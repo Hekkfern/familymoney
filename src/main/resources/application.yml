@@ -1,0 +1,53 @@
+spring:
+  application:
+    name: miticketdecomida
+  main:
+    banner-mode: off
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  config:
+    import: optional:file:.env[.properties]
+  mail:
+    host: ${MAIL_SENDER_HOST}
+    port: ${MAIL_SENDER_PORT}
+    username: ${MAIL_SENDER_USERNAME}
+    password: ${MAIL_SENDER_PASSWORD}
+    properties:
+      mail:
+        transport:
+          protocol: ${MAIL_SENDER_PROTOCOL}
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  mvc:
+    problemdetails:
+      enabled: false
+server:
+  port: ${APP_PORT}
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} | %level | %msg%n"
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    display-request-duration: true
+  show-actuator: true
+jwt:
+  key: ${JWT_KEY}
+mail:
+  sender:
+    email: ${MAIL_SENDER_FROM_EMAIL}
+    name: ${MAIL_SENDER_FROM_NAME}

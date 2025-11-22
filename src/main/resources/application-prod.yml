@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    tomcat:
+      test-while-idle: true
+      validation-query: SELECT 1
+      time-between-eviction-runs-millis: 30000
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+logging:
+  level:
+    root: WARN
+

@@ -1,0 +1,24 @@
+[versions]
+springboot = "3.5.8"
+springboot-dependencymanagement = "1.1.7"
+springdoc-openapi = "2.8.13"
+jjwt = "0.13.0"
+testcontainers = "2.0.2"
+
+[libraries]
+flyway = { module = "org.flywaydb:flyway-core" }
+flyway-postgresql = { module = "org.flywaydb:flyway-database-postgresql" }
+lombok = { module = "org.projectlombok:lombok" }
+springdoc-openapi = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc-openapi" }
+jjwt-api = { module = "io.jsonwebtoken:jjwt-api", version.ref = "jjwt" }
+jjwt-impl = { module = "io.jsonwebtoken:jjwt-impl", version.ref = "jjwt" }
+jjwt-jackson = { module = "io.jsonwebtoken:jjwt-jackson", version.ref = "jjwt" }
+testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
+testcontainers-junit = { module = "org.testcontainers:testcontainers-junit-jupiter", version.ref = "testcontainers" }
+testcontainers-postgresql = { module = "org.testcontainers:testcontainers-postgresql", version.ref = "testcontainers" }
+
+[plugins]
+springboot = { id = "org.springframework.boot", version.ref = "springboot" }
+springboot-dependencymanagement = { id = "io.spring.dependency-management", version.ref = "springboot-dependencymanagement" }
+
+[bundles]
