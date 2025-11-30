@@ -1,9 +1,6 @@
 package com.familymoney.familymoney.exceptions;
 
-import lombok.RequiredArgsConstructor;
+import lombok.experimental.StandardException;
 
-@RequiredArgsConstructor
-public final class UserAlreadyExistsException extends RuntimeException {
-
-  private final String message;
-}
+@StandardException
+public final class UserAlreadyExistsException extends RuntimeException {}

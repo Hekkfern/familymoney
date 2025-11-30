@@ -30,8 +30,8 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
         """;
     return jdbcClient
         .sql(sql)
-        .param("userId", userId.toString())
-        .param("token", token.toString())
+        .param("userId", userId.value())
+        .param("token", token.value())
         .param("family", family)
         .query(new RefreshTokenRowMapper())
         .optional();
@@ -48,7 +48,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
         """;
     return jdbcClient
         .sql(sql)
-        .param("token", token.toString())
+        .param("token", token.value())
         .query(new RefreshTokenRowMapper())
         .optional();
   }
@@ -62,7 +62,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
             used_at = NOW()
         WHERE token = :token
         """;
-    jdbcClient.sql(sql).param("token", token.toString()).update();
+    jdbcClient.sql(sql).param("token", token.value()).update();
   }
 
   @Override
@@ -84,7 +84,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
         SET is_used = TRUE
         WHERE user_id = :userId
         """;
-    jdbcClient.sql(sql).param("userId", userId.toString()).update();
+    jdbcClient.sql(sql).param("userId", userId.value()).update();
   }
 
   @Override

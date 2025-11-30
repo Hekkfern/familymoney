@@ -32,8 +32,8 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
         """;
     return jdbcClient
         .sql(sql)
-        .param("userId", userId.toString())
-        .param("token", token.toString())
+        .param("userId", userId.value())
+        .param("token", token.value())
         .param("expiresAt", OffsetDateTime.ofInstant(expiresAt, ZoneOffset.UTC))
         .query(new EmailVerificationRowMapper())
         .optional();
@@ -50,7 +50,7 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
         """;
     return jdbcClient
         .sql(sql)
-        .param("token", token.toString())
+        .param("token", token.value())
         .query(new EmailVerificationRowMapper())
         .optional();
   }
@@ -62,7 +62,7 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
         DELETE FROM email_verification_tokens
         WHERE user_id = :userId
         """;
-    jdbcClient.sql(sql).param("userId", userId.toString()).update();
+    jdbcClient.sql(sql).param("userId", userId.value()).update();
   }
 
   @Override
@@ -73,7 +73,7 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
         SET email_verified = TRUE
         WHERE id = :userId
         """;
-    jdbcClient.sql(sql).param("userId", userId.toString()).update();
+    jdbcClient.sql(sql).param("userId", userId.value()).update();
   }
 
   @Override

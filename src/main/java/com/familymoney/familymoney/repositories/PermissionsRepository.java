@@ -26,7 +26,7 @@ public class PermissionsRepository implements IPermissionsRepository {
         """;
     return jdbcClient
         .sql(sql)
-        .param("userId", userId.toString())
+        .param("userId", userId.value())
         .query(String.class)
         .list()
         .stream()
@@ -48,7 +48,7 @@ public class PermissionsRepository implements IPermissionsRepository {
             WHERE up.user_id = :userId AND up.permission_id = p.id
           )
         """;
-    jdbcClient.sql(sql).param("userId", userId.toString()).param("names", permissions).update();
+    jdbcClient.sql(sql).param("userId", userId.value()).param("names", permissions).update();
   }
 
   @Override

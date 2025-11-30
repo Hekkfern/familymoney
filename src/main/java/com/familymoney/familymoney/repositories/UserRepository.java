@@ -30,8 +30,8 @@ public class UserRepository implements IUserRepository {
         """;
     return jdbcClient
         .sql(sql)
-        .param("username", username.toString())
-        .param("email", email.toString())
+        .param("username", username.value())
+        .param("email", email.value())
         .param("passwordHash", passwordHash)
         .query(new UserDboRowMapper())
         .optional();
@@ -46,7 +46,7 @@ public class UserRepository implements IUserRepository {
         FROM users
         WHERE id = :id
         """;
-    return jdbcClient.sql(sql).param("id", id.toString()).query(new UserDboRowMapper()).optional();
+    return jdbcClient.sql(sql).param("id", id.value()).query(new UserDboRowMapper()).optional();
   }
 
   @Override
@@ -60,7 +60,7 @@ public class UserRepository implements IUserRepository {
         """;
     return jdbcClient
         .sql(sql)
-        .param("email", email.toString())
+        .param("email", email.value())
         .query(new UserDboRowMapper())
         .optional();
   }
@@ -76,7 +76,7 @@ public class UserRepository implements IUserRepository {
         """;
     return jdbcClient
         .sql(sql)
-        .param("username", username.toString())
+        .param("username", username.value())
         .query(new UserDboRowMapper())
         .optional();
   }
@@ -92,8 +92,8 @@ public class UserRepository implements IUserRepository {
     var count =
         jdbcClient
             .sql(sql)
-            .param("email", email.toString())
-            .param("username", username.toString())
+            .param("email", email.value())
+            .param("username", username.value())
             .query(Integer.class)
             .single();
     return count > 0;
@@ -111,9 +111,9 @@ public class UserRepository implements IUserRepository {
         """;
     jdbcClient
         .sql(sql)
-        .param("id", id.toString())
-        .param("username", username.isPresent() ? username.toString() : null)
-        .param("email", email.isPresent() ? email.toString() : null)
+        .param("id", id.value())
+        .param("username", username.map(Username::value).orElse(null))
+        .param("email", email.map(Email::value).orElse(null))
         .update();
   }
 
