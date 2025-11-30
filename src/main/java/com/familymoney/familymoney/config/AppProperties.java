@@ -9,5 +9,5 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "spring.application")
 public class AppProperties {
 
-    private String name;
+  private String name;
 }

@@ -5,5 +5,5 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public final class DatabaseExecutionException extends RuntimeException {
 
-    private final String message;
+  private final String message;
 }

@@ -5,7 +5,4 @@ import com.familymoney.familymoney.validation.Password;
 import jakarta.validation.constraints.NotBlank;
 
 public record ResetPasswordRequestDto(
-        @NotBlank @EmailVerificationToken String token,
-        @NotBlank @Password String newPassword) {
-
-}
+    @NotBlank @EmailVerificationToken String token, @NotBlank @Password String newPassword) {}

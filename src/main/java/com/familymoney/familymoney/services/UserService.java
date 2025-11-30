@@ -7,12 +7,12 @@ import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.Password;
 import com.familymoney.familymoney.types.UserId;
 import com.familymoney.familymoney.types.Username;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor

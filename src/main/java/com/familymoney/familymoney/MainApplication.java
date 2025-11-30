@@ -8,14 +8,12 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication(exclude = {UserDetailsServiceAutoConfiguration.class})
-
 @EnableScheduling
 @EnableAsync
 @ConfigurationPropertiesScan
 public class MainApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(MainApplication.class, args);
-    }
-
+  public static void main(String[] args) {
+    SpringApplication.run(MainApplication.class, args);
+  }
 }

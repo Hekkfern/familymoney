@@ -5,15 +5,13 @@ import java.util.UUID;
 
 public record RefreshToken(String value) {
 
-    @Override
-    public @NonNull String toString() {
-        return value;
-    }
+  @Override
+  public @NonNull String toString() {
+    return value;
+  }
 
-    @NonNull
-    public static RefreshToken generate() {
-        return new RefreshToken(
-                UUID.randomUUID().toString().replace("-", "")
-        );
-    }
+  @NonNull
+  public static RefreshToken generate() {
+    return new RefreshToken(UUID.randomUUID().toString().replace("-", ""));
+  }
 }

@@ -19,54 +19,54 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @RestControllerAdvice(assignableTypes = {AuthController.class, AuthService.class})
 public class AuthControllerExceptionHandler extends ResponseEntityExceptionHandler {
 
-    @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<String> handle(BadCredentialsException e) {
-        logger.info(e.getMessage());
-        // SECURITY: Never return specific reason for authentication failure
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
-    }
+  @ExceptionHandler(BadCredentialsException.class)
+  public ResponseEntity<String> handle(BadCredentialsException e) {
+    logger.info(e.getMessage());
+    // SECURITY: Never return specific reason for authentication failure
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+  }
 
-    @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<String> handle(UserAlreadyExistsException e) {
-        logger.info(e.getMessage());
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
-    }
+  @ExceptionHandler(UserAlreadyExistsException.class)
+  public ResponseEntity<String> handle(UserAlreadyExistsException e) {
+    logger.info(e.getMessage());
+    return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+  }
 
-    @ExceptionHandler(EmailNotFoundException.class)
-    public ResponseEntity<String> handle(EmailNotFoundException e) {
-        logger.info(e.getMessage());
-        // SECURITY: Always return success even if email doesn't exist
-        // This prevents attackers from discovering which emails are registered
-        return ResponseEntity.status(HttpStatus.OK).body("");
-    }
+  @ExceptionHandler(EmailNotFoundException.class)
+  public ResponseEntity<String> handle(EmailNotFoundException e) {
+    logger.info(e.getMessage());
+    // SECURITY: Always return success even if email doesn't exist
+    // This prevents attackers from discovering which emails are registered
+    return ResponseEntity.status(HttpStatus.OK).body("");
+  }
 
-    @ExceptionHandler(RefreshTokenNotFoundException.class)
-    public ResponseEntity<String> handle(RefreshTokenNotFoundException e) {
-        logger.info(e.getMessage());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
-    }
+  @ExceptionHandler(RefreshTokenNotFoundException.class)
+  public ResponseEntity<String> handle(RefreshTokenNotFoundException e) {
+    logger.info(e.getMessage());
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+  }
 
-    @ExceptionHandler(VerificationTokenNotFoundException.class)
-    public ResponseEntity<String> handle(VerificationTokenNotFoundException e) {
-        logger.info(e.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-    }
+  @ExceptionHandler(VerificationTokenNotFoundException.class)
+  public ResponseEntity<String> handle(VerificationTokenNotFoundException e) {
+    logger.info(e.getMessage());
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+  }
 
-    @ExceptionHandler(VerificationTokenExpiredException.class)
-    public ResponseEntity<String> handle(VerificationTokenExpiredException e) {
-        logger.info(e.getMessage());
-        return ResponseEntity.status(HttpStatus.GONE).body(e.getMessage());
-    }
+  @ExceptionHandler(VerificationTokenExpiredException.class)
+  public ResponseEntity<String> handle(VerificationTokenExpiredException e) {
+    logger.info(e.getMessage());
+    return ResponseEntity.status(HttpStatus.GONE).body(e.getMessage());
+  }
 
-    @ExceptionHandler(ResetPasswordTokenNotFoundException.class)
-    public ResponseEntity<String> handle(ResetPasswordTokenNotFoundException e) {
-        logger.info(e.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-    }
+  @ExceptionHandler(ResetPasswordTokenNotFoundException.class)
+  public ResponseEntity<String> handle(ResetPasswordTokenNotFoundException e) {
+    logger.info(e.getMessage());
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+  }
 
-    @ExceptionHandler(ResetPasswordTokenExpiredException.class)
-    public ResponseEntity<String> handle(ResetPasswordTokenExpiredException e) {
-        logger.info(e.getMessage());
-        return ResponseEntity.status(HttpStatus.GONE).body(e.getMessage());
-    }
+  @ExceptionHandler(ResetPasswordTokenExpiredException.class)
+  public ResponseEntity<String> handle(ResetPasswordTokenExpiredException e) {
+    logger.info(e.getMessage());
+    return ResponseEntity.status(HttpStatus.GONE).body(e.getMessage());
+  }
 }

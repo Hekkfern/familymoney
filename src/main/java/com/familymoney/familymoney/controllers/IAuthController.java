@@ -20,27 +20,27 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/api/auth")
 public interface IAuthController {
 
-    @PostMapping("register")
-    void register(@RequestBody @Valid RegisterRequestDto request);
+  @PostMapping("register")
+  void register(@RequestBody @Valid RegisterRequestDto request);
 
-    @PostMapping("login")
-    LoginResponseDto login(@RequestBody @Valid LoginRequestDto request);
+  @PostMapping("login")
+  LoginResponseDto login(@RequestBody @Valid LoginRequestDto request);
 
-    @GetMapping("verify-email/{token}")
-    void verifyEmail(@PathVariable @EmailVerificationToken String token);
+  @GetMapping("verify-email/{token}")
+  void verifyEmail(@PathVariable @EmailVerificationToken String token);
 
-    @PostMapping("verify-email/resend")
-    void resendVerificationEmail(@RequestBody @Valid ResendVerificationEmailRequestDto request);
+  @PostMapping("verify-email/resend")
+  void resendVerificationEmail(@RequestBody @Valid ResendVerificationEmailRequestDto request);
 
-    @PostMapping("forgot-password")
-    void forgotPassword(@RequestBody @Valid ForgotPasswordRequestDto request);
+  @PostMapping("forgot-password")
+  void forgotPassword(@RequestBody @Valid ForgotPasswordRequestDto request);
 
-    @PostMapping("reset-password")
-    void resetPassword(@RequestBody @Valid ResetPasswordRequestDto request);
+  @PostMapping("reset-password")
+  void resetPassword(@RequestBody @Valid ResetPasswordRequestDto request);
 
-    @PostMapping("refresh")
-    RefreshResponseDto refresh(@RequestBody @Valid RefreshTokenRequestDto request);
+  @PostMapping("refresh")
+  RefreshResponseDto refresh(@RequestBody @Valid RefreshTokenRequestDto request);
 
-    @PostMapping("logout")
-    void logout(@RequestBody @Valid LogoutRequestDto request);
+  @PostMapping("logout")
+  void logout(@RequestBody @Valid LogoutRequestDto request);
 }

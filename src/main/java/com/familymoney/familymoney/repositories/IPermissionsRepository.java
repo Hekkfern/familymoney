@@ -1,9 +1,8 @@
 package com.familymoney.familymoney.repositories;
 
 import com.familymoney.familymoney.types.UserId;
-import org.springframework.lang.NonNull;
-import org.springframework.stereotype.Repository;
 import java.util.List;
+import org.springframework.lang.NonNull;
 
 public interface IPermissionsRepository {
 

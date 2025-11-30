@@ -4,9 +4,9 @@ import com.familymoney.familymoney.repositories.dbos.UserDbo;
 import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.UserId;
 import com.familymoney.familymoney.types.Username;
-import org.springframework.lang.NonNull;
 import java.time.Duration;
 import java.util.Optional;
+import org.springframework.lang.NonNull;
 
 public interface IUserRepository {
 

@@ -10,13 +10,13 @@ import java.util.UUID;
 
 public final class EmailVerificationRowMapper implements RowMapper<EmailVerificationDbo> {
 
-    @Override
-    public EmailVerificationDbo mapRow(ResultSet rs, int rowNum) throws SQLException {
-        return new EmailVerificationDbo(
-                UUID.fromString(rs.getString("id")),
-                new UserId(UUID.fromString(rs.getString("user_id"))),
-                new EmailVerificationToken(rs.getString("token")),
-                rs.getTimestamp("expires_at").toInstant(),
-                rs.getTimestamp("created_at").toInstant());
-    }
+  @Override
+  public EmailVerificationDbo mapRow(ResultSet rs, int rowNum) throws SQLException {
+    return new EmailVerificationDbo(
+        UUID.fromString(rs.getString("id")),
+        new UserId(UUID.fromString(rs.getString("user_id"))),
+        new EmailVerificationToken(rs.getString("token")),
+        rs.getTimestamp("expires_at").toInstant(),
+        rs.getTimestamp("created_at").toInstant());
+  }
 }

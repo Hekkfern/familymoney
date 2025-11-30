@@ -21,15 +21,15 @@ import com.familymoney.familymoney.types.Password;
 import com.familymoney.familymoney.types.RefreshToken;
 import com.familymoney.familymoney.types.UserId;
 import com.familymoney.familymoney.types.Username;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.lang.NonNull;
-import org.springframework.stereotype.Service;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.UUID;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor

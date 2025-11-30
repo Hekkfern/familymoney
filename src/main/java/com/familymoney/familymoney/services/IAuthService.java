@@ -9,21 +9,21 @@ import org.springframework.lang.NonNull;
 
 public interface IAuthService {
 
-    void registerUser(@NonNull Username username, @NonNull Email email, @NonNull Password password);
+  void registerUser(@NonNull Username username, @NonNull Email email, @NonNull Password password);
 
-    @NonNull
-    TokenPair loginUser(@NonNull Email email, @NonNull Password password);
+  @NonNull
+  TokenPair loginUser(@NonNull Email email, @NonNull Password password);
 
-    @NonNull
-    TokenPair refreshTokens(@NonNull RefreshToken refreshToken);
+  @NonNull
+  TokenPair refreshTokens(@NonNull RefreshToken refreshToken);
 
-    void verifyEmail(@NonNull EmailVerificationToken token);
+  void verifyEmail(@NonNull EmailVerificationToken token);
 
-    void resendVerificationEmail(@NonNull Email email);
+  void resendVerificationEmail(@NonNull Email email);
 
-    void forgotPassword(@NonNull Email email);
+  void forgotPassword(@NonNull Email email);
 
-    void resetPassword(@NonNull EmailVerificationToken token, @NonNull Password newPassword);
+  void resetPassword(@NonNull EmailVerificationToken token, @NonNull Password newPassword);
 
-    void logoutUser(@NonNull RefreshToken refreshToken);
+  void logoutUser(@NonNull RefreshToken refreshToken);
 }

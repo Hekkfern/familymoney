@@ -1,10 +1,10 @@
 package com.familymoney.familymoney.tasks;
 
 import com.familymoney.familymoney.repositories.IEmailVerificationRepository;
+import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import java.time.Duration;
 
 @Component
 @RequiredArgsConstructor

@@ -9,6 +9,6 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "mail.sender")
 public class MailSenderProperties {
 
-    private String name;
-    private String email;
+  private String name;
+  private String email;
 }

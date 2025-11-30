@@ -13,13 +13,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/api/users")
 public interface IUserController {
 
-    @GetMapping("/me")
-    @NonNull
-    GetMyUserResponseDto getMyUser();
+  @GetMapping("/me")
+  @NonNull
+  GetMyUserResponseDto getMyUser();
 
-    @DeleteMapping("/me")
-    void deleteMyUser();
+  @DeleteMapping("/me")
+  void deleteMyUser();
 
-    @PatchMapping("/me")
-    void updateMyUser(@RequestBody @Valid UpdateUserRequestDto request);
+  @PatchMapping("/me")
+  void updateMyUser(@RequestBody @Valid UpdateUserRequestDto request);
 }

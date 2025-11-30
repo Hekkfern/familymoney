@@ -10,23 +10,23 @@ import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 @Configuration
 public class ThymeleafConfig implements WebMvcConfigurer {
 
-    @Bean
-    public ClassLoaderTemplateResolver htmlTemplateResolver() {
-        ClassLoaderTemplateResolver resolver = new ClassLoaderTemplateResolver();
+  @Bean
+  public ClassLoaderTemplateResolver htmlTemplateResolver() {
+    ClassLoaderTemplateResolver resolver = new ClassLoaderTemplateResolver();
 
-        resolver.setPrefix("templates/mail/"); // Location of thymeleaf template
-        resolver.setCacheable(false); // Turning off cache to facilitate template changes
-        resolver.setSuffix(".html"); // Template file extension
-        resolver.setTemplateMode(TemplateMode.HTML); // Template Type
-        resolver.setCharacterEncoding("UTF-8");
+    resolver.setPrefix("templates/mail/"); // Location of thymeleaf template
+    resolver.setCacheable(false); // Turning off cache to facilitate template changes
+    resolver.setSuffix(".html"); // Template file extension
+    resolver.setTemplateMode(TemplateMode.HTML); // Template Type
+    resolver.setCharacterEncoding("UTF-8");
 
-        return resolver;
-    }
+    return resolver;
+  }
 
-    @Bean
-    public SpringTemplateEngine templateEngine() {
-        SpringTemplateEngine engine = new SpringTemplateEngine();
-        engine.setTemplateResolver(htmlTemplateResolver());
-        return engine;
-    }
+  @Bean
+  public SpringTemplateEngine templateEngine() {
+    SpringTemplateEngine engine = new SpringTemplateEngine();
+    engine.setTemplateResolver(htmlTemplateResolver());
+    return engine;
+  }
 }

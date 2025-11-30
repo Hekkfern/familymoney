@@ -23,48 +23,53 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AuthController implements IAuthController {
 
-    private final IAuthService authService;
+  private final IAuthService authService;
 
-    @Override
-    public void register(RegisterRequestDto request) {
-        authService.registerUser(new Username(request.username()), new Email(request.email()),
-                new Password(request.password()));
-    }
+  @Override
+  public void register(RegisterRequestDto request) {
+    authService.registerUser(
+        new Username(request.username()),
+        new Email(request.email()),
+        new Password(request.password()));
+  }
 
-    @Override
-    public LoginResponseDto login(LoginRequestDto request) {
-        val tokenPair = authService.loginUser(new Email(request.email()), new Password(request.password()));
-        return new LoginResponseDto(tokenPair.accessToken().value(), tokenPair.refreshToken().value());
-    }
+  @Override
+  public LoginResponseDto login(LoginRequestDto request) {
+    val tokenPair =
+        authService.loginUser(new Email(request.email()), new Password(request.password()));
+    return new LoginResponseDto(tokenPair.accessToken().value(), tokenPair.refreshToken().value());
+  }
 
-    @Override
-    public void verifyEmail(String token) {
-        authService.verifyEmail(new EmailVerificationToken(token));
-    }
+  @Override
+  public void verifyEmail(String token) {
+    authService.verifyEmail(new EmailVerificationToken(token));
+  }
 
-    @Override
-    public void resendVerificationEmail(ResendVerificationEmailRequestDto request) {
-        authService.resendVerificationEmail(new Email(request.email()));
-    }
+  @Override
+  public void resendVerificationEmail(ResendVerificationEmailRequestDto request) {
+    authService.resendVerificationEmail(new Email(request.email()));
+  }
 
-    @Override
-    public void forgotPassword(ForgotPasswordRequestDto request) {
-        authService.forgotPassword(new Email(request.email()));
-    }
+  @Override
+  public void forgotPassword(ForgotPasswordRequestDto request) {
+    authService.forgotPassword(new Email(request.email()));
+  }
 
-    @Override
-    public void resetPassword(ResetPasswordRequestDto request) {
-        authService.resetPassword(new EmailVerificationToken(request.token()), new Password(request.newPassword()));
-    }
+  @Override
+  public void resetPassword(ResetPasswordRequestDto request) {
+    authService.resetPassword(
+        new EmailVerificationToken(request.token()), new Password(request.newPassword()));
+  }
 
-    @Override
-    public RefreshResponseDto refresh(RefreshTokenRequestDto request) {
-        val tokenPair = authService.refreshTokens(new RefreshToken(request.refreshToken()));
-        return new RefreshResponseDto(tokenPair.accessToken().value(), tokenPair.refreshToken().value());
-    }
+  @Override
+  public RefreshResponseDto refresh(RefreshTokenRequestDto request) {
+    val tokenPair = authService.refreshTokens(new RefreshToken(request.refreshToken()));
+    return new RefreshResponseDto(
+        tokenPair.accessToken().value(), tokenPair.refreshToken().value());
+  }
 
-    @Override
-    public void logout(LogoutRequestDto request) {
-        authService.logoutUser(new RefreshToken(request.refreshToken()));
-    }
+  @Override
+  public void logout(LogoutRequestDto request) {
+    authService.logoutUser(new RefreshToken(request.refreshToken()));
+  }
 }

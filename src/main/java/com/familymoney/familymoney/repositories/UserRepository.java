@@ -5,12 +5,12 @@ import com.familymoney.familymoney.repositories.rowmappers.UserDboRowMapper;
 import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.UserId;
 import com.familymoney.familymoney.types.Username;
+import java.time.Duration;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
-import java.time.Duration;
-import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor

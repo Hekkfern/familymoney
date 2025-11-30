@@ -5,5 +5,5 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public final class VerificationTokenExpiredException extends RuntimeException {
 
-    private final String message;
+  private final String message;
 }

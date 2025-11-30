@@ -10,11 +10,14 @@ import java.util.Optional;
 
 public interface IUserService {
 
-    @NonNull
-    UserData getMyUserData(@NonNull UserId userId);
+  @NonNull
+  UserData getMyUserData(@NonNull UserId userId);
 
-    void deleteMyUser(@NonNull UserId userId);
+  void deleteMyUser(@NonNull UserId userId);
 
-    void updateMyUser(@NonNull UserId userId, @NonNull Optional<Username> username, @NonNull Optional<Email> email,
-            @NonNull Optional<Password> password);
+  void updateMyUser(
+      @NonNull UserId userId,
+      @NonNull Optional<Username> username,
+      @NonNull Optional<Email> email,
+      @NonNull Optional<Password> password);
 }

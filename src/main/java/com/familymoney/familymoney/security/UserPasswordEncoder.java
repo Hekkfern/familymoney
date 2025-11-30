@@ -7,16 +7,16 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserPasswordEncoder {
 
-    private final int STRENGTH = 12;
+  private final int STRENGTH = 12;
 
-    private final BCryptPasswordEncoder bcrypt = new BCryptPasswordEncoder(STRENGTH);
+  private final BCryptPasswordEncoder bcrypt = new BCryptPasswordEncoder(STRENGTH);
 
-    @NonNull
-    public String encode(@NonNull String rawPassword) {
-        return bcrypt.encode(rawPassword);
-    }
+  @NonNull
+  public String encode(@NonNull String rawPassword) {
+    return bcrypt.encode(rawPassword);
+  }
 
-    public boolean verify(@NonNull String rawPassword, @NonNull String hashedPassword) {
-        return bcrypt.matches(rawPassword, hashedPassword);
-    }
+  public boolean verify(@NonNull String rawPassword, @NonNull String hashedPassword) {
+    return bcrypt.matches(rawPassword, hashedPassword);
+  }
 }

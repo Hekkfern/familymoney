@@ -3,9 +3,9 @@ package com.familymoney.familymoney.repositories;
 import com.familymoney.familymoney.repositories.dbos.PasswordResetDbo;
 import com.familymoney.familymoney.types.PasswordResetToken;
 import com.familymoney.familymoney.types.UserId;
-import org.springframework.lang.NonNull;
 import java.time.Instant;
 import java.util.Optional;
+import org.springframework.lang.NonNull;
 
 public interface IPasswordResetRepository {
 
