@@ -1,7 +1,7 @@
 package com.familymoney.familymoney.utils;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 public class FakeGenerator {
 

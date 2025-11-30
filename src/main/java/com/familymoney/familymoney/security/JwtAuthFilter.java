@@ -10,7 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -35,7 +35,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     val authHeader = request.getHeader(AUTHORIZATION_HEADER);
     String rawToken = null;
     if (authHeader != null && authHeader.startsWith(BEARER_PREFIX)) {
-      rawToken = StringUtils.removeStart(authHeader, BEARER_PREFIX);
+      rawToken = Strings.CI.removeStart(authHeader, BEARER_PREFIX);
     }
     if (rawToken != null) {
       // skip

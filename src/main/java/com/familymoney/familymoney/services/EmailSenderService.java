@@ -7,7 +7,7 @@ import com.familymoney.familymoney.types.EmailVerificationToken;
 import com.familymoney.familymoney.types.Username;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;

@@ -1,5 +1,5 @@
 package com.familymoney.familymoney.dtos.auth;
 
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 public record LoginResponseDto(@NonNull String accessToken, @NonNull String refreshToken) {}

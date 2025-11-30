@@ -3,7 +3,7 @@ package com.familymoney.familymoney.services;
 import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.EmailVerificationToken;
 import com.familymoney.familymoney.types.Username;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 public interface IEmailSenderService {
 

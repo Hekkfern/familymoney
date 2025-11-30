@@ -1,8 +1,5 @@
 package com.familymoney.familymoney.integration;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 
@@ -11,14 +8,14 @@ import com.familymoney.familymoney.services.IEmailSenderService;
 import com.familymoney.familymoney.types.EmailVerificationToken;
 import com.familymoney.familymoney.utils.FakeGenerator;
 import lombok.val;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.http.HttpStatus;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.client.RestTestClient;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
@@ -26,7 +23,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
 public class AuthFlowTest {
-  @Autowired private TestRestTemplate client;
+  RestTestClient client;
 
   @MockitoBean private IEmailSenderService emailSenderService;
 
@@ -36,21 +33,30 @@ public class AuthFlowTest {
 
   private final String BASE_AUTH_URI = "/api/auth";
 
+  @LocalServerPort private int port;
+
+  @BeforeEach
+  public void setup() {
+    client = RestTestClient.bindToServer().baseUrl("http://localhost:" + port).build();
+  }
+
   @Test
   void Auth_SuccessfulRegistrationProcess() {
     // Mock email sender
     val verificationTokenCaptor = ArgumentCaptor.forClass(EmailVerificationToken.class);
 
     // register the new user
-    val registerResponse =
-        client.postForEntity(
-            String.format("%s/register", BASE_AUTH_URI),
+    client
+        .post()
+        .uri(String.format("%s/register", BASE_AUTH_URI))
+        .body(
             new RegisterRequestDto(
-                FakeGenerator.username(), FakeGenerator.email(), FakeGenerator.password()),
-            Void.class);
-    assertNotNull(registerResponse);
-    assertEquals(HttpStatus.OK, registerResponse.getStatusCode());
-    assertNull(registerResponse.getBody());
+                FakeGenerator.username(), FakeGenerator.email(), FakeGenerator.password()))
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectBody()
+        .isEmpty();
 
     // get the captured email verification token
     verify(emailSenderService)
@@ -58,11 +64,13 @@ public class AuthFlowTest {
     val verificationToken = verificationTokenCaptor.getValue();
 
     // verify email
-    val verifyEmailResponse =
-        client.getForEntity(
-            String.format("%s/verify-email/%s", BASE_AUTH_URI, verificationToken), Void.class);
-    assertNotNull(verifyEmailResponse);
-    assertEquals(HttpStatus.OK, verifyEmailResponse.getStatusCode());
-    assertNull(verifyEmailResponse.getBody());
+    client
+        .get()
+        .uri(String.format("%s/verify-email/%s", BASE_AUTH_URI, verificationToken))
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectBody()
+        .isEmpty();
   }
 }

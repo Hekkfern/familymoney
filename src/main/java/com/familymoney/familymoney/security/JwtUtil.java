@@ -15,7 +15,7 @@ import java.util.Optional;
 import javax.crypto.SecretKey;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
 
 @Component

@@ -1,7 +1,7 @@
 package com.familymoney.familymoney.types;
 
 import java.util.UUID;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 public record UserId(UUID value) {
 

@@ -1,7 +1,7 @@
 package com.familymoney.familymoney.types;
 
 import java.security.SecureRandom;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 public record EmailVerificationToken(String value) {
 

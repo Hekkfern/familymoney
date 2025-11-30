@@ -6,7 +6,7 @@ import com.familymoney.familymoney.types.UserId;
 import com.familymoney.familymoney.types.Username;
 import java.time.Duration;
 import java.util.Optional;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 public interface IUserRepository {
 

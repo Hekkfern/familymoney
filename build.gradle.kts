@@ -11,7 +11,7 @@ description = "Backend of the FamilyMoney application"
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
@@ -33,7 +33,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation(libs.flyway)
+    implementation("org.springframework.boot:spring-boot-starter-flyway")
     implementation(libs.flyway.postgresql)
     implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
     compileOnly(libs.lombok)
@@ -44,6 +44,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
+    testImplementation("org.springframework.boot:spring-boot-starter-flyway-test")
     testImplementation(libs.testcontainers.junit)
     testImplementation(libs.testcontainers.postgresql)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -51,6 +52,7 @@ dependencies {
     implementation(libs.jjwt.api)
     runtimeOnly(libs.jjwt.impl)
     runtimeOnly(libs.jjwt.jackson)
+    testImplementation("org.springframework.boot:spring-boot-resttestclient")
 }
 
 tasks.withType<Test> {

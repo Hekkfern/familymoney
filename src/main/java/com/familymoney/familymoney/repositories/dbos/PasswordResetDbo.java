@@ -5,7 +5,7 @@ import com.familymoney.familymoney.types.UserId;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.Builder;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 @Builder
 public record PasswordResetDbo(

@@ -5,7 +5,7 @@ import com.familymoney.familymoney.types.EmailVerificationToken;
 import com.familymoney.familymoney.types.Password;
 import com.familymoney.familymoney.types.RefreshToken;
 import com.familymoney.familymoney.types.Username;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 public interface IAuthService {
 

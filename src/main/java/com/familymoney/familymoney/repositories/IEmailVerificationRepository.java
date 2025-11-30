@@ -6,7 +6,7 @@ import com.familymoney.familymoney.types.UserId;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 public interface IEmailVerificationRepository {
 

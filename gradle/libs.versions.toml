@@ -1,12 +1,11 @@
 [versions]
-springboot = "3.5.8"
+springboot = "4.0.0"
 springboot-dependencymanagement = "1.1.7"
 springdoc-openapi = "2.8.13"
 jjwt = "0.13.0"
 testcontainers = "2.0.2"
 
 [libraries]
-flyway = { module = "org.flywaydb:flyway-core" }
 flyway-postgresql = { module = "org.flywaydb:flyway-database-postgresql" }
 lombok = { module = "org.projectlombok:lombok" }
 springdoc-openapi = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc-openapi" }

@@ -6,7 +6,7 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.Builder;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 @Builder
 public record RefreshTokenDbo(

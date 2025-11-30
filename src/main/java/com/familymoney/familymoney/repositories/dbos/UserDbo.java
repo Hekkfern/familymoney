@@ -5,7 +5,7 @@ import com.familymoney.familymoney.types.UserId;
 import com.familymoney.familymoney.types.Username;
 import java.time.Instant;
 import lombok.Builder;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 @Builder
 public record UserDbo(

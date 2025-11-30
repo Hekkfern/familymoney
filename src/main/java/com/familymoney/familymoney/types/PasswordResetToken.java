@@ -1,6 +1,6 @@
 package com.familymoney.familymoney.types;
 
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 public record PasswordResetToken(String value) {
 

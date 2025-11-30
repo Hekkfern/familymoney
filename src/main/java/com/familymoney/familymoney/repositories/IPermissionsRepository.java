@@ -2,7 +2,7 @@ package com.familymoney.familymoney.repositories;
 
 import com.familymoney.familymoney.types.UserId;
 import java.util.List;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 public interface IPermissionsRepository {
 

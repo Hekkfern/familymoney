@@ -10,7 +10,7 @@ import com.familymoney.familymoney.types.Username;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RestController;

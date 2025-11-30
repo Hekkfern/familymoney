@@ -5,7 +5,7 @@ import com.familymoney.familymoney.types.PasswordResetToken;
 import com.familymoney.familymoney.types.UserId;
 import java.time.Instant;
 import java.util.Optional;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 public interface IPasswordResetRepository {
 
