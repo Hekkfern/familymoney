@@ -56,3 +56,11 @@ dependencies {
 tasks.withType<Test> {
     useJUnitPlatform()
 }
+
+tasks.withType<Test>().configureEach {
+    val mockito = this.classpath.elements.map { files ->
+        files.single { it.asFile.name.startsWith("mockito-core-") }
+    }
+    this.jvmArgumentProviders.add { listOf("-javaagent:${mockito.get().asFile}") }
+}
+
