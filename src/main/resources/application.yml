@@ -1,6 +1,6 @@
 spring:
   application:
-    name: miticketdecomida
+    name: familymoney
   main:
     banner-mode: off
   threads:
