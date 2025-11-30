@@ -18,66 +18,71 @@ import org.springframework.stereotype.Repository;
 @RequiredArgsConstructor
 public class EmailVerificationRepository implements IEmailVerificationRepository {
 
-    private final JdbcClient jdbcClient;
+  private final JdbcClient jdbcClient;
 
-    @Override
-    @NonNull
-    public Optional<EmailVerificationDbo> create(@NonNull UserId userId, @NonNull EmailVerificationToken token,
-            @NonNull Instant expiresAt) {
-        var sql = """
-                INSERT INTO email_verification_tokens (user_id, token, expires_at)
-                VALUES (:userId, :token, :expiresAt)
-                RETURNING id, user_id, token, expires_at, created_at
-                """;
-        return jdbcClient
-                .sql(sql)
-                .param("userId", userId.toString())
-                .param("token", token.toString())
-                .param("expiresAt", OffsetDateTime.ofInstant(expiresAt, ZoneOffset.UTC))
-                .query(new EmailVerificationRowMapper())
-                .optional();
-    }
+  @Override
+  @NonNull
+  public Optional<EmailVerificationDbo> create(
+      @NonNull UserId userId, @NonNull EmailVerificationToken token, @NonNull Instant expiresAt) {
+    var sql =
+        """
+        INSERT INTO email_verification_tokens (user_id, token, expires_at)
+        VALUES (:userId, :token, :expiresAt)
+        RETURNING id, user_id, token, expires_at, created_at
+        """;
+    return jdbcClient
+        .sql(sql)
+        .param("userId", userId.toString())
+        .param("token", token.toString())
+        .param("expiresAt", OffsetDateTime.ofInstant(expiresAt, ZoneOffset.UTC))
+        .query(new EmailVerificationRowMapper())
+        .optional();
+  }
 
-    @Override
-    @NonNull
-    public Optional<EmailVerificationDbo> findByToken(@NonNull EmailVerificationToken token) {
-        var sql = """
-                SELECT id, user_id, token, expires_at, created_at
-                FROM email_verification_tokens
-                WHERE token = :token
-                """;
-        return jdbcClient
-                .sql(sql)
-                .param("token", token.toString())
-                .query(new EmailVerificationRowMapper())
-                .optional();
-    }
+  @Override
+  @NonNull
+  public Optional<EmailVerificationDbo> findByToken(@NonNull EmailVerificationToken token) {
+    var sql =
+        """
+        SELECT id, user_id, token, expires_at, created_at
+        FROM email_verification_tokens
+        WHERE token = :token
+        """;
+    return jdbcClient
+        .sql(sql)
+        .param("token", token.toString())
+        .query(new EmailVerificationRowMapper())
+        .optional();
+  }
 
-    @Override
-    public void deleteByUserId(@NonNull UserId userId) {
-        var sql = """
-                DELETE FROM email_verification_tokens
-                WHERE user_id = :userId
-                """;
-        jdbcClient.sql(sql).param("userId", userId.toString()).update();
-    }
+  @Override
+  public void deleteByUserId(@NonNull UserId userId) {
+    var sql =
+        """
+        DELETE FROM email_verification_tokens
+        WHERE user_id = :userId
+        """;
+    jdbcClient.sql(sql).param("userId", userId.toString()).update();
+  }
 
-    @Override
-    public void verifyEmail(@NonNull UserId userId) {
-        var sql = """
-                UPDATE users
-                SET email_verified = TRUE
-                WHERE id = :userId
-                """;
-        jdbcClient.sql(sql).param("userId", userId.toString()).update();
-    }
+  @Override
+  public void verifyEmail(@NonNull UserId userId) {
+    var sql =
+        """
+        UPDATE users
+        SET email_verified = TRUE
+        WHERE id = :userId
+        """;
+    jdbcClient.sql(sql).param("userId", userId.toString()).update();
+  }
 
-    @Override
-    public void deleteOlderThan(@NonNull Duration cutoff) {
-        var sql = """
-                DELETE FROM email_verification_tokens
-                WHERE created_at < NOW() - INTERVAL ':duration seconds'
-                """;
-        jdbcClient.sql(sql).param("duration", cutoff.getSeconds()).update();
-    }
+  @Override
+  public void deleteOlderThan(@NonNull Duration cutoff) {
+    var sql =
+        """
+        DELETE FROM email_verification_tokens
+        WHERE created_at < NOW() - INTERVAL ':duration seconds'
+        """;
+    jdbcClient.sql(sql).param("duration", cutoff.getSeconds()).update();
+  }
 }

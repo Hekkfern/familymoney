@@ -3,7 +3,6 @@ package com.familymoney.familymoney.validation;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 import jakarta.validation.constraints.Pattern;
-
 import java.lang.annotation.*;
 
 final class EmailVerificationTokenValidationConstants {

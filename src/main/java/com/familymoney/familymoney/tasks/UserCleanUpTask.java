@@ -10,12 +10,12 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public final class UserCleanUpTask {
 
-    private final IUserRepository userRepository;
+  private final IUserRepository userRepository;
 
-    private final Duration DURATION_THRESHOLD_FOR_CLEANUP = Duration.ofDays(7);
+  private final Duration DURATION_THRESHOLD_FOR_CLEANUP = Duration.ofDays(7);
 
-    @Scheduled(cron = "@daily", zone = "UTC")
-    void execute() {
-        userRepository.deleteByIsUnverifiedAndOlderThan(DURATION_THRESHOLD_FOR_CLEANUP);
-    }
+  @Scheduled(cron = "@daily", zone = "UTC")
+  void execute() {
+    userRepository.deleteByIsUnverifiedAndOlderThan(DURATION_THRESHOLD_FOR_CLEANUP);
+  }
 }

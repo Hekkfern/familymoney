@@ -9,12 +9,12 @@ import org.springframework.lang.NonNull;
 
 public interface IPasswordResetRepository {
 
-    @NonNull
-    Optional<PasswordResetDbo> create(@NonNull UserId userId, @NonNull PasswordResetToken token,
-            @NonNull Instant expiresAt);
+  @NonNull
+  Optional<PasswordResetDbo> create(
+      @NonNull UserId userId, @NonNull PasswordResetToken token, @NonNull Instant expiresAt);
 
-    @NonNull
-    Optional<PasswordResetDbo> findByToken(@NonNull PasswordResetToken token);
+  @NonNull
+  Optional<PasswordResetDbo> findByToken(@NonNull PasswordResetToken token);
 
-    void deleteByUserId(@NonNull UserId userId);
+  void deleteByUserId(@NonNull UserId userId);
 }

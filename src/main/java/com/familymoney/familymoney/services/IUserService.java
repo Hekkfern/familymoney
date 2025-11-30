@@ -5,8 +5,8 @@ import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.Password;
 import com.familymoney.familymoney.types.UserId;
 import com.familymoney.familymoney.types.Username;
-import org.springframework.lang.NonNull;
 import java.util.Optional;
+import org.springframework.lang.NonNull;
 
 public interface IUserService {
 

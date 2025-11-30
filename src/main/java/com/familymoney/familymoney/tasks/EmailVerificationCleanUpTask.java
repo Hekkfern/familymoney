@@ -10,12 +10,12 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class EmailVerificationCleanUpTask {
 
-    private final IEmailVerificationRepository emailVerificationRepository;
+  private final IEmailVerificationRepository emailVerificationRepository;
 
-    private static final Duration DURATION_THRESHOLD_FOR_CLEANUP = Duration.ofDays(7);
+  private static final Duration DURATION_THRESHOLD_FOR_CLEANUP = Duration.ofDays(7);
 
-    @Scheduled(cron = "@daily", zone = "UTC")
-    public void execute() {
-        emailVerificationRepository.deleteOlderThan(DURATION_THRESHOLD_FOR_CLEANUP);
-    }
+  @Scheduled(cron = "@daily", zone = "UTC")
+  public void execute() {
+    emailVerificationRepository.deleteOlderThan(DURATION_THRESHOLD_FOR_CLEANUP);
+  }
 }

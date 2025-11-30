@@ -2,11 +2,11 @@ package com.familymoney.familymoney.repositories.dbos;
 
 import com.familymoney.familymoney.types.RefreshToken;
 import com.familymoney.familymoney.types.UserId;
-import lombok.Builder;
-import org.springframework.lang.NonNull;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
+import lombok.Builder;
+import org.springframework.lang.NonNull;
 
 @Builder
 public record RefreshTokenDbo(

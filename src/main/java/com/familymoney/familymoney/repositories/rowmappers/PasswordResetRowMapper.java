@@ -12,11 +12,12 @@ public final class PasswordResetRowMapper implements RowMapper<PasswordResetDbo>
 
   @Override
   public PasswordResetDbo mapRow(ResultSet rs, int rowNum) throws SQLException {
-    return new PasswordResetDbo(
-        UUID.fromString(rs.getString("id")),
-        new UserId(UUID.fromString(rs.getString("user_id"))),
-        new PasswordResetToken(rs.getString("token")),
-        rs.getTimestamp("expires_at").toInstant(),
-        rs.getTimestamp("created_at").toInstant());
+    return PasswordResetDbo.builder()
+        .id(UUID.fromString(rs.getString("id")))
+        .userId(new UserId(UUID.fromString(rs.getString("user_id"))))
+        .token(new PasswordResetToken(rs.getString("token")))
+        .createdAt(rs.getTimestamp("created_at").toInstant())
+        .expiresAt(rs.getTimestamp("expires_at").toInstant())
+        .build();
   }
 }

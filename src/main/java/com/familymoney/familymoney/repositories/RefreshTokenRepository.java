@@ -24,10 +24,10 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
       @NonNull UserId userId, @NonNull RefreshToken token, @NonNull UUID family) {
     var sql =
         """
-                INSERT INTO refresh_tokens (user_id, token, family)
-                VALUES (:userId, :token, :family)
-                RETURNING id, user_id, token, created_at, expires_at, is_used, used_at, family
-                """;
+        INSERT INTO refresh_tokens (user_id, token, family)
+        VALUES (:userId, :token, :family)
+        RETURNING id, user_id, token, created_at, expires_at, is_used, used_at, family
+        """;
     return jdbcClient
         .sql(sql)
         .param("userId", userId.toString())
@@ -42,10 +42,10 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
   public Optional<RefreshTokenDbo> findByToken(@NonNull RefreshToken token) {
     var sql =
         """
-                SELECT id, user_id, token, created_at, expires_at, is_used, used_at, family
-                FROM refresh_tokens
-                WHERE token = :token
-                """;
+        SELECT id, user_id, token, created_at, expires_at, is_used, used_at, family
+        FROM refresh_tokens
+        WHERE token = :token
+        """;
     return jdbcClient
         .sql(sql)
         .param("token", token.toString())
@@ -57,11 +57,11 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
   public void markTokenAsUsed(@NonNull RefreshToken token) {
     var sql =
         """
-                UPDATE refresh_tokens
-                SET is_used = TRUE,
-                    used_at = NOW()
-                WHERE token = :token
-                """;
+        UPDATE refresh_tokens
+        SET is_used = TRUE,
+            used_at = NOW()
+        WHERE token = :token
+        """;
     jdbcClient.sql(sql).param("token", token.toString()).update();
   }
 
@@ -69,10 +69,10 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
   public void invalidateByFamily(@NonNull UUID family) {
     var sql =
         """
-                UPDATE refresh_tokens
-                SET is_used = TRUE
-                WHERE family = :family
-                """;
+        UPDATE refresh_tokens
+        SET is_used = TRUE
+        WHERE family = :family
+        """;
     jdbcClient.sql(sql).param("family", family).update();
   }
 
@@ -80,10 +80,10 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
   public void invalidateByUserId(@NonNull UserId userId) {
     var sql =
         """
-                UPDATE refresh_tokens
-                SET is_used = TRUE
-                WHERE user_id = :userId
-                """;
+        UPDATE refresh_tokens
+        SET is_used = TRUE
+        WHERE user_id = :userId
+        """;
     jdbcClient.sql(sql).param("userId", userId.toString()).update();
   }
 
@@ -91,9 +91,9 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
   public void deleteOlderThan(@NonNull Duration cutoff) {
     var sql =
         """
-                DELETE FROM refresh_tokens
-                WHERE created_at < NOW() - INTERVAL ':duration seconds'
-                """;
+        DELETE FROM refresh_tokens
+        WHERE created_at < NOW() - INTERVAL ':duration seconds'
+        """;
     jdbcClient.sql(sql).param("duration", cutoff.toSeconds()).update();
   }
 }

@@ -19,27 +19,28 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class UserService implements IUserService {
 
-    private final IUserRepository userRepository;
+  private final IUserRepository userRepository;
 
-    @Override
-    @NonNull
-    public UserData getMyUserData(@NonNull UserId userId) {
-        val userOpt = userRepository.findById(userId);
-        if (userOpt.isEmpty()) {
-            throw new DatabaseExecutionException("User not found with id: $userId");
-        }
-        val user = userOpt.get();
-        return new UserData(user.username(), user.email(), user.createdAt());
+  @Override
+  @NonNull
+  public UserData getMyUserData(@NonNull UserId userId) {
+    val userOpt = userRepository.findById(userId);
+    if (userOpt.isEmpty()) {
+      throw new DatabaseExecutionException("User not found with id: $userId");
     }
+    val user = userOpt.get();
+    return new UserData(user.username(), user.email(), user.createdAt());
+  }
 
-    @Override
-    public void deleteMyUser(@NonNull UserId userId) {
-        userRepository.deleteById(userId);
-    }
+  @Override
+  public void deleteMyUser(@NonNull UserId userId) {
+    userRepository.deleteById(userId);
+  }
 
-    @Override
-    public void updateMyUser(@NonNull UserId userId, @NonNull Optional<Username> username,
-            @NonNull Optional<Email> email, @NonNull Optional<Password> password) {
-
-    }
+  @Override
+  public void updateMyUser(
+      @NonNull UserId userId,
+      @NonNull Optional<Username> username,
+      @NonNull Optional<Email> email,
+      @NonNull Optional<Password> password) {}
 }
