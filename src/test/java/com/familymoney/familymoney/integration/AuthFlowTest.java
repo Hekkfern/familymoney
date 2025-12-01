@@ -23,7 +23,10 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
 public class AuthFlowTest {
-  RestTestClient client;
+
+  // region Fields
+
+  private RestTestClient client;
 
   @MockitoBean private IEmailSenderService emailSenderService;
 
@@ -34,6 +37,8 @@ public class AuthFlowTest {
   private final String BASE_AUTH_URI = "/api/auth";
 
   @LocalServerPort private int port;
+
+  // endregion
 
   @BeforeEach
   public void setup() {
