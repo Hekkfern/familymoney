@@ -2,15 +2,21 @@ package com.familymoney.familymoney.unit.controllers;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
 
 import com.familymoney.familymoney.controllers.AuthController;
+import com.familymoney.familymoney.dtos.auth.LoginRequestDto;
 import com.familymoney.familymoney.dtos.auth.RegisterRequestDto;
 import com.familymoney.familymoney.repositories.IPermissionsRepository;
 import com.familymoney.familymoney.security.JwtUtil;
 import com.familymoney.familymoney.services.IAuthService;
+import com.familymoney.familymoney.services.TokenPair;
+import com.familymoney.familymoney.types.JwtToken;
+import com.familymoney.familymoney.types.RefreshToken;
 import com.familymoney.familymoney.utils.FakeGenerator;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -34,7 +40,12 @@ public class AuthControllerTest {
   @MockitoBean private JwtUtil jwtUtil;
   @MockitoBean private IPermissionsRepository permissionsRepository;
 
-  private final String BASE_AUTH_URI = "/api/auth";
+  // endregion
+
+  // region Constants
+
+  private static final String REGISTER_PATH = "/api/auth/register";
+  private static final String LOGIN_PATH = "/api/auth/login";
 
   // endregion
 
@@ -42,6 +53,8 @@ public class AuthControllerTest {
   public void setup() {
     client = RestTestClient.bindTo(mockMvc).build();
   }
+
+  // region /register Tests
 
   private static Stream<Arguments> provideValidRegisterParams() {
     return Stream.of(
@@ -59,11 +72,11 @@ public class AuthControllerTest {
 
   @ParameterizedTest
   @MethodSource("provideValidRegisterParams")
-  void AuthController_Register_CorrectParams(String username, String email, String password) {
+  void AuthController_Register_Successful(String username, String email, String password) {
     doNothing().when(authService).registerUser(any(), any(), any());
     client
         .post()
-        .uri(String.format("%s/register", BASE_AUTH_URI))
+        .uri(REGISTER_PATH)
         .body(new RegisterRequestDto(username, email, password))
         .exchange()
         .expectStatus()
@@ -92,7 +105,7 @@ public class AuthControllerTest {
     doNothing().when(authService).registerUser(any(), any(), any());
     client
         .post()
-        .uri(String.format("%s/register", BASE_AUTH_URI))
+        .uri(REGISTER_PATH)
         .body(new RegisterRequestDto(username, FakeGenerator.email(), FakeGenerator.password()))
         .exchange()
         .expectStatus()
@@ -116,8 +129,7 @@ public class AuthControllerTest {
     doNothing().when(authService).registerUser(any(), any(), any());
     client
         .post()
-        .uri(String.format("%s/register", BASE_AUTH_URI))
-        // keep username valid and vary email with the parameter under test
+        .uri(REGISTER_PATH)
         .body(new RegisterRequestDto(FakeGenerator.username(), email, FakeGenerator.password()))
         .exchange()
         .expectStatus()
@@ -141,11 +153,79 @@ public class AuthControllerTest {
     doNothing().when(authService).registerUser(any(), any(), any());
     client
         .post()
-        .uri(String.format("%s/register", BASE_AUTH_URI))
-        // keep username and email valid; vary password
+        .uri(REGISTER_PATH)
         .body(new RegisterRequestDto(FakeGenerator.username(), FakeGenerator.email(), password))
         .exchange()
         .expectStatus()
         .isBadRequest();
   }
+
+  // endregion
+
+  // region /login Tests
+
+  @Test
+  void AuthController_Login_Successful() {
+    when(authService.loginUser(any(), any()))
+        .thenReturn(new TokenPair(new JwtToken("aa"), new RefreshToken("bb")));
+    client
+        .post()
+        .uri(LOGIN_PATH)
+        .body(new LoginRequestDto(FakeGenerator.email(), FakeGenerator.password()))
+        .exchange()
+        .expectStatus()
+        .isOk();
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "", // empty
+        "plainaddress", // missing @ and domain
+        "@no-local-part.com", // missing local part
+        "no-at.domain.com", // missing @
+        "user@.com", // dot immediately after @
+        "user@domain..com", // consecutive dots in domain
+        "user@@domain.com", // double @
+        "user@domain,com", // comma instead of dot
+        " user@domain.com" // leading space
+      })
+  void AuthController_Login_InvalidParam_Email(String email) {
+    when(authService.loginUser(any(), any()))
+        .thenReturn(new TokenPair(new JwtToken("aa"), new RefreshToken("bb")));
+    client
+        .post()
+        .uri(LOGIN_PATH)
+        .body(new LoginRequestDto(email, FakeGenerator.password()))
+        .exchange()
+        .expectStatus()
+        .isBadRequest();
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "Short1!", // too short (<12)
+        "alllowercase1!", // missing uppercase
+        "ALLUPPERCASE1!", // missing lowercase
+        "NoDigitPassword!", // missing digit
+        "NoSpecialChar1A", // missing special character
+        "Invalid#Char1A", // '#' not allowed in charset
+        "Contains Space1!", // spaces are invalid
+        "\tTabInPassword1!", // control character (tab)
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", // >64 chars
+      })
+  void AuthController_Login_InvalidParam_Password(String password) {
+    when(authService.loginUser(any(), any()))
+        .thenReturn(new TokenPair(new JwtToken("aa"), new RefreshToken("bb")));
+    client
+        .post()
+        .uri(LOGIN_PATH)
+        .body(new LoginRequestDto(FakeGenerator.email(), password))
+        .exchange()
+        .expectStatus()
+        .isBadRequest();
+  }
+
+  // endregion
 }

@@ -3,7 +3,7 @@ package com.familymoney.familymoney.utils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.jspecify.annotations.NonNull;
 
-public class FakeGenerator {
+public final class FakeGenerator {
 
   private static final String LOWER_CHARACTERS = "abcdefghijklmnopqrstuvwxyz";
   private static final String UPPER_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
