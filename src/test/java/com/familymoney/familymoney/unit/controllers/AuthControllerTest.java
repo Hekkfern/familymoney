@@ -11,6 +11,8 @@ import com.familymoney.familymoney.services.IAuthService;
 import com.familymoney.familymoney.utils.FakeGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -53,13 +55,22 @@ public class AuthControllerTest {
         .isOk();
   }
 
-  @Test
-  void AuthController_Register_InvalidParams() {
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "",
+        "a",
+        "1",
+        "1aaa",
+        "a21354.asd",
+        "thisusernameiswaytoolongtobevalid2s1af54saf54s5daf6s541f65as1"
+      })
+  void AuthController_Register_InvalidParam_Username(String username) {
     doNothing().when(authService).registerUser(any(), any(), any());
     client
         .post()
         .uri(String.format("%s/register", BASE_AUTH_URI))
-        .body(new RegisterRequestDto("", FakeGenerator.email(), FakeGenerator.password()))
+        .body(new RegisterRequestDto(username, FakeGenerator.email(), FakeGenerator.password()))
         .exchange()
         .expectStatus()
         .isBadRequest();
