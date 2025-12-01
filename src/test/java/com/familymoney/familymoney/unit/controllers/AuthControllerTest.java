@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import com.familymoney.familymoney.controllers.AuthController;
 import com.familymoney.familymoney.dtos.auth.LoginRequestDto;
+import com.familymoney.familymoney.dtos.auth.RefreshTokenRequestDto;
 import com.familymoney.familymoney.dtos.auth.RegisterRequestDto;
 import com.familymoney.familymoney.repositories.IPermissionsRepository;
 import com.familymoney.familymoney.security.JwtUtil;
@@ -19,8 +20,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.FieldSource;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -46,6 +47,8 @@ public class AuthControllerTest {
 
   private static final String REGISTER_PATH = "/api/auth/register";
   private static final String LOGIN_PATH = "/api/auth/login";
+  private static final String VERIFY_EMAIL_PATH = "/api/auth/verify-email/%s";
+  private static final String REFRESH_PATH = "/api/auth/refresh";
 
   // endregion
 
@@ -65,7 +68,7 @@ public class AuthControllerTest {
         // hyphen in username, dot in local-part
         Arguments.of("john-doe", "john.doe@example.com", "Password123$!"),
         // max-length username (32 chars): 'a' + 31 'b'
-        Arguments.of("a" + "b".repeat(31), "long.user@example-domain.com", "Zz9@" + "a".repeat(10)),
+        Arguments.of("a" + "b".repeat(31), "long.user@example-domain.com", "Zz9@aaaaaaaaaaa"),
         // another valid combination with mixed allowed specials in password (ensure >=12 chars)
         Arguments.of("alpha1", "alpha1@mail.example.org", "GoodPass1@$a"));
   }
@@ -84,23 +87,7 @@ public class AuthControllerTest {
   }
 
   @ParameterizedTest
-  @ValueSource(
-      strings = {
-        "", // empty
-        "a", // length 1 (too short)
-        "ab", // length 2 (too short)
-        "1abc", // starts with digit
-        "-abc", // starts with hyphen
-        "_abc", // starts with underscore
-        "Abc", // starts with uppercase letter
-        "aBc", // contains uppercase letter
-        "a21354.asd", // contains dot
-        "user name", // contains space
-        "user@name", // contains @
-        "user,name", // contains comma
-        "user$money", // contains $
-        "thisusernameiswaytoolongtobevalid2s1af54saf54s5daf6s541f65as1", // >32 chars (too long)
-      })
+  @FieldSource("com.familymoney.familymoney.utils.TestDataFactory#INVALID_USERNAMES")
   void AuthController_Register_InvalidParam_Username(String username) {
     doNothing().when(authService).registerUser(any(), any(), any());
     client
@@ -113,18 +100,7 @@ public class AuthControllerTest {
   }
 
   @ParameterizedTest
-  @ValueSource(
-      strings = {
-        "", // empty
-        "plainaddress", // missing @ and domain
-        "@no-local-part.com", // missing local part
-        "no-at.domain.com", // missing @
-        "user@.com", // dot immediately after @
-        "user@domain..com", // consecutive dots in domain
-        "user@@domain.com", // double @
-        "user@domain,com", // comma instead of dot
-        " user@domain.com" // leading space
-      })
+  @FieldSource("com.familymoney.familymoney.utils.TestDataFactory#INVALID_EMAILS")
   void AuthController_Register_InvalidParam_Email(String email) {
     doNothing().when(authService).registerUser(any(), any(), any());
     client
@@ -137,18 +113,7 @@ public class AuthControllerTest {
   }
 
   @ParameterizedTest
-  @ValueSource(
-      strings = {
-        "Short1!", // too short (<12)
-        "alllowercase1!", // missing uppercase
-        "ALLUPPERCASE1!", // missing lowercase
-        "NoDigitPassword!", // missing digit
-        "NoSpecialChar1A", // missing special character
-        "Invalid#Char1A", // '#' not allowed in charset
-        "Contains Space1!", // spaces are invalid
-        "\tTabInPassword1!", // control character (tab)
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", // >64 chars
-      })
+  @FieldSource("com.familymoney.familymoney.utils.TestDataFactory#INVALID_PASSWORDS")
   void AuthController_Register_InvalidParam_Password(String password) {
     doNothing().when(authService).registerUser(any(), any(), any());
     client
@@ -164,32 +129,36 @@ public class AuthControllerTest {
 
   // region /login Tests
 
-  @Test
-  void AuthController_Login_Successful() {
+  private static Stream<Arguments> provideValidLoginParams() {
+    return Stream.of(
+        // minimal valid password length (12), simple username
+        Arguments.of("hector.fernandez+dev@example.com", "StrongPass1!"),
+        // underscore in username, plus-addressing and multi-part TLD
+        Arguments.of("user+tag@example.co.uk", "Aa1$aaaaaaaa"),
+        // hyphen in username, dot in local-part
+        Arguments.of("john.doe@example.com", "Password123$!"),
+        // max-length username (32 chars): 'a' + 31 'b'
+        Arguments.of("long.user@example-domain.com", "Zz9@aaaaaaaaaaa"),
+        // another valid combination with mixed allowed specials in password (ensure >=12 chars)
+        Arguments.of("alpha1@mail.example.org", "GoodPass1@$a"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("provideValidLoginParams")
+  void AuthController_Login_Successful(String email, String password) {
     when(authService.loginUser(any(), any()))
         .thenReturn(new TokenPair(new JwtToken("aa"), new RefreshToken("bb")));
     client
         .post()
         .uri(LOGIN_PATH)
-        .body(new LoginRequestDto(FakeGenerator.email(), FakeGenerator.password()))
+        .body(new LoginRequestDto(email, password))
         .exchange()
         .expectStatus()
         .isOk();
   }
 
   @ParameterizedTest
-  @ValueSource(
-      strings = {
-        "", // empty
-        "plainaddress", // missing @ and domain
-        "@no-local-part.com", // missing local part
-        "no-at.domain.com", // missing @
-        "user@.com", // dot immediately after @
-        "user@domain..com", // consecutive dots in domain
-        "user@@domain.com", // double @
-        "user@domain,com", // comma instead of dot
-        " user@domain.com" // leading space
-      })
+  @FieldSource("com.familymoney.familymoney.utils.TestDataFactory#INVALID_EMAILS")
   void AuthController_Login_InvalidParam_Email(String email) {
     when(authService.loginUser(any(), any()))
         .thenReturn(new TokenPair(new JwtToken("aa"), new RefreshToken("bb")));
@@ -203,18 +172,7 @@ public class AuthControllerTest {
   }
 
   @ParameterizedTest
-  @ValueSource(
-      strings = {
-        "Short1!", // too short (<12)
-        "alllowercase1!", // missing uppercase
-        "ALLUPPERCASE1!", // missing lowercase
-        "NoDigitPassword!", // missing digit
-        "NoSpecialChar1A", // missing special character
-        "Invalid#Char1A", // '#' not allowed in charset
-        "Contains Space1!", // spaces are invalid
-        "\tTabInPassword1!", // control character (tab)
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", // >64 chars
-      })
+  @FieldSource("com.familymoney.familymoney.utils.TestDataFactory#INVALID_PASSWORDS")
   void AuthController_Login_InvalidParam_Password(String password) {
     when(authService.loginUser(any(), any()))
         .thenReturn(new TokenPair(new JwtToken("aa"), new RefreshToken("bb")));
@@ -222,6 +180,65 @@ public class AuthControllerTest {
         .post()
         .uri(LOGIN_PATH)
         .body(new LoginRequestDto(FakeGenerator.email(), password))
+        .exchange()
+        .expectStatus()
+        .isBadRequest();
+  }
+
+  // endregion
+
+  // region /verify-email/{token} Tests
+
+  @Test
+  void AuthController_VerifyEmail_Successful() {
+    doNothing().when(authService).verifyEmail(any());
+    client
+        .get()
+        .uri(
+            String.format(
+                VERIFY_EMAIL_PATH,
+                "nBErlAqusirf5ylhUWY65j3ortHBtaD75wxHQ4Q3yFE3jUnViVpyBtkEvvyXw1Yh"))
+        .exchange()
+        .expectStatus()
+        .isOk();
+  }
+
+  @Test
+  void AuthController_VerifyEmail_InvalidParam_Token() {
+    doNothing().when(authService).verifyEmail(any());
+    client
+        .get()
+        .uri(String.format(VERIFY_EMAIL_PATH, "nBErlAqusirf5!ylhUWY65j+)1Yh"))
+        .exchange()
+        .expectStatus()
+        .isBadRequest();
+  }
+
+  // endregion
+
+  // region /refresh Tests
+
+  @Test
+  void AuthController_Refresh_Successful() {
+    when(authService.refreshTokens(any()))
+        .thenReturn(new TokenPair(new JwtToken("aa"), new RefreshToken("bb")));
+    client
+        .post()
+        .uri(REFRESH_PATH)
+        .body(new RefreshTokenRequestDto(FakeGenerator.refreshToken()))
+        .exchange()
+        .expectStatus()
+        .isOk();
+  }
+
+  @Test
+  void AuthController_Refresh_InvalidParam_Token() {
+    when(authService.refreshTokens(any()))
+        .thenReturn(new TokenPair(new JwtToken("aa"), new RefreshToken("bb")));
+    client
+        .post()
+        .uri(REFRESH_PATH)
+        .body(new RefreshTokenRequestDto("fdsfs!ffg231154"))
         .exchange()
         .expectStatus()
         .isBadRequest();

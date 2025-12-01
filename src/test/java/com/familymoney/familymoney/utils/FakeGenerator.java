@@ -24,4 +24,10 @@ public final class FakeGenerator {
         + random.next(4, NUMBER_CHARACTERS)
         + "!";
   }
+
+  public static @NonNull String refreshToken() {
+    return random.next(12, UPPER_CHARACTERS)
+        + random.next(10, LOWER_CHARACTERS)
+        + random.next(10, NUMBER_CHARACTERS);
+  }
 }
