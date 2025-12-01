@@ -9,9 +9,11 @@ import com.familymoney.familymoney.repositories.IPermissionsRepository;
 import com.familymoney.familymoney.security.JwtUtil;
 import com.familymoney.familymoney.services.IAuthService;
 import com.familymoney.familymoney.utils.FakeGenerator;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -41,15 +43,28 @@ public class AuthControllerTest {
     client = RestTestClient.bindTo(mockMvc).build();
   }
 
-  @Test
-  void AuthController_Register_CorrectParams() {
+  private static Stream<Arguments> provideValidRegisterParams() {
+    return Stream.of(
+        // minimal valid password length (12), simple username
+        Arguments.of("hector", "hector.fernandez+dev@example.com", "StrongPass1!"),
+        // underscore in username, plus-addressing and multi-part TLD
+        Arguments.of("user_123", "user+tag@example.co.uk", "Aa1$aaaaaaaa"),
+        // hyphen in username, dot in local-part
+        Arguments.of("john-doe", "john.doe@example.com", "Password123$!"),
+        // max-length username (32 chars): 'a' + 31 'b'
+        Arguments.of("a" + "b".repeat(31), "long.user@example-domain.com", "Zz9@" + "a".repeat(10)),
+        // another valid combination with mixed allowed specials in password (ensure >=12 chars)
+        Arguments.of("alpha1", "alpha1@mail.example.org", "GoodPass1@$a"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("provideValidRegisterParams")
+  void AuthController_Register_CorrectParams(String username, String email, String password) {
     doNothing().when(authService).registerUser(any(), any(), any());
     client
         .post()
         .uri(String.format("%s/register", BASE_AUTH_URI))
-        .body(
-            new RegisterRequestDto(
-                FakeGenerator.username(), FakeGenerator.email(), FakeGenerator.password()))
+        .body(new RegisterRequestDto(username, email, password))
         .exchange()
         .expectStatus()
         .isOk();
