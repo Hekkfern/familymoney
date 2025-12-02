@@ -14,6 +14,7 @@ import com.familymoney.familymoney.services.IAuthService;
 import com.familymoney.familymoney.services.TokenPair;
 import com.familymoney.familymoney.types.JwtToken;
 import com.familymoney.familymoney.types.RefreshToken;
+import com.familymoney.familymoney.utils.AuthControllerUriFactory;
 import com.familymoney.familymoney.utils.FakeGenerator;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,15 +41,6 @@ public class AuthControllerTests {
   @MockitoBean private IAuthService authService;
   @MockitoBean private JwtUtil jwtUtil;
   @MockitoBean private IPermissionsRepository permissionsRepository;
-
-  // endregion
-
-  // region Constants
-
-  private static final String REGISTER_PATH = "/api/auth/register";
-  private static final String LOGIN_PATH = "/api/auth/login";
-  private static final String VERIFY_EMAIL_PATH = "/api/auth/verify-email/%s";
-  private static final String REFRESH_PATH = "/api/auth/refresh";
 
   // endregion
 
@@ -79,7 +71,7 @@ public class AuthControllerTests {
     doNothing().when(authService).registerUser(any(), any(), any());
     client
         .post()
-        .uri(REGISTER_PATH)
+        .uri(AuthControllerUriFactory.getRegisterPath())
         .body(new RegisterRequestDto(username, email, password))
         .exchange()
         .expectStatus()
@@ -92,7 +84,7 @@ public class AuthControllerTests {
     doNothing().when(authService).registerUser(any(), any(), any());
     client
         .post()
-        .uri(REGISTER_PATH)
+        .uri(AuthControllerUriFactory.getRegisterPath())
         .body(new RegisterRequestDto(username, FakeGenerator.email(), FakeGenerator.password()))
         .exchange()
         .expectStatus()
@@ -105,7 +97,7 @@ public class AuthControllerTests {
     doNothing().when(authService).registerUser(any(), any(), any());
     client
         .post()
-        .uri(REGISTER_PATH)
+        .uri(AuthControllerUriFactory.getRegisterPath())
         .body(new RegisterRequestDto(FakeGenerator.username(), email, FakeGenerator.password()))
         .exchange()
         .expectStatus()
@@ -118,7 +110,7 @@ public class AuthControllerTests {
     doNothing().when(authService).registerUser(any(), any(), any());
     client
         .post()
-        .uri(REGISTER_PATH)
+        .uri(AuthControllerUriFactory.getRegisterPath())
         .body(new RegisterRequestDto(FakeGenerator.username(), FakeGenerator.email(), password))
         .exchange()
         .expectStatus()
@@ -150,7 +142,7 @@ public class AuthControllerTests {
         .thenReturn(new TokenPair(new JwtToken("aa"), new RefreshToken("bb")));
     client
         .post()
-        .uri(LOGIN_PATH)
+        .uri(AuthControllerUriFactory.getLoginPath())
         .body(new LoginRequestDto(email, password))
         .exchange()
         .expectStatus()
@@ -164,7 +156,7 @@ public class AuthControllerTests {
         .thenReturn(new TokenPair(new JwtToken("aa"), new RefreshToken("bb")));
     client
         .post()
-        .uri(LOGIN_PATH)
+        .uri(AuthControllerUriFactory.getLoginPath())
         .body(new LoginRequestDto(email, FakeGenerator.password()))
         .exchange()
         .expectStatus()
@@ -178,7 +170,7 @@ public class AuthControllerTests {
         .thenReturn(new TokenPair(new JwtToken("aa"), new RefreshToken("bb")));
     client
         .post()
-        .uri(LOGIN_PATH)
+        .uri(AuthControllerUriFactory.getLoginPath())
         .body(new LoginRequestDto(FakeGenerator.email(), password))
         .exchange()
         .expectStatus()
@@ -195,8 +187,7 @@ public class AuthControllerTests {
     client
         .get()
         .uri(
-            String.format(
-                VERIFY_EMAIL_PATH,
+            AuthControllerUriFactory.getVerifyEmailPath(
                 "nBErlAqusirf5ylhUWY65j3ortHBtaD75wxHQ4Q3yFE3jUnViVpyBtkEvvyXw1Yh"))
         .exchange()
         .expectStatus()
@@ -208,7 +199,7 @@ public class AuthControllerTests {
     doNothing().when(authService).verifyEmail(any());
     client
         .get()
-        .uri(String.format(VERIFY_EMAIL_PATH, "nBErlAqusirf5!ylhUWY65j+)1Yh"))
+        .uri(AuthControllerUriFactory.getVerifyEmailPath("nBErlAqusirf5!ylhUWY65j+)1Yh"))
         .exchange()
         .expectStatus()
         .isBadRequest();
@@ -224,7 +215,7 @@ public class AuthControllerTests {
         .thenReturn(new TokenPair(new JwtToken("aa"), new RefreshToken("bb")));
     client
         .post()
-        .uri(REFRESH_PATH)
+        .uri(AuthControllerUriFactory.getRefreshPath())
         .body(new RefreshTokenRequestDto(FakeGenerator.refreshToken()))
         .exchange()
         .expectStatus()
@@ -237,7 +228,7 @@ public class AuthControllerTests {
         .thenReturn(new TokenPair(new JwtToken("aa"), new RefreshToken("bb")));
     client
         .post()
-        .uri(REFRESH_PATH)
+        .uri(AuthControllerUriFactory.getRefreshPath())
         .body(new RefreshTokenRequestDto("fdsfs!ffg231154"))
         .exchange()
         .expectStatus()

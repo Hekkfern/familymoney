@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import com.familymoney.familymoney.dtos.auth.RegisterRequestDto;
 import com.familymoney.familymoney.services.IEmailSenderService;
 import com.familymoney.familymoney.types.EmailVerificationToken;
+import com.familymoney.familymoney.utils.AuthControllerUriFactory;
 import com.familymoney.familymoney.utils.FakeGenerator;
 import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,7 +54,7 @@ public class AuthFlowTests {
     // register the new user
     client
         .post()
-        .uri(String.format("%s/register", BASE_AUTH_URI))
+        .uri(AuthControllerUriFactory.getRegisterPath())
         .body(
             new RegisterRequestDto(
                 FakeGenerator.username(), FakeGenerator.email(), FakeGenerator.password()))
@@ -71,7 +72,7 @@ public class AuthFlowTests {
     // verify email
     client
         .get()
-        .uri(String.format("%s/verify-email/%s", BASE_AUTH_URI, verificationToken))
+        .uri(AuthControllerUriFactory.getVerifyEmailPath(verificationToken.value()))
         .exchange()
         .expectStatus()
         .isOk()
