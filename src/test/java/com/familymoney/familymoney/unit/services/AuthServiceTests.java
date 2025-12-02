@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import com.familymoney.familymoney.exceptions.DatabaseExecutionException;
 import com.familymoney.familymoney.exceptions.UserAlreadyExistsException;
 import com.familymoney.familymoney.repositories.IEmailVerificationRepository;
 import com.familymoney.familymoney.repositories.IPermissionsRepository;
@@ -84,6 +85,46 @@ public class AuthServiceTests {
 
     assertThrows(
         UserAlreadyExistsException.class,
+        () ->
+            authService.registerUser(
+                new Username(FakeGenerator.username()),
+                new Email(FakeGenerator.email()),
+                new Password(FakeGenerator.password())));
+  }
+
+  @Test
+  public void register_user_but_user_table_fails() {
+    when(userRepository.existsByEmailOrUsername(any(), any())).thenReturn(false);
+    when(userRepository.create(any(), any(), any())).thenReturn(Optional.empty());
+
+    assertThrows(
+        DatabaseExecutionException.class,
+        () ->
+            authService.registerUser(
+                new Username(FakeGenerator.username()),
+                new Email(FakeGenerator.email()),
+                new Password(FakeGenerator.password())));
+  }
+
+  @Test
+  public void register_user_but_email_verification_table_fails() {
+    when(userRepository.existsByEmailOrUsername(any(), any())).thenReturn(false);
+    when(userRepository.create(any(), any(), any()))
+        .thenReturn(
+            Optional.of(
+                new UserDbo(
+                    new UserId(UUID.randomUUID()),
+                    new Username("testuser"),
+                    new Email("test@mail.com"),
+                    "dsafjhadskjgf5dsf56a4",
+                    Instant.now(),
+                    Instant.now(),
+                    false,
+                    true)));
+    when(emailVerificationRepository.create(any(), any(), any())).thenReturn(Optional.empty());
+
+    assertThrows(
+        DatabaseExecutionException.class,
         () ->
             authService.registerUser(
                 new Username(FakeGenerator.username()),
