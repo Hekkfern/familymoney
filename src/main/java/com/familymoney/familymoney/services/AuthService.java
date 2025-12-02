@@ -238,7 +238,7 @@ public class AuthService implements IAuthService {
     }
     val refreshTokenFromDb = refreshTokenFromDbOpt.get();
     // Check if the refresh token is valid
-    if (refreshTokenFromDb.isValid()) {
+    if (!refreshTokenFromDb.isValid()) {
       val msg = "Invalid refresh token";
       log.trace(msg);
       throw new InvalidRefreshTokenException(msg);
