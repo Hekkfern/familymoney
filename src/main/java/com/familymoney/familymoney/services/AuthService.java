@@ -53,6 +53,7 @@ public class AuthService implements IAuthService {
    * @param userId Identifier of the user to generate the token for
    * @return The stored email verification token database object
    */
+  @NonNull
   private EmailVerificationDbo generateAndStoreEmailVerificationToken(@NonNull UserId userId) {
     final int MAX_NUM_ATTEMPTS = 3;
     final Duration VERIFICATION_TOKEN_EXPIRY = Duration.ofHours(24);

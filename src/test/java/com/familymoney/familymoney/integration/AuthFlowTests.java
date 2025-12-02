@@ -22,7 +22,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
-public class AuthFlowTest {
+public class AuthFlowTests {
 
   // region Fields
 

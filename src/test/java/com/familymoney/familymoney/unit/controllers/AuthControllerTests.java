@@ -29,7 +29,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 @WebMvcTest(controllers = AuthController.class)
-public class AuthControllerTest {
+public class AuthControllerTests {
 
   // region Fields
 
