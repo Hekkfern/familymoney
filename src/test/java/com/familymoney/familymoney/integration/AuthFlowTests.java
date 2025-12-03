@@ -9,6 +9,7 @@ import com.familymoney.familymoney.types.EmailVerificationToken;
 import com.familymoney.familymoney.utils.AuthControllerUriFactory;
 import com.familymoney.familymoney.utils.FakeGenerator;
 import lombok.val;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
@@ -17,6 +18,8 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.http.HttpStatus;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.client.RestTestClient;
 import org.testcontainers.junit.jupiter.Container;
@@ -26,6 +29,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
+@ActiveProfiles("test")
 public class AuthFlowTests {
 
   // region Fields
@@ -42,23 +46,18 @@ public class AuthFlowTests {
 
   // endregion
 
-  @BeforeEach
-  public void setup() {
-    client = RestTestClient.bindToServer().baseUrl("http://localhost:" + port).build();
-  }
+  // region Helpers
 
-  @Test
-  void Flow_Successful_register_login_refresh_and_logout() {
+  private void registerAndVerifyNewUser(
+      @NonNull String username, @NonNull String email, @NonNull String password) {
     // Mock email sender
     val verificationTokenCaptor = ArgumentCaptor.forClass(EmailVerificationToken.class);
 
     // register the new user
-    val email = FakeGenerator.email();
-    val password = FakeGenerator.password();
     client
         .post()
         .uri(AuthControllerUriFactory.getRegisterPath())
-        .body(new RegisterRequestDto(FakeGenerator.username(), email, password))
+        .body(new RegisterRequestDto(username, email, password))
         .exchange()
         .expectStatus()
         .isOk()
@@ -79,8 +78,10 @@ public class AuthFlowTests {
         .isOk()
         .expectBody()
         .isEmpty();
+  }
 
-    // login
+  @NonNull
+  private String[] loginUser(@NonNull String email, @NonNull String password) {
     val loginResponse =
         client
             .post()
@@ -92,9 +93,11 @@ public class AuthFlowTests {
             .expectBody(LoginResponseDto.class)
             .returnResult()
             .getResponseBody();
-    val refreshToken = loginResponse.refreshToken();
+    return new String[] {loginResponse.accessToken(), loginResponse.refreshToken()};
+  }
 
-    // refresh
+  @NonNull
+  private String[] refreshTokens(@NonNull String refreshToken) {
     val refreshResponse =
         client
             .post()
@@ -106,17 +109,62 @@ public class AuthFlowTests {
             .expectBody(RefreshResponseDto.class)
             .returnResult()
             .getResponseBody();
-    val newRefreshToken = refreshResponse.refreshToken();
+    return new String[] {refreshResponse.accessToken(), refreshResponse.refreshToken()};
+  }
 
-    // logout
+  private void logoutUser(@NonNull String refreshToken) {
     client
         .post()
         .uri(AuthControllerUriFactory.getLogoutPath())
-        .body(new LogoutRequestDto(newRefreshToken))
+        .body(new LogoutRequestDto(refreshToken))
         .exchange()
         .expectStatus()
         .isOk()
         .expectBody()
         .isEmpty();
+  }
+
+  // endregion
+
+  @BeforeEach
+  public void setup() {
+    client = RestTestClient.bindToServer().baseUrl("http://localhost:" + port).build();
+  }
+
+  @Test
+  void Flow_Successful_register_login_refresh_and_logout() {
+    // register and verify a new user
+    val username = FakeGenerator.username();
+    val email = FakeGenerator.email();
+    val password = FakeGenerator.password();
+    registerAndVerifyNewUser(username, email, password);
+
+    // login
+    val tokens = loginUser(email, password);
+    val refreshToken = tokens[1];
+
+    // refresh
+    val newTokens = refreshTokens(refreshToken);
+    val newRefreshToken = newTokens[1];
+
+    // logout
+    logoutUser(newRefreshToken);
+  }
+
+  @Test
+  void Flow_Register_with_existing_email_fails() {
+    // register and verify a new user
+    val username = FakeGenerator.username();
+    val email = FakeGenerator.email();
+    val password = FakeGenerator.password();
+    registerAndVerifyNewUser(username, email, password);
+    // register again with the same email
+    client
+        .post()
+        .uri(AuthControllerUriFactory.getRegisterPath())
+        .body(new RegisterRequestDto(username, email, password))
+        .exchange()
+        .expectStatus()
+        .isEqualTo(HttpStatus.CONFLICT);
   }
 }

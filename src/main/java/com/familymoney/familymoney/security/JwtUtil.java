@@ -1,7 +1,7 @@
 package com.familymoney.familymoney.security;
 
-import com.familymoney.familymoney.config.AppProperties;
-import com.familymoney.familymoney.config.JwtProperties;
+import com.familymoney.familymoney.properties.AppProperties;
+import com.familymoney.familymoney.properties.JwtProperties;
 import com.familymoney.familymoney.types.JwtToken;
 import com.familymoney.familymoney.types.UserId;
 import io.jsonwebtoken.Claims;
