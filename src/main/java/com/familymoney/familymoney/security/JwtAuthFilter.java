@@ -37,7 +37,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     if (authHeader != null && authHeader.startsWith(BEARER_PREFIX)) {
       rawToken = Strings.CI.removeStart(authHeader, BEARER_PREFIX);
     }
-    if (rawToken != null) {
+    if (rawToken == null) {
       // skip
       filterChain.doFilter(request, response);
       return;
@@ -55,7 +55,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         permissionsRepository.getPermissionsByUserId(UserId.fromString(accessToken.getSubject()));
     val permissions = permissionsFromDb.stream().map(SimpleGrantedAuthority::new).toList();
     // set authorization
-    val auth = new UsernamePasswordAuthenticationToken(accessToken.getSubject(), null, permissions);
+    val auth =
+        new UsernamePasswordAuthenticationToken(
+            UserId.fromString(accessToken.getSubject()), null, permissions);
     SecurityContextHolder.getContext().setAuthentication(auth);
     // finish
     filterChain.doFilter(request, response);
