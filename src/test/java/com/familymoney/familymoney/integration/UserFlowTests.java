@@ -1,5 +1,6 @@
 package com.familymoney.familymoney.integration;
 
+import static com.familymoney.familymoney.utils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -42,7 +43,7 @@ public class UserFlowTests {
 
   @Container @ServiceConnection
   private static final PostgreSQLContainer postgresContainer =
-      new PostgreSQLContainer("postgres:17.6-alpine");
+      new PostgreSQLContainer(POSTGRESQL_CONTAINER_IMAGE);
 
   @LocalServerPort private int port;
 
