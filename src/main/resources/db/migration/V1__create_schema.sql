@@ -29,7 +29,7 @@ $$ language plpgsql;
 
 CREATE TABLE users
 (
-    id              UUID PRIMARY KEY                  DEFAULT gen_random_uuid(),
+    id              UUID PRIMARY KEY                  DEFAULT uuidv7(),
     username        VARCHAR(128) UNIQUE      NOT NULL,
     email           VARCHAR(255) UNIQUE      NOT NULL,
     hashed_password VARCHAR(255)             NOT NULL,
@@ -116,7 +116,7 @@ VALUES (1, 1),
 
 CREATE TABLE email_verification_tokens
 (
-    id         UUID PRIMARY KEY                  DEFAULT gen_random_uuid(),
+    id         UUID PRIMARY KEY                  DEFAULT uuidv7(),
     user_id    UUID                     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     token      VARCHAR(255) UNIQUE      NOT NULL,
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -130,7 +130,7 @@ CREATE INDEX idx_email_verification_tokens_expires_at ON email_verification_toke
 
 CREATE TABLE password_reset_tokens
 (
-    id         UUID PRIMARY KEY                  DEFAULT gen_random_uuid(),
+    id         UUID PRIMARY KEY                  DEFAULT uuidv7(),
     user_id    UUID                     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     token      VARCHAR(255) UNIQUE      NOT NULL,
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -144,7 +144,7 @@ CREATE INDEX idx_password_reset_tokens_expires_at ON password_reset_tokens (expi
 
 CREATE TABLE refresh_tokens
 (
-    id         UUID PRIMARY KEY                  DEFAULT gen_random_uuid(),
+    id         UUID PRIMARY KEY                  DEFAULT uuidv7(),
     user_id    UUID                     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     token      VARCHAR(255) UNIQUE      NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
@@ -164,7 +164,7 @@ CREATE INDEX idx_refresh_tokens_token ON refresh_tokens (token);
 
 CREATE TABLE shops
 (
-    id              UUID PRIMARY KEY                  DEFAULT gen_random_uuid(),
+    id              UUID PRIMARY KEY                  DEFAULT uuidv7(),
     name            VARCHAR(255)             NOT NULL,
     google_place_id VARCHAR(255) UNIQUE      NOT NULL,
     location        POINT                    NOT NULL,
@@ -192,7 +192,7 @@ CREATE TABLE shop_shop_types
 
 CREATE TABLE votes
 (
-    id           UUID PRIMARY KEY                  DEFAULT gen_random_uuid(),
+    id           UUID PRIMARY KEY                  DEFAULT uuidv7(),
     user_id      UUID                     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     shop_id      UUID                     NOT NULL REFERENCES shops (id) ON DELETE CASCADE,
     card_type_id INTEGER                  NOT NULL REFERENCES card_types (id) ON DELETE CASCADE,

@@ -113,7 +113,7 @@ public class UserFlowTests {
   }
 
   @Test
-  void Flow_Get_user_data_successfully() {
+  void Flow_Get_user_data_when_logged_in() {
     // Register and login user
     val username = FakeGenerator.username();
     val email = FakeGenerator.email();
@@ -133,5 +133,17 @@ public class UserFlowTests {
             .getResponseBody();
     assertEquals(username, userDataResponse.username());
     assertEquals(email, userDataResponse.email());
+  }
+
+  @Test
+  void Flow_Get_user_data_when_not_logged_in() {
+    // Get user data without logging in
+    val userDataResponse =
+        client
+            .get()
+            .uri(UserControllerUriFactory.getMePath())
+            .exchange()
+            .expectStatus()
+            .isForbidden();
   }
 }
