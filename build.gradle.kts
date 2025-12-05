@@ -7,7 +7,7 @@ plugins {
 
 group = "com.familymoney"
 version = "1.0.0"
-description = "Backend of the FamilyMoney application"
+description = "Backend of the \"Family Money\" application"
 
 java {
     toolchain {

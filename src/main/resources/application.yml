@@ -42,6 +42,8 @@ management:
 springdoc:
   swagger-ui:
     display-request-duration: true
+    show-extensions: true
+    show-common-extensions: true
   show-actuator: true
   cache:
     disabled: true
