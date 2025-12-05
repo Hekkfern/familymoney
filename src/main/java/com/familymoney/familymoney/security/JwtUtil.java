@@ -27,7 +27,7 @@ public class JwtUtil {
 
   @NonNull
   private SecretKey getSigningKey() {
-    return Keys.hmacShaKeyFor(jwtProperties.getKey().getBytes(StandardCharsets.UTF_8));
+    return Keys.hmacShaKeyFor(jwtProperties.key().getBytes(StandardCharsets.UTF_8));
   }
 
   @NonNull
@@ -40,9 +40,9 @@ public class JwtUtil {
             .subject(userId.value().toString())
             .issuedAt(Date.from(now))
             .expiration(Date.from(expiryDate))
-            .issuer(appProperties.getName())
+            .issuer(appProperties.name())
             .audience()
-            .add(appProperties.getName())
+            .add(appProperties.name())
             .and()
             .signWith(getSigningKey())
             .compact();
@@ -60,8 +60,8 @@ public class JwtUtil {
               .getPayload();
       val isExpired = claims.getExpiration().before(new Date());
       val audienceMatches =
-          claims.getAudience() != null && claims.getAudience().contains(appProperties.getName());
-      val issuerMatches = claims.getIssuer().equals(appProperties.getName());
+          claims.getAudience() != null && claims.getAudience().contains(appProperties.name());
+      val issuerMatches = claims.getIssuer().equals(appProperties.name());
       if (!isExpired && audienceMatches && issuerMatches) {
         return Optional.of(claims);
       } else {

@@ -1,14 +1,10 @@
 package com.familymoney.familymoney.properties;
 
-import lombok.Data;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.validation.annotation.Validated;
 
-@Data
-@Configuration
 @ConfigurationProperties(prefix = "mail.sender")
-public class MailSenderProperties {
-
-  private String name;
-  private String email;
-}
+@Validated
+public record MailSenderProperties(@NotBlank String name, @Email String email) {}

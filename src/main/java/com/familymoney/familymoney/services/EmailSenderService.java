@@ -33,14 +33,13 @@ public class EmailSenderService implements IEmailSenderService {
 
     try {
       mimeMessageHelper.setFrom(
-          String.format(
-              "%s <%s>", mailSenderProperties.getName(), mailSenderProperties.getEmail()));
+          String.format("%s <%s>", mailSenderProperties.name(), mailSenderProperties.email()));
       mimeMessageHelper.setTo(toEmail.value());
       mimeMessageHelper.setSubject("Email Verification");
 
       val context = new Context();
       context.setVariable("userName", username.value());
-      context.setVariable("appName", appProperties.getName());
+      context.setVariable("appName", appProperties.name());
       context.setVariable(
           "verificationUrl",
           String.format("https://miticketdecomida.com/verify-email/%s", verificationToken.value()));
@@ -74,7 +73,7 @@ public class EmailSenderService implements IEmailSenderService {
 
       val context = new Context();
       context.setVariable("userName", username.value());
-      context.setVariable("appName", appProperties.getName());
+      context.setVariable("appName", appProperties.name());
       val SECURITY_ALERT_EMAIL_TEMPLATE_NAME = "email-securityalert";
       val processedString = htmlTemplateEngine.process(SECURITY_ALERT_EMAIL_TEMPLATE_NAME, context);
       mimeMessageHelper.setText(processedString, true);

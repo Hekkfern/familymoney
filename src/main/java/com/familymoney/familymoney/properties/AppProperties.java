@@ -1,13 +1,9 @@
 package com.familymoney.familymoney.properties;
 
-import lombok.Data;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.validation.annotation.Validated;
 
-@Data
-@Configuration
 @ConfigurationProperties(prefix = "spring.application")
-public class AppProperties {
-
-  private String name;
-}
+@Validated
+public record AppProperties(@NotBlank String name) {}
