@@ -9,9 +9,8 @@ import com.familymoney.familymoney.exceptions.UserAlreadyExistsException;
 import com.familymoney.familymoney.exceptions.VerificationTokenExpiredException;
 import com.familymoney.familymoney.exceptions.VerificationTokenNotFoundException;
 import com.familymoney.familymoney.services.AuthService;
-import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.ProblemDetail;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -21,53 +20,53 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 public class AuthControllerExceptionHandler extends ResponseEntityExceptionHandler {
 
   @ExceptionHandler(BadCredentialsException.class)
-  public ResponseEntity<@NonNull String> handle(BadCredentialsException e) {
+  public ProblemDetail handle(BadCredentialsException e) {
     logger.info(e.getMessage());
     // SECURITY: Never return specific reason for authentication failure
-    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+    return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "Invalid credentials");
   }
 
   @ExceptionHandler(UserAlreadyExistsException.class)
-  public ResponseEntity<@NonNull String> handle(UserAlreadyExistsException e) {
+  public ProblemDetail handle(UserAlreadyExistsException e) {
     logger.info(e.getMessage());
-    return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
   }
 
   @ExceptionHandler(EmailNotFoundException.class)
-  public ResponseEntity<@NonNull String> handle(EmailNotFoundException e) {
+  public ProblemDetail handle(EmailNotFoundException e) {
     logger.info(e.getMessage());
     // SECURITY: Always return success even if email doesn't exist
     // This prevents attackers from discovering which emails are registered
-    return ResponseEntity.status(HttpStatus.OK).body("");
+    return ProblemDetail.forStatusAndDetail(HttpStatus.OK, "");
   }
 
   @ExceptionHandler(RefreshTokenNotFoundException.class)
-  public ResponseEntity<@NonNull String> handle(RefreshTokenNotFoundException e) {
+  public ProblemDetail handle(RefreshTokenNotFoundException e) {
     logger.info(e.getMessage());
-    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+    return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, e.getMessage());
   }
 
   @ExceptionHandler(VerificationTokenNotFoundException.class)
-  public ResponseEntity<@NonNull String> handle(VerificationTokenNotFoundException e) {
+  public ProblemDetail handle(VerificationTokenNotFoundException e) {
     logger.info(e.getMessage());
-    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
   }
 
   @ExceptionHandler(VerificationTokenExpiredException.class)
-  public ResponseEntity<@NonNull String> handle(VerificationTokenExpiredException e) {
+  public ProblemDetail handle(VerificationTokenExpiredException e) {
     logger.info(e.getMessage());
-    return ResponseEntity.status(HttpStatus.GONE).body(e.getMessage());
+    return ProblemDetail.forStatusAndDetail(HttpStatus.GONE, e.getMessage());
   }
 
   @ExceptionHandler(ResetPasswordTokenNotFoundException.class)
-  public ResponseEntity<@NonNull String> handle(ResetPasswordTokenNotFoundException e) {
+  public ProblemDetail handle(ResetPasswordTokenNotFoundException e) {
     logger.info(e.getMessage());
-    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
   }
 
   @ExceptionHandler(ResetPasswordTokenExpiredException.class)
-  public ResponseEntity<@NonNull String> handle(ResetPasswordTokenExpiredException e) {
+  public ProblemDetail handle(ResetPasswordTokenExpiredException e) {
     logger.info(e.getMessage());
-    return ResponseEntity.status(HttpStatus.GONE).body(e.getMessage());
+    return ProblemDetail.forStatusAndDetail(HttpStatus.GONE, e.getMessage());
   }
 }

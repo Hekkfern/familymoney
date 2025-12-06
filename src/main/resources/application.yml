@@ -26,9 +26,6 @@ spring:
           auth: true
           starttls:
             enable: true
-  mvc:
-    problemdetails:
-      enabled: false
 server:
   port: ${APP_PORT}
 logging:

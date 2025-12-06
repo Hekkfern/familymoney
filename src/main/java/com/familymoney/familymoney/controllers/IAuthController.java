@@ -41,9 +41,18 @@ public interface IAuthController {
                           "{\"username\":\"hectorfern\",\"email\":\"hector@mail.com\",\"password\":\"P@ssw0rd!123456\"}")))
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "User account registered successfully"),
-    @ApiResponse(responseCode = "400", description = "Invalid request data"),
-    @ApiResponse(responseCode = "409", description = "Username or email already exists"),
-    @ApiResponse(responseCode = "500", description = "Something went wrong on the server side")
+    @ApiResponse(
+        responseCode = "400",
+        description = "Invalid request data",
+        content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE)),
+    @ApiResponse(
+        responseCode = "409",
+        description = "Username or email already exists",
+        content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE)),
+    @ApiResponse(
+        responseCode = "500",
+        description = "Something went wrong on the server side",
+        content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE))
   })
   @PostMapping("register")
   void register(@RequestBody @Valid RegisterRequestDto request);
@@ -61,15 +70,18 @@ public interface IAuthController {
                       value =
                           "{\"accessToken\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30\",\"refreshToken\":\"046460f4397d444faf489609b411567b\"}")
                 })),
-    @ApiResponse(responseCode = "400", description = "Invalid request data", content = @Content),
+    @ApiResponse(
+        responseCode = "400",
+        description = "Invalid request data",
+        content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE)),
     @ApiResponse(
         responseCode = "401",
         description = "Invalid user credentials",
-        content = @Content),
+        content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE)),
     @ApiResponse(
         responseCode = "500",
         description = "Something went wrong on the server side",
-        content = @Content)
+        content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE))
   })
   @PostMapping("login")
   LoginResponseDto login(@RequestBody @Valid LoginRequestDto request);

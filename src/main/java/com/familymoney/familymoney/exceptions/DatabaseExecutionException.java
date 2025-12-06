@@ -1,6 +1,16 @@
 package com.familymoney.familymoney.exceptions;
 
-import lombok.experimental.StandardException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
+import org.springframework.web.ErrorResponseException;
 
-@StandardException
-public final class DatabaseExecutionException extends RuntimeException {}
+public final class DatabaseExecutionException extends ErrorResponseException {
+
+  public DatabaseExecutionException(String message) {
+    super(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        ProblemDetail.forStatusAndDetail(
+            HttpStatus.INTERNAL_SERVER_ERROR, "Please contact the administrator"),
+        null);
+  }
+}

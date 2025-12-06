@@ -40,15 +40,12 @@ public class SecurityConfig {
                     .authenticated()
                     .requestMatchers("/api/admin/**")
                     .hasAuthority("manage_users")
+                    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**")
+                    .permitAll()
                     .anyRequest()
                     .denyAll())
         .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
-  }
-
-  @Bean
-  public WebSecurityCustomizer webSecurityCustomizer() {
-    return web -> web.ignoring().requestMatchers("/swagger-ui/**", "/v3/api-docs/**");
   }
 }
