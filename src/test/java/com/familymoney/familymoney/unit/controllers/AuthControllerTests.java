@@ -8,7 +8,7 @@ import com.familymoney.familymoney.controllers.AuthController;
 import com.familymoney.familymoney.dtos.auth.LoginRequestDto;
 import com.familymoney.familymoney.dtos.auth.RefreshTokenRequestDto;
 import com.familymoney.familymoney.dtos.auth.RegisterRequestDto;
-import com.familymoney.familymoney.repositories.IPermissionsRepository;
+import com.familymoney.familymoney.repositories.IRolesRepository;
 import com.familymoney.familymoney.security.JwtUtil;
 import com.familymoney.familymoney.services.IAuthService;
 import com.familymoney.familymoney.services.TokenPair;
@@ -40,7 +40,7 @@ public class AuthControllerTests {
 
   @MockitoBean private IAuthService authService;
   @MockitoBean private JwtUtil jwtUtil;
-  @MockitoBean private IPermissionsRepository permissionsRepository;
+  @MockitoBean private IRolesRepository permissionsRepository;
 
   // endregion
 

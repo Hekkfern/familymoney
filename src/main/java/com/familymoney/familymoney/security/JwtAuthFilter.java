@@ -1,6 +1,6 @@
 package com.familymoney.familymoney.security;
 
-import com.familymoney.familymoney.repositories.IPermissionsRepository;
+import com.familymoney.familymoney.repositories.IRolesRepository;
 import com.familymoney.familymoney.types.JwtToken;
 import com.familymoney.familymoney.types.UserId;
 import jakarta.servlet.FilterChain;
@@ -8,6 +8,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.apache.commons.lang3.Strings;
@@ -23,9 +24,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
   private static final String AUTHORIZATION_HEADER = "Authorization";
   private static final String BEARER_PREFIX = "Bearer ";
+  private static final String ROLE_PREFIX = "ROLE_";
 
   private final JwtUtil jwtUtil;
-  private final IPermissionsRepository permissionsRepository;
+  private final IRolesRepository permissionsRepository;
 
   @Override
   protected void doFilterInternal(
@@ -50,14 +52,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
       return;
     }
     val accessToken = accessTokenOpt.get();
-    // get permissions from DB
-    val permissionsFromDb =
-        permissionsRepository.getPermissionsByUserId(UserId.fromString(accessToken.getSubject()));
-    val permissions = permissionsFromDb.stream().map(SimpleGrantedAuthority::new).toList();
+    // get roles from DB
+    val role =
+        permissionsRepository.getRoleByUserId(UserId.fromString(accessToken.getSubject()));
     // set authorization
+    val authorities = List.of(new SimpleGrantedAuthority(ROLE_PREFIX + role));
     val auth =
         new UsernamePasswordAuthenticationToken(
-            UserId.fromString(accessToken.getSubject()), null, permissions);
+            UserId.fromString(accessToken.getSubject()), null, authorities);
     SecurityContextHolder.getContext().setAuthentication(auth);
     // finish
     filterChain.doFilter(request, response);

@@ -9,7 +9,7 @@ import com.familymoney.familymoney.exceptions.VerificationTokenExpiredException;
 import com.familymoney.familymoney.exceptions.VerificationTokenNotFoundException;
 import com.familymoney.familymoney.repositories.IEmailVerificationRepository;
 import com.familymoney.familymoney.repositories.IPasswordResetRepository;
-import com.familymoney.familymoney.repositories.IPermissionsRepository;
+import com.familymoney.familymoney.repositories.IRolesRepository;
 import com.familymoney.familymoney.repositories.IRefreshTokenRepository;
 import com.familymoney.familymoney.repositories.IUserRepository;
 import com.familymoney.familymoney.repositories.dbos.EmailVerificationDbo;
@@ -45,7 +45,7 @@ public class AuthService implements IAuthService {
   private final IRefreshTokenRepository refreshTokenRepository;
   private final IEmailVerificationRepository emailVerificationRepository;
   private final IPasswordResetRepository passwordResetRepository;
-  private final IPermissionsRepository permissionsRepository;
+  private final IRolesRepository permissionsRepository;
 
   /**
    * Generate and store email verification token in the database, retrying on collision
