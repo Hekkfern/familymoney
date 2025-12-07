@@ -2,7 +2,7 @@ package com.familymoney.familymoney.services;
 
 import com.familymoney.familymoney.exceptions.DatabaseExecutionException;
 import com.familymoney.familymoney.exceptions.EmailNotFoundException;
-import com.familymoney.familymoney.exceptions.InvalidRefreshTokenException;
+import com.familymoney.familymoney.exceptions.RefreshTokenInvalidException;
 import com.familymoney.familymoney.exceptions.RefreshTokenNotFoundException;
 import com.familymoney.familymoney.exceptions.UserAlreadyExistsException;
 import com.familymoney.familymoney.exceptions.VerificationTokenExpiredException;
@@ -149,8 +149,8 @@ public class AuthService implements IAuthService {
     // Check if the refresh token is expired
     if (refreshTokenFoundInDb.isExpired()) {
       val msg = "Invalid refresh token";
-      log.trace(msg);
-      throw new InvalidRefreshTokenException(msg);
+      log.info(msg);
+      throw new RefreshTokenInvalidException(msg);
     }
     // Check if the token was already used
     if (refreshTokenFoundInDb.isUsed()) {
@@ -166,7 +166,7 @@ public class AuthService implements IAuthService {
       // Send security alert email
       emailSenderService.sendSecurityAlertEmail(userDb.email(), userDb.username());
       // Throw exception
-      throw new InvalidRefreshTokenException("Refresh token not found in the database");
+      throw new RefreshTokenInvalidException("Refresh token not found in the database");
     }
     // Mark the old token as used
     refreshTokenRepository.markTokenAsUsed(refreshTokenFoundInDb.token());
@@ -241,7 +241,7 @@ public class AuthService implements IAuthService {
     if (!refreshTokenFromDb.isValid()) {
       val msg = "Invalid refresh token";
       log.trace(msg);
-      throw new InvalidRefreshTokenException(msg);
+      throw new RefreshTokenInvalidException(msg);
     }
     // Invalidate the family of refresh token from the database
     refreshTokenRepository.invalidateByFamily(refreshTokenFromDb.family());
