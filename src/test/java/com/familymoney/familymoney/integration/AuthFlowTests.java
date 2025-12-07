@@ -166,4 +166,30 @@ public class AuthFlowTests {
         .expectStatus()
         .isEqualTo(HttpStatus.CONFLICT);
   }
+
+  @Test
+  void Flow_Login_with_unverified_email_fails() {
+    // register a new user but do not verify email
+    val username = FakeGenerator.username();
+    val email = FakeGenerator.email();
+    val password = FakeGenerator.password();
+    client
+        .post()
+        .uri(AuthControllerUriFactory.getRegisterPath())
+        .body(new RegisterRequestDto(username, email, password))
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectBody()
+        .isEmpty();
+    // attempt to login
+    val loginResponse =
+        client
+            .post()
+            .uri(AuthControllerUriFactory.getLoginPath())
+            .body(new LoginRequestDto(email, password))
+            .exchange()
+            .expectStatus()
+            .isUnauthorized();
+  }
 }

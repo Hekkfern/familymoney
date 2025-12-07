@@ -144,6 +144,6 @@ public class UserFlowTests {
             .uri(UserControllerUriFactory.getMePath())
             .exchange()
             .expectStatus()
-            .isForbidden();
+            .isUnauthorized();
   }
 }
