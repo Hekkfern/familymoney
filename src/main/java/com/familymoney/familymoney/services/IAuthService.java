@@ -1,5 +1,6 @@
 package com.familymoney.familymoney.services;
 
+import com.familymoney.familymoney.services.data.TokenPair;
 import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.EmailVerificationToken;
 import com.familymoney.familymoney.types.Password;

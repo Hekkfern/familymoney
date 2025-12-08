@@ -1,4 +1,4 @@
-package com.familymoney.familymoney.repositories.rowmappers;
+package com.familymoney.familymoney.repositories.mappers;
 
 import com.familymoney.familymoney.repositories.dbos.UserDbo;
 import com.familymoney.familymoney.types.Email;

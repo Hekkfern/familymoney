@@ -4,7 +4,7 @@ import static com.familymoney.familymoney.utils.TestConstants.POSTGRESQL_CONTAIN
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 
-import com.familymoney.familymoney.dtos.auth.*;
+import com.familymoney.familymoney.controllers.dtos.auth.*;
 import com.familymoney.familymoney.services.IEmailSenderService;
 import com.familymoney.familymoney.types.EmailVerificationToken;
 import com.familymoney.familymoney.utils.AuthControllerUriFactory;

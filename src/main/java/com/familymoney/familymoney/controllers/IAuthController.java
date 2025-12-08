@@ -1,14 +1,14 @@
 package com.familymoney.familymoney.controllers;
 
-import com.familymoney.familymoney.dtos.auth.ForgotPasswordRequestDto;
-import com.familymoney.familymoney.dtos.auth.LoginRequestDto;
-import com.familymoney.familymoney.dtos.auth.LoginResponseDto;
-import com.familymoney.familymoney.dtos.auth.LogoutRequestDto;
-import com.familymoney.familymoney.dtos.auth.RefreshResponseDto;
-import com.familymoney.familymoney.dtos.auth.RefreshTokenRequestDto;
-import com.familymoney.familymoney.dtos.auth.RegisterRequestDto;
-import com.familymoney.familymoney.dtos.auth.ResendVerificationEmailRequestDto;
-import com.familymoney.familymoney.dtos.auth.ResetPasswordRequestDto;
+import com.familymoney.familymoney.controllers.dtos.auth.ForgotPasswordRequestDto;
+import com.familymoney.familymoney.controllers.dtos.auth.LoginRequestDto;
+import com.familymoney.familymoney.controllers.dtos.auth.LoginResponseDto;
+import com.familymoney.familymoney.controllers.dtos.auth.LogoutRequestDto;
+import com.familymoney.familymoney.controllers.dtos.auth.RefreshResponseDto;
+import com.familymoney.familymoney.controllers.dtos.auth.RefreshTokenRequestDto;
+import com.familymoney.familymoney.controllers.dtos.auth.RegisterRequestDto;
+import com.familymoney.familymoney.controllers.dtos.auth.ResendVerificationEmailRequestDto;
+import com.familymoney.familymoney.controllers.dtos.auth.ResetPasswordRequestDto;
 import com.familymoney.familymoney.validation.EmailVerificationToken;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

@@ -7,7 +7,7 @@ import static org.mockito.Mockito.*;
 import com.familymoney.familymoney.exceptions.DatabaseExecutionException;
 import com.familymoney.familymoney.exceptions.UserAlreadyExistsException;
 import com.familymoney.familymoney.repositories.IEmailVerificationRepository;
-import com.familymoney.familymoney.repositories.IRolesRepository;
+import com.familymoney.familymoney.repositories.IRoleRepository;
 import com.familymoney.familymoney.repositories.IUserRepository;
 import com.familymoney.familymoney.repositories.dbos.EmailVerificationDbo;
 import com.familymoney.familymoney.repositories.dbos.UserDbo;
@@ -33,7 +33,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 public class AuthServiceTests {
 
   @Mock private IUserRepository userRepository;
-  @Mock private IRolesRepository permissionsRepository;
+  @Mock private IRoleRepository permissionsRepository;
   @Mock private IEmailSenderService emailSenderService;
   @Spy private UserPasswordEncoder passwordEncoder;
   @Mock private IEmailVerificationRepository emailVerificationRepository;

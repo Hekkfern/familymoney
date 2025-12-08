@@ -1,6 +1,6 @@
 package com.familymoney.familymoney.security;
 
-import com.familymoney.familymoney.repositories.IRolesRepository;
+import com.familymoney.familymoney.repositories.IRoleRepository;
 import com.familymoney.familymoney.types.JwtToken;
 import com.familymoney.familymoney.types.UserId;
 import jakarta.servlet.FilterChain;
@@ -27,7 +27,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
   private static final String ROLE_PREFIX = "ROLE_";
 
   private final JwtUtil jwtUtil;
-  private final IRolesRepository permissionsRepository;
+  private final IRoleRepository roleRepository;
 
   @Override
   protected void doFilterInternal(
@@ -54,7 +54,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     val accessToken = accessTokenOpt.get();
     // get roles from DB
     val role =
-        permissionsRepository.getRoleByUserId(UserId.fromString(accessToken.getSubject()));
+        roleRepository.getRoleByUserId(UserId.fromString(accessToken.getSubject()));
     // set authorization
     val authorities = List.of(new SimpleGrantedAuthority(ROLE_PREFIX + role));
     val auth =

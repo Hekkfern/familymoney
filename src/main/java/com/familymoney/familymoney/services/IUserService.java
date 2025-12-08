@@ -1,23 +1,25 @@
 package com.familymoney.familymoney.services;
 
-import com.familymoney.familymoney.services.data.UserData;
-import com.familymoney.familymoney.types.Email;
-import com.familymoney.familymoney.types.Password;
-import com.familymoney.familymoney.types.UserId;
-import com.familymoney.familymoney.types.Username;
-import java.util.Optional;
+import com.familymoney.familymoney.services.data.GetUserData;
+import com.familymoney.familymoney.services.data.UpdateUserData;
+import com.familymoney.familymoney.types.*;
 import org.jspecify.annotations.NonNull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface IUserService {
 
-  @NonNull
-  UserData getMyUserData(@NonNull UserId userId);
+  @NonNull GetUserData getUserData(@NonNull UserId userId);
 
-  void deleteMyUser(@NonNull UserId userId);
+  void deleteUser(@NonNull UserId userId);
 
-  void updateMyUser(
-      @NonNull UserId userId,
-      @NonNull Optional<Username> username,
-      @NonNull Optional<Email> email,
-      @NonNull Optional<Password> password);
+  void updateUserInfo(@NonNull UserId userId, @NonNull UpdateUserData data);
+
+  @NonNull Page<@NonNull GetUserData> getUsers(Pageable pageable);
+
+  void enableUser(@NonNull UserId userId, boolean enabled);
+
+  void setUserRole(@NonNull UserId userId, @NonNull Role role);
+
+  @NonNull Role getUserRole(@NonNull UserId userId);
 }

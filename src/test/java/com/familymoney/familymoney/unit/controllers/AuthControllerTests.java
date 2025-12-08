@@ -5,13 +5,13 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import com.familymoney.familymoney.controllers.AuthController;
-import com.familymoney.familymoney.dtos.auth.LoginRequestDto;
-import com.familymoney.familymoney.dtos.auth.RefreshTokenRequestDto;
-import com.familymoney.familymoney.dtos.auth.RegisterRequestDto;
-import com.familymoney.familymoney.repositories.IRolesRepository;
+import com.familymoney.familymoney.controllers.dtos.auth.LoginRequestDto;
+import com.familymoney.familymoney.controllers.dtos.auth.RefreshTokenRequestDto;
+import com.familymoney.familymoney.controllers.dtos.auth.RegisterRequestDto;
+import com.familymoney.familymoney.repositories.IRoleRepository;
 import com.familymoney.familymoney.security.JwtUtil;
 import com.familymoney.familymoney.services.IAuthService;
-import com.familymoney.familymoney.services.TokenPair;
+import com.familymoney.familymoney.services.data.TokenPair;
 import com.familymoney.familymoney.types.JwtToken;
 import com.familymoney.familymoney.types.RefreshToken;
 import com.familymoney.familymoney.utils.AuthControllerUriFactory;
@@ -40,7 +40,7 @@ public class AuthControllerTests {
 
   @MockitoBean private IAuthService authService;
   @MockitoBean private JwtUtil jwtUtil;
-  @MockitoBean private IRolesRepository permissionsRepository;
+  @MockitoBean private IRoleRepository permissionsRepository;
 
   // endregion
 

@@ -1,4 +1,4 @@
-package com.familymoney.familymoney.dtos.auth;
+package com.familymoney.familymoney.controllers.dtos.auth;
 
 import com.familymoney.familymoney.validation.Password;
 import com.familymoney.familymoney.validation.Username;

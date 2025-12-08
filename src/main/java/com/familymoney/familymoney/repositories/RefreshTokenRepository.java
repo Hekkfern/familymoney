@@ -1,7 +1,7 @@
 package com.familymoney.familymoney.repositories;
 
 import com.familymoney.familymoney.repositories.dbos.RefreshTokenDbo;
-import com.familymoney.familymoney.repositories.rowmappers.RefreshTokenRowMapper;
+import com.familymoney.familymoney.repositories.mappers.RefreshTokenRowMapper;
 import com.familymoney.familymoney.types.RefreshToken;
 import com.familymoney.familymoney.types.UserId;
 import java.time.Duration;

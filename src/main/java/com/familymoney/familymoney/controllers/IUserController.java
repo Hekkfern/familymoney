@@ -1,7 +1,7 @@
 package com.familymoney.familymoney.controllers;
 
-import com.familymoney.familymoney.dtos.user.GetMyUserResponseDto;
-import com.familymoney.familymoney.dtos.user.UpdateUserRequestDto;
+import com.familymoney.familymoney.controllers.dtos.user.GetMyUserResponseDto;
+import com.familymoney.familymoney.controllers.dtos.user.UpdateUserRequestDto;
 import jakarta.validation.Valid;
 import org.jspecify.annotations.NonNull;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -15,11 +15,11 @@ public interface IUserController {
 
   @GetMapping("/me")
   @NonNull
-  GetMyUserResponseDto getMyUser();
+  GetMyUserResponseDto getMyUserInfo();
 
   @DeleteMapping("/me")
   void deleteMyUser();
 
   @PatchMapping("/me")
-  void updateMyUser(@RequestBody @Valid UpdateUserRequestDto request);
+  void updateMyUserInfo(@RequestBody @Valid UpdateUserRequestDto request);
 }

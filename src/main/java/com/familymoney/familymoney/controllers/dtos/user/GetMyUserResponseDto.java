@@ -1,4 +1,4 @@
-package com.familymoney.familymoney.dtos.user;
+package com.familymoney.familymoney.controllers.dtos.user;
 
 import java.time.Instant;
 import org.jspecify.annotations.NonNull;

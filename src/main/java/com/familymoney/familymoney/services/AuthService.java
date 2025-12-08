@@ -9,18 +9,15 @@ import com.familymoney.familymoney.exceptions.VerificationTokenExpiredException;
 import com.familymoney.familymoney.exceptions.VerificationTokenNotFoundException;
 import com.familymoney.familymoney.repositories.IEmailVerificationRepository;
 import com.familymoney.familymoney.repositories.IPasswordResetRepository;
-import com.familymoney.familymoney.repositories.IRolesRepository;
+import com.familymoney.familymoney.repositories.IRoleRepository;
 import com.familymoney.familymoney.repositories.IRefreshTokenRepository;
 import com.familymoney.familymoney.repositories.IUserRepository;
 import com.familymoney.familymoney.repositories.dbos.EmailVerificationDbo;
 import com.familymoney.familymoney.security.JwtUtil;
 import com.familymoney.familymoney.security.UserPasswordEncoder;
-import com.familymoney.familymoney.types.Email;
-import com.familymoney.familymoney.types.EmailVerificationToken;
-import com.familymoney.familymoney.types.Password;
-import com.familymoney.familymoney.types.RefreshToken;
-import com.familymoney.familymoney.types.UserId;
-import com.familymoney.familymoney.types.Username;
+import com.familymoney.familymoney.services.data.TokenPair;
+import com.familymoney.familymoney.types.*;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
@@ -45,7 +42,7 @@ public class AuthService implements IAuthService {
   private final IRefreshTokenRepository refreshTokenRepository;
   private final IEmailVerificationRepository emailVerificationRepository;
   private final IPasswordResetRepository passwordResetRepository;
-  private final IRolesRepository permissionsRepository;
+  private final IRoleRepository permissionsRepository;
 
   /**
    * Generate and store email verification token in the database, retrying on collision
@@ -89,7 +86,7 @@ public class AuthService implements IAuthService {
     }
     val userDb = userDbOpt.get();
     // Assign user permissions (default role)
-    permissionsRepository.setRoleForUserId(userDb.id(), "user");
+    permissionsRepository.setRoleForUserId(userDb.id(), Role.USER);
     // Generate and save verification token to database
     // NOTE: Retry several times in case of token collision
     val emailVerificationTokenDb = generateAndStoreEmailVerificationToken(userDb.id());

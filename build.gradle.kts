@@ -54,6 +54,8 @@ dependencies {
     runtimeOnly(libs.jjwt.jackson)
     testImplementation("org.springframework.boot:spring-boot-resttestclient")
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
+    implementation(libs.mapstruct)
+    annotationProcessor(libs.mapstruct.processor)
 }
 
 tasks.withType<Test> {

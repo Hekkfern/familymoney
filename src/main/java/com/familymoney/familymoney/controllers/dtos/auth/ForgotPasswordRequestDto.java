@@ -1,4 +1,4 @@
-package com.familymoney.familymoney.dtos.auth;
+package com.familymoney.familymoney.controllers.dtos.auth;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

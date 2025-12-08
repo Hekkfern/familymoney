@@ -61,8 +61,8 @@ CREATE TABLE users_roles
 );
 
 INSERT INTO roles(name, description)
-VALUES ('admin', 'Administrator with full access'),
-       ('user', 'Regular user with standard access');
+VALUES ('ADMIN', 'Administrator with full access'),
+       ('USER', 'Regular user with standard access');
 
 -- ******************* EMAIL VERIFICATION *******************
 

@@ -1,7 +1,7 @@
 package com.familymoney.familymoney.repositories;
 
 import com.familymoney.familymoney.repositories.dbos.EmailVerificationDbo;
-import com.familymoney.familymoney.repositories.rowmappers.EmailVerificationRowMapper;
+import com.familymoney.familymoney.repositories.mappers.EmailVerificationRowMapper;
 import com.familymoney.familymoney.types.EmailVerificationToken;
 import com.familymoney.familymoney.types.UserId;
 import java.time.Duration;
