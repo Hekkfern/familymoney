@@ -50,3 +50,8 @@ mail:
   sender:
     email: ${MAIL_SENDER_FROM_EMAIL}
     name: ${MAIL_SENDER_FROM_NAME}
+admin:
+  username: ${ADMIN_USERNAME}
+  email: ${ADMIN_EMAIL}
+  password: ${ADMIN_PASSWORD}
+

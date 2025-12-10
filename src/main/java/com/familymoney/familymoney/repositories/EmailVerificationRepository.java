@@ -10,8 +10,8 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.jdbc.core.simple.JdbcClient;
 import org.jspecify.annotations.NonNull;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -61,17 +61,6 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
         """
         DELETE FROM email_verification_tokens
         WHERE user_id = :userId
-        """;
-    jdbcClient.sql(sql).param("userId", userId.value()).update();
-  }
-
-  @Override
-  public void verifyEmail(@NonNull UserId userId) {
-    var sql =
-        """
-        UPDATE users
-        SET email_verified = TRUE
-        WHERE id = :userId
         """;
     jdbcClient.sql(sql).param("userId", userId.value()).update();
   }

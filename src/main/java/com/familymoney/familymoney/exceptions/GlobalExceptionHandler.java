@@ -1,6 +1,5 @@
-package com.familymoney.familymoney.security;
+package com.familymoney.familymoney.exceptions;
 
-import com.familymoney.familymoney.exceptions.DatabaseExecutionException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;

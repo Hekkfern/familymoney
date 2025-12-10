@@ -9,15 +9,14 @@ import com.familymoney.familymoney.exceptions.VerificationTokenExpiredException;
 import com.familymoney.familymoney.exceptions.VerificationTokenNotFoundException;
 import com.familymoney.familymoney.repositories.IEmailVerificationRepository;
 import com.familymoney.familymoney.repositories.IPasswordResetRepository;
-import com.familymoney.familymoney.repositories.IRoleRepository;
 import com.familymoney.familymoney.repositories.IRefreshTokenRepository;
+import com.familymoney.familymoney.repositories.IRoleRepository;
 import com.familymoney.familymoney.repositories.IUserRepository;
 import com.familymoney.familymoney.repositories.dbos.EmailVerificationDbo;
 import com.familymoney.familymoney.security.JwtUtil;
 import com.familymoney.familymoney.security.UserPasswordEncoder;
 import com.familymoney.familymoney.services.data.TokenPair;
 import com.familymoney.familymoney.types.*;
-
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
@@ -27,6 +26,7 @@ import lombok.val;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -42,7 +42,7 @@ public class AuthService implements IAuthService {
   private final IRefreshTokenRepository refreshTokenRepository;
   private final IEmailVerificationRepository emailVerificationRepository;
   private final IPasswordResetRepository passwordResetRepository;
-  private final IRoleRepository permissionsRepository;
+  private final IRoleRepository roleRepository;
 
   /**
    * Generate and store email verification token in the database, retrying on collision
@@ -70,6 +70,7 @@ public class AuthService implements IAuthService {
         "Could not generate a unique email verification token after multiple attempts");
   }
 
+  @Transactional
   @Override
   public void registerUser(
       @NonNull Username username, @NonNull Email email, @NonNull Password password) {
@@ -86,7 +87,7 @@ public class AuthService implements IAuthService {
     }
     val userDb = userDbOpt.get();
     // Assign user permissions (default role)
-    permissionsRepository.setRoleForUserId(userDb.id(), Role.USER);
+    roleRepository.setRoleForUserId(userDb.id(), Role.USER);
     // Generate and save verification token to database
     // NOTE: Retry several times in case of token collision
     val emailVerificationTokenDb = generateAndStoreEmailVerificationToken(userDb.id());
@@ -195,7 +196,7 @@ public class AuthService implements IAuthService {
       throw new VerificationTokenExpiredException("Email verification token has expired");
     }
     // Verify the user's email
-    emailVerificationRepository.verifyEmail(verificationTokenFromDb.userId());
+    userRepository.verifyEmail(verificationTokenFromDb.userId());
     // Delete all the verification tokens assigned to this user from the database
     emailVerificationRepository.deleteByUserId(verificationTokenFromDb.userId());
   }

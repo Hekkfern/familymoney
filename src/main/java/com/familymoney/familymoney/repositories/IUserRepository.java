@@ -34,5 +34,7 @@ public interface IUserRepository {
 
   void setIsEnabledByUserId(@NonNull UserId id, boolean isEnabled);
 
+  void verifyEmail(@NonNull UserId userId);
+
   @NonNull Page<@NonNull UserDbo> findAll(Pageable pageable);
 }

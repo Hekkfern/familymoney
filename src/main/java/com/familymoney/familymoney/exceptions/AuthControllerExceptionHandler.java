@@ -1,13 +1,6 @@
-package com.familymoney.familymoney.security;
+package com.familymoney.familymoney.exceptions;
 
 import com.familymoney.familymoney.controllers.AuthController;
-import com.familymoney.familymoney.exceptions.EmailNotFoundException;
-import com.familymoney.familymoney.exceptions.RefreshTokenNotFoundException;
-import com.familymoney.familymoney.exceptions.ResetPasswordTokenExpiredException;
-import com.familymoney.familymoney.exceptions.ResetPasswordTokenNotFoundException;
-import com.familymoney.familymoney.exceptions.UserAlreadyExistsException;
-import com.familymoney.familymoney.exceptions.VerificationTokenExpiredException;
-import com.familymoney.familymoney.exceptions.VerificationTokenNotFoundException;
 import com.familymoney.familymoney.services.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;

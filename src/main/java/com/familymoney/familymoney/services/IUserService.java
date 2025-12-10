@@ -3,13 +3,14 @@ package com.familymoney.familymoney.services;
 import com.familymoney.familymoney.services.data.GetUserData;
 import com.familymoney.familymoney.services.data.UpdateUserData;
 import com.familymoney.familymoney.types.*;
+import java.util.Optional;
 import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface IUserService {
 
-  @NonNull GetUserData getUserData(@NonNull UserId userId);
+  @NonNull Optional<GetUserData> getUserData(@NonNull UserId userId);
 
   void deleteUser(@NonNull UserId userId);
 
@@ -22,4 +23,7 @@ public interface IUserService {
   void setUserRole(@NonNull UserId userId, @NonNull Role role);
 
   @NonNull Role getUserRole(@NonNull UserId userId);
+
+  void createAdminUser(
+      @NonNull Username username, @NonNull Email email, @NonNull Password password);
 }

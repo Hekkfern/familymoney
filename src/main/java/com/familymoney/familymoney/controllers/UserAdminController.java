@@ -1,10 +1,11 @@
 package com.familymoney.familymoney.controllers;
 
-import com.familymoney.familymoney.controllers.mappers.GetUserResponseMapper;
-import com.familymoney.familymoney.controllers.mappers.UpdateUserRequestMapper;
 import com.familymoney.familymoney.controllers.dtos.admin.GetUserResponseDto;
 import com.familymoney.familymoney.controllers.dtos.admin.GetUsersResponseDto;
 import com.familymoney.familymoney.controllers.dtos.user.UpdateUserRequestDto;
+import com.familymoney.familymoney.controllers.mappers.GetUserResponseMapper;
+import com.familymoney.familymoney.controllers.mappers.UpdateUserRequestMapper;
+import com.familymoney.familymoney.exceptions.UserNotFoundException;
 import com.familymoney.familymoney.services.IUserService;
 import com.familymoney.familymoney.types.*;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,11 @@ public class UserAdminController implements IUserAdminController {
   @Override
   public @NonNull GetUserResponseDto getUser(UserId userId) {
     // Fetch user data
-    val userData = userService.getUserData(userId);
+    val userDataOpt = userService.getUserData(userId);
+    if (userDataOpt.isEmpty()) {
+      throw new UserNotFoundException("User with ID " + userId.value() + " not found");
+    }
+    val userData = userDataOpt.get();
     // Return response
     return getUserResponseMapper.toDto(userData);
   }

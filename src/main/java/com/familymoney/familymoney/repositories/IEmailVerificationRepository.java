@@ -19,7 +19,5 @@ public interface IEmailVerificationRepository {
 
   void deleteByUserId(@NonNull UserId userId);
 
-  void verifyEmail(@NonNull UserId userId);
-
   void deleteOlderThan(@NonNull Duration cutoff);
 }

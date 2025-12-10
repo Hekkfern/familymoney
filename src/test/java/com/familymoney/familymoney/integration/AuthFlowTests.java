@@ -151,7 +151,7 @@ public class AuthFlowTests {
   }
 
   @Test
-  void Flow_Register_with_existing_email_fails() {
+  void AuthFlow_Register_with_existing_email_fails() {
     // register and verify a new user
     val username = FakeGenerator.username();
     val email = FakeGenerator.email();
@@ -168,7 +168,7 @@ public class AuthFlowTests {
   }
 
   @Test
-  void Flow_Login_with_unverified_email_fails() {
+  void AuthFlow_Login_with_unverified_email_fails() {
     // register a new user but do not verify email
     val username = FakeGenerator.username();
     val email = FakeGenerator.email();

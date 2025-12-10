@@ -1,6 +1,5 @@
 package com.familymoney.familymoney.services;
 
-import com.familymoney.familymoney.exceptions.DatabaseExecutionException;
 import com.familymoney.familymoney.repositories.IRoleRepository;
 import com.familymoney.familymoney.repositories.IUserRepository;
 import com.familymoney.familymoney.security.UserPasswordEncoder;
@@ -8,6 +7,7 @@ import com.familymoney.familymoney.services.data.GetUserData;
 import com.familymoney.familymoney.services.data.UpdateUserData;
 import com.familymoney.familymoney.services.mappers.GetUserDataMapper;
 import com.familymoney.familymoney.types.*;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -28,14 +28,9 @@ public class UserService implements IUserService {
   private final GetUserDataMapper getUserDataMapper;
 
   @Override
-  @NonNull
-  public GetUserData getUserData(@NonNull UserId userId) {
+  public @NonNull Optional<GetUserData> getUserData(@NonNull UserId userId) {
     val userOpt = userRepository.findById(userId);
-    if (userOpt.isEmpty()) {
-      throw new DatabaseExecutionException("User not found with id: $userId");
-    }
-    val user = userOpt.get();
-    return getUserDataMapper.fromDbo(user);
+    return userOpt.map(getUserDataMapper::fromDbo);
   }
 
   @Override
@@ -73,5 +68,28 @@ public class UserService implements IUserService {
   @Override
   public @NonNull Role getUserRole(@NonNull UserId userId) {
     return roleRepository.getRoleByUserId(userId);
+  }
+
+  @Override
+  public void createAdminUser(
+          @NonNull Username username, @NonNull Email email, @NonNull Password password) {
+    // Check if user already exists
+    if (userRepository.existsByEmailOrUsername(email, username)) {
+      log.info("Admin user already exists, skipping creation");
+      return;
+    }
+    // Create user
+    val userDbOpt =
+        userRepository.create(username, email, passwordEncoder.encode(password.value()));
+    if (userDbOpt.isEmpty()) {
+      log.error("Could not create user in the database");
+      return;
+    }
+    val userDb = userDbOpt.get();
+    // Assign user permissions (default role)
+    roleRepository.setRoleForUserId(userDb.id(), Role.ADMIN);
+    // verify email
+    userRepository.verifyEmail(userDb.id());
+    log.info("Admin user created successfully");
   }
 }

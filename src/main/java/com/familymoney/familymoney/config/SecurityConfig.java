@@ -1,5 +1,7 @@
-package com.familymoney.familymoney.security;
+package com.familymoney.familymoney.config;
 
+import com.familymoney.familymoney.security.JwtAuthFilter;
+import com.familymoney.familymoney.security.JwtAuthenticationEntryPoint;
 import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

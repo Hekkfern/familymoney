@@ -30,9 +30,9 @@ public class UserController implements IUserController {
       throw new AuthenticationCredentialsNotFoundException("User ID not found in security context");
     }
     // Fetch user data
-    val userData = userService.getUserData(userId);
+    val userDataOpt = userService.getUserData(userId);
     // Return response
-    return getUserResponseMapper.toDto(userData);
+    return getUserResponseMapper.toDto(userDataOpt.get());
   }
 
   @Override

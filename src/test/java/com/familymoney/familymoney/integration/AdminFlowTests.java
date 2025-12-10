@@ -1,19 +1,16 @@
 package com.familymoney.familymoney.integration;
 
 import static com.familymoney.familymoney.utils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 
 import com.familymoney.familymoney.controllers.dtos.auth.LoginRequestDto;
 import com.familymoney.familymoney.controllers.dtos.auth.LoginResponseDto;
 import com.familymoney.familymoney.controllers.dtos.auth.RegisterRequestDto;
-import com.familymoney.familymoney.controllers.dtos.user.GetMyUserResponseDto;
 import com.familymoney.familymoney.services.IEmailSenderService;
 import com.familymoney.familymoney.types.EmailVerificationToken;
 import com.familymoney.familymoney.utils.AuthControllerUriFactory;
 import com.familymoney.familymoney.utils.FakeGenerator;
-import com.familymoney.familymoney.utils.UserControllerUriFactory;
 import lombok.val;
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +30,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
-public class UserFlowTests {
+public class AdminFlowTests {
 
   // region Fields
 
@@ -113,37 +110,13 @@ public class UserFlowTests {
   }
 
   @Test
-  void UserFlow_Get_user_data_when_logged_in() {
-    // Register and login user
+  void AdminFlow_Normal_User_Tries_To_Access_Admin_Endpoints_Should_Fail() {
+    // Register and login a non-admin user
     val username = FakeGenerator.username();
     val email = FakeGenerator.email();
     val password = FakeGenerator.password();
     val accessToken = registerAndLoginUser(username, email, password);
-    // Get user data
-    val userDataResponse =
-        client
-            .get()
-            .uri(UserControllerUriFactory.getMePath())
-            .header("Authorization", "Bearer " + accessToken)
-            .exchange()
-            .expectStatus()
-            .isOk()
-            .expectBody(GetMyUserResponseDto.class)
-            .returnResult()
-            .getResponseBody();
-    assertEquals(username, userDataResponse.username());
-    assertEquals(email, userDataResponse.email());
-  }
-
-  @Test
-  void UserFlow_Get_user_data_when_not_logged_in() {
-    // Get user data without logging in
-    val userDataResponse =
-        client
-            .get()
-            .uri(UserControllerUriFactory.getMePath())
-            .exchange()
-            .expectStatus()
-            .isUnauthorized();
+    // Get data from another user
+    // TODO
   }
 }

@@ -165,6 +165,17 @@ public class UserRepository implements IUserRepository {
     jdbcClient.sql(sql).param("id", id.value()).param("isEnabled", isEnabled).update();
   }
 
+  @Override
+  public void verifyEmail(@NonNull UserId userId) {
+    var sql =
+        """
+        UPDATE users
+        SET email_verified = TRUE
+        WHERE id = :userId
+        """;
+    jdbcClient.sql(sql).param("userId", userId.value()).update();
+  }
+
   @Transactional
   @Override
   public @NonNull Page<@NonNull UserDbo> findAll(Pageable pageable) {
