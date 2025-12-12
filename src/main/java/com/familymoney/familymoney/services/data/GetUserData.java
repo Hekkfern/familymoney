@@ -11,5 +11,4 @@ public record GetUserData(
     @NonNull Email email,
     @NonNull Instant createdAt,
     boolean emailVerified,
-    boolean isEnabled,
-    Role role) {}
+    boolean isEnabled) {}

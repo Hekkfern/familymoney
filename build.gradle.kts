@@ -56,6 +56,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
     implementation(libs.mapstruct)
     annotationProcessor(libs.mapstruct.processor)
+    implementation(libs.moneta)
 }
 
 tasks.withType<Test> {
