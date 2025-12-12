@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.javamoney.moneta.Money;
-import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -14,7 +13,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class CurrencyConversionService implements ICurrencyConversionService {
   @Override
-  public @NonNull Money convert(@NonNull Money amount, @NonNull CurrencyUnit targetCurrency) {
+  public Money convert(Money amount, CurrencyUnit targetCurrency) {
     val conv = MonetaryConversions.getConversion(targetCurrency);
     return amount.with(conv);
   }

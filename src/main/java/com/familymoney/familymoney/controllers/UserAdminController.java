@@ -10,7 +10,6 @@ import com.familymoney.familymoney.services.IUserService;
 import com.familymoney.familymoney.types.*;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
-import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,7 +22,7 @@ public class UserAdminController implements IUserAdminController {
   private final UpdateUserRequestMapper updateUserRequestMapper;
 
   @Override
-  public @NonNull GetUserResponseDto getUser(UserId userId) {
+  public GetUserResponseDto getUser(UserId userId) {
     // Fetch user data
     val userDataOpt = userService.getUserData(userId);
     if (userDataOpt.isEmpty()) {
@@ -35,7 +34,7 @@ public class UserAdminController implements IUserAdminController {
   }
 
   @Override
-  public @NonNull GetUsersResponseDto getUsers(Pageable pageable) {
+  public GetUsersResponseDto getUsers(Pageable pageable) {
     val userDataPages = userService.getUsers(pageable);
     return new GetUsersResponseDto(
         userDataPages.getContent().stream().map(getUserResponseMapper::toDto).toList());

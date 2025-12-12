@@ -9,7 +9,6 @@ import java.time.Duration;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
-import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -24,9 +23,7 @@ public class UserRepository implements IUserRepository {
   private final JdbcClient jdbcClient;
 
   @Override
-  @NonNull
-  public Optional<UserDbo> create(
-      @NonNull Username username, @NonNull Email email, @NonNull String passwordHash) {
+  public Optional<UserDbo> create(Username username, Email email, String passwordHash) {
     val sql =
         """
         INSERT INTO users (username, email, hashed_password)
@@ -43,8 +40,7 @@ public class UserRepository implements IUserRepository {
   }
 
   @Override
-  @NonNull
-  public Optional<UserDbo> findById(@NonNull UserId id) {
+  public Optional<UserDbo> findById(UserId id) {
     val sql =
         """
         SELECT id, username, email, hashed_password, created_at, updated_at, email_verified, is_enabled
@@ -55,8 +51,7 @@ public class UserRepository implements IUserRepository {
   }
 
   @Override
-  @NonNull
-  public Optional<UserDbo> findByEmail(@NonNull Email email) {
+  public Optional<UserDbo> findByEmail(Email email) {
     val sql =
         """
         SELECT id, username, email, hashed_password, created_at, updated_at, email_verified, is_enabled
@@ -71,8 +66,7 @@ public class UserRepository implements IUserRepository {
   }
 
   @Override
-  @NonNull
-  public Optional<UserDbo> findByUsername(@NonNull Username username) {
+  public Optional<UserDbo> findByUsername(Username username) {
     val sql =
         """
         SELECT id, username, email, hashed_password, created_at, updated_at, email_verified, is_enabled
@@ -87,7 +81,7 @@ public class UserRepository implements IUserRepository {
   }
 
   @Override
-  public boolean existsByEmailOrUsername(@NonNull Email email, @NonNull Username username) {
+  public boolean existsByEmailOrUsername(Email email, Username username) {
     var sql =
         """
         SELECT COUNT(*)
@@ -105,8 +99,7 @@ public class UserRepository implements IUserRepository {
   }
 
   @Override
-  public void updateInfo(
-      @NonNull UserId id, @NonNull Optional<Username> username, @NonNull Optional<Email> email) {
+  public void updateInfo(UserId id, Optional<Username> username, Optional<Email> email) {
     val sql =
         """
         UPDATE users
@@ -123,7 +116,7 @@ public class UserRepository implements IUserRepository {
   }
 
   @Override
-  public void updatePassword(@NonNull UserId id, @NonNull String newPasswordHash) {
+  public void updatePassword(UserId id, String newPasswordHash) {
     val sql =
         """
         UPDATE users
@@ -134,7 +127,7 @@ public class UserRepository implements IUserRepository {
   }
 
   @Override
-  public void deleteById(@NonNull UserId id) {
+  public void deleteById(UserId id) {
     val sql =
         """
         DELETE FROM users
@@ -144,7 +137,7 @@ public class UserRepository implements IUserRepository {
   }
 
   @Override
-  public void deleteByIsUnverifiedAndOlderThan(@NonNull Duration cutoff) {
+  public void deleteByIsUnverifiedAndOlderThan(Duration cutoff) {
     val sql =
         """
         DELETE FROM users
@@ -155,7 +148,7 @@ public class UserRepository implements IUserRepository {
   }
 
   @Override
-  public void setIsEnabledByUserId(@NonNull UserId id, boolean isEnabled) {
+  public void setIsEnabledByUserId(UserId id, boolean isEnabled) {
     val sql =
         """
         UPDATE users
@@ -166,7 +159,7 @@ public class UserRepository implements IUserRepository {
   }
 
   @Override
-  public void verifyEmail(@NonNull UserId userId) {
+  public void verifyEmail(UserId userId) {
     var sql =
         """
         UPDATE users
@@ -178,7 +171,7 @@ public class UserRepository implements IUserRepository {
 
   @Transactional
   @Override
-  public @NonNull Page<@NonNull UserDbo> findAll(Pageable pageable) {
+  public Page<UserDbo> findAll(Pageable pageable) {
     val rowCountSql =
         """
           SELECT COUNT(1)

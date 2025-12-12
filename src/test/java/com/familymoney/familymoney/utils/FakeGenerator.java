@@ -1,9 +1,7 @@
 package com.familymoney.familymoney.utils;
 
-import org.apache.commons.lang3.RandomStringUtils;
-import org.jspecify.annotations.NonNull;
-
 import java.util.UUID;
+import org.apache.commons.lang3.RandomStringUtils;
 
 public final class FakeGenerator {
 
@@ -12,28 +10,28 @@ public final class FakeGenerator {
   private static final String NUMBER_CHARACTERS = "0123456789";
   private static final RandomStringUtils random = RandomStringUtils.insecure();
 
-  public static @NonNull String username() {
+  public static  String username() {
     return random.next(10, LOWER_CHARACTERS);
   }
 
-  public static @NonNull String email() {
+  public static  String email() {
     return random.next(12, LOWER_CHARACTERS) + "@gmail.com";
   }
 
-  public static @NonNull String password() {
+  public static  String password() {
     return random.next(12, UPPER_CHARACTERS)
         + random.next(4, LOWER_CHARACTERS)
         + random.next(4, NUMBER_CHARACTERS)
         + "!";
   }
 
-  public static @NonNull String refreshToken() {
+  public static  String refreshToken() {
     return random.next(12, UPPER_CHARACTERS)
         + random.next(10, LOWER_CHARACTERS)
         + random.next(10, NUMBER_CHARACTERS);
   }
 
-  public static @NonNull String userId() {
+  public static  String userId() {
       return UUID.randomUUID().toString();
   }
 }

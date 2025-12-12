@@ -15,7 +15,6 @@ import java.util.Optional;
 import javax.crypto.SecretKey;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
-import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -25,13 +24,11 @@ public class JwtUtil {
   private final AppProperties appProperties;
   private final JwtProperties jwtProperties;
 
-  @NonNull
   private SecretKey getSigningKey() {
     return Keys.hmacShaKeyFor(jwtProperties.key().getBytes(StandardCharsets.UTF_8));
   }
 
-  @NonNull
-  public JwtToken generateAccessToken(@NonNull UserId userId) {
+  public JwtToken generateAccessToken(UserId userId) {
     val now = Instant.now();
     val ACCESS_TOKEN_VALIDITY = Duration.ofMinutes(15);
     val expiryDate = now.plus(ACCESS_TOKEN_VALIDITY);
@@ -49,8 +46,7 @@ public class JwtUtil {
     return new JwtToken(token);
   }
 
-  @NonNull
-  public Optional<Claims> parseAccessToken(@NonNull JwtToken token) {
+  public Optional<Claims> parseAccessToken(JwtToken token) {
     try {
       Claims claims =
           Jwts.parser()

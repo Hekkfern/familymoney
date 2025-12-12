@@ -10,7 +10,6 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.NonNull;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
@@ -21,9 +20,8 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
   private final JdbcClient jdbcClient;
 
   @Override
-  @NonNull
   public Optional<EmailVerificationDbo> create(
-      @NonNull UserId userId, @NonNull EmailVerificationToken token, @NonNull Instant expiresAt) {
+      UserId userId, EmailVerificationToken token, Instant expiresAt) {
     var sql =
         """
         INSERT INTO email_verification_tokens (user_id, token, expires_at)
@@ -40,8 +38,7 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
   }
 
   @Override
-  @NonNull
-  public Optional<EmailVerificationDbo> findByToken(@NonNull EmailVerificationToken token) {
+  public Optional<EmailVerificationDbo> findByToken(EmailVerificationToken token) {
     var sql =
         """
         SELECT id, user_id, token, expires_at, created_at
@@ -56,7 +53,7 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
   }
 
   @Override
-  public void deleteByUserId(@NonNull UserId userId) {
+  public void deleteByUserId(UserId userId) {
     var sql =
         """
         DELETE FROM email_verification_tokens
@@ -66,7 +63,7 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
   }
 
   @Override
-  public void deleteOlderThan(@NonNull Duration cutoff) {
+  public void deleteOlderThan(Duration cutoff) {
     var sql =
         """
         DELETE FROM email_verification_tokens

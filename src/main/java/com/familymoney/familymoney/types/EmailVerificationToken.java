@@ -1,16 +1,14 @@
 package com.familymoney.familymoney.types;
 
 import java.security.SecureRandom;
-import org.jspecify.annotations.NonNull;
 
 public record EmailVerificationToken(String value) {
 
   @Override
-  public @NonNull String toString() {
+  public String toString() {
     return value;
   }
 
-  @NonNull
   public static EmailVerificationToken generate() {
     final int TOKEN_LENGTH = 64;
     final String CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";

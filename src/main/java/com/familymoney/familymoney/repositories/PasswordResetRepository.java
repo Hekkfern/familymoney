@@ -10,7 +10,6 @@ import java.time.ZoneOffset;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.simple.JdbcClient;
-import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -20,9 +19,8 @@ public class PasswordResetRepository implements IPasswordResetRepository {
   private final JdbcClient jdbcClient;
 
   @Override
-  @NonNull
   public Optional<PasswordResetDbo> create(
-      @NonNull UserId userId, @NonNull PasswordResetToken token, @NonNull Instant expiresAt) {
+      UserId userId, PasswordResetToken token, Instant expiresAt) {
     var sql =
         """
         INSERT INTO password_reset_tokens (user_id, token, expires_at)
@@ -39,14 +37,13 @@ public class PasswordResetRepository implements IPasswordResetRepository {
   }
 
   @Override
-  @NonNull
-  public Optional<PasswordResetDbo> findByToken(@NonNull PasswordResetToken token) {
+  public Optional<PasswordResetDbo> findByToken(PasswordResetToken token) {
     // TODO
     return Optional.empty();
   }
 
   @Override
-  public void deleteByUserId(@NonNull UserId userId) {
+  public void deleteByUserId(UserId userId) {
     // TODO
   }
 }

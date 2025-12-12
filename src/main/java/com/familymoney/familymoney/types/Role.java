@@ -1,12 +1,10 @@
 package com.familymoney.familymoney.types;
 
-import org.jspecify.annotations.NonNull;
-
 public enum Role {
   USER,
   ADMIN;
 
-  public static Role fromString(@NonNull String role) {
+  public static Role fromString(String role) {
     return switch (role) {
       case "USER" -> Role.USER;
       case "ADMIN" -> Role.ADMIN;
@@ -15,7 +13,7 @@ public enum Role {
   }
 
   @Override
-  public @NonNull String toString() {
+  public String toString() {
     return switch (this) {
       case USER -> "USER";
       case ADMIN -> "ADMIN";

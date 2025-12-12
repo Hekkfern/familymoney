@@ -9,7 +9,6 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.simple.JdbcClient;
-import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -19,9 +18,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
   private final JdbcClient jdbcClient;
 
   @Override
-  @NonNull
-  public Optional<RefreshTokenDbo> create(
-      @NonNull UserId userId, @NonNull RefreshToken token, @NonNull UUID family) {
+  public Optional<RefreshTokenDbo> create(UserId userId, RefreshToken token, UUID family) {
     var sql =
         """
         INSERT INTO refresh_tokens (user_id, token, family)
@@ -38,8 +35,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
   }
 
   @Override
-  @NonNull
-  public Optional<RefreshTokenDbo> findByToken(@NonNull RefreshToken token) {
+  public Optional<RefreshTokenDbo> findByToken(RefreshToken token) {
     var sql =
         """
         SELECT id, user_id, token, created_at, expires_at, is_used, used_at, family
@@ -54,7 +50,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
   }
 
   @Override
-  public void markTokenAsUsed(@NonNull RefreshToken token) {
+  public void markTokenAsUsed(RefreshToken token) {
     var sql =
         """
         UPDATE refresh_tokens
@@ -66,7 +62,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
   }
 
   @Override
-  public void invalidateByFamily(@NonNull UUID family) {
+  public void invalidateByFamily(UUID family) {
     var sql =
         """
         UPDATE refresh_tokens
@@ -77,7 +73,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
   }
 
   @Override
-  public void invalidateByUserId(@NonNull UserId userId) {
+  public void invalidateByUserId(UserId userId) {
     var sql =
         """
         UPDATE refresh_tokens
@@ -88,7 +84,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
   }
 
   @Override
-  public void deleteOlderThan(@NonNull Duration cutoff) {
+  public void deleteOlderThan(Duration cutoff) {
     var sql =
         """
         DELETE FROM refresh_tokens

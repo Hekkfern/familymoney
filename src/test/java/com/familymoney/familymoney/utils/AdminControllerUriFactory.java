@@ -1,7 +1,6 @@
 package com.familymoney.familymoney.utils;
 
 import com.familymoney.familymoney.types.UserId;
-import org.jspecify.annotations.NonNull;
 
 public class AdminControllerUriFactory {
 
@@ -13,7 +12,7 @@ public class AdminControllerUriFactory {
 
   // region Public Methods
 
-  public static String getUserPath(@NonNull UserId userId) {
+  public static String getUserPath(UserId userId) {
     return BASE_PATH + "/%s";
   }
 

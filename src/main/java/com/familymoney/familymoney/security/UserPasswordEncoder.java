@@ -1,6 +1,5 @@
 package com.familymoney.familymoney.security;
 
-import org.jspecify.annotations.NonNull;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -11,12 +10,11 @@ public class UserPasswordEncoder {
 
   private final BCryptPasswordEncoder bcrypt = new BCryptPasswordEncoder(STRENGTH);
 
-  @NonNull
-  public String encode(@NonNull String rawPassword) {
+  public String encode(String rawPassword) {
     return bcrypt.encode(rawPassword);
   }
 
-  public boolean verify(@NonNull String rawPassword, @NonNull String hashedPassword) {
+  public boolean verify(String rawPassword, String hashedPassword) {
     return bcrypt.matches(rawPassword, hashedPassword);
   }
 }

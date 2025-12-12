@@ -4,26 +4,24 @@ import com.familymoney.familymoney.services.data.GetUserData;
 import com.familymoney.familymoney.services.data.UpdateUserData;
 import com.familymoney.familymoney.types.*;
 import java.util.Optional;
-import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface IUserService {
 
-  @NonNull Optional<GetUserData> getUserData(@NonNull UserId userId);
+  Optional<GetUserData> getUserData(UserId userId);
 
-  void deleteUser(@NonNull UserId userId);
+  void deleteUser(UserId userId);
 
-  void updateUserInfo(@NonNull UserId userId, @NonNull UpdateUserData data);
+  void updateUserInfo(UserId userId, UpdateUserData data);
 
-  @NonNull Page<@NonNull GetUserData> getUsers(Pageable pageable);
+  Page<GetUserData> getUsers(Pageable pageable);
 
-  void enableUser(@NonNull UserId userId, boolean enabled);
+  void enableUser(UserId userId, boolean enabled);
 
-  void setUserRole(@NonNull UserId userId, @NonNull Role role);
+  void setUserRole(UserId userId, Role role);
 
-  @NonNull Role getUserRole(@NonNull UserId userId);
+  Role getUserRole(UserId userId);
 
-  void createAdminUser(
-      @NonNull Username username, @NonNull Email email, @NonNull Password password);
+  void createAdminUser(Username username, Email email, Password password);
 }

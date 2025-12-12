@@ -6,35 +6,32 @@ import com.familymoney.familymoney.types.UserId;
 import com.familymoney.familymoney.types.Username;
 import java.time.Duration;
 import java.util.Optional;
-import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface IUserRepository {
 
-  @NonNull Optional<UserDbo> create(
-      @NonNull Username username, @NonNull Email email, @NonNull String passwordHash);
+  Optional<UserDbo> create(Username username, Email email, String passwordHash);
 
-  @NonNull Optional<UserDbo> findById(@NonNull UserId id);
+  Optional<UserDbo> findById(UserId id);
 
-  @NonNull Optional<UserDbo> findByEmail(@NonNull Email email);
+  Optional<UserDbo> findByEmail(Email email);
 
-  @NonNull Optional<UserDbo> findByUsername(@NonNull Username username);
+  Optional<UserDbo> findByUsername(Username username);
 
-  boolean existsByEmailOrUsername(@NonNull Email email, @NonNull Username username);
+  boolean existsByEmailOrUsername(Email email, Username username);
 
-  void updateInfo(
-      @NonNull UserId id, @NonNull Optional<Username> username, @NonNull Optional<Email> email);
+  void updateInfo(UserId id, Optional<Username> username, Optional<Email> email);
 
-  void updatePassword(@NonNull UserId id, @NonNull String newPasswordHash);
+  void updatePassword(UserId id, String newPasswordHash);
 
-  void deleteById(@NonNull UserId id);
+  void deleteById(UserId id);
 
-  void deleteByIsUnverifiedAndOlderThan(@NonNull Duration cutoff);
+  void deleteByIsUnverifiedAndOlderThan(Duration cutoff);
 
-  void setIsEnabledByUserId(@NonNull UserId id, boolean isEnabled);
+  void setIsEnabledByUserId(UserId id, boolean isEnabled);
 
-  void verifyEmail(@NonNull UserId userId);
+  void verifyEmail(UserId userId);
 
-  @NonNull Page<@NonNull UserDbo> findAll(Pageable pageable);
+  Page<UserDbo> findAll(Pageable pageable);
 }

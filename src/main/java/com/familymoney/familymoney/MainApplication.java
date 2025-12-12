@@ -9,7 +9,7 @@ import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoCon
 @ConfigurationPropertiesScan
 public class MainApplication {
 
-  public static void main(String[] args) {
+  static void main(String[] args) {
     SpringApplication.run(MainApplication.class, args);
   }
 }

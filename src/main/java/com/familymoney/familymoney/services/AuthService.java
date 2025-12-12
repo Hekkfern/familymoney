@@ -23,7 +23,6 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,8 +49,7 @@ public class AuthService implements IAuthService {
    * @param userId Identifier of the user to generate the token for
    * @return The stored email verification token database object
    */
-  @NonNull
-  private EmailVerificationDbo generateAndStoreEmailVerificationToken(@NonNull UserId userId) {
+  private EmailVerificationDbo generateAndStoreEmailVerificationToken(UserId userId) {
     final int MAX_NUM_ATTEMPTS = 3;
     final Duration VERIFICATION_TOKEN_EXPIRY = Duration.ofHours(24);
 
@@ -72,8 +70,7 @@ public class AuthService implements IAuthService {
 
   @Transactional
   @Override
-  public void registerUser(
-      @NonNull Username username, @NonNull Email email, @NonNull Password password) {
+  public void registerUser(Username username, Email email, Password password) {
     log.trace("registerUser() started");
     // Check if user already exists
     if (userRepository.existsByEmailOrUsername(email, username)) {
@@ -98,8 +95,7 @@ public class AuthService implements IAuthService {
   }
 
   @Override
-  @NonNull
-  public TokenPair loginUser(@NonNull Email email, @NonNull Password password) {
+  public TokenPair loginUser(Email email, Password password) {
     log.trace("loginUser() started");
     // Find user by email
     val userDbOpt = userRepository.findByEmail(email);
@@ -135,8 +131,7 @@ public class AuthService implements IAuthService {
   }
 
   @Override
-  @NonNull
-  public TokenPair refreshTokens(@NonNull RefreshToken refreshToken) {
+  public TokenPair refreshTokens(RefreshToken refreshToken) {
     log.trace("refreshTokens() started");
     // Find the refresh token in the database
     val refreshTokenFoundInDbOpt = refreshTokenRepository.findByToken(refreshToken);
@@ -184,7 +179,7 @@ public class AuthService implements IAuthService {
   }
 
   @Override
-  public void verifyEmail(@NonNull EmailVerificationToken token) {
+  public void verifyEmail(EmailVerificationToken token) {
     // Find the verification token in the database
     val verificationTokenFromDbOpt = emailVerificationRepository.findByToken(token);
     if (verificationTokenFromDbOpt.isEmpty()) {
@@ -202,7 +197,7 @@ public class AuthService implements IAuthService {
   }
 
   @Override
-  public void resendVerificationEmail(@NonNull Email email) {
+  public void resendVerificationEmail(Email email) {
     // Look for user by email
     val userFromDbOpt = userRepository.findByEmail(email);
     if (userFromDbOpt.isEmpty()) {
@@ -218,17 +213,17 @@ public class AuthService implements IAuthService {
   }
 
   @Override
-  public void forgotPassword(@NonNull Email email) {
+  public void forgotPassword(Email email) {
     // TODO
   }
 
   @Override
-  public void resetPassword(@NonNull EmailVerificationToken token, @NonNull Password newPassword) {
+  public void resetPassword(EmailVerificationToken token, Password newPassword) {
     // TODO
   }
 
   @Override
-  public void logoutUser(@NonNull RefreshToken refreshToken) {
+  public void logoutUser(RefreshToken refreshToken) {
     // Find the refresh token in the database
     val refreshTokenFromDbOpt = refreshTokenRepository.findByToken(refreshToken);
     if (refreshTokenFromDbOpt.isEmpty()) {

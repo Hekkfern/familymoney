@@ -6,18 +6,15 @@ import com.familymoney.familymoney.types.UserId;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
-import org.jspecify.annotations.NonNull;
 
 public interface IEmailVerificationRepository {
 
-  @NonNull
   Optional<EmailVerificationDbo> create(
-      @NonNull UserId userId, @NonNull EmailVerificationToken token, @NonNull Instant expiresAt);
+      UserId userId, EmailVerificationToken token, Instant expiresAt);
 
-  @NonNull
-  Optional<EmailVerificationDbo> findByToken(@NonNull EmailVerificationToken token);
+  Optional<EmailVerificationDbo> findByToken(EmailVerificationToken token);
 
-  void deleteByUserId(@NonNull UserId userId);
+  void deleteByUserId(UserId userId);
 
-  void deleteOlderThan(@NonNull Duration cutoff);
+  void deleteOlderThan(Duration cutoff);
 }

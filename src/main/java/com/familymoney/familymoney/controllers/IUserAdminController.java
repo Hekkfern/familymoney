@@ -7,7 +7,6 @@ import com.familymoney.familymoney.types.UserId;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,10 +14,10 @@ import org.springframework.web.bind.annotation.*;
 public interface IUserAdminController {
 
   @GetMapping("/{userId}")
-  @NonNull GetUserResponseDto getUser(@PathVariable @NotNull UserId userId);
+  GetUserResponseDto getUser(@PathVariable @NotNull UserId userId);
 
   @GetMapping
-  @NonNull GetUsersResponseDto getUsers(Pageable pageable);
+  GetUsersResponseDto getUsers(Pageable pageable);
 
   @PutMapping("/{userId}/enable")
   void enableUser(@PathVariable @NotNull UserId userId, @RequestParam boolean enabled);

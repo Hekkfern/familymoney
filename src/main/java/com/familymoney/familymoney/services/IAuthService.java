@@ -6,25 +6,22 @@ import com.familymoney.familymoney.types.EmailVerificationToken;
 import com.familymoney.familymoney.types.Password;
 import com.familymoney.familymoney.types.RefreshToken;
 import com.familymoney.familymoney.types.Username;
-import org.jspecify.annotations.NonNull;
 
 public interface IAuthService {
 
-  void registerUser(@NonNull Username username, @NonNull Email email, @NonNull Password password);
+  void registerUser(Username username, Email email, Password password);
 
-  @NonNull
-  TokenPair loginUser(@NonNull Email email, @NonNull Password password);
+  TokenPair loginUser(Email email, Password password);
 
-  @NonNull
-  TokenPair refreshTokens(@NonNull RefreshToken refreshToken);
+  TokenPair refreshTokens(RefreshToken refreshToken);
 
-  void verifyEmail(@NonNull EmailVerificationToken token);
+  void verifyEmail(EmailVerificationToken token);
 
-  void resendVerificationEmail(@NonNull Email email);
+  void resendVerificationEmail(Email email);
 
-  void forgotPassword(@NonNull Email email);
+  void forgotPassword(Email email);
 
-  void resetPassword(@NonNull EmailVerificationToken token, @NonNull Password newPassword);
+  void resetPassword(EmailVerificationToken token, Password newPassword);
 
-  void logoutUser(@NonNull RefreshToken refreshToken);
+  void logoutUser(RefreshToken refreshToken);
 }

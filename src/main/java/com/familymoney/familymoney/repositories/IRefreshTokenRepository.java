@@ -6,22 +6,18 @@ import com.familymoney.familymoney.types.UserId;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
-import org.jspecify.annotations.NonNull;
 
 public interface IRefreshTokenRepository {
 
-  @NonNull
-  Optional<RefreshTokenDbo> create(
-      @NonNull UserId userId, @NonNull RefreshToken token, UUID family);
+  Optional<RefreshTokenDbo> create(UserId userId, RefreshToken token, UUID family);
 
-  @NonNull
-  Optional<RefreshTokenDbo> findByToken(@NonNull RefreshToken token);
+  Optional<RefreshTokenDbo> findByToken(RefreshToken token);
 
-  void markTokenAsUsed(@NonNull RefreshToken token);
+  void markTokenAsUsed(RefreshToken token);
 
   void invalidateByFamily(UUID family);
 
-  void invalidateByUserId(@NonNull UserId userId);
+  void invalidateByUserId(UserId userId);
 
-  void deleteOlderThan(@NonNull Duration cutoff);
+  void deleteOlderThan(Duration cutoff);
 }

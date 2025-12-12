@@ -1,12 +1,11 @@
 package com.familymoney.familymoney.types;
 
 import java.util.UUID;
-import org.jspecify.annotations.NonNull;
 
 public record UserId(UUID value) {
 
   @Override
-  public @NonNull String toString() {
+  public String toString() {
     return value.toString();
   }
 

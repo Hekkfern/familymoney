@@ -11,7 +11,6 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -28,19 +27,19 @@ public class UserService implements IUserService {
   private final GetUserDataMapper getUserDataMapper;
 
   @Override
-  public @NonNull Optional<GetUserData> getUserData(@NonNull UserId userId) {
+  public Optional<GetUserData> getUserData(UserId userId) {
     val userOpt = userRepository.findById(userId);
     return userOpt.map(getUserDataMapper::fromDbo);
   }
 
   @Override
-  public void deleteUser(@NonNull UserId userId) {
+  public void deleteUser(UserId userId) {
     userRepository.deleteById(userId);
   }
 
   @Transactional
   @Override
-  public void updateUserInfo(@NonNull UserId userId, @NonNull UpdateUserData data) {
+  public void updateUserInfo(UserId userId, UpdateUserData data) {
     // change user info
     if (data.username().isPresent() || data.password().isPresent()) {
       userRepository.updateInfo(userId, data.username(), data.email());
@@ -51,28 +50,27 @@ public class UserService implements IUserService {
   }
 
   @Override
-  public @NonNull Page<@NonNull GetUserData> getUsers(Pageable pageable) {
+  public Page<GetUserData> getUsers(Pageable pageable) {
     return userRepository.findAll(pageable).map(getUserDataMapper::fromDbo);
   }
 
   @Override
-  public void enableUser(@NonNull UserId userId, boolean enabled) {
+  public void enableUser(UserId userId, boolean enabled) {
     userRepository.setIsEnabledByUserId(userId, enabled);
   }
 
   @Override
-  public void setUserRole(@NonNull UserId userId, @NonNull Role role) {
+  public void setUserRole(UserId userId, Role role) {
     roleRepository.setRoleForUserId(userId, role);
   }
 
   @Override
-  public @NonNull Role getUserRole(@NonNull UserId userId) {
+  public Role getUserRole(UserId userId) {
     return roleRepository.getRoleByUserId(userId);
   }
 
   @Override
-  public void createAdminUser(
-          @NonNull Username username, @NonNull Email email, @NonNull Password password) {
+  public void createAdminUser(Username username, Email email, Password password) {
     // Check if user already exists
     if (userRepository.existsByEmailOrUsername(email, username)) {
       log.info("Admin user already exists, skipping creation");

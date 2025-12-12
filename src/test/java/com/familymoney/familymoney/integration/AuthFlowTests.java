@@ -10,7 +10,6 @@ import com.familymoney.familymoney.types.EmailVerificationToken;
 import com.familymoney.familymoney.utils.AuthControllerUriFactory;
 import com.familymoney.familymoney.utils.FakeGenerator;
 import lombok.val;
-import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
@@ -48,7 +47,7 @@ public class AuthFlowTests {
   // region Helpers
 
   private void registerAndVerifyNewUser(
-      @NonNull String username, @NonNull String email, @NonNull String password) {
+       String username,  String email,  String password) {
     // Mock email sender
     val verificationTokenCaptor = ArgumentCaptor.forClass(EmailVerificationToken.class);
 
@@ -79,8 +78,8 @@ public class AuthFlowTests {
         .isEmpty();
   }
 
-  @NonNull
-  private String[] loginUser(@NonNull String email, @NonNull String password) {
+
+  private String[] loginUser( String email,  String password) {
     val loginResponse =
         client
             .post()
@@ -95,8 +94,8 @@ public class AuthFlowTests {
     return new String[] {loginResponse.accessToken(), loginResponse.refreshToken()};
   }
 
-  @NonNull
-  private String[] refreshTokens(@NonNull String refreshToken) {
+
+  private String[] refreshTokens( String refreshToken) {
     val refreshResponse =
         client
             .post()
@@ -111,7 +110,7 @@ public class AuthFlowTests {
     return new String[] {refreshResponse.accessToken(), refreshResponse.refreshToken()};
   }
 
-  private void logoutUser(@NonNull String refreshToken) {
+  private void logoutUser( String refreshToken) {
     client
         .post()
         .uri(AuthControllerUriFactory.getLogoutPath())

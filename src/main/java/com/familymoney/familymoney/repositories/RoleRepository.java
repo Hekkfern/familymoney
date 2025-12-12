@@ -4,7 +4,6 @@ import com.familymoney.familymoney.types.Role;
 import com.familymoney.familymoney.types.UserId;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
-import org.jspecify.annotations.NonNull;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
@@ -15,8 +14,7 @@ public class RoleRepository implements IRoleRepository {
   private final JdbcClient jdbcClient;
 
   @Override
-  @NonNull
-  public Role getRoleByUserId(@NonNull UserId userId) {
+  public Role getRoleByUserId(UserId userId) {
     var sql =
         """
         SELECT r.name
@@ -29,7 +27,7 @@ public class RoleRepository implements IRoleRepository {
   }
 
   @Override
-  public void setRoleForUserId(@NonNull UserId userId, @NonNull Role role) {
+  public void setRoleForUserId(UserId userId, Role role) {
     var sql =
         """
         WITH r AS (

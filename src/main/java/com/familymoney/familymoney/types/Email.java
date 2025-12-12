@@ -1,15 +1,13 @@
 package com.familymoney.familymoney.types;
 
-import org.jspecify.annotations.NonNull;
-
 public record Email(String value) {
 
-  public static @NonNull Email of(@NonNull String value) {
+  public static Email of(String value) {
     return new Email(value);
   }
 
   @Override
-  public @NonNull String toString() {
+  public String toString() {
     return value;
   }
 }

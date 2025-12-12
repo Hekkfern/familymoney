@@ -5,16 +5,12 @@ import com.familymoney.familymoney.types.PasswordResetToken;
 import com.familymoney.familymoney.types.UserId;
 import java.time.Instant;
 import java.util.Optional;
-import org.jspecify.annotations.NonNull;
 
 public interface IPasswordResetRepository {
 
-  @NonNull
-  Optional<PasswordResetDbo> create(
-      @NonNull UserId userId, @NonNull PasswordResetToken token, @NonNull Instant expiresAt);
+  Optional<PasswordResetDbo> create(UserId userId, PasswordResetToken token, Instant expiresAt);
 
-  @NonNull
-  Optional<PasswordResetDbo> findByToken(@NonNull PasswordResetToken token);
+  Optional<PasswordResetDbo> findByToken(PasswordResetToken token);
 
-  void deleteByUserId(@NonNull UserId userId);
+  void deleteByUserId(UserId userId);
 }

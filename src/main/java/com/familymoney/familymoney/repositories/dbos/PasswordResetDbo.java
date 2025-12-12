@@ -5,15 +5,10 @@ import com.familymoney.familymoney.types.UserId;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.Builder;
-import org.jspecify.annotations.NonNull;
 
 @Builder
 public record PasswordResetDbo(
-    @NonNull UUID id,
-    @NonNull UserId userId,
-    @NonNull PasswordResetToken token,
-    @NonNull Instant createdAt,
-    @NonNull Instant expiresAt) {
+    UUID id, UserId userId, PasswordResetToken token, Instant createdAt, Instant expiresAt) {
 
   public boolean isExpired() {
     return Instant.now().isAfter(expiresAt);
