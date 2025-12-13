@@ -1,4 +1,4 @@
-package com.familymoney.familymoney.properties.converter;
+package com.familymoney.familymoney.types.converter;
 
 import com.familymoney.familymoney.types.Password;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
@@ -7,9 +7,9 @@ import org.springframework.stereotype.Component;
 
 @Component
 @ConfigurationPropertiesBinding
-public class PasswordPropertyConverter implements Converter<String, Password> {
+public class PasswordConverter implements Converter<String, Password> {
   @Override
   public Password convert(@com.familymoney.familymoney.validation.Password String source) {
-    return Password.of(source);
+    return Password.fromString(source);
   }
 }

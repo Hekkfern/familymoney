@@ -9,6 +9,10 @@ public record RefreshToken(String value) {
     return value;
   }
 
+  public static RefreshToken fromString(String value) {
+    return new RefreshToken(value);
+  }
+
   public static RefreshToken generate() {
     return new RefreshToken(UUID.randomUUID().toString().replace("-", ""));
   }

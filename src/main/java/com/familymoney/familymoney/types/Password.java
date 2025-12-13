@@ -2,7 +2,7 @@ package com.familymoney.familymoney.types;
 
 public record Password(String value) {
 
-  public static Password of(String value) {
+  public static Password fromString(String value) {
     return new Password(value);
   }
 

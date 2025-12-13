@@ -9,6 +9,10 @@ public record EmailVerificationToken(String value) {
     return value;
   }
 
+  public static EmailVerificationToken fromString(String value) {
+    return new EmailVerificationToken(value);
+  }
+
   public static EmailVerificationToken generate() {
     final int TOKEN_LENGTH = 64;
     final String CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
