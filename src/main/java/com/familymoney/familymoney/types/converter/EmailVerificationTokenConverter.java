@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationPropertiesBinding
 public class EmailVerificationTokenConverter implements Converter<String, EmailVerificationToken> {
+
   @Override
   public EmailVerificationToken convert(String source) {
     return EmailVerificationToken.fromString(source);

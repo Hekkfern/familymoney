@@ -1,8 +1,6 @@
 package com.familymoney.familymoney.controllers.dtos.auth;
 
-import com.familymoney.familymoney.validation.EmailVerificationToken;
-import com.familymoney.familymoney.validation.Password;
-import jakarta.validation.constraints.NotBlank;
+import com.familymoney.familymoney.types.Password;
+import com.familymoney.familymoney.types.PasswordResetToken;
 
-public record ResetPasswordRequestDto(
-    @NotBlank @EmailVerificationToken String token, @NotBlank @Password String newPassword) {}
+public record ResetPasswordRequestDto(PasswordResetToken token, Password newPassword) {}

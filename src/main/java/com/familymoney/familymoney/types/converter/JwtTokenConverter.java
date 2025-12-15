@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationPropertiesBinding
 public class JwtTokenConverter implements Converter<String, JwtToken> {
+
   @Override
   public JwtToken convert(String source) {
     return JwtToken.fromString(source);

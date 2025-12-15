@@ -8,8 +8,9 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationPropertiesBinding
 public class UsernameConverter implements Converter<String, Username> {
+
   @Override
-  public Username convert(@com.familymoney.familymoney.validation.Username String source) {
-    return Username.of(source);
+  public Username convert(String source) {
+    return Username.fromString(source);
   }
 }

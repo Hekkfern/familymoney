@@ -8,7 +8,10 @@ import com.familymoney.familymoney.controllers.dtos.auth.LoginRequestDto;
 import com.familymoney.familymoney.controllers.dtos.auth.LoginResponseDto;
 import com.familymoney.familymoney.controllers.dtos.auth.RegisterRequestDto;
 import com.familymoney.familymoney.services.IEmailSenderService;
+import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.EmailVerificationToken;
+import com.familymoney.familymoney.types.Password;
+import com.familymoney.familymoney.types.Username;
 import com.familymoney.familymoney.utils.AuthControllerUriFactory;
 import com.familymoney.familymoney.utils.FakeGenerator;
 import lombok.val;
@@ -55,9 +58,7 @@ public class AdminFlowTests {
    * @param password Password of the user account
    * @return Access Token for the logged-in user.
    */
-
-  private String registerAndLoginUser(
-       String username,  String email,  String password) {
+  private String registerAndLoginUser(Username username, Email email, Password password) {
     // Mock email sender
     val verificationTokenCaptor = ArgumentCaptor.forClass(EmailVerificationToken.class);
 
@@ -98,7 +99,7 @@ public class AdminFlowTests {
             .expectBody(LoginResponseDto.class)
             .returnResult()
             .getResponseBody();
-    return loginResponse.accessToken();
+    return loginResponse.accessToken().toString();
   }
 
   // endregion

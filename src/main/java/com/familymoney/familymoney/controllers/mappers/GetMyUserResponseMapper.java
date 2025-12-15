@@ -8,7 +8,5 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface GetMyUserResponseMapper {
 
-  @Mapping(target = "username", expression = "java(userData.username().toString())")
-  @Mapping(target = "email", expression = "java(userData.email().toString())")
   GetMyUserResponseDto toDto(GetUserData userData);
 }

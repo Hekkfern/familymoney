@@ -1,11 +1,7 @@
 package com.familymoney.familymoney.services;
 
 import com.familymoney.familymoney.services.data.TokenPair;
-import com.familymoney.familymoney.types.Email;
-import com.familymoney.familymoney.types.EmailVerificationToken;
-import com.familymoney.familymoney.types.Password;
-import com.familymoney.familymoney.types.RefreshToken;
-import com.familymoney.familymoney.types.Username;
+import com.familymoney.familymoney.types.*;
 
 public interface IAuthService {
 
@@ -21,7 +17,7 @@ public interface IAuthService {
 
   void forgotPassword(Email email);
 
-  void resetPassword(EmailVerificationToken token, Password newPassword);
+  void resetPassword(PasswordResetToken token, Password newPassword);
 
   void logoutUser(RefreshToken refreshToken);
 }

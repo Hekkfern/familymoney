@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationPropertiesBinding
 public class TransactionIdConverter implements Converter<String, TransactionId> {
+
   @Override
   public TransactionId convert(String source) {
     return TransactionId.fromString(source);

@@ -218,7 +218,7 @@ public class AuthService implements IAuthService {
   }
 
   @Override
-  public void resetPassword(EmailVerificationToken token, Password newPassword) {
+  public void resetPassword(PasswordResetToken token, Password newPassword) {
     // TODO
   }
 

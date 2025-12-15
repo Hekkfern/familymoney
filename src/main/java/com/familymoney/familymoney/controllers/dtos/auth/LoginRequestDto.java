@@ -1,7 +1,6 @@
 package com.familymoney.familymoney.controllers.dtos.auth;
 
-import com.familymoney.familymoney.validation.Password;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
+import com.familymoney.familymoney.types.Email;
+import com.familymoney.familymoney.types.Password;
 
-public record LoginRequestDto(@NotBlank @Email String email, @NotBlank @Password String password) {}
+public record LoginRequestDto(Email email, Password password) {}

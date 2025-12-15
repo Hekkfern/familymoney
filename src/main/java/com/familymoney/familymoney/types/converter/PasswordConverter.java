@@ -8,8 +8,9 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationPropertiesBinding
 public class PasswordConverter implements Converter<String, Password> {
+
   @Override
-  public Password convert(@com.familymoney.familymoney.validation.Password String source) {
+  public Password convert(String source) {
     return Password.fromString(source);
   }
 }

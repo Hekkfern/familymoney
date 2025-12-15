@@ -10,12 +10,14 @@ import com.familymoney.familymoney.controllers.dtos.auth.LoginResponseDto;
 import com.familymoney.familymoney.controllers.dtos.auth.RegisterRequestDto;
 import com.familymoney.familymoney.controllers.dtos.user.GetMyUserResponseDto;
 import com.familymoney.familymoney.services.IEmailSenderService;
+import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.EmailVerificationToken;
+import com.familymoney.familymoney.types.Password;
+import com.familymoney.familymoney.types.Username;
 import com.familymoney.familymoney.utils.AuthControllerUriFactory;
 import com.familymoney.familymoney.utils.FakeGenerator;
 import com.familymoney.familymoney.utils.UserControllerUriFactory;
 import lombok.val;
-import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
@@ -59,7 +61,7 @@ public class UserFlowTests {
    * @param password Password of the user account
    * @return Access Token for the logged-in user.
    */
-  private String registerAndLoginUser(String username, String email, String password) {
+  private String registerAndLoginUser(Username username, Email email, Password password) {
     // Mock email sender
     val verificationTokenCaptor = ArgumentCaptor.forClass(EmailVerificationToken.class);
 
@@ -100,7 +102,7 @@ public class UserFlowTests {
             .expectBody(LoginResponseDto.class)
             .returnResult()
             .getResponseBody();
-    return loginResponse.accessToken();
+    return loginResponse.accessToken().toString();
   }
 
   // endregion
@@ -129,8 +131,8 @@ public class UserFlowTests {
             .expectBody(GetMyUserResponseDto.class)
             .returnResult()
             .getResponseBody();
-    assertEquals(username, userDataResponse.username());
-    assertEquals(email, userDataResponse.email());
+    assertEquals(username, userDataResponse.username().value());
+    assertEquals(email, userDataResponse.email().value());
   }
 
   @Test

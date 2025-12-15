@@ -1,8 +1,9 @@
 package com.familymoney.familymoney.controllers.dtos.user;
 
-import com.familymoney.familymoney.validation.Password;
-import com.familymoney.familymoney.validation.Username;
-import jakarta.validation.constraints.Email;
+import com.familymoney.familymoney.types.Email;
+import com.familymoney.familymoney.types.Password;
+import com.familymoney.familymoney.types.Username;
+import java.util.Optional;
 
 public record UpdateUserRequestDto(
-    @Username String username, @Email String email, @Password String password) {}
+    Optional<Username> username, Optional<Email> email, Optional<Password> password) {}

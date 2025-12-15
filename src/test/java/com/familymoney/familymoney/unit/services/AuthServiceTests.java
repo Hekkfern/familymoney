@@ -49,9 +49,9 @@ public class AuthServiceTests {
         .thenReturn(
             Optional.of(
                 new UserDbo(
-                    new UserId(UUID.randomUUID()),
-                    new Username("testuser"),
-                    new Email("test@mail.com"),
+                    FakeGenerator.userId(),
+                    FakeGenerator.username(),
+                    FakeGenerator.email(),
                     "dsafjhadskjgf5dsf56a4",
                     Instant.now(),
                     Instant.now(),
@@ -62,17 +62,15 @@ public class AuthServiceTests {
             Optional.of(
                 new EmailVerificationDbo(
                     UUID.randomUUID(),
-                    new UserId(UUID.randomUUID()),
-                    new EmailVerificationToken("verificationcode"),
+                    FakeGenerator.userId(),
+                    FakeGenerator.emailVerificationToken(),
                     Instant.now(),
                     Instant.now().plusSeconds(3600))));
 
     assertDoesNotThrow(
         () ->
             authService.registerUser(
-                new Username(FakeGenerator.username()),
-                new Email(FakeGenerator.email()),
-                new Password(FakeGenerator.password())));
+                FakeGenerator.username(), FakeGenerator.email(), FakeGenerator.password()));
 
     verify(userRepository, times(1)).create(any(), any(), any());
     verify(emailVerificationRepository, times(1)).create(any(), any(), any());
@@ -87,9 +85,7 @@ public class AuthServiceTests {
         UserAlreadyExistsException.class,
         () ->
             authService.registerUser(
-                new Username(FakeGenerator.username()),
-                new Email(FakeGenerator.email()),
-                new Password(FakeGenerator.password())));
+                FakeGenerator.username(), FakeGenerator.email(), FakeGenerator.password()));
   }
 
   @Test
@@ -101,9 +97,7 @@ public class AuthServiceTests {
         DatabaseExecutionException.class,
         () ->
             authService.registerUser(
-                new Username(FakeGenerator.username()),
-                new Email(FakeGenerator.email()),
-                new Password(FakeGenerator.password())));
+                FakeGenerator.username(), FakeGenerator.email(), FakeGenerator.password()));
   }
 
   @Test
@@ -113,9 +107,9 @@ public class AuthServiceTests {
         .thenReturn(
             Optional.of(
                 new UserDbo(
-                    new UserId(UUID.randomUUID()),
-                    new Username("testuser"),
-                    new Email("test@mail.com"),
+                    FakeGenerator.userId(),
+                    FakeGenerator.username(),
+                    FakeGenerator.email(),
                     "dsafjhadskjgf5dsf56a4",
                     Instant.now(),
                     Instant.now(),
@@ -127,9 +121,7 @@ public class AuthServiceTests {
         DatabaseExecutionException.class,
         () ->
             authService.registerUser(
-                new Username(FakeGenerator.username()),
-                new Email(FakeGenerator.email()),
-                new Password(FakeGenerator.password())));
+                FakeGenerator.username(), FakeGenerator.email(), FakeGenerator.password()));
   }
 
   // endregion

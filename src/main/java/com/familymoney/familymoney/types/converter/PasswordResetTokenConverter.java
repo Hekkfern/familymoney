@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationPropertiesBinding
 public class PasswordResetTokenConverter implements Converter<String, PasswordResetToken> {
+
   @Override
   public PasswordResetToken convert(String source) {
     return PasswordResetToken.fromString(source);

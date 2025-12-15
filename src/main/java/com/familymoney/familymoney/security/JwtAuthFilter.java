@@ -52,13 +52,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
       return;
     }
     val accessToken = accessTokenOpt.get();
+    val userId = UserId.fromString(accessToken.getSubject());
     // get roles from DB
-    val role = userService.getUserRole(UserId.fromString(accessToken.getSubject()));
+    val role = userService.getUserRole(userId);
     // set authorization
     val authorities = List.of(new SimpleGrantedAuthority(ROLE_PREFIX + role));
-    val auth =
-        new UsernamePasswordAuthenticationToken(
-            UserId.fromString(accessToken.getSubject()), null, authorities);
+    val auth = new UsernamePasswordAuthenticationToken(userId, null, authorities);
     SecurityContextHolder.getContext().setAuthentication(auth);
     // finish
     filterChain.doFilter(request, response);

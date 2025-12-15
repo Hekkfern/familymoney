@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationPropertiesBinding
 public class UserIdConverter implements Converter<String, UserId> {
+
   @Override
   public UserId convert(String source) {
     return UserId.fromString(source);

@@ -5,17 +5,14 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import com.familymoney.familymoney.controllers.AuthController;
-import com.familymoney.familymoney.controllers.dtos.auth.LoginRequestDto;
-import com.familymoney.familymoney.controllers.dtos.auth.RefreshTokenRequestDto;
-import com.familymoney.familymoney.controllers.dtos.auth.RegisterRequestDto;
-import com.familymoney.familymoney.repositories.IRoleRepository;
 import com.familymoney.familymoney.security.JwtUtil;
 import com.familymoney.familymoney.services.IAuthService;
+import com.familymoney.familymoney.services.IUserService;
 import com.familymoney.familymoney.services.data.TokenPair;
-import com.familymoney.familymoney.types.JwtToken;
-import com.familymoney.familymoney.types.RefreshToken;
+import com.familymoney.familymoney.types.*;
 import com.familymoney.familymoney.utils.AuthControllerUriFactory;
 import com.familymoney.familymoney.utils.FakeGenerator;
+import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,7 +37,7 @@ public class AuthControllerTests {
 
   @MockitoBean private IAuthService authService;
   @MockitoBean private JwtUtil jwtUtil;
-  @MockitoBean private IRoleRepository permissionsRepository;
+  @MockitoBean private IUserService userService;
 
   // endregion
 
@@ -54,25 +51,47 @@ public class AuthControllerTests {
   private static Stream<Arguments> provideValidRegisterParams() {
     return Stream.of(
         // minimal valid password length (12), simple username
-        Arguments.of("hector", "hector.fernandez+dev@example.com", "StrongPass1!"),
+        Arguments.of(
+            Username.fromString("hector"),
+            Email.fromString("hector.fernandez+dev@example.com"),
+            Password.fromString("StrongPass1!")),
         // underscore in username, plus-addressing and multi-part TLD
-        Arguments.of("user_123", "user+tag@example.co.uk", "Aa1$aaaaaaaa"),
+        Arguments.of(
+            Username.fromString("user_123"),
+            Email.fromString("user+tag@example.co.uk"),
+            Password.fromString("Aa1$aaaaaaaa")),
         // hyphen in username, dot in local-part
-        Arguments.of("john-doe", "john.doe@example.com", "Password123$!"),
+        Arguments.of(
+            Username.fromString("john-doe"),
+            Email.fromString("john.doe@example.com"),
+            Password.fromString("Password123$!")),
         // max-length username (32 chars): 'a' + 31 'b'
-        Arguments.of("a" + "b".repeat(31), "long.user@example-domain.com", "Zz9@aaaaaaaaaaa"),
+        Arguments.of(
+            Username.fromString("abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"),
+            Email.fromString("long.user@example-domain.com"),
+            Password.fromString("Zz9@aaaaaaaaaaa")),
         // another valid combination with mixed allowed specials in password (ensure >=12 chars)
-        Arguments.of("alpha1", "alpha1@mail.example.org", "GoodPass1@$a"));
+        Arguments.of(
+            Username.fromString("alpha1"),
+            Email.fromString("alpha1@mail.example.org"),
+            Password.fromString("GoodPass1@$a")));
   }
 
   @ParameterizedTest
   @MethodSource("provideValidRegisterParams")
-  void AuthController_Register_Successful(String username, String email, String password) {
+  void AuthController_Register_Successful(Username username, Email email, Password password) {
     doNothing().when(authService).registerUser(any(), any(), any());
     client
         .post()
         .uri(AuthControllerUriFactory.getRegisterPath())
-        .body(new RegisterRequestDto(username, email, password))
+        .body(
+            Map.of(
+                "username",
+                username.toString(),
+                "email",
+                email.toString(),
+                "password",
+                password.toString()))
         .exchange()
         .expectStatus()
         .isOk();
@@ -85,7 +104,14 @@ public class AuthControllerTests {
     client
         .post()
         .uri(AuthControllerUriFactory.getRegisterPath())
-        .body(new RegisterRequestDto(username, FakeGenerator.email(), FakeGenerator.password()))
+        .body(
+            Map.of(
+                "username",
+                username,
+                "email",
+                FakeGenerator.email().toString(),
+                "password",
+                FakeGenerator.password().toString()))
         .exchange()
         .expectStatus()
         .isBadRequest();
@@ -98,7 +124,14 @@ public class AuthControllerTests {
     client
         .post()
         .uri(AuthControllerUriFactory.getRegisterPath())
-        .body(new RegisterRequestDto(FakeGenerator.username(), email, FakeGenerator.password()))
+        .body(
+            Map.of(
+                "username",
+                FakeGenerator.username().toString(),
+                "email",
+                email,
+                "password",
+                FakeGenerator.password().toString()))
         .exchange()
         .expectStatus()
         .isBadRequest();
@@ -111,7 +144,14 @@ public class AuthControllerTests {
     client
         .post()
         .uri(AuthControllerUriFactory.getRegisterPath())
-        .body(new RegisterRequestDto(FakeGenerator.username(), FakeGenerator.email(), password))
+        .body(
+            Map.of(
+                "username",
+                FakeGenerator.username().toString(),
+                "email",
+                FakeGenerator.email().toString(),
+                "password",
+                password))
         .exchange()
         .expectStatus()
         .isBadRequest();
@@ -124,26 +164,33 @@ public class AuthControllerTests {
   private static Stream<Arguments> provideValidLoginParams() {
     return Stream.of(
         // minimal valid password length (12), simple username
-        Arguments.of("hector.fernandez+dev@example.com", "StrongPass1!"),
+        Arguments.of(
+            Email.fromString("hector.fernandez+dev@example.com"),
+            Password.fromString("StrongPass1!")),
         // underscore in username, plus-addressing and multi-part TLD
-        Arguments.of("user+tag@example.co.uk", "Aa1$aaaaaaaa"),
+        Arguments.of(
+            Email.fromString("user+tag@example.co.uk"), Password.fromString("Aa1$aaaaaaaa")),
         // hyphen in username, dot in local-part
-        Arguments.of("john.doe@example.com", "Password123$!"),
+        Arguments.of(
+            Email.fromString("john.doe@example.com"), Password.fromString("Password123$!")),
         // max-length username (32 chars): 'a' + 31 'b'
-        Arguments.of("long.user@example-domain.com", "Zz9@aaaaaaaaaaa"),
+        Arguments.of(
+            Email.fromString("long.user@example-domain.com"),
+            Password.fromString("Zz9@aaaaaaaaaaa")),
         // another valid combination with mixed allowed specials in password (ensure >=12 chars)
-        Arguments.of("alpha1@mail.example.org", "GoodPass1@$a"));
+        Arguments.of(
+            Email.fromString("alpha1@mail.example.org"), Password.fromString("GoodPass1@$a")));
   }
 
   @ParameterizedTest
   @MethodSource("provideValidLoginParams")
-  void AuthController_Login_Successful(String email, String password) {
+  void AuthController_Login_Successful(Email email, Password password) {
     when(authService.loginUser(any(), any()))
-        .thenReturn(new TokenPair(new JwtToken("aa"), new RefreshToken("bb")));
+        .thenReturn(new TokenPair(FakeGenerator.accessToken(), FakeGenerator.refreshToken()));
     client
         .post()
         .uri(AuthControllerUriFactory.getLoginPath())
-        .body(new LoginRequestDto(email, password))
+        .body(Map.of("email", email.toString(), "password", password.toString()))
         .exchange()
         .expectStatus()
         .isOk();
@@ -153,11 +200,11 @@ public class AuthControllerTests {
   @FieldSource("com.familymoney.familymoney.utils.TestDataFactory#INVALID_EMAILS")
   void AuthController_Login_InvalidParam_Email(String email) {
     when(authService.loginUser(any(), any()))
-        .thenReturn(new TokenPair(new JwtToken("aa"), new RefreshToken("bb")));
+        .thenReturn(new TokenPair(FakeGenerator.accessToken(), FakeGenerator.refreshToken()));
     client
         .post()
         .uri(AuthControllerUriFactory.getLoginPath())
-        .body(new LoginRequestDto(email, FakeGenerator.password()))
+        .body(Map.of("email", email, "password", FakeGenerator.password()))
         .exchange()
         .expectStatus()
         .isBadRequest();
@@ -167,11 +214,11 @@ public class AuthControllerTests {
   @FieldSource("com.familymoney.familymoney.utils.TestDataFactory#INVALID_PASSWORDS")
   void AuthController_Login_InvalidParam_Password(String password) {
     when(authService.loginUser(any(), any()))
-        .thenReturn(new TokenPair(new JwtToken("aa"), new RefreshToken("bb")));
+        .thenReturn(new TokenPair(FakeGenerator.accessToken(), FakeGenerator.refreshToken()));
     client
         .post()
         .uri(AuthControllerUriFactory.getLoginPath())
-        .body(new LoginRequestDto(FakeGenerator.email(), password))
+        .body(Map.of("email", FakeGenerator.email().toString(), "password", password))
         .exchange()
         .expectStatus()
         .isBadRequest();
@@ -188,7 +235,7 @@ public class AuthControllerTests {
         .get()
         .uri(
             AuthControllerUriFactory.getVerifyEmailPath(
-                "nBErlAqusirf5ylhUWY65j3ortHBtaD75wxHQ4Q3yFE3jUnViVpyBtkEvvyXw1Yh"))
+                FakeGenerator.emailVerificationToken().toString()))
         .exchange()
         .expectStatus()
         .isOk();
@@ -212,11 +259,11 @@ public class AuthControllerTests {
   @Test
   void AuthController_Refresh_Successful() {
     when(authService.refreshTokens(any()))
-        .thenReturn(new TokenPair(new JwtToken("aa"), new RefreshToken("bb")));
+        .thenReturn(new TokenPair(FakeGenerator.accessToken(), FakeGenerator.refreshToken()));
     client
         .post()
         .uri(AuthControllerUriFactory.getRefreshPath())
-        .body(new RefreshTokenRequestDto(FakeGenerator.refreshToken()))
+        .body(Map.of("refreshToken", FakeGenerator.refreshToken().toString()))
         .exchange()
         .expectStatus()
         .isOk();
@@ -225,11 +272,11 @@ public class AuthControllerTests {
   @Test
   void AuthController_Refresh_InvalidParam_Token() {
     when(authService.refreshTokens(any()))
-        .thenReturn(new TokenPair(new JwtToken("aa"), new RefreshToken("bb")));
+        .thenReturn(new TokenPair(FakeGenerator.accessToken(), FakeGenerator.refreshToken()));
     client
         .post()
         .uri(AuthControllerUriFactory.getRefreshPath())
-        .body(new RefreshTokenRequestDto("fdsfs!ffg231154"))
+        .body(Map.of("refreshToken", "fdsfs!ffg231154"))
         .exchange()
         .expectStatus()
         .isBadRequest();

@@ -6,7 +6,7 @@ import static org.mockito.Mockito.verify;
 
 import com.familymoney.familymoney.controllers.dtos.auth.*;
 import com.familymoney.familymoney.services.IEmailSenderService;
-import com.familymoney.familymoney.types.EmailVerificationToken;
+import com.familymoney.familymoney.types.*;
 import com.familymoney.familymoney.utils.AuthControllerUriFactory;
 import com.familymoney.familymoney.utils.FakeGenerator;
 import lombok.val;
@@ -46,8 +46,7 @@ public class AuthFlowTests {
 
   // region Helpers
 
-  private void registerAndVerifyNewUser(
-       String username,  String email,  String password) {
+  private void registerAndVerifyNewUser(Username username, Email email, Password password) {
     // Mock email sender
     val verificationTokenCaptor = ArgumentCaptor.forClass(EmailVerificationToken.class);
 
@@ -78,8 +77,9 @@ public class AuthFlowTests {
         .isEmpty();
   }
 
+  record TokenPair(JwtToken accessToken, RefreshToken refreshToken) {}
 
-  private String[] loginUser( String email,  String password) {
+  private TokenPair loginUser(Email email, Password password) {
     val loginResponse =
         client
             .post()
@@ -91,11 +91,10 @@ public class AuthFlowTests {
             .expectBody(LoginResponseDto.class)
             .returnResult()
             .getResponseBody();
-    return new String[] {loginResponse.accessToken(), loginResponse.refreshToken()};
+    return new TokenPair(loginResponse.accessToken(), loginResponse.refreshToken());
   }
 
-
-  private String[] refreshTokens( String refreshToken) {
+  private TokenPair refreshTokens(RefreshToken refreshToken) {
     val refreshResponse =
         client
             .post()
@@ -107,10 +106,10 @@ public class AuthFlowTests {
             .expectBody(RefreshResponseDto.class)
             .returnResult()
             .getResponseBody();
-    return new String[] {refreshResponse.accessToken(), refreshResponse.refreshToken()};
+    return new TokenPair(refreshResponse.accessToken(), refreshResponse.refreshToken());
   }
 
-  private void logoutUser( String refreshToken) {
+  private void logoutUser(RefreshToken refreshToken) {
     client
         .post()
         .uri(AuthControllerUriFactory.getLogoutPath())
@@ -139,11 +138,11 @@ public class AuthFlowTests {
 
     // login
     val tokens = loginUser(email, password);
-    val refreshToken = tokens[1];
+    val refreshToken = tokens.refreshToken();
 
     // refresh
     val newTokens = refreshTokens(refreshToken);
-    val newRefreshToken = newTokens[1];
+    val newRefreshToken = newTokens.refreshToken();
 
     // logout
     logoutUser(newRefreshToken);

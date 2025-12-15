@@ -1,3 +1,6 @@
 package com.familymoney.familymoney.controllers.dtos.auth;
 
-public record LoginResponseDto(String accessToken, String refreshToken) {}
+import com.familymoney.familymoney.types.JwtToken;
+import com.familymoney.familymoney.types.RefreshToken;
+
+public record LoginResponseDto(JwtToken accessToken, RefreshToken refreshToken) {}
