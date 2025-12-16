@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.springboot)
     alias(libs.plugins.springboot.dependencymanagement)
     idea
+    checkstyle
 }
 
 group = "com.familymoney"
@@ -13,6 +14,10 @@ java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(25)
     }
+}
+
+checkstyle {
+    toolVersion = "12.3.0"
 }
 
 configurations {
