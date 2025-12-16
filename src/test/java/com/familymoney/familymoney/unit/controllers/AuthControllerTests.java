@@ -100,7 +100,6 @@ public class AuthControllerTests {
   @ParameterizedTest
   @FieldSource("com.familymoney.familymoney.utils.TestDataFactory#INVALID_USERNAMES")
   void AuthController_Register_InvalidParam_Username(String username) {
-    doNothing().when(authService).registerUser(any(), any(), any());
     client
         .post()
         .uri(AuthControllerUriFactory.getRegisterPath())
@@ -117,10 +116,25 @@ public class AuthControllerTests {
         .isBadRequest();
   }
 
+  @Test
+  void AuthController_Register_MissingParam_Username() {
+    client
+        .post()
+        .uri(AuthControllerUriFactory.getRegisterPath())
+        .body(
+            Map.of(
+                "email",
+                FakeGenerator.email().toString(),
+                "password",
+                FakeGenerator.password().toString()))
+        .exchange()
+        .expectStatus()
+        .isBadRequest();
+  }
+
   @ParameterizedTest
   @FieldSource("com.familymoney.familymoney.utils.TestDataFactory#INVALID_EMAILS")
   void AuthController_Register_InvalidParam_Email(String email) {
-    doNothing().when(authService).registerUser(any(), any(), any());
     client
         .post()
         .uri(AuthControllerUriFactory.getRegisterPath())
@@ -137,10 +151,25 @@ public class AuthControllerTests {
         .isBadRequest();
   }
 
+  @Test
+  void AuthController_Register_MissingParam_Email() {
+    client
+        .post()
+        .uri(AuthControllerUriFactory.getRegisterPath())
+        .body(
+            Map.of(
+                "username",
+                FakeGenerator.username().toString(),
+                "password",
+                FakeGenerator.password().toString()))
+        .exchange()
+        .expectStatus()
+        .isBadRequest();
+  }
+
   @ParameterizedTest
   @FieldSource("com.familymoney.familymoney.utils.TestDataFactory#INVALID_PASSWORDS")
   void AuthController_Register_InvalidParam_Password(String password) {
-    doNothing().when(authService).registerUser(any(), any(), any());
     client
         .post()
         .uri(AuthControllerUriFactory.getRegisterPath())
@@ -152,6 +181,22 @@ public class AuthControllerTests {
                 FakeGenerator.email().toString(),
                 "password",
                 password))
+        .exchange()
+        .expectStatus()
+        .isBadRequest();
+  }
+
+  @Test
+  void AuthController_Register_MissingParam_Password() {
+    client
+        .post()
+        .uri(AuthControllerUriFactory.getRegisterPath())
+        .body(
+            Map.of(
+                "email",
+                FakeGenerator.email().toString(),
+                "username",
+                FakeGenerator.username().toString()))
         .exchange()
         .expectStatus()
         .isBadRequest();
@@ -199,12 +244,21 @@ public class AuthControllerTests {
   @ParameterizedTest
   @FieldSource("com.familymoney.familymoney.utils.TestDataFactory#INVALID_EMAILS")
   void AuthController_Login_InvalidParam_Email(String email) {
-    when(authService.loginUser(any(), any()))
-        .thenReturn(new TokenPair(FakeGenerator.accessToken(), FakeGenerator.refreshToken()));
     client
         .post()
         .uri(AuthControllerUriFactory.getLoginPath())
-        .body(Map.of("email", email, "password", FakeGenerator.password()))
+        .body(Map.of("email", email, "password", FakeGenerator.password().toString()))
+        .exchange()
+        .expectStatus()
+        .isBadRequest();
+  }
+
+  @Test
+  void AuthController_Login_MissingParam_Email() {
+    client
+        .post()
+        .uri(AuthControllerUriFactory.getLoginPath())
+        .body(Map.of("password", FakeGenerator.password().toString()))
         .exchange()
         .expectStatus()
         .isBadRequest();
@@ -213,12 +267,21 @@ public class AuthControllerTests {
   @ParameterizedTest
   @FieldSource("com.familymoney.familymoney.utils.TestDataFactory#INVALID_PASSWORDS")
   void AuthController_Login_InvalidParam_Password(String password) {
-    when(authService.loginUser(any(), any()))
-        .thenReturn(new TokenPair(FakeGenerator.accessToken(), FakeGenerator.refreshToken()));
     client
         .post()
         .uri(AuthControllerUriFactory.getLoginPath())
         .body(Map.of("email", FakeGenerator.email().toString(), "password", password))
+        .exchange()
+        .expectStatus()
+        .isBadRequest();
+  }
+
+  @Test
+  void AuthController_Login_MissingParam_Password() {
+    client
+        .post()
+        .uri(AuthControllerUriFactory.getLoginPath())
+        .body(Map.of("email", FakeGenerator.email().toString()))
         .exchange()
         .expectStatus()
         .isBadRequest();
@@ -243,13 +306,22 @@ public class AuthControllerTests {
 
   @Test
   void AuthController_VerifyEmail_InvalidParam_Token() {
-    doNothing().when(authService).verifyEmail(any());
     client
         .get()
         .uri(AuthControllerUriFactory.getVerifyEmailPath("nBErlAqusirf5!ylhUWY65j+)1Yh"))
         .exchange()
         .expectStatus()
         .isBadRequest();
+  }
+
+  @Test
+  void AuthController_VerifyEmail_MissingParam_Token() {
+    client
+        .get()
+        .uri(AuthControllerUriFactory.getVerifyEmailPath(""))
+        .exchange()
+        .expectStatus()
+        .isNotFound();
   }
 
   // endregion
@@ -271,12 +343,59 @@ public class AuthControllerTests {
 
   @Test
   void AuthController_Refresh_InvalidParam_Token() {
-    when(authService.refreshTokens(any()))
-        .thenReturn(new TokenPair(FakeGenerator.accessToken(), FakeGenerator.refreshToken()));
     client
         .post()
         .uri(AuthControllerUriFactory.getRefreshPath())
         .body(Map.of("refreshToken", "fdsfs!ffg231154"))
+        .exchange()
+        .expectStatus()
+        .isBadRequest();
+  }
+
+  @Test
+  void AuthController_Refresh_MissingParam_Token() {
+    client
+        .post()
+        .uri(AuthControllerUriFactory.getRefreshPath())
+        .body(Map.of())
+        .exchange()
+        .expectStatus()
+        .isBadRequest();
+  }
+
+  // endregion
+
+  // region /logout Tests
+
+  @Test
+  void AuthController_Logout_Successful() {
+    doNothing().when(authService).logoutUser(any());
+    client
+        .post()
+        .uri(AuthControllerUriFactory.getLogoutPath())
+        .body(Map.of("refreshToken", FakeGenerator.refreshToken().toString()))
+        .exchange()
+        .expectStatus()
+        .isOk();
+  }
+
+  @Test
+  void AuthController_Logout_InvalidParam_Token() {
+    client
+        .post()
+        .uri(AuthControllerUriFactory.getLogoutPath())
+        .body(Map.of("refreshToken", "fdsfs!ffg231154"))
+        .exchange()
+        .expectStatus()
+        .isBadRequest();
+  }
+
+  @Test
+  void AuthController_Logout_MissingParam_Token() {
+    client
+        .post()
+        .uri(AuthControllerUriFactory.getLogoutPath())
+        .body(Map.of())
         .exchange()
         .expectStatus()
         .isBadRequest();

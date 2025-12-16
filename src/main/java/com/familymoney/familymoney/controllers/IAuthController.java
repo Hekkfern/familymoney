@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -88,7 +89,7 @@ public interface IAuthController {
 
   @Operation(summary = "Verify the email address of an user account using the verification token")
   @GetMapping("verify-email/{token}")
-  void verifyEmail(@PathVariable EmailVerificationToken token);
+  void verifyEmail(@PathVariable @NotNull EmailVerificationToken token);
 
   @Operation(summary = "Resend the email verification email to the user")
   @PostMapping("verify-email/resend")

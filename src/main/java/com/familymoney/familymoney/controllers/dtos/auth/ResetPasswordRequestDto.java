@@ -2,5 +2,6 @@ package com.familymoney.familymoney.controllers.dtos.auth;
 
 import com.familymoney.familymoney.types.Password;
 import com.familymoney.familymoney.types.PasswordResetToken;
+import jakarta.validation.constraints.NotNull;
 
-public record ResetPasswordRequestDto(PasswordResetToken token, Password newPassword) {}
+public record ResetPasswordRequestDto(@NotNull PasswordResetToken token, @NotNull Password newPassword) {}
