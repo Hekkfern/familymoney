@@ -22,36 +22,43 @@ public class UserController implements IUserController {
 
   @Override
   public GetMyUserResponseDto getMyUserInfo() {
-    // Get user ID from security context
-    val userIdFromCxt = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-    if (!(userIdFromCxt instanceof UserId userId)) {
-      throw new AuthenticationCredentialsNotFoundException("User ID not found in security context");
-    }
+    // Get user ID from security context (validated)
+    UserId userId = getUserIdFromSecurityContext();
     // Fetch user data
     val userDataOpt = userService.getUserData(userId);
-    // Return response
-    return getUserResponseMapper.toDto(userDataOpt.get());
+    // Return response or throw a clear exception if no user
+    return getUserResponseMapper.toDto(
+        userDataOpt.orElseThrow(
+            () -> new java.util.NoSuchElementException("User not found for id: " + userId)));
   }
 
   @Override
   public void deleteMyUser() {
-    // Get user ID from security context
-    val userIdFromCxt = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-    if (!(userIdFromCxt instanceof UserId userId)) {
-      throw new AuthenticationCredentialsNotFoundException("User ID not found in security context");
-    }
+    // Get user ID from security context (validated)
+    UserId userId = getUserIdFromSecurityContext();
     // Delete user
     userService.deleteUser(userId);
   }
 
   @Override
   public void updateMyUserInfo(UpdateUserRequestDto request) {
-    // Get user ID from security context
-    val userIdFromCxt = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-    if (!(userIdFromCxt instanceof UserId userId)) {
-      throw new AuthenticationCredentialsNotFoundException("User ID not found in security context");
-    }
+    // Get user ID from security context (validated)
+    UserId userId = getUserIdFromSecurityContext();
     // Update user
     userService.updateUserInfo(userId, updateUserRequestMapper.fromDto(request));
+  }
+
+  // Helper to safely extract UserId from SecurityContext and throw a consistent exception if
+  // missing
+  private UserId getUserIdFromSecurityContext() {
+    val authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication == null) {
+      throw new AuthenticationCredentialsNotFoundException("User ID not found in security context");
+    }
+    Object principal = authentication.getPrincipal();
+    if (!(principal instanceof UserId userId)) {
+      throw new AuthenticationCredentialsNotFoundException("User ID not found in security context");
+    }
+    return userId;
   }
 }
