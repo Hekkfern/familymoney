@@ -131,8 +131,8 @@ public class UserFlowTests {
             .expectBody(GetMyUserResponseDto.class)
             .returnResult()
             .getResponseBody();
-    assertEquals(username, userDataResponse.username().value());
-    assertEquals(email, userDataResponse.email().value());
+    assertEquals(username, userDataResponse.username());
+    assertEquals(email, userDataResponse.email());
   }
 
   @Test
