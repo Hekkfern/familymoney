@@ -10,6 +10,9 @@ import com.familymoney.familymoney.controllers.mappers.GetMyUserResponseMapper;
 import com.familymoney.familymoney.controllers.mappers.GetMyUserResponseMapperImpl;
 import com.familymoney.familymoney.controllers.mappers.UpdateUserRequestMapper;
 import com.familymoney.familymoney.controllers.mappers.UpdateUserRequestMapperImpl;
+import com.familymoney.familymoney.exceptions.GlobalExceptionHandler;
+import com.familymoney.familymoney.properties.AppProperties;
+import com.familymoney.familymoney.properties.JwtProperties;
 import com.familymoney.familymoney.security.JwtUtil;
 import com.familymoney.familymoney.services.IUserService;
 import com.familymoney.familymoney.services.data.GetUserData;
@@ -25,17 +28,30 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
-@WebMvcTest(controllers = UserController.class)
-@Import({GetMyUserResponseMapperImpl.class, UpdateUserRequestMapperImpl.class})
+@WebMvcTest(
+    controllers = UserController.class,
+    properties = {
+      "spring.application.name=testapp",
+      "jwt.key=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    })
+@Import({
+  GlobalExceptionHandler.class,
+  JwtUtil.class,
+  GetMyUserResponseMapperImpl.class,
+  UpdateUserRequestMapperImpl.class
+})
+@EnableConfigurationProperties({AppProperties.class, JwtProperties.class})
 public class UserControllerTests {
 
   private static final String ROLE_PREFIX = "ROLE_";
@@ -46,7 +62,7 @@ public class UserControllerTests {
 
   @Autowired private MockMvc mockMvc;
 
-  @MockitoBean private JwtUtil jwtUtil;
+  @MockitoSpyBean private JwtUtil jwtUtil;
   @MockitoBean private IUserService userService;
   @Spy private GetMyUserResponseMapper getMyUserResponseMapper;
   @Spy private UpdateUserRequestMapper updateUserRequestMapper;
@@ -66,16 +82,14 @@ public class UserControllerTests {
     val email = FakeGenerator.email();
     when(userService.getUserData(any()))
         .thenReturn(Optional.of(new GetUserData(username, email, Instant.now(), true, true)));
-    // Authenticate
-    val authorities = List.of(new SimpleGrantedAuthority(ROLE_PREFIX + "USER"));
-    val auth = new UsernamePasswordAuthenticationToken(FakeGenerator.userId(), null, authorities);
-    SecurityContextHolder.getContext().setAuthentication(auth);
+    when(userService.getUserRole(any())).thenReturn(Role.USER);
 
-    // Request
     val data =
         client
             .get()
             .uri(UserControllerUriFactory.getMePath())
+            .header(
+                "Authorization", "Bearer " + jwtUtil.generateAccessToken(FakeGenerator.userId()))
             .exchange()
             .expectStatus()
             .isOk()
@@ -88,11 +102,6 @@ public class UserControllerTests {
 
   @Test
   void AuthController_GetMyUserInfo_Unauthenticated() {
-    when(userService.getUserData(any()))
-        .thenReturn(
-            Optional.of(
-                new GetUserData(
-                    FakeGenerator.username(), FakeGenerator.email(), Instant.now(), true, true)));
     client
         .get()
         .uri(UserControllerUriFactory.getMePath())
@@ -108,10 +117,6 @@ public class UserControllerTests {
             Optional.of(
                 new GetUserData(
                     FakeGenerator.username(), FakeGenerator.email(), Instant.now(), true, true)));
-    // Authenticate
-    val authorities = List.of(new SimpleGrantedAuthority(ROLE_PREFIX + "USER"));
-    val auth = new UsernamePasswordAuthenticationToken("ad4fa56s4!", null, authorities);
-    SecurityContextHolder.getContext().setAuthentication(auth);
 
     // Request
     client
