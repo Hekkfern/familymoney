@@ -18,6 +18,7 @@ import com.familymoney.familymoney.utils.FakeGenerator;
 import com.familymoney.familymoney.utils.UserControllerUriFactory;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
@@ -135,6 +136,121 @@ public class UserControllerTests {
 
     // Request
     client.get().uri(UserControllerUriFactory.getMePath()).exchange().expectStatus().isOk();
+  }
+
+  // endregion
+
+  // region DELETE /me Tests
+
+  @Test
+  void AuthController_DeleteMyUser_Successful() {
+    // Authenticate
+    val authorities = List.of(new SimpleGrantedAuthority(ROLE_PREFIX + "USER"));
+    val auth = new UsernamePasswordAuthenticationToken(FakeGenerator.userId(), null, authorities);
+    SecurityContextHolder.getContext().setAuthentication(auth);
+
+    // Request
+    client.delete().uri(UserControllerUriFactory.getMePath()).exchange().expectStatus().isOk();
+  }
+
+  @Test
+  void AuthController_DeleteMyUser_Unauthenticated() {
+    client
+        .delete()
+        .uri(UserControllerUriFactory.getMePath())
+        .exchange()
+        .expectStatus()
+        .isUnauthorized();
+  }
+
+  // endregion
+
+  // region PATCH /me Tests
+
+  @Test
+  void AuthController_UpdateMyUserInfo_Successful() {
+    // Authenticate
+    val authorities = List.of(new SimpleGrantedAuthority(ROLE_PREFIX + "USER"));
+    val auth = new UsernamePasswordAuthenticationToken(FakeGenerator.userId(), null, authorities);
+    SecurityContextHolder.getContext().setAuthentication(auth);
+
+    // Request
+    client
+        .patch()
+        .uri(UserControllerUriFactory.getMePath())
+        .body(
+            Map.of(
+                "username",
+                FakeGenerator.username(),
+                "email",
+                FakeGenerator.email(),
+                "password",
+                FakeGenerator.password()))
+        .exchange()
+        .expectStatus()
+        .isOk();
+  }
+
+  @Test
+  void AuthController_UpdateMyUserInfo_Successful_OnlyUsername() {
+    // Authenticate
+    val authorities = List.of(new SimpleGrantedAuthority(ROLE_PREFIX + "USER"));
+    val auth = new UsernamePasswordAuthenticationToken(FakeGenerator.userId(), null, authorities);
+    SecurityContextHolder.getContext().setAuthentication(auth);
+
+    // Request
+    client
+        .patch()
+        .uri(UserControllerUriFactory.getMePath())
+        .body(Map.of("username", FakeGenerator.username()))
+        .exchange()
+        .expectStatus()
+        .isOk();
+  }
+
+  @Test
+  void AuthController_UpdateMyUserInfo_Successful_OnlyEmail() {
+    // Authenticate
+    val authorities = List.of(new SimpleGrantedAuthority(ROLE_PREFIX + "USER"));
+    val auth = new UsernamePasswordAuthenticationToken(FakeGenerator.userId(), null, authorities);
+    SecurityContextHolder.getContext().setAuthentication(auth);
+
+    // Request
+    client
+        .patch()
+        .uri(UserControllerUriFactory.getMePath())
+        .body(Map.of("email", FakeGenerator.email()))
+        .exchange()
+        .expectStatus()
+        .isOk();
+  }
+
+  @Test
+  void AuthController_UpdateMyUserInfo_Successful_OnlyPassword() {
+    // Authenticate
+    val authorities = List.of(new SimpleGrantedAuthority(ROLE_PREFIX + "USER"));
+    val auth = new UsernamePasswordAuthenticationToken(FakeGenerator.userId(), null, authorities);
+    SecurityContextHolder.getContext().setAuthentication(auth);
+
+    // Request
+    client
+        .patch()
+        .uri(UserControllerUriFactory.getMePath())
+        .body(Map.of("password", FakeGenerator.password()))
+        .exchange()
+        .expectStatus()
+        .isOk();
+  }
+
+  @Test
+  void AuthController_UpdateMyUserInfo_Unauthenticated() {
+    client
+        .patch()
+        .uri(UserControllerUriFactory.getMePath())
+        .body(Map.of("username", FakeGenerator.username()))
+        .exchange()
+        .expectStatus()
+        .isUnauthorized();
   }
 
   // endregion
