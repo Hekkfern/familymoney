@@ -1,6 +1,7 @@
 package com.familymoney.familymoney.controllers;
 
 import com.familymoney.familymoney.controllers.dtos.admin.GetUserResponseDto;
+import com.familymoney.familymoney.controllers.dtos.admin.GetUserRoleResponseDto;
 import com.familymoney.familymoney.controllers.dtos.admin.GetUsersResponseDto;
 import com.familymoney.familymoney.controllers.dtos.user.UpdateUserRequestDto;
 import com.familymoney.familymoney.controllers.mappers.GetUserResponseMapper;
@@ -61,7 +62,11 @@ public class UserAdminController implements IUserAdminController {
   }
 
   @Override
-  public void getUserRole(UserId userId) {
-    userService.getUserRole(userId);
+  public GetUserRoleResponseDto getUserRole(UserId userId) {
+    return userService
+        .getUserRole(userId)
+        .map(GetUserRoleResponseDto::new)
+        .orElseThrow(
+            () -> new UserNotFoundException("User with ID " + userId.value() + " not found"));
   }
 }

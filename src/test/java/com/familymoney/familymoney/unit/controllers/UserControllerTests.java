@@ -10,7 +10,6 @@ import com.familymoney.familymoney.controllers.mappers.GetMyUserResponseMapper;
 import com.familymoney.familymoney.controllers.mappers.GetMyUserResponseMapperImpl;
 import com.familymoney.familymoney.controllers.mappers.UpdateUserRequestMapper;
 import com.familymoney.familymoney.controllers.mappers.UpdateUserRequestMapperImpl;
-import com.familymoney.familymoney.exceptions.GlobalExceptionHandler;
 import com.familymoney.familymoney.properties.AppProperties;
 import com.familymoney.familymoney.properties.JwtProperties;
 import com.familymoney.familymoney.security.JwtUtil;
@@ -46,7 +45,6 @@ import org.springframework.test.web.servlet.client.RestTestClient;
       "jwt.key=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     })
 @Import({
-  GlobalExceptionHandler.class,
   JwtUtil.class,
   GetMyUserResponseMapperImpl.class,
   UpdateUserRequestMapperImpl.class
@@ -82,7 +80,7 @@ public class UserControllerTests {
     val email = FakeGenerator.email();
     when(userService.getUserData(any()))
         .thenReturn(Optional.of(new GetUserData(username, email, Instant.now(), true, true)));
-    when(userService.getUserRole(any())).thenReturn(Role.USER);
+    when(userService.getUserRole(any())).thenReturn(Optional.of(Role.USER));
 
     val data =
         client

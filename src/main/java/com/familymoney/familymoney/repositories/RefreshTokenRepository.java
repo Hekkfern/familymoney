@@ -8,6 +8,7 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.val;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
@@ -50,7 +51,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
   }
 
   @Override
-  public void markTokenAsUsed(RefreshToken token) {
+  public boolean markTokenAsUsed(RefreshToken token) {
     var sql =
         """
         UPDATE refresh_tokens
@@ -58,29 +59,32 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
             used_at = NOW()
         WHERE token = :token
         """;
-    jdbcClient.sql(sql).param("token", token.value()).update();
+    val rowsAffected = jdbcClient.sql(sql).param("token", token.value()).update();
+    return rowsAffected > 0;
   }
 
   @Override
-  public void invalidateByFamily(UUID family) {
+  public boolean invalidateByFamily(UUID family) {
     var sql =
         """
         UPDATE refresh_tokens
         SET is_used = TRUE
         WHERE family = :family
         """;
-    jdbcClient.sql(sql).param("family", family).update();
+    val rowsAffected = jdbcClient.sql(sql).param("family", family).update();
+    return rowsAffected > 0;
   }
 
   @Override
-  public void invalidateByUserId(UserId userId) {
+  public boolean invalidateByUserId(UserId userId) {
     var sql =
         """
         UPDATE refresh_tokens
         SET is_used = TRUE
         WHERE user_id = :userId
         """;
-    jdbcClient.sql(sql).param("userId", userId.value()).update();
+    val rowsAffected = jdbcClient.sql(sql).param("userId", userId.value()).update();
+    return rowsAffected > 0;
   }
 
   @Override

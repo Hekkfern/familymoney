@@ -21,7 +21,7 @@ public interface IUserService {
 
   void setUserRole(UserId userId, Role role);
 
-  Role getUserRole(UserId userId);
+  Optional<Role> getUserRole(UserId userId);
 
   void createAdminUser(Username username, Email email, Password password);
 }

@@ -2,6 +2,7 @@ package com.familymoney.familymoney.repositories;
 
 import com.familymoney.familymoney.types.Role;
 import com.familymoney.familymoney.types.UserId;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -14,7 +15,7 @@ public class RoleRepository implements IRoleRepository {
   private final JdbcClient jdbcClient;
 
   @Override
-  public Role getRoleByUserId(UserId userId) {
+  public Optional<Role> getRoleByUserId(UserId userId) {
     var sql =
         """
         SELECT r.name
@@ -22,12 +23,12 @@ public class RoleRepository implements IRoleRepository {
         JOIN roles r ON ur.role_id = r.id
         WHERE ur.user_id = :userId
         """;
-    val role = jdbcClient.sql(sql).param("userId", userId.value()).query(String.class).single();
-    return Role.fromString(role);
+    val role = jdbcClient.sql(sql).param("userId", userId.value()).query(String.class).optional();
+    return role.map(Role::fromString);
   }
 
   @Override
-  public void setRoleForUserId(UserId userId, Role role) {
+  public boolean setRoleForUserId(UserId userId, Role role) {
     var sql =
         """
         WITH r AS (
@@ -38,6 +39,8 @@ public class RoleRepository implements IRoleRepository {
         ON CONFLICT (user_id) DO UPDATE
             SET role_id = EXCLUDED.role_id;
         """;
-    jdbcClient.sql(sql).param("userId", userId.value()).param("role", role.toString()).update();
+    int rowsAffected =
+        jdbcClient.sql(sql).param("userId", userId.value()).param("role", role.toString()).update();
+    return rowsAffected > 0;
   }
 }

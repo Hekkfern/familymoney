@@ -77,12 +77,11 @@ public class AuthService implements IAuthService {
       throw new UserAlreadyExistsException("A user with that email already exists.");
     }
     // Create user
-    val userDbOpt =
-        userRepository.create(username, email, passwordEncoder.encode(password.value()));
-    if (userDbOpt.isEmpty()) {
-      throw new DatabaseExecutionException("Could not create user in the database");
-    }
-    val userDb = userDbOpt.get();
+    val userDb =
+        userRepository
+            .create(username, email, passwordEncoder.encode(password.value()))
+            .orElseThrow(
+                () -> new DatabaseExecutionException("Could not create user in the database"));
     // Assign user permissions (default role)
     roleRepository.setRoleForUserId(userDb.id(), Role.USER);
     // Generate and save verification token to database
@@ -98,11 +97,10 @@ public class AuthService implements IAuthService {
   public TokenPair loginUser(Email email, Password password) {
     log.trace("loginUser() started");
     // Find user by email
-    val userDbOpt = userRepository.findByEmail(email);
-    if (userDbOpt.isEmpty()) {
-      throw new BadCredentialsException("Email doesn't exist");
-    }
-    val userDb = userDbOpt.get();
+    val userDb =
+        userRepository
+            .findByEmail(email)
+            .orElseThrow(() -> new BadCredentialsException("Email doesn't exist"));
     // Verify that user is enabled
     if (!userDb.isEnabled()) {
       throw new BadCredentialsException("User is not enabled");
@@ -120,11 +118,10 @@ public class AuthService implements IAuthService {
     // Generate refresh token
     val refreshToken = RefreshToken.generate();
     // Save refresh token in database
-    val refreshTokenDbOpt =
-        refreshTokenRepository.create(userDb.id(), refreshToken, UUID.randomUUID());
-    if (refreshTokenDbOpt.isEmpty()) {
-      throw new DatabaseExecutionException("Could not create refresh token in the database");
-    }
+    refreshTokenRepository
+        .create(userDb.id(), refreshToken, UUID.randomUUID())
+        .orElseThrow(
+            () -> new DatabaseExecutionException("Could not create refresh token in the database"));
     // Build response with both tokens
     log.trace("loginUser() finished");
     return new TokenPair(accessToken, refreshToken);
@@ -134,45 +131,43 @@ public class AuthService implements IAuthService {
   public TokenPair refreshTokens(RefreshToken refreshToken) {
     log.trace("refreshTokens() started");
     // Find the refresh token in the database
-    val refreshTokenFoundInDbOpt = refreshTokenRepository.findByToken(refreshToken);
-    if (refreshTokenFoundInDbOpt.isEmpty()) {
-      throw new RefreshTokenNotFoundException("Refresh token not found");
-    }
-    val refreshTokenFoundInDb = refreshTokenFoundInDbOpt.get();
+    val refreshTokenDb =
+        refreshTokenRepository
+            .findByToken(refreshToken)
+            .orElseThrow(() -> new RefreshTokenNotFoundException("Refresh token not found"));
     // Check if the refresh token is expired
-    if (refreshTokenFoundInDb.isExpired()) {
+    if (refreshTokenDb.isExpired()) {
       val msg = "Invalid refresh token";
       log.info(msg);
       throw new RefreshTokenInvalidException(msg);
     }
     // Check if the token was already used
-    if (refreshTokenFoundInDb.isUsed()) {
+    if (refreshTokenDb.isUsed()) {
       // Invalidate all refresh tokens for that user
       log.warn("REFRESH TOKEN REUSE DETECTED!");
-      refreshTokenRepository.invalidateByFamily(refreshTokenFoundInDb.family());
+      refreshTokenRepository.invalidateByFamily(refreshTokenDb.family());
       // Get user info for email
-      val userDbOpt = userRepository.findById(refreshTokenFoundInDb.userId());
-      if (userDbOpt.isEmpty()) {
-        throw new DatabaseExecutionException("User not found in the database");
-      }
-      val userDb = userDbOpt.get();
+      val userDb =
+          userRepository
+              .findById(refreshTokenDb.userId())
+              .orElseThrow(() -> new DatabaseExecutionException("User not found in the database"));
       // Send security alert email
       emailSenderService.sendSecurityAlertEmail(userDb.email(), userDb.username());
       // Throw exception
       throw new RefreshTokenInvalidException("Refresh token not found in the database");
     }
     // Mark the old token as used
-    refreshTokenRepository.markTokenAsUsed(refreshTokenFoundInDb.token());
+    refreshTokenRepository.markTokenAsUsed(refreshTokenDb.token());
     // Generate new tokens
-    val newAccessToken = jwtUtil.generateAccessToken(refreshTokenFoundInDb.userId());
+    val newAccessToken = jwtUtil.generateAccessToken(refreshTokenDb.userId());
     val newRefreshToken = RefreshToken.generate();
     // Save new refresh token in database
-    val refreshTokenCreatedInDbOpt =
-        refreshTokenRepository.create(
-            refreshTokenFoundInDb.userId(), newRefreshToken, refreshTokenFoundInDb.family());
-    if (refreshTokenCreatedInDbOpt.isEmpty()) {
-      throw new DatabaseExecutionException("Could not create new refresh token in the database");
-    }
+    refreshTokenRepository
+        .create(refreshTokenDb.userId(), newRefreshToken, refreshTokenDb.family())
+        .orElseThrow(
+            () ->
+                new DatabaseExecutionException(
+                    "Could not create new refresh token in the database"));
     // Build response with both tokens
     log.trace("refreshTokens() finished");
     return new TokenPair(newAccessToken, newRefreshToken);
@@ -181,35 +176,34 @@ public class AuthService implements IAuthService {
   @Override
   public void verifyEmail(EmailVerificationToken token) {
     // Find the verification token in the database
-    val verificationTokenFromDbOpt = emailVerificationRepository.findByToken(token);
-    if (verificationTokenFromDbOpt.isEmpty()) {
-      throw new VerificationTokenNotFoundException("Invalid email verification token");
-    }
-    val verificationTokenFromDb = verificationTokenFromDbOpt.get();
+    val verificationTokenDb =
+        emailVerificationRepository
+            .findByToken(token)
+            .orElseThrow(
+                () -> new VerificationTokenNotFoundException("Invalid email verification token"));
     // Check if the token is expired
-    if (verificationTokenFromDb.isExpired()) {
+    if (verificationTokenDb.isExpired()) {
       throw new VerificationTokenExpiredException("Email verification token has expired");
     }
     // Verify the user's email
-    userRepository.verifyEmail(verificationTokenFromDb.userId());
+    userRepository.verifyEmail(verificationTokenDb.userId());
     // Delete all the verification tokens assigned to this user from the database
-    emailVerificationRepository.deleteByUserId(verificationTokenFromDb.userId());
+    emailVerificationRepository.deleteByUserId(verificationTokenDb.userId());
   }
 
   @Override
   public void resendVerificationEmail(Email email) {
     // Look for user by email
-    val userFromDbOpt = userRepository.findByEmail(email);
-    if (userFromDbOpt.isEmpty()) {
-      throw new EmailNotFoundException("User with that email not found");
-    }
-    val userFromDb = userFromDbOpt.get();
+    val userDb =
+        userRepository
+            .findByEmail(email)
+            .orElseThrow(() -> new EmailNotFoundException("User with that email not found"));
     // Generate and save verification token to database
     // NOTE: Retry several times in case of token collision
-    val emailVerificationTokenDb = generateAndStoreEmailVerificationToken(userFromDb.id());
+    val emailVerificationTokenDb = generateAndStoreEmailVerificationToken(userDb.id());
     // Send verification email
     emailSenderService.sendEmailVerificationEmail(
-        email, userFromDb.username(), emailVerificationTokenDb.token());
+        email, userDb.username(), emailVerificationTokenDb.token());
   }
 
   @Override
@@ -225,18 +219,18 @@ public class AuthService implements IAuthService {
   @Override
   public void logoutUser(RefreshToken refreshToken) {
     // Find the refresh token in the database
-    val refreshTokenFromDbOpt = refreshTokenRepository.findByToken(refreshToken);
-    if (refreshTokenFromDbOpt.isEmpty()) {
-      throw new RefreshTokenNotFoundException("Refresh token not found in the database");
-    }
-    val refreshTokenFromDb = refreshTokenFromDbOpt.get();
+    val refreshTokenDb =
+        refreshTokenRepository
+            .findByToken(refreshToken)
+            .orElseThrow(
+                () -> new RefreshTokenNotFoundException("Refresh token not found in the database"));
     // Check if the refresh token is valid
-    if (!refreshTokenFromDb.isValid()) {
+    if (!refreshTokenDb.isValid()) {
       val msg = "Invalid refresh token";
       log.trace(msg);
       throw new RefreshTokenInvalidException(msg);
     }
     // Invalidate the family of refresh token from the database
-    refreshTokenRepository.invalidateByFamily(refreshTokenFromDb.family());
+    refreshTokenRepository.invalidateByFamily(refreshTokenDb.family());
   }
 }

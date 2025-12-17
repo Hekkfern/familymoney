@@ -12,5 +12,5 @@ public interface IPasswordResetRepository {
 
   Optional<PasswordResetDbo> findByToken(PasswordResetToken token);
 
-  void deleteByUserId(UserId userId);
+  boolean deleteByUserId(UserId userId);
 }

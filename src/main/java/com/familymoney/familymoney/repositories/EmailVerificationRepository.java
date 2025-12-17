@@ -10,6 +10,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.val;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
@@ -53,13 +54,14 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
   }
 
   @Override
-  public void deleteByUserId(UserId userId) {
+  public boolean deleteByUserId(UserId userId) {
     var sql =
         """
         DELETE FROM email_verification_tokens
         WHERE user_id = :userId
         """;
-    jdbcClient.sql(sql).param("userId", userId.value()).update();
+    val rowsAffected = jdbcClient.sql(sql).param("userId", userId.value()).update();
+    return rowsAffected > 0;
   }
 
   @Override

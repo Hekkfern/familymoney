@@ -1,6 +1,7 @@
 package com.familymoney.familymoney.controllers;
 
 import com.familymoney.familymoney.controllers.dtos.admin.GetUserResponseDto;
+import com.familymoney.familymoney.controllers.dtos.admin.GetUserRoleResponseDto;
 import com.familymoney.familymoney.controllers.dtos.admin.GetUsersResponseDto;
 import com.familymoney.familymoney.controllers.dtos.user.UpdateUserRequestDto;
 import com.familymoney.familymoney.types.UserId;
@@ -33,5 +34,5 @@ public interface IUserAdminController {
   void setUserRole(@PathVariable @NotNull UserId userId, @RequestBody @NotBlank String role);
 
   @GetMapping("/{userId}/role")
-  void getUserRole(@PathVariable @NotNull UserId userId);
+  GetUserRoleResponseDto getUserRole(@PathVariable @NotNull UserId userId);
 }

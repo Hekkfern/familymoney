@@ -43,7 +43,8 @@ public class PasswordResetRepository implements IPasswordResetRepository {
   }
 
   @Override
-  public void deleteByUserId(UserId userId) {
+  public boolean deleteByUserId(UserId userId) {
     // TODO
+    return true;
   }
 }

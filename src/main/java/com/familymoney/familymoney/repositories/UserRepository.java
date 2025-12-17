@@ -9,6 +9,7 @@ import java.time.Duration;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -99,7 +100,7 @@ public class UserRepository implements IUserRepository {
   }
 
   @Override
-  public void updateInfo(UserId id, Optional<Username> username, Optional<Email> email) {
+  public boolean updateInfo(UserId id, @Nullable Username username, @Nullable Email email) {
     val sql =
         """
         UPDATE users
@@ -107,33 +108,38 @@ public class UserRepository implements IUserRepository {
             email = COALESCE(:email, email)
         WHERE id = :id
         """;
-    jdbcClient
-        .sql(sql)
-        .param("id", id.value())
-        .param("username", username.map(Username::value).orElse(null))
-        .param("email", email.map(Email::value).orElse(null))
-        .update();
+    val rowsAffected =
+        jdbcClient
+            .sql(sql)
+            .param("id", id.value())
+            .param("username", username)
+            .param("email", email)
+            .update();
+    return rowsAffected > 0;
   }
 
   @Override
-  public void updatePassword(UserId id, String newPasswordHash) {
+  public boolean updatePassword(UserId id, String newPasswordHash) {
     val sql =
         """
         UPDATE users
         SET hashed_password = :passwordHash
         WHERE id = :id
         """;
-    jdbcClient.sql(sql).param("id", id.value()).param("passwordHash", newPasswordHash).update();
+    val rowsAffected =
+        jdbcClient.sql(sql).param("id", id.value()).param("passwordHash", newPasswordHash).update();
+    return rowsAffected > 0;
   }
 
   @Override
-  public void deleteById(UserId id) {
+  public boolean deleteById(UserId id) {
     val sql =
         """
         DELETE FROM users
         WHERE id = :id
         """;
-    jdbcClient.sql(sql).param("id", id.value()).update();
+    val rowsAffected = jdbcClient.sql(sql).param("id", id.value()).update();
+    return rowsAffected > 0;
   }
 
   @Override
@@ -148,25 +154,28 @@ public class UserRepository implements IUserRepository {
   }
 
   @Override
-  public void setIsEnabledByUserId(UserId id, boolean isEnabled) {
+  public boolean setIsEnabledByUserId(UserId id, boolean isEnabled) {
     val sql =
         """
         UPDATE users
         SET is_enabled = :isEnabled
         WHERE id = :id
         """;
-    jdbcClient.sql(sql).param("id", id.value()).param("isEnabled", isEnabled).update();
+    val rowsAffected =
+        jdbcClient.sql(sql).param("id", id.value()).param("isEnabled", isEnabled).update();
+    return rowsAffected > 0;
   }
 
   @Override
-  public void verifyEmail(UserId userId) {
+  public boolean verifyEmail(UserId userId) {
     var sql =
         """
         UPDATE users
         SET email_verified = TRUE
         WHERE id = :userId
         """;
-    jdbcClient.sql(sql).param("userId", userId.value()).update();
+    val rowsAffected = jdbcClient.sql(sql).param("userId", userId.value()).update();
+    return rowsAffected > 0;
   }
 
   @Transactional

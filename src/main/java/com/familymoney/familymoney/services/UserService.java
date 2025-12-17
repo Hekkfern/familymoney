@@ -42,7 +42,7 @@ public class UserService implements IUserService {
   public void updateUserInfo(UserId userId, UpdateUserData data) {
     // change user info
     if (data.username().isPresent() || data.password().isPresent()) {
-      userRepository.updateInfo(userId, data.username(), data.email());
+      userRepository.updateInfo(userId, data.username().orElse(null), data.email().orElse(null));
     }
     // change user password
     data.password()
@@ -65,7 +65,7 @@ public class UserService implements IUserService {
   }
 
   @Override
-  public Role getUserRole(UserId userId) {
+  public Optional<Role> getUserRole(UserId userId) {
     return roleRepository.getRoleByUserId(userId);
   }
 
