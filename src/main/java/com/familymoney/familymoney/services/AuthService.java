@@ -13,6 +13,8 @@ import com.familymoney.familymoney.repositories.IRefreshTokenRepository;
 import com.familymoney.familymoney.repositories.IRoleRepository;
 import com.familymoney.familymoney.repositories.IUserRepository;
 import com.familymoney.familymoney.repositories.dbos.EmailVerificationDbo;
+import com.familymoney.familymoney.repositories.dbos.UpdateRefreshTokenDbo;
+import com.familymoney.familymoney.repositories.dbos.UpdateUserDbo;
 import com.familymoney.familymoney.security.JwtUtil;
 import com.familymoney.familymoney.security.UserPasswordEncoder;
 import com.familymoney.familymoney.services.data.TokenPair;
@@ -31,8 +33,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Slf4j
 public class AuthService implements IAuthService {
-
-  private static final Duration RESET_TOKEN_EXPIRY = Duration.ofHours(1);
 
   private final IUserRepository userRepository;
   private final UserPasswordEncoder passwordEncoder;
@@ -145,7 +145,8 @@ public class AuthService implements IAuthService {
     if (refreshTokenDb.isUsed()) {
       // Invalidate all refresh tokens for that user
       log.warn("REFRESH TOKEN REUSE DETECTED!");
-      refreshTokenRepository.invalidateByFamily(refreshTokenDb.family());
+      refreshTokenRepository.updateByFamily(
+          refreshTokenDb.family(), UpdateRefreshTokenDbo.builder().isUsed(true).build());
       // Get user info for email
       val userDb =
           userRepository
@@ -157,7 +158,9 @@ public class AuthService implements IAuthService {
       throw new RefreshTokenInvalidException("Refresh token not found in the database");
     }
     // Mark the old token as used
-    refreshTokenRepository.markTokenAsUsed(refreshTokenDb.token());
+    refreshTokenRepository.updateByToken(
+        refreshTokenDb.token(),
+        UpdateRefreshTokenDbo.builder().isUsed(true).usedAt(Instant.now()).build());
     // Generate new tokens
     val newAccessToken = jwtUtil.generateAccessToken(refreshTokenDb.userId());
     val newRefreshToken = RefreshToken.generate();
@@ -186,7 +189,8 @@ public class AuthService implements IAuthService {
       throw new VerificationTokenExpiredException("Email verification token has expired");
     }
     // Verify the user's email
-    userRepository.verifyEmail(verificationTokenDb.userId());
+    userRepository.updateById(
+        verificationTokenDb.userId(), UpdateUserDbo.builder().isEmailVerified(true).build());
     // Delete all the verification tokens assigned to this user from the database
     emailVerificationRepository.deleteByUserId(verificationTokenDb.userId());
   }
@@ -231,6 +235,7 @@ public class AuthService implements IAuthService {
       throw new RefreshTokenInvalidException(msg);
     }
     // Invalidate the family of refresh token from the database
-    refreshTokenRepository.invalidateByFamily(refreshTokenDb.family());
+    refreshTokenRepository.updateByFamily(
+        refreshTokenDb.family(), UpdateRefreshTokenDbo.builder().isUsed(true).build());
   }
 }

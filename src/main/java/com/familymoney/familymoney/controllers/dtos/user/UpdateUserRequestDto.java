@@ -3,7 +3,7 @@ package com.familymoney.familymoney.controllers.dtos.user;
 import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.Password;
 import com.familymoney.familymoney.types.Username;
-import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 public record UpdateUserRequestDto(
-    Optional<Username> username, Optional<Email> email, Optional<Password> password) {}
+    @Nullable Username username, @Nullable Email email, @Nullable Password password) {}

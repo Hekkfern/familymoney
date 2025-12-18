@@ -2,6 +2,7 @@ package com.familymoney.familymoney.services;
 
 import com.familymoney.familymoney.repositories.IRoleRepository;
 import com.familymoney.familymoney.repositories.IUserRepository;
+import com.familymoney.familymoney.repositories.dbos.UpdateUserDbo;
 import com.familymoney.familymoney.security.UserPasswordEncoder;
 import com.familymoney.familymoney.services.data.GetUserData;
 import com.familymoney.familymoney.services.data.UpdateUserData;
@@ -40,13 +41,18 @@ public class UserService implements IUserService {
   @Transactional
   @Override
   public void updateUserInfo(UserId userId, UpdateUserData data) {
-    // change user info
-    if (data.username().isPresent() || data.password().isPresent()) {
-      userRepository.updateInfo(userId, data.username().orElse(null), data.email().orElse(null));
+    if (!data.isEmpty()) {
+      userRepository.updateById(
+          userId,
+          UpdateUserDbo.builder()
+              .username(data.getUsername())
+              .email(data.getEmail())
+              .hashedPassword(
+                  data.getPassword() != null
+                      ? passwordEncoder.encode(data.getPassword().value())
+                      : null)
+              .build());
     }
-    // change user password
-    data.password()
-        .ifPresent(p -> userRepository.updatePassword(userId, passwordEncoder.encode(p.value())));
   }
 
   @Override
@@ -56,7 +62,7 @@ public class UserService implements IUserService {
 
   @Override
   public void enableUser(UserId userId, boolean enabled) {
-    userRepository.setIsEnabledByUserId(userId, enabled);
+    userRepository.updateById(userId, UpdateUserDbo.builder().isEnabled(enabled).build());
   }
 
   @Override
@@ -87,7 +93,7 @@ public class UserService implements IUserService {
     // Assign user permissions (default role)
     roleRepository.setRoleForUserId(userDb.id(), Role.ADMIN);
     // verify email
-    userRepository.verifyEmail(userDb.id());
+    userRepository.updateById(userDb.id(), UpdateUserDbo.builder().isEmailVerified(true).build());
     log.info("Admin user created successfully");
   }
 }

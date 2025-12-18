@@ -1,10 +1,13 @@
 package com.familymoney.familymoney.repositories;
 
 import com.familymoney.familymoney.repositories.dbos.RefreshTokenDbo;
+import com.familymoney.familymoney.repositories.dbos.UpdateRefreshTokenDbo;
 import com.familymoney.familymoney.repositories.mappers.RefreshTokenRowMapper;
 import com.familymoney.familymoney.types.RefreshToken;
 import com.familymoney.familymoney.types.UserId;
 import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +23,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
 
   @Override
   public Optional<RefreshTokenDbo> create(UserId userId, RefreshToken token, UUID family) {
-    var sql =
+    val sql =
         """
         INSERT INTO refresh_tokens (user_id, token, family)
         VALUES (:userId, :token, :family)
@@ -37,7 +40,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
 
   @Override
   public Optional<RefreshTokenDbo> findByToken(RefreshToken token) {
-    var sql =
+    val sql =
         """
         SELECT id, user_id, token, created_at, expires_at, is_used, used_at, family
         FROM refresh_tokens
@@ -51,45 +54,77 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
   }
 
   @Override
-  public boolean markTokenAsUsed(RefreshToken token) {
-    var sql =
+  public boolean updateByToken(RefreshToken token, UpdateRefreshTokenDbo data) {
+    val sql =
         """
-        UPDATE refresh_tokens
-        SET is_used = TRUE,
-            used_at = NOW()
+        UPDATE users
+        SET is_used = COALESCE(:isUsed, is_used),
+            used_at = COALESCE(:usedAt, used_at)
         WHERE token = :token
         """;
-    val rowsAffected = jdbcClient.sql(sql).param("token", token.value()).update();
+    val rowsAffected =
+        jdbcClient
+            .sql(sql)
+            .param("token", token.toString())
+            .param("isUsed", data.getIsUsed())
+            .param(
+                "usedAt",
+                data.getUsedAt() != null
+                    ? OffsetDateTime.ofInstant(data.getUsedAt(), ZoneOffset.UTC)
+                    : null)
+            .update();
     return rowsAffected > 0;
   }
 
   @Override
-  public boolean invalidateByFamily(UUID family) {
-    var sql =
+  public boolean updateByFamily(UUID family, UpdateRefreshTokenDbo data) {
+    val sql =
         """
-        UPDATE refresh_tokens
-        SET is_used = TRUE
+        UPDATE users
+        SET is_used = COALESCE(:isUsed, is_used),
+            used_at = COALESCE(:usedAt, used_at)
         WHERE family = :family
         """;
-    val rowsAffected = jdbcClient.sql(sql).param("family", family).update();
+    val rowsAffected =
+        jdbcClient
+            .sql(sql)
+            .param("family", family)
+            .param("isUsed", data.getIsUsed())
+            .param(
+                "usedAt",
+                data.getUsedAt() != null
+                    ? OffsetDateTime.ofInstant(data.getUsedAt(), ZoneOffset.UTC)
+                    : null)
+            .update();
     return rowsAffected > 0;
   }
 
   @Override
-  public boolean invalidateByUserId(UserId userId) {
-    var sql =
+  public boolean updateByUserId(UserId userId, UpdateRefreshTokenDbo data) {
+    val sql =
         """
-        UPDATE refresh_tokens
-        SET is_used = TRUE
+        UPDATE users
+        SET is_used = COALESCE(:isUsed, is_used),
+            used_at = COALESCE(:usedAt, used_at)
         WHERE user_id = :userId
         """;
-    val rowsAffected = jdbcClient.sql(sql).param("userId", userId.value()).update();
+    val rowsAffected =
+        jdbcClient
+            .sql(sql)
+            .param("userId", userId.toString())
+            .param("isUsed", data.getIsUsed())
+            .param(
+                "usedAt",
+                data.getUsedAt() != null
+                    ? OffsetDateTime.ofInstant(data.getUsedAt(), ZoneOffset.UTC)
+                    : null)
+            .update();
     return rowsAffected > 0;
   }
 
   @Override
   public void deleteOlderThan(Duration cutoff) {
-    var sql =
+    val sql =
         """
         DELETE FROM refresh_tokens
         WHERE created_at < NOW() - INTERVAL ':duration seconds'

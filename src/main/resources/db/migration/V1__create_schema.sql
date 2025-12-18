@@ -29,14 +29,14 @@ $$ language plpgsql;
 
 CREATE TABLE users
 (
-    id              UUID PRIMARY KEY                  DEFAULT uuidv7(),
-    username        VARCHAR(128) UNIQUE      NOT NULL,
-    email           VARCHAR(255) UNIQUE      NOT NULL,
-    hashed_password VARCHAR(255)             NOT NULL,
-    created_at      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    email_verified  BOOLEAN                  NOT NULL DEFAULT FALSE,
-    is_enabled      BOOLEAN                  NOT NULL DEFAULT TRUE
+    id                UUID PRIMARY KEY                  DEFAULT uuidv7(),
+    username          VARCHAR(128) UNIQUE      NOT NULL,
+    email             VARCHAR(255) UNIQUE      NOT NULL,
+    hashed_password   VARCHAR(255)             NOT NULL,
+    created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    is_email_verified BOOLEAN                  NOT NULL DEFAULT FALSE,
+    is_enabled        BOOLEAN                  NOT NULL DEFAULT TRUE
 );
 
 CREATE INDEX idx_users_created_at ON users (created_at);

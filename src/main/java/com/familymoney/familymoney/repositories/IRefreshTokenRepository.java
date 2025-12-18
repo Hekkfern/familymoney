@@ -1,6 +1,7 @@
 package com.familymoney.familymoney.repositories;
 
 import com.familymoney.familymoney.repositories.dbos.RefreshTokenDbo;
+import com.familymoney.familymoney.repositories.dbos.UpdateRefreshTokenDbo;
 import com.familymoney.familymoney.types.RefreshToken;
 import com.familymoney.familymoney.types.UserId;
 import java.time.Duration;
@@ -27,29 +28,11 @@ public interface IRefreshTokenRepository {
    */
   Optional<RefreshTokenDbo> findByToken(RefreshToken token);
 
-  /**
-   * Mark a Refresh token as used
-   *
-   * @param token Refresh token to be marked as used
-   * @return true if the operation was successful, false otherwise
-   */
-  boolean markTokenAsUsed(RefreshToken token);
+  boolean updateByToken(RefreshToken token, UpdateRefreshTokenDbo data);
 
-  /**
-   * Invalidate all refresh tokens belonging to a specific family
-   *
-   * @param family UUID representing the family of tokens to invalidate
-   * @return true if the operation was successful, false otherwise
-   */
-  boolean invalidateByFamily(UUID family);
+  boolean updateByFamily(UUID family, UpdateRefreshTokenDbo data);
 
-  /**
-   * Invalidate all refresh tokens for a specific user
-   *
-   * @param userId ID of the user whose tokens are to be invalidated
-   * @return true if the operation was successful, false otherwise
-   */
-  boolean invalidateByUserId(UserId userId);
+  boolean updateByUserId(UserId userId, UpdateRefreshTokenDbo data);
 
   /**
    * Delete refresh tokens older than the specified duration from the current time
