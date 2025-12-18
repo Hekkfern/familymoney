@@ -40,9 +40,16 @@ public final class TestDataFactory {
           "no-at.domain.com",
           "user@.com",
           "user@domain..com",
+          "user..user@domain.com",
           "user@@domain.com",
           "user@domain,com",
-          " user@domain.com");
+          " user@domain.com",
+          ".email@example.com",
+          "user@user@domain.com",
+          "email@111.222.333",
+          "user@-example.com",
+          "email@example.com (John Smith)",
+          "John Smith <email@example.com>");
 
   public static List<String> VALID_PASSWORDS =
       List.of("StrongPass1!", "Aa1$aaaaaaaa", "Password123$!", "Zz9@aaaaaaaaaaa", "GoodPass1@$a");
@@ -58,4 +65,17 @@ public final class TestDataFactory {
           "Contains Space1!",
           "\tTabInPassword1!",
           "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+
+  public static List<String> VALID_REFRESHTOKENS = List.of("alice99alice99alice99alice99alic");
+
+  public static List<String> INVALID_REFRESHTOKENS =
+      List.of("alice99alice99alice99alice99ali!", "!alice99alice99alice99alice99ali");
+
+  public static List<String> VALID_EMAILVERIFICATIONTOKENS =
+      List.of("alice99alice99alice99alice99alicalice99alice99alice99alice99alic");
+
+  public static List<String> INVALID_EMAILVERIFICATIONTOKENS =
+      List.of(
+          "alice99alice99alice99alice99ali!alice99alice99alice99alice99ali!",
+          "!alice99alice99alice99alice99ali!alice99alice99alice99alice99ali");
 }

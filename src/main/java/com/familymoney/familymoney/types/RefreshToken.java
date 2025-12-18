@@ -5,7 +5,9 @@ import java.util.regex.Pattern;
 
 public record RefreshToken(String value) {
 
-  private static final Pattern VALIDATION_PATTERN = Pattern.compile("^[A-Za-z0-9]{32}$");
+  public static final int LENGTH = 32;
+  private static final Pattern VALIDATION_PATTERN =
+      Pattern.compile(String.format("^[A-Za-z0-9]{%s}$", LENGTH));
 
   public RefreshToken {
     if (!VALIDATION_PATTERN.matcher(value).matches()) {

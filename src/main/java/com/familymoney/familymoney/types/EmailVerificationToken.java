@@ -7,7 +7,7 @@ public record EmailVerificationToken(String value) {
 
   public static final int LENGTH = 64;
   private static final Pattern VALIDATION_PATTERN =
-      Pattern.compile(String.format("^[A-Za-z0-9]{%s}$", EmailVerificationToken.LENGTH));
+      Pattern.compile(String.format("^[A-Za-z0-9]{%s}$", LENGTH));
 
   public EmailVerificationToken {
     if (!VALIDATION_PATTERN.matcher(value).matches()) {
