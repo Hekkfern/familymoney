@@ -1,6 +1,7 @@
 package com.familymoney.familymoney.unit.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -82,6 +83,7 @@ public class UserAdminControllerTests {
             .expectBody(GetUserResponseDto.class)
             .returnResult()
             .getResponseBody();
+    assertNotNull(data);
     assertEquals(username, data.username());
     assertEquals(email, data.email());
   }
