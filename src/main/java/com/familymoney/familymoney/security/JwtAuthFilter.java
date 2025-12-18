@@ -61,7 +61,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
       return;
     }
     // set authorization
-    val authorities = List.of(new SimpleGrantedAuthority(ROLE_PREFIX + roleOpt));
+    val authorities = List.of(new SimpleGrantedAuthority(ROLE_PREFIX + roleOpt.get()));
     val auth = new UsernamePasswordAuthenticationToken(userId, null, authorities);
     SecurityContextHolder.getContext().setAuthentication(auth);
     // finish

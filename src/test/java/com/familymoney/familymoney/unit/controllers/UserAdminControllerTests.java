@@ -101,6 +101,6 @@ public class UserAdminControllerTests {
         .header("Authorization", "Bearer " + jwtUtil.generateAccessToken(userId))
         .exchange()
         .expectStatus()
-        .isUnauthorized();
+        .isForbidden();
   }
 }
