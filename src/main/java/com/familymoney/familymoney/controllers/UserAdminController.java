@@ -25,11 +25,13 @@ public class UserAdminController implements IUserAdminController {
   @Override
   public GetUserResponseDto getUser(UserId userId) {
     // Fetch user data
-    val userDataOpt = userService.getUserData(userId);
-    if (userDataOpt.isEmpty()) {
-      throw new UserNotFoundException("User with ID " + userId.value() + " not found");
-    }
-    val userData = userDataOpt.get();
+    val userData =
+        userService
+            .getUserData(userId)
+            .orElseThrow(
+                () ->
+                    new UserNotFoundException(
+                        String.format("User with ID %s not found", userId.value())));
     // Return response
     return getUserResponseMapper.toDto(userData);
   }
@@ -67,6 +69,8 @@ public class UserAdminController implements IUserAdminController {
         .getUserRole(userId)
         .map(GetUserRoleResponseDto::new)
         .orElseThrow(
-            () -> new UserNotFoundException("User with ID " + userId.value() + " not found"));
+            () ->
+                new UserNotFoundException(
+                    String.format("User with ID %s not found", userId.value())));
   }
 }
