@@ -98,7 +98,7 @@ public class UserAdminControllerTests {
     client
         .get()
         .uri(AdminControllerUriFactory.getUserPath(userId))
-        .header("Authorization", "Bearer " + jwtUtil.generateAccessToken(FakeGenerator.userId()))
+        .header("Authorization", "Bearer " + jwtUtil.generateAccessToken(userId))
         .exchange()
         .expectStatus()
         .isUnauthorized();

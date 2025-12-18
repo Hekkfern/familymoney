@@ -2,6 +2,7 @@ package com.familymoney.familymoney.config;
 
 import com.familymoney.familymoney.security.JwtAuthFilter;
 import com.familymoney.familymoney.security.JwtAuthenticationEntryPoint;
+import com.familymoney.familymoney.types.Role;
 import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -41,7 +42,7 @@ public class SecurityConfig {
                     .requestMatchers("/api/users/**")
                     .authenticated()
                     .requestMatchers("/api/admin/**")
-                    .hasRole("ADMIN")
+                    .hasRole(Role.ADMIN.toString())
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**")
                     .permitAll()
                     .anyRequest()
