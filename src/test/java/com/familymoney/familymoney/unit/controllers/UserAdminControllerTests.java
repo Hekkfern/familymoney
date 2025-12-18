@@ -4,12 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import com.familymoney.familymoney.controllers.UserController;
+import com.familymoney.familymoney.controllers.UserAdminController;
 import com.familymoney.familymoney.controllers.dtos.admin.GetUserResponseDto;
-import com.familymoney.familymoney.controllers.mappers.GetMyUserResponseMapper;
-import com.familymoney.familymoney.controllers.mappers.GetMyUserResponseMapperImpl;
-import com.familymoney.familymoney.controllers.mappers.UpdateUserRequestMapper;
-import com.familymoney.familymoney.controllers.mappers.UpdateUserRequestMapperImpl;
+import com.familymoney.familymoney.controllers.mappers.*;
 import com.familymoney.familymoney.properties.AppProperties;
 import com.familymoney.familymoney.properties.JwtProperties;
 import com.familymoney.familymoney.security.JwtUtil;
@@ -34,12 +31,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 @WebMvcTest(
-    controllers = UserController.class,
+    controllers = UserAdminController.class,
     properties = {
       "spring.application.name=testapp",
       "jwt.key=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     })
-@Import({JwtUtil.class, GetMyUserResponseMapperImpl.class, UpdateUserRequestMapperImpl.class})
+@Import({JwtUtil.class, GetUserResponseMapperImpl.class, UpdateUserRequestMapperImpl.class})
 @EnableConfigurationProperties({AppProperties.class, JwtProperties.class})
 public class UserAdminControllerTests {
 
@@ -53,7 +50,7 @@ public class UserAdminControllerTests {
 
   @MockitoSpyBean private JwtUtil jwtUtil;
   @MockitoBean private IUserService userService;
-  @Spy private GetMyUserResponseMapper getMyUserResponseMapper;
+  @Spy private GetUserResponseMapper getUserResponseMapper;
   @Spy private UpdateUserRequestMapper updateUserRequestMapper;
 
   // endregion
