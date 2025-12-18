@@ -48,7 +48,7 @@ public class JwtUtil {
 
   public Optional<Claims> parseAccessToken(JwtToken token) {
     try {
-      Claims claims =
+      val claims =
           Jwts.parser()
               .verifyWith(getSigningKey())
               .build()
@@ -58,11 +58,9 @@ public class JwtUtil {
       val audienceMatches =
           claims.getAudience() != null && claims.getAudience().contains(appProperties.name());
       val issuerMatches = claims.getIssuer().equals(appProperties.name());
-      if (!isExpired && audienceMatches && issuerMatches) {
-        return Optional.of(claims);
-      } else {
-        return Optional.empty();
-      }
+      return (!isExpired && audienceMatches && issuerMatches)
+          ? Optional.of(claims)
+          : Optional.empty();
     } catch (Exception e) {
       return Optional.empty();
     }
