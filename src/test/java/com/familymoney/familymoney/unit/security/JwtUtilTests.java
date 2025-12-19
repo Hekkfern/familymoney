@@ -1,13 +1,14 @@
 package com.familymoney.familymoney.unit.security;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.familymoney.familymoney.properties.AppProperties;
 import com.familymoney.familymoney.properties.JwtProperties;
 import com.familymoney.familymoney.security.JwtUtil;
 import com.familymoney.familymoney.types.JwtToken;
+import com.familymoney.familymoney.types.UserId;
 import java.util.Optional;
+import java.util.UUID;
 import lombok.val;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,10 +35,12 @@ public class JwtUtilTests {
 
   @Test
   void parseValidToken() {
-    val token = JwtToken.fromString("aaa.bbbb.ccc");
+    val token = jwtUtil.generateAccessToken(new UserId(UUID.randomUUID()));
     val claimsOpt = jwtUtil.parseAccessToken(token);
     assertNotEquals(Optional.empty(), claimsOpt);
     val claims = claimsOpt.get();
     assertEquals("testapp", claims.getIssuer());
+    assertEquals(1, claims.getAudience().size());
+    assertTrue(claims.getAudience().contains("testapp"));
   }
 }
