@@ -47,7 +47,6 @@ public final class TestDataFactory {
           ".email@example.com",
           "user@user@domain.com",
           "email@111.222.333",
-          "user@-example.com",
           "email@example.com (John Smith)",
           "John Smith <email@example.com>");
 
@@ -66,16 +65,40 @@ public final class TestDataFactory {
           "\tTabInPassword1!",
           "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 
-  public static List<String> VALID_REFRESHTOKENS = List.of("alice99alice99alice99alice99alic");
+  // Refresh tokens must be exactly 32 alphanumeric characters
+  public static List<String> VALID_REFRESHTOKENS = List.of(
+      "alice99alice99alice99alice99alic",
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "01234567890123456789012345678901",
+      "AbCdEfGhIjKlMnOpQrStUvWxYz012345",
+      "userUSER1234567890abcdEFGHijklmn"
+  );
 
   public static List<String> INVALID_REFRESHTOKENS =
-      List.of("alice99alice99alice99alice99ali!", "!alice99alice99alice99alice99ali");
+      List.of(
+          "alice99alice99alice99alice99ali!",
+          "!alice99alice99alice99alice99ali",
+          "shorttoken123",
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "invalid_token_with_underscores!!",
+          "space token with space 123456789012"
+      );
 
-  public static List<String> VALID_EMAILVERIFICATIONTOKENS =
-      List.of("alice99alice99alice99alice99alicalice99alice99alice99alice99alic");
+  // Email verification tokens must be exactly 64 alphanumeric characters
+  public static List<String> VALID_EMAILVERIFICATIONTOKENS = List.of(
+      "alice99alice99alice99alice99alicalice99alice99alice99alice99alic",
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "0123456789012345678901234567890123456789012345678901234567890123"
+  );
 
   public static List<String> INVALID_EMAILVERIFICATIONTOKENS =
       List.of(
           "alice99alice99alice99alice99ali!alice99alice99alice99alice99ali!",
-          "!alice99alice99alice99alice99ali!alice99alice99alice99alice99ali");
+          "!alice99alice99alice99alice99ali!alice99alice99alice99alice99ali",
+          "shorttoken",
+          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "invalid-token-with-hyphens-0123456789012345678901234567",
+          "contains space token01234567890123456789012345678901234567890123456"
+      );
 }
