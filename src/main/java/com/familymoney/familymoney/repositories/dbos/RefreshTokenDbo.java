@@ -16,13 +16,4 @@ public record RefreshTokenDbo(
     Instant expiresAt,
     boolean isUsed,
     Optional<Instant> usedAt,
-    UUID family) {
-
-  public boolean isExpired() {
-    return Instant.now().isAfter(expiresAt);
-  }
-
-  public boolean isValid() {
-    return !isUsed && !isExpired();
-  }
-}
+    UUID family) {}

@@ -14,5 +14,5 @@ public record UserDbo(
     String hashedPassword,
     Instant createdAt,
     Instant updatedAt,
-    boolean emailVerified,
+    boolean isEmailVerified,
     boolean isEnabled) {}

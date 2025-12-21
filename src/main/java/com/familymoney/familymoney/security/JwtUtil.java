@@ -8,6 +8,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
@@ -23,13 +24,14 @@ public class JwtUtil {
 
   private final AppProperties appProperties;
   private final JwtProperties jwtProperties;
+  private final Clock clock;
 
   private SecretKey getSigningKey() {
     return Keys.hmacShaKeyFor(jwtProperties.key().getBytes(StandardCharsets.UTF_8));
   }
 
   public JwtToken generateAccessToken(UserId userId) {
-    val now = Instant.now();
+    val now = Instant.now(clock);
     val ACCESS_TOKEN_VALIDITY = Duration.ofMinutes(15);
     val expiryDate = now.plus(ACCESS_TOKEN_VALIDITY);
     val token =

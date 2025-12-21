@@ -5,4 +5,4 @@ import com.familymoney.familymoney.types.Username;
 import java.time.Instant;
 
 public record GetUserData(
-    Username username, Email email, Instant createdAt, boolean emailVerified, boolean isEnabled) {}
+        Username username, Email email, Instant createdAt, boolean isEmailVerified, boolean isEnabled) {}

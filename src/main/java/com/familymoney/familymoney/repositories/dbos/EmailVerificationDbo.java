@@ -8,9 +8,4 @@ import lombok.Builder;
 
 @Builder
 public record EmailVerificationDbo(
-    UUID id, UserId userId, EmailVerificationToken token, Instant createdAt, Instant expiresAt) {
-
-  public boolean isExpired() {
-    return Instant.now().isAfter(expiresAt);
-  }
-}
+    UUID id, UserId userId, EmailVerificationToken token, Instant createdAt, Instant expiresAt) {}

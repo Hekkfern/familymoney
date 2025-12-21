@@ -8,9 +8,4 @@ import lombok.Builder;
 
 @Builder
 public record PasswordResetDbo(
-    UUID id, UserId userId, PasswordResetToken token, Instant createdAt, Instant expiresAt) {
-
-  public boolean isExpired() {
-    return Instant.now().isAfter(expiresAt);
-  }
-}
+    UUID id, UserId userId, PasswordResetToken token, Instant createdAt, Instant expiresAt) {}
