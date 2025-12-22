@@ -13,7 +13,7 @@ import com.familymoney.familymoney.services.IEmailSenderService;
 import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.EmailVerificationToken;
 import com.familymoney.familymoney.types.Password;
-import com.familymoney.familymoney.types.Username;
+import com.familymoney.familymoney.types.UserName;
 import com.familymoney.familymoney.utils.AuthControllerUriFactory;
 import com.familymoney.familymoney.utils.FakeGenerator;
 import com.familymoney.familymoney.utils.UserControllerUriFactory;
@@ -61,7 +61,7 @@ public class UserFlowTests {
    * @param password Password of the user account
    * @return Access Token for the logged-in user.
    */
-  private String registerAndLoginUser(Username username, Email email, Password password) {
+  private String registerAndLoginUser(UserName username, Email email, Password password) {
     // Mock email sender
     val verificationTokenCaptor = ArgumentCaptor.forClass(EmailVerificationToken.class);
 

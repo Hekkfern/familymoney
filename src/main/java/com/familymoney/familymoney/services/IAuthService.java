@@ -5,7 +5,7 @@ import com.familymoney.familymoney.types.*;
 
 public interface IAuthService {
 
-  void registerUser(Username username, Email email, Password password);
+  void registerUser(UserName username, Email email, Password password);
 
   TokenPair loginUser(Email email, Password password);
 

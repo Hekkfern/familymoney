@@ -3,7 +3,8 @@ package com.familymoney.familymoney.repositories.mappers;
 import com.familymoney.familymoney.repositories.dbos.UserDbo;
 import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.UserId;
-import com.familymoney.familymoney.types.Username;
+import com.familymoney.familymoney.types.UserName;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
@@ -15,7 +16,7 @@ public final class UserDboRowMapper implements RowMapper<UserDbo> {
   public UserDbo mapRow(ResultSet rs, int rowNum) throws SQLException {
     return UserDbo.builder()
         .id(new UserId(UUID.fromString(rs.getString("id"))))
-        .username(new Username(rs.getString("username")))
+        .username(new UserName(rs.getString("username")))
         .email(new Email(rs.getString("email")))
         .hashedPassword(rs.getString("hashed_password"))
         .createdAt(rs.getTimestamp("created_at").toInstant())

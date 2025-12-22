@@ -72,7 +72,7 @@ public class AuthService implements IAuthService {
 
   @Transactional
   @Override
-  public void registerUser(Username username, Email email, Password password) {
+  public void registerUser(UserName username, Email email, Password password) {
     log.trace("registerUser() started");
     // Check if user already exists
     if (userRepository.existsByEmailOrUsername(email, username)) {

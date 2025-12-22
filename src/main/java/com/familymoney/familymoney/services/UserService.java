@@ -76,7 +76,7 @@ public class UserService implements IUserService {
   }
 
   @Override
-  public void createAdminUser(Username username, Email email, Password password) {
+  public void createAdminUser(UserName username, Email email, Password password) {
     // Check if user already exists
     if (userRepository.existsByEmailOrUsername(email, username)) {
       log.info("Admin user already exists, skipping creation");

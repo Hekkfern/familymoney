@@ -5,7 +5,8 @@ import com.familymoney.familymoney.repositories.dbos.UserDbo;
 import com.familymoney.familymoney.repositories.mappers.UserDboRowMapper;
 import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.UserId;
-import com.familymoney.familymoney.types.Username;
+import com.familymoney.familymoney.types.UserName;
+
 import java.time.Duration;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,7 @@ public class UserRepository implements IUserRepository {
   private final JdbcClient jdbcClient;
 
   @Override
-  public Optional<UserDbo> create(Username username, Email email, String passwordHash) {
+  public Optional<UserDbo> create(UserName username, Email email, String passwordHash) {
     val sql =
         """
         INSERT INTO users (username, email, hashed_password)
@@ -67,7 +68,7 @@ public class UserRepository implements IUserRepository {
   }
 
   @Override
-  public Optional<UserDbo> findByUsername(Username username) {
+  public Optional<UserDbo> findByUsername(UserName username) {
     val sql =
         """
         SELECT id, username, email, hashed_password, created_at, updated_at, email_verified, is_enabled
@@ -82,7 +83,7 @@ public class UserRepository implements IUserRepository {
   }
 
   @Override
-  public boolean existsByEmailOrUsername(Email email, Username username) {
+  public boolean existsByEmailOrUsername(Email email, UserName username) {
     var sql =
         """
         SELECT COUNT(*)

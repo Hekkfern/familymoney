@@ -4,7 +4,7 @@ import com.familymoney.familymoney.properties.AppProperties;
 import com.familymoney.familymoney.properties.MailSenderProperties;
 import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.EmailVerificationToken;
-import com.familymoney.familymoney.types.Username;
+import com.familymoney.familymoney.types.UserName;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -24,7 +24,7 @@ public class EmailSenderService implements IEmailSenderService {
 
   @Override
   public void sendEmailVerificationEmail(
-      Email toEmail, Username username, EmailVerificationToken verificationToken) {
+          Email toEmail, UserName username, EmailVerificationToken verificationToken) {
     val mimeMessage = mailSender.createMimeMessage();
     val mimeMessageHelper = new MimeMessageHelper(mimeMessage, "UTF-8");
 
@@ -52,12 +52,12 @@ public class EmailSenderService implements IEmailSenderService {
 
   @Override
   public void sendPasswordResetEmail(
-      Email toEmail, Username username, EmailVerificationToken resetToken) {
+          Email toEmail, UserName username, EmailVerificationToken resetToken) {
     // TODO("Not yet implemented")
   }
 
   @Override
-  public void sendSecurityAlertEmail(Email toEmail, Username username) {
+  public void sendSecurityAlertEmail(Email toEmail, UserName username) {
     val mimeMessage = mailSender.createMimeMessage();
     val mimeMessageHelper = new MimeMessageHelper(mimeMessage, "UTF-8");
 

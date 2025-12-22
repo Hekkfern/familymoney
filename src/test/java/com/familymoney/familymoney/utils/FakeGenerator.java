@@ -16,8 +16,8 @@ public final class FakeGenerator {
   private static final String NUMBER_CHARACTERS = "0123456789";
   private static final RandomStringUtils random = RandomStringUtils.insecure();
 
-  public static Username username() {
-    return Username.fromString(random.next(10, LOWER_CHARACTERS));
+  public static UserName username() {
+    return UserName.fromString(random.next(10, LOWER_CHARACTERS));
   }
 
   public static Email email() {

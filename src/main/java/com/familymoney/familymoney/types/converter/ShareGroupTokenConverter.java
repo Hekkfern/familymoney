@@ -1,16 +1,16 @@
 package com.familymoney.familymoney.types.converter;
 
-import com.familymoney.familymoney.types.UserName;
+import com.familymoney.familymoney.types.ShareGroupToken;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
 @Component
 @ConfigurationPropertiesBinding
-public class UsernameConverter implements Converter<String, UserName> {
+public class ShareGroupTokenConverter implements Converter<String, ShareGroupToken> {
 
   @Override
-  public UserName convert(String source) {
-    return UserName.fromString(source);
+  public ShareGroupToken convert(String source) {
+    return ShareGroupToken.fromString(source);
   }
 }

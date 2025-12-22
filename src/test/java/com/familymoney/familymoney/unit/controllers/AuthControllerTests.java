@@ -52,34 +52,34 @@ public class AuthControllerTests {
     return Stream.of(
         // minimal valid password length (12), simple username
         Arguments.of(
-            Username.fromString("hector"),
+            UserName.fromString("hector"),
             Email.fromString("hector.fernandez+dev@example.com"),
             Password.fromString("StrongPass1!")),
         // underscore in username, plus-addressing and multi-part TLD
         Arguments.of(
-            Username.fromString("user_123"),
+            UserName.fromString("user_123"),
             Email.fromString("user+tag@example.co.uk"),
             Password.fromString("Aa1$aaaaaaaa")),
         // hyphen in username, dot in local-part
         Arguments.of(
-            Username.fromString("john-doe"),
+            UserName.fromString("john-doe"),
             Email.fromString("john.doe@example.com"),
             Password.fromString("Password123$!")),
         // max-length username (32 chars): 'a' + 31 'b'
         Arguments.of(
-            Username.fromString("abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"),
+            UserName.fromString("abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"),
             Email.fromString("long.user@example-domain.com"),
             Password.fromString("Zz9@aaaaaaaaaaa")),
         // another valid combination with mixed allowed specials in password (ensure >=12 chars)
         Arguments.of(
-            Username.fromString("alpha1"),
+            UserName.fromString("alpha1"),
             Email.fromString("alpha1@mail.example.org"),
             Password.fromString("GoodPass1@$a")));
   }
 
   @ParameterizedTest
   @MethodSource("provideValidRegisterParams")
-  void AuthController_Register_Successful(Username username, Email email, Password password) {
+  void AuthController_Register_Successful(UserName username, Email email, Password password) {
     doNothing().when(authService).registerUser(any(), any(), any());
     client
         .post()

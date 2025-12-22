@@ -1,7 +1,7 @@
 package com.familymoney.familymoney.repositories.dbos;
 
 import com.familymoney.familymoney.types.Email;
-import com.familymoney.familymoney.types.Username;
+import com.familymoney.familymoney.types.UserName;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
@@ -10,7 +10,7 @@ import org.jspecify.annotations.Nullable;
 @Data
 @Builder
 public class UpdateUserDbo {
-  @Nullable @Default private Username username = null;
+  @Nullable @Default private UserName username = null;
   @Nullable @Default private Email email = null;
   @Nullable @Default private String hashedPassword = null;
   @Nullable @Default private Boolean isEmailVerified = null;

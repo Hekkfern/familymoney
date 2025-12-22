@@ -4,7 +4,8 @@ import com.familymoney.familymoney.repositories.dbos.UpdateUserDbo;
 import com.familymoney.familymoney.repositories.dbos.UserDbo;
 import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.UserId;
-import com.familymoney.familymoney.types.Username;
+import com.familymoney.familymoney.types.UserName;
+
 import java.time.Duration;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -20,7 +21,7 @@ public interface IUserRepository {
    * @param passwordHash Hashed password of the user
    * @return Created UserDbo wrapped in Optional, or empty Optional if creation failed
    */
-  Optional<UserDbo> create(Username username, Email email, String passwordHash);
+  Optional<UserDbo> create(UserName username, Email email, String passwordHash);
 
   /**
    * Find a user record by its ID
@@ -44,7 +45,7 @@ public interface IUserRepository {
    * @param username Nametag of the user
    * @return Found UserDbo wrapped in Optional, or empty Optional if not found
    */
-  Optional<UserDbo> findByUsername(Username username);
+  Optional<UserDbo> findByUsername(UserName username);
 
   /**
    * Check if there is any other user record with the given email or username
@@ -53,7 +54,7 @@ public interface IUserRepository {
    * @param username Nametag to check
    * @return true if a user with the given email or username exists, false otherwise
    */
-  boolean existsByEmailOrUsername(Email email, Username username);
+  boolean existsByEmailOrUsername(Email email, UserName username);
 
   boolean updateById(UserId id, UpdateUserDbo data);
 
