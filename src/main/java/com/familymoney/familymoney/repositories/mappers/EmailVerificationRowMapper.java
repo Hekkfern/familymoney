@@ -14,8 +14,8 @@ public final class EmailVerificationRowMapper implements RowMapper<EmailVerifica
   public EmailVerificationDbo mapRow(ResultSet rs, int rowNum) throws SQLException {
     return EmailVerificationDbo.builder()
         .id(UUID.fromString(rs.getString("id")))
-        .userId(new UserId(UUID.fromString(rs.getString("user_id"))))
-        .token(new EmailVerificationToken(rs.getString("token")))
+        .userId(UserId.fromString(rs.getString("user_id")))
+        .token(EmailVerificationToken.fromString(rs.getString("token")))
         .expiresAt(rs.getTimestamp("expires_at").toInstant())
         .createdAt(rs.getTimestamp("created_at").toInstant())
         .build();

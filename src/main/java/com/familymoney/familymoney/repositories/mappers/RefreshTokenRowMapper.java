@@ -19,8 +19,8 @@ public final class RefreshTokenRowMapper implements RowMapper<RefreshTokenDbo> {
         Optional.ofNullable(rs.getTimestamp("used_at")).map(Timestamp::toInstant);
     return RefreshTokenDbo.builder()
         .id(UUID.fromString(rs.getString("id")))
-        .userId(new UserId(UUID.fromString(rs.getString("user_id"))))
-        .token(new RefreshToken(rs.getString("token")))
+        .userId(UserId.fromString(rs.getString("user_id")))
+        .token(RefreshToken.fromString(rs.getString("token")))
         .createdAt(rs.getTimestamp("created_at").toInstant())
         .expiresAt(rs.getTimestamp("expires_at").toInstant())
         .isUsed(rs.getBoolean("is_used"))

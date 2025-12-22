@@ -4,7 +4,7 @@ CREATE TABLE groups
 (
     id            UUID PRIMARY KEY                  DEFAULT uuidv7(),
     name          VARCHAR(64)              NOT NULL,
-    description   VARCHAR(255)             NOT NULL DEFAULT '',
+    description   VARCHAR(255)             NOT NULL,
     currency_code VARCHAR(3)               NOT NULL CHECK (currency_code ~ '^[A-Z]{3}$'),
     created_by    UUID                     REFERENCES users (id) ON DELETE SET NULL,
     created_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
@@ -46,14 +46,14 @@ CREATE UNIQUE INDEX ux_balances_group_unordered_pair
 CREATE TABLE transactions
 (
     id            UUID PRIMARY KEY                  DEFAULT uuidv7(),
-    description   VARCHAR(255)             NOT NULL DEFAULT '',
+    description   VARCHAR(255)             NOT NULL,
     group_id      UUID                     NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
-    amount        DECIMAL(19, 4)           NOT NULL,
+    amount        DECIMAL(19, 4)           NOT NULL CHECK (amount > 0),
     currency_code VARCHAR(3)               NOT NULL CHECK (currency_code ~ '^[A-Z]{3}$'),
     lender        UUID                     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     borrower      UUID                     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     created_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-        updated_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+    updated_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 SELECT trigger_updated_at('transactions');

@@ -6,7 +6,6 @@ import com.familymoney.familymoney.repositories.mappers.UserDboRowMapper;
 import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.UserId;
 import com.familymoney.familymoney.types.UserName;
-
 import java.time.Duration;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -84,7 +83,7 @@ public class UserRepository implements IUserRepository {
 
   @Override
   public boolean existsByEmailOrUsername(Email email, UserName username) {
-    var sql =
+    val sql =
         """
         SELECT COUNT(*)
         FROM users

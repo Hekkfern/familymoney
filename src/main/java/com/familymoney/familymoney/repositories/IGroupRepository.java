@@ -1,24 +1,25 @@
 package com.familymoney.familymoney.repositories;
 
 import com.familymoney.familymoney.repositories.dbos.GroupDbo;
-import com.familymoney.familymoney.repositories.dbos.UpdateUserDbo;
+import com.familymoney.familymoney.repositories.dbos.UpdateGroupDbo;
+import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.GroupName;
 import com.familymoney.familymoney.types.UserId;
-import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import javax.money.CurrencyUnit;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface IGroupRepository {
 
   Optional<GroupDbo> create(
       GroupName name, String description, CurrencyUnit currency, UserId owner);
 
-  boolean updateById(UUID id, UpdateUserDbo data);
+  boolean updateById(GroupId id, UpdateGroupDbo data);
 
-  boolean deleteById(UUID id);
+  boolean deleteById(GroupId id);
 
-  List<GroupDbo> findAllByUserId(UserId userId);
+  Page<GroupDbo> findAllByUserId(UserId userId, Pageable pageable);
 
-  Optional<GroupDbo> findById(UUID id);
+  Optional<GroupDbo> findById(GroupId id);
 }

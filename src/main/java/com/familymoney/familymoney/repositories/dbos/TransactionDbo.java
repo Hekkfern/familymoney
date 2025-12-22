@@ -1,18 +1,19 @@
 package com.familymoney.familymoney.repositories.dbos;
 
 import com.familymoney.familymoney.types.GroupId;
-import com.familymoney.familymoney.types.GroupName;
+import com.familymoney.familymoney.types.TransactionId;
 import com.familymoney.familymoney.types.UserId;
 import java.time.Instant;
-import javax.money.CurrencyUnit;
 import lombok.Builder;
+import org.javamoney.moneta.Money;
 
 @Builder
-public record GroupDbo(
-    GroupId id,
-    GroupName name,
+public record TransactionDbo(
+    TransactionId id,
     String description,
-    CurrencyUnit currency,
-    UserId createdBy,
+    GroupId groupId,
+    Money amount,
+    UserId lender,
+    UserId borrower,
     Instant createdAt,
     Instant updatedAt) {}
