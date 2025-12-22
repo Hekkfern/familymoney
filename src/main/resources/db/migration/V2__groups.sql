@@ -11,7 +11,7 @@ CREATE TABLE groups
     updated_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
-SELECT trigger_updated_at('users');
+SELECT trigger_updated_at('groups');
 
 CREATE TABLE user_groups
 (
@@ -49,11 +49,14 @@ CREATE TABLE transactions
     description   VARCHAR(255)             NOT NULL DEFAULT '',
     group_id      UUID                     NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
     amount        DECIMAL(19, 4)           NOT NULL,
-    currency_code VARCHAR(3)               NOT NULL CHECK (currencyCode ~ '^[A-Z]{3}$'),
+    currency_code VARCHAR(3)               NOT NULL CHECK (currency_code ~ '^[A-Z]{3}$'),
     lender        UUID                     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     borrower      UUID                     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    created_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+    created_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+        updated_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
+
+SELECT trigger_updated_at('transactions');
 
 CREATE INDEX idx_transactions_group_id ON transactions (group_id);
 CREATE INDEX idx_transactions_emitter_user_id ON transactions (lender);
