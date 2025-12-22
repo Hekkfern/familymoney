@@ -9,6 +9,7 @@ import com.familymoney.familymoney.properties.AppProperties;
 import com.familymoney.familymoney.properties.MailSenderProperties;
 import com.familymoney.familymoney.services.EmailSenderService;
 import com.familymoney.familymoney.utils.FakeGenerator;
+import jakarta.mail.Message;
 import jakarta.mail.internet.MimeMessage;
 import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
@@ -65,5 +66,11 @@ public class EmailSenderServiceTests {
             assertEquals(
                 String.format("%s <%s>", mailSenderProperties.name(), mailSenderProperties.email()),
                 sentMessage.getFrom()[0].toString()));
+    assertDoesNotThrow(
+        () ->
+            assertEquals(
+                email.toString(),
+                sentMessage.getRecipients(Message.RecipientType.TO)[0].toString()));
+    assertDoesNotThrow(() -> assertFalse(sentMessage.getContent().toString().isEmpty()));
   }
 }
