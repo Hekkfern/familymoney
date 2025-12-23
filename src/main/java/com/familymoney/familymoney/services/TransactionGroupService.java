@@ -3,6 +3,7 @@ package com.familymoney.familymoney.services;
 import com.familymoney.familymoney.repositories.IBalanceRepository;
 import com.familymoney.familymoney.repositories.IGroupRepository;
 import com.familymoney.familymoney.repositories.ITransactionRepository;
+import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.GroupName;
 import com.familymoney.familymoney.types.UserId;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,7 @@ public class TransactionGroupService implements ITransactionGroupService {
   private final ITransactionRepository transactionRepository;
 
   @Override
-  public void createGroup(
+  public GroupId createGroup(
       GroupName name, String description, CurrencyUnit currency, UserId createdBy) {
     // Create group in the database
     val group = groupRepository.create(name, description, currency, createdBy);

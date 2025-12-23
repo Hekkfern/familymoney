@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 public interface ITransactionGroupController {
 
   @PostMapping
-  void createGroup(@RequestBody @Valid CreateGroupRequestDto request);
+  CreateGroupResponseDto createGroup(@RequestBody @Valid CreateGroupRequestDto request);
 
   @DeleteMapping("/{groupId}")
   void deleteGroup(@PathVariable @NotNull GroupId groupId);
