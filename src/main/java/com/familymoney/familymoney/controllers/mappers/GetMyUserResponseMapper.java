@@ -5,7 +5,7 @@ import com.familymoney.familymoney.services.data.GetUserData;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface GetMyUserResponseMapper {
 
   GetMyUserResponseDto toDto(GetUserData userData);

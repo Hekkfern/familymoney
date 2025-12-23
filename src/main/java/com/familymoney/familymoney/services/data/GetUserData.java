@@ -1,13 +1,14 @@
 package com.familymoney.familymoney.services.data;
 
 import com.familymoney.familymoney.types.Email;
+import com.familymoney.familymoney.types.UserId;
 import com.familymoney.familymoney.types.UserName;
-import lombok.Builder;
-
 import java.time.Instant;
+import lombok.Builder;
 
 @Builder
 public record GetUserData(
+    UserId id,
     UserName username,
     Email email,
     Instant createdAt,

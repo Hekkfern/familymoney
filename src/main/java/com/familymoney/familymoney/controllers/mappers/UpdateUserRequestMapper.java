@@ -4,7 +4,7 @@ import com.familymoney.familymoney.controllers.dtos.user.UpdateUserRequestDto;
 import com.familymoney.familymoney.services.data.UpdateUserData;
 import org.mapstruct.Mapper;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface UpdateUserRequestMapper {
 
   UpdateUserData fromDto(UpdateUserRequestDto dto);
