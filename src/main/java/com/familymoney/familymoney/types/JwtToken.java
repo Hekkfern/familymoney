@@ -1,5 +1,7 @@
 package com.familymoney.familymoney.types;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.regex.Pattern;
 
 public record JwtToken(String value) {
@@ -13,12 +15,18 @@ public record JwtToken(String value) {
     }
   }
 
-  @Override
-  public String toString() {
+  @JsonValue
+  public String value() {
     return value;
   }
 
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static JwtToken fromString(String value) {
     return new JwtToken(value);
+  }
+
+  @Override
+  public String toString() {
+    return value;
   }
 }

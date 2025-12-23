@@ -1,5 +1,7 @@
 package com.familymoney.familymoney.types;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.regex.Pattern;
 
 public record UserName(String value) {
@@ -13,6 +15,12 @@ public record UserName(String value) {
     }
   }
 
+  @JsonValue
+  public String value() {
+    return value;
+  }
+
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static UserName fromString(String value) {
     return new UserName(value);
   }

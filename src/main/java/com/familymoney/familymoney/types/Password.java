@@ -1,5 +1,7 @@
 package com.familymoney.familymoney.types;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.regex.Pattern;
 
 public record Password(String value) {
@@ -14,6 +16,12 @@ public record Password(String value) {
     }
   }
 
+  @JsonValue
+  public String value() {
+    return value;
+  }
+
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static Password fromString(String value) {
     return new Password(value);
   }

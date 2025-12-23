@@ -21,8 +21,8 @@ public class TransactionGroupController implements ITransactionGroupController {
     // Get user ID from security context (validated)
     val userId = AuthenticationUtils.getUserIdFromSecurityContext();
     // Create group
-    transactionGroupService.createGroup(
-        request.name(), request.description().trim(), request.currency(), userId);
+    /*transactionGroupService.createGroup(
+        request.name(), request.description().trim(), request.currency(), userId);*/
   }
 
   @Override

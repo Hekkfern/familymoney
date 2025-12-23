@@ -1,5 +1,7 @@
 package com.familymoney.familymoney.types;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.regex.Pattern;
 
 public record PasswordResetToken(String value) {
@@ -12,12 +14,18 @@ public record PasswordResetToken(String value) {
     }
   }
 
-  @Override
-  public String toString() {
+  @JsonValue
+  public String value() {
     return value;
   }
 
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static PasswordResetToken fromString(String value) {
     return new PasswordResetToken(value);
+  }
+
+  @Override
+  public String toString() {
+    return value;
   }
 }

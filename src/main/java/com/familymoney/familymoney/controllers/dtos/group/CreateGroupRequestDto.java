@@ -5,4 +5,4 @@ import jakarta.validation.constraints.NotNull;
 import javax.money.CurrencyUnit;
 
 public record CreateGroupRequestDto(
-    GroupName name, @NotNull String description, @NotNull CurrencyUnit currency) {}
+    GroupName name, @NotNull String description, @NotNull String currency) {}

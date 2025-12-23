@@ -1,5 +1,8 @@
 package com.familymoney.familymoney.types;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 import java.security.SecureRandom;
 import java.util.regex.Pattern;
 
@@ -15,11 +18,12 @@ public record EmailVerificationToken(String value) {
     }
   }
 
-  @Override
-  public String toString() {
+  @JsonValue
+  public String value() {
     return value;
   }
 
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static EmailVerificationToken fromString(String value) {
     return new EmailVerificationToken(value);
   }
@@ -33,5 +37,10 @@ public record EmailVerificationToken(String value) {
       sb.append(CHARSET.charAt(idx));
     }
     return new EmailVerificationToken(sb.toString());
+  }
+
+  @Override
+  public String toString() {
+    return value;
   }
 }
