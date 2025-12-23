@@ -34,11 +34,11 @@ public class TransactionRepository implements ITransactionRepository {
     return jdbcClient
         .sql(sql)
         .param("description", description)
-        .param("groupId", groupId.toString())
+        .param("groupId", groupId.value())
         .param("amount", amount.getNumber().toString())
-        .param("currencyCode", amount.getCurrency().toString())
-        .param("lender", lender.toString())
-        .param("borrower", borrower.toString())
+        .param("currencyCode", amount.getCurrency().getCurrencyCode())
+        .param("lender", lender.value())
+        .param("borrower", borrower.value())
         .query(new TransactionDboRowMapper())
         .optional();
   }
@@ -58,15 +58,15 @@ public class TransactionRepository implements ITransactionRepository {
     val rowsAffected =
         jdbcClient
             .sql(sql)
-            .param("id", id.toString())
+            .param("id", id.value())
             .param(
                 "amount", data.getAmount() != null ? data.getAmount().getNumber().toString() : null)
             .param(
                 "currencyCode",
-                data.getAmount() != null ? data.getAmount().getCurrency().toString() : null)
+                data.getAmount() != null ? data.getAmount().getCurrency().getCurrencyCode() : null)
             .param("description", data.getDescription() != null ? data.getDescription() : null)
-            .param("lender", data.getLender() != null ? data.getLender().toString() : null)
-            .param("borrower", data.getBorrower() != null ? data.getBorrower().toString() : null)
+            .param("lender", data.getLender() != null ? data.getLender().value() : null)
+            .param("borrower", data.getBorrower() != null ? data.getBorrower().value() : null)
             .update();
     return rowsAffected > 0;
   }
@@ -78,7 +78,7 @@ public class TransactionRepository implements ITransactionRepository {
         DELETE FROM transactions
         WHERE id = :id
         """;
-    val rowsAffected = jdbcClient.sql(sql).param("id", id.toString()).update();
+    val rowsAffected = jdbcClient.sql(sql).param("id", id.value()).update();
     return rowsAffected > 0;
   }
 
@@ -92,7 +92,7 @@ public class TransactionRepository implements ITransactionRepository {
         """;
     return jdbcClient
         .sql(sql)
-        .param("id", id.toString())
+        .param("id", id.value())
         .query(new TransactionDboRowMapper())
         .optional();
   }
@@ -106,7 +106,7 @@ public class TransactionRepository implements ITransactionRepository {
         where group_id = :groupId
         """;
     val total =
-        jdbcClient.sql(rowCountSql).param("groupId", groupId.toString()).query(Long.class).single();
+        jdbcClient.sql(rowCountSql).param("groupId", groupId.value()).query(Long.class).single();
     val querySql =
         """
         SELECT id, description, group_id, currency_code, lender,borrower, created_at, updated_at

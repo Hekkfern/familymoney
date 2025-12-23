@@ -1,0 +1,20 @@
+package com.familymoney.familymoney.repositories.dbos;
+
+import com.familymoney.familymoney.types.UserId;
+import lombok.Builder;
+import lombok.Builder.Default;
+import lombok.Data;
+import org.javamoney.moneta.Money;
+import org.jspecify.annotations.Nullable;
+
+@Data
+@Builder
+public class UpdateBalanceDbo {
+  @Nullable @Default private Money amount = null;
+  @Nullable @Default private UserId user1 = null;
+  @Nullable @Default private UserId user2 = null;
+
+  public boolean isEmpty() {
+    return amount == null && user1 == null && user2 == null;
+  }
+}

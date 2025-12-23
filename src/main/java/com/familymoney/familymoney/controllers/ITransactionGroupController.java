@@ -9,7 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/api/groups")
-public interface IGroupController {
+public interface ITransactionGroupController {
 
   @PostMapping
   void createGroup(@RequestBody @Valid CreateGroupRequestDto request);

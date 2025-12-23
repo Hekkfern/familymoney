@@ -1,7 +1,8 @@
 package com.familymoney.familymoney.controllers.dtos.group;
 
-import jakarta.validation.constraints.NotBlank;
+import com.familymoney.familymoney.types.GroupName;
 import jakarta.validation.constraints.NotNull;
-import java.util.Currency;
+import javax.money.CurrencyUnit;
 
-public record CreateGroupRequestDto(@NotBlank String name, @NotNull Currency currency) {}
+public record CreateGroupRequestDto(
+    GroupName name, @NotNull String description, @NotNull CurrencyUnit currency) {}

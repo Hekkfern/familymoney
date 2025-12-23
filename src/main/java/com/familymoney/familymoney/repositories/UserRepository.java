@@ -29,12 +29,12 @@ public class UserRepository implements IUserRepository {
         """
         INSERT INTO users (username, email, hashed_password)
         VALUES (:username, :email, :passwordHash)
-        RETURNING id, username, email, hashed_password, email_verified, created_at, updated_at, is_enabled
+        RETURNING id, username, email, hashed_password, is_email_verified, created_at, updated_at, is_enabled
         """;
     return jdbcClient
         .sql(sql)
-        .param("username", username.toString())
-        .param("email", email.toString())
+        .param("username", username.value())
+        .param("email", email.value())
         .param("passwordHash", passwordHash)
         .query(new UserDboRowMapper())
         .optional();
@@ -44,24 +44,24 @@ public class UserRepository implements IUserRepository {
   public Optional<UserDbo> findById(UserId id) {
     val sql =
         """
-        SELECT id, username, email, hashed_password, created_at, updated_at, email_verified, is_enabled
+        SELECT id, username, email, hashed_password, created_at, updated_at, is_email_verified, is_enabled
         FROM users
         WHERE id = :id
         """;
-    return jdbcClient.sql(sql).param("id", id.toString()).query(new UserDboRowMapper()).optional();
+    return jdbcClient.sql(sql).param("id", id.value()).query(new UserDboRowMapper()).optional();
   }
 
   @Override
   public Optional<UserDbo> findByEmail(Email email) {
     val sql =
         """
-        SELECT id, username, email, hashed_password, created_at, updated_at, email_verified, is_enabled
+        SELECT id, username, email, hashed_password, created_at, updated_at, is_email_verified, is_enabled
         FROM users
         WHERE email = :email
         """;
     return jdbcClient
         .sql(sql)
-        .param("email", email.toString())
+        .param("email", email.value())
         .query(new UserDboRowMapper())
         .optional();
   }
@@ -70,13 +70,13 @@ public class UserRepository implements IUserRepository {
   public Optional<UserDbo> findByUsername(UserName username) {
     val sql =
         """
-        SELECT id, username, email, hashed_password, created_at, updated_at, email_verified, is_enabled
+        SELECT id, username, email, hashed_password, created_at, updated_at, is_email_verified, is_enabled
         FROM users
         WHERE username = :username
         """;
     return jdbcClient
         .sql(sql)
-        .param("username", username.toString())
+        .param("username", username.value())
         .query(new UserDboRowMapper())
         .optional();
   }
@@ -92,8 +92,8 @@ public class UserRepository implements IUserRepository {
     val count =
         jdbcClient
             .sql(sql)
-            .param("email", email.toString())
-            .param("username", username.toString())
+            .param("email", email.value())
+            .param("username", username.value())
             .query(Integer.class)
             .single();
     return count > 0;
@@ -105,21 +105,25 @@ public class UserRepository implements IUserRepository {
         """
         UPDATE users
         SET username = COALESCE(:username, username),
-            email = COALESCE(:email, email)
-            hashed_password = COALESCE(:hashedPassword, hashed_password)
-            is_email_verified = COALESCE(:isEmailVerified, is_email_verified)
+            email = COALESCE(:email, email),
+            hashed_password = COALESCE(:hashedPassword, hashed_password),
+            is_email_verified = COALESCE(:isEmailVerified, is_email_verified),
             is_enabled = COALESCE(:isEnabled, is_enabled)
         WHERE id = :id
         """;
     val rowsAffected =
         jdbcClient
             .sql(sql)
-            .param("id", id.toString())
-            .param("username", data.getUsername() != null ? data.getUsername().toString() : null)
-            .param("email", data.getEmail() != null ? data.getEmail().toString() : null)
-            .param("hashedPassword", data.getHashedPassword())
-            .param("isEmailVerified", data.getIsEmailVerified())
-            .param("isEnabled", data.getIsEnabled())
+            .param("id", id.value())
+            .param("username", data.getUsername() != null ? data.getUsername().value() : null)
+            .param("email", data.getEmail() != null ? data.getEmail().value() : null)
+            .param(
+                "hashedPassword",
+                data.getHashedPassword() != null ? data.getHashedPassword() : null)
+            .param(
+                "isEmailVerified",
+                data.getIsEmailVerified() != null ? data.getIsEmailVerified() : null)
+            .param("isEnabled", data.getIsEnabled() != null ? data.getIsEnabled() : null)
             .update();
     return rowsAffected > 0;
   }
@@ -131,7 +135,7 @@ public class UserRepository implements IUserRepository {
         DELETE FROM users
         WHERE id = :id
         """;
-    val rowsAffected = jdbcClient.sql(sql).param("id", id.toString()).update();
+    val rowsAffected = jdbcClient.sql(sql).param("id", id.value()).update();
     return rowsAffected > 0;
   }
 
@@ -140,7 +144,7 @@ public class UserRepository implements IUserRepository {
     val sql =
         """
         DELETE FROM users
-        WHERE email_verified = FALSE
+        WHERE is_email_verified = FALSE
           AND created_at < NOW() - INTERVAL ':duration seconds'
         """;
     jdbcClient.sql(sql).params("duration", cutoff).update();
@@ -157,7 +161,7 @@ public class UserRepository implements IUserRepository {
     val total = jdbcClient.sql(rowCountSql).query(Long.class).single();
     val querySql =
         """
-        SELECT id, username, email, hashed_password, created_at, updated_at, email_verified, is_enabled
+        SELECT id, username, email, hashed_password, created_at, updated_at, is_email_verified, is_enabled
         FROM users
         LIMIT :limit
         OFFSET :offset

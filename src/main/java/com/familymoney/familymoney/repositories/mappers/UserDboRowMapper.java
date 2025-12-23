@@ -19,7 +19,7 @@ public final class UserDboRowMapper implements RowMapper<UserDbo> {
         .hashedPassword(rs.getString("hashed_password"))
         .createdAt(rs.getTimestamp("created_at").toInstant())
         .updatedAt(rs.getTimestamp("updated_at").toInstant())
-        .isEmailVerified(rs.getBoolean("email_verified"))
+        .isEmailVerified(rs.getBoolean("is_email_verified"))
         .isEnabled(rs.getBoolean("is_enabled"))
         .build();
   }

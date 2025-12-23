@@ -5,6 +5,7 @@ import com.familymoney.familymoney.repositories.dbos.UpdateGroupDbo;
 import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.GroupName;
 import com.familymoney.familymoney.types.UserId;
+import java.util.List;
 import java.util.Optional;
 import javax.money.CurrencyUnit;
 import org.springframework.data.domain.Page;
@@ -22,4 +23,8 @@ public interface IGroupRepository {
   Page<GroupDbo> findAllByUserId(UserId userId, Pageable pageable);
 
   Optional<GroupDbo> findById(GroupId id);
+
+  List<UserId> findUserIdsByGroupId(GroupId id);
+
+  boolean isUserInGroup(UserId userId, GroupId groupId);
 }

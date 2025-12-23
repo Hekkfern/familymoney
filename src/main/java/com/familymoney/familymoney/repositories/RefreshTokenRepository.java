@@ -65,7 +65,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
     val rowsAffected =
         jdbcClient
             .sql(sql)
-            .param("token", token.toString())
+            .param("token", token.value())
             .param("isUsed", data.getIsUsed())
             .param(
                 "usedAt",
@@ -111,7 +111,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
     val rowsAffected =
         jdbcClient
             .sql(sql)
-            .param("userId", userId.toString())
+            .param("userId", userId.value())
             .param("isUsed", data.getIsUsed())
             .param(
                 "usedAt",

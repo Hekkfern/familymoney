@@ -25,11 +25,12 @@ CREATE TABLE user_groups
 
 CREATE TABLE balances
 (
-    id        UUID PRIMARY KEY        DEFAULT uuidv7(),
-    group_id  UUID           NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
-    amount    DECIMAL(19, 4) NOT NULL DEFAULT 0,
-    user_id_1 UUID           NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    user_id_2 UUID           NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    id            UUID PRIMARY KEY        DEFAULT uuidv7(),
+    group_id      UUID           NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
+    amount        DECIMAL(19, 4) NOT NULL DEFAULT 0,
+    currency_code VARCHAR(3)     NOT NULL CHECK (currency_code ~ '^[A-Z]{3}$'),
+    user_id_1     UUID           NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    user_id_2     UUID           NOT NULL REFERENCES users (id) ON DELETE CASCADE,
 
     CONSTRAINT chk_balances_lender_borrower_not_equal CHECK (user_id_1 <> user_id_2)
 );

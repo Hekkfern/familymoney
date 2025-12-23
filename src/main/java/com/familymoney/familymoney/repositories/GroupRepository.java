@@ -6,8 +6,8 @@ import com.familymoney.familymoney.repositories.mappers.GroupDboRowMapper;
 import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.GroupName;
 import com.familymoney.familymoney.types.UserId;
+import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import javax.money.CurrencyUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
@@ -34,10 +34,10 @@ public class GroupRepository implements IGroupRepository {
         """;
     return jdbcClient
         .sql(sql)
-        .param("name", name.toString())
+        .param("name", name.value())
         .param("description", description)
         .param("currency", currency.getCurrencyCode())
-        .param("owner", owner.toString())
+        .param("owner", owner.value())
         .query(new GroupDboRowMapper())
         .optional();
   }
@@ -54,8 +54,8 @@ public class GroupRepository implements IGroupRepository {
     val rowsAffected =
         jdbcClient
             .sql(sql)
-            .param("id", id.toString())
-            .param("name", data.getName() != null ? data.getName().toString() : null)
+            .param("id", id.value())
+            .param("name", data.getName() != null ? data.getName().value() : null)
             .param("description", data.getDescription() != null ? data.getDescription() : null)
             .update();
     return rowsAffected > 0;
@@ -68,7 +68,7 @@ public class GroupRepository implements IGroupRepository {
         DELETE FROM groups
         WHERE id = :id
         """;
-    val rowsAffected = jdbcClient.sql(sql).param("id", id.toString()).update();
+    val rowsAffected = jdbcClient.sql(sql).param("id", id.value()).update();
     return rowsAffected > 0;
   }
 
@@ -81,7 +81,7 @@ public class GroupRepository implements IGroupRepository {
         WHERE user_id = :userId
         """;
     val total =
-        jdbcClient.sql(rowCountSql).param("userId", userId.toString()).query(Long.class).single();
+        jdbcClient.sql(rowCountSql).param("userId", userId.value()).query(Long.class).single();
     val querySql =
         """
         SELECT g.id, g.name, g.description, g.currency_code, g.created_by, g.created_at, g.updated_at
@@ -94,7 +94,7 @@ public class GroupRepository implements IGroupRepository {
     val data =
         jdbcClient
             .sql(querySql)
-            .param("userId", userId.toString())
+            .param("userId", userId.value())
             .param("limit", pageable.getPageSize())
             .param("offset", pageable.getOffset())
             .query(new GroupDboRowMapper())
@@ -110,6 +110,38 @@ public class GroupRepository implements IGroupRepository {
         FROM groups
         WHERE id = :id
         """;
-    return jdbcClient.sql(sql).param("id", id.toString()).query(new GroupDboRowMapper()).optional();
+    return jdbcClient.sql(sql).param("id", id.value()).query(new GroupDboRowMapper()).optional();
+  }
+
+  @Override
+  public List<UserId> findUserIdsByGroupId(GroupId id) {
+    val sql =
+        """
+        SELECT user_id
+        FROM user_groups
+        WHERE group_id = :groupId
+        """;
+    return jdbcClient.sql(sql).param("groupId", id.value()).query(String.class).stream()
+        .map(UserId::fromString)
+        .toList();
+  }
+
+  @Override
+  public boolean isUserInGroup(UserId userId, GroupId groupId) {
+    val sql =
+        """
+        SELECT COUNT(1)
+        FROM user_groups
+        WHERE user_id = :userId
+          AND group_id = :groupId
+        """;
+    val count =
+        jdbcClient
+            .sql(sql)
+            .param("userId", userId.value())
+            .param("groupId", groupId.value())
+            .query(Long.class)
+            .single();
+    return count > 0;
   }
 }
