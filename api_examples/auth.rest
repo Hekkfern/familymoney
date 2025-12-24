@@ -56,7 +56,29 @@ POST {{BaseUrl}}/api/v1/auth/verify-email/aaa
 
 ###
 
-# @name Verify email with wrong token
+# @name Verify email with wrong parameters
 POST {{BaseUrl}}/api/v1/auth/verify-email/aaa
+
+###
+
+// /api/v1/auth/verify-email/resend endpoint
+
+# @name Resend verification email for user
+POST {{BaseUrl}}/api/v1/auth/verify-email/resend
+Content-Type: application/json
+
+{
+  "email": "hector@example.com"
+}
+
+###
+
+# @name Resend verification email with wrong parameters
+POST {{BaseUrl}}/api/v1/auth/verify-email/resend
+Content-Type: application/json
+
+{
+  "email": "aaaa"
+}
 
 ###
