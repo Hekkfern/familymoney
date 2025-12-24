@@ -11,28 +11,28 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
-@RequestMapping("/api/admin/users")
+@RequestMapping("/admin/users")
 public interface IUserAdminController {
 
-  @GetMapping("/{userId}")
+  @GetMapping(path = "/{userId}", version = "1")
   GetUserResponseDto getUser(@PathVariable @NotNull UserId userId);
 
-  @GetMapping
+  @GetMapping(version = "1")
   GetUsersResponseDto getUsers(Pageable pageable);
 
-  @PutMapping("/{userId}/enable")
+  @PutMapping(path = "/{userId}/enable", version = "1")
   void enableUser(@PathVariable @NotNull UserId userId, @RequestParam boolean enabled);
 
-  @DeleteMapping("/{userId}")
+  @DeleteMapping(path = "/{userId}", version = "1")
   void deleteUser(@PathVariable @NotNull UserId userId);
 
-  @PatchMapping("/{userId}")
+  @PatchMapping(path = "/{userId}", version = "1")
   void updateUserInfo(
       @PathVariable @NotNull UserId userId, @RequestBody @Valid UpdateUserRequestDto request);
 
-  @PutMapping("/{userId}/role")
+  @PutMapping(path = "/{userId}/role", version = "1")
   void setUserRole(@PathVariable @NotNull UserId userId, @RequestBody @NotBlank String role);
 
-  @GetMapping("/{userId}/role")
+  @GetMapping(path = "/{userId}/role", version = "1")
   GetUserRoleResponseDto getUserRole(@PathVariable @NotNull UserId userId);
 }

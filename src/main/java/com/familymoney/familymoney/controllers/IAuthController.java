@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Tag(
     name = "Registration and Authentication APIs",
     description = "Operations to register a new user and authenticate")
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
 public interface IAuthController {
 
   @Operation(summary = "Register a new user account")
@@ -55,7 +55,7 @@ public interface IAuthController {
         description = "Something went wrong on the server side",
         content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE))
   })
-  @PostMapping("register")
+  @PostMapping(path = "register", version = "1")
   void register(@RequestBody @Valid RegisterRequestDto request);
 
   @Operation(summary = "Log in using an existing user account")
@@ -84,30 +84,30 @@ public interface IAuthController {
         description = "Something went wrong on the server side",
         content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE))
   })
-  @PostMapping("login")
+  @PostMapping(path = "login", version = "1")
   LoginResponseDto login(@RequestBody @Valid LoginRequestDto request);
 
   @Operation(summary = "Verify the email address of an user account using the verification token")
-  @GetMapping("verify-email/{token}")
+  @GetMapping(path = "verify-email/{token}", version = "1")
   void verifyEmail(@PathVariable @NotNull EmailVerificationToken token);
 
   @Operation(summary = "Resend the email verification email to the user")
-  @PostMapping("verify-email/resend")
+  @PostMapping(path = "verify-email/resend", version = "1")
   void resendVerificationEmail(@RequestBody @Valid ResendVerificationEmailRequestDto request);
 
   @Operation(summary = "Initiate the password reset process for a user account")
-  @PostMapping("forgot-password")
+  @PostMapping(path = "forgot-password", version = "1")
   void forgotPassword(@RequestBody @Valid ForgotPasswordRequestDto request);
 
   @Operation(summary = "Reset the password of a user account using the password reset token")
-  @PostMapping("reset-password")
+  @PostMapping(path = "reset-password", version = "1")
   void resetPassword(@RequestBody @Valid ResetPasswordRequestDto request);
 
   @Operation(summary = "Refresh the access and refresh tokens using a valid refresh token")
-  @PostMapping("refresh")
+  @PostMapping(path = "refresh", version = "1")
   RefreshResponseDto refresh(@RequestBody @Valid RefreshTokenRequestDto request);
 
   @Operation(summary = "Log out the user and invalidate the refresh token")
-  @PostMapping("logout")
+  @PostMapping(path = "logout", version = "1")
   void logout(@RequestBody @Valid LogoutRequestDto request);
 }

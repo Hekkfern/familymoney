@@ -28,6 +28,8 @@ spring:
             enable: true
 server:
   port: ${APP_PORT}
+  servlet:
+    context-path: /api
 logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} | %level | %msg%n"
