@@ -1,0 +1,62 @@
+
+// /api/v1/auth/register endpoint
+
+# @name Register new user
+POST {{BaseUrl}}/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "username": "hector1111",
+  "email": "hector@example.com",
+  "password": "Isadj12312kgsf!sda"
+}
+
+###
+
+# @name Register using wrong parameters
+POST {{BaseUrl}}/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "username": "hector22",
+  "email": "aaa",
+  "password": "bbb"
+}
+
+###
+
+// /api/v1/auth/login endpoint
+
+# @name Login
+POST {{BaseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "hector@example.com",
+  "password": "Isadj12312kgsf!sda"
+}
+
+###
+
+# @name Login using wrong parameters
+POST {{BaseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "aaaa",
+  "password": "bbbb"
+}
+
+###
+
+// /api/v1/auth/verify-email endpoint
+
+# @name Verify email for user
+POST {{BaseUrl}}/api/v1/auth/verify-email/aaa
+
+###
+
+# @name Verify email with wrong token
+POST {{BaseUrl}}/api/v1/auth/verify-email/aaa
+
+###
