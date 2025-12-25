@@ -1,17 +1,18 @@
 package com.familymoney.familymoney.services;
 
+import com.familymoney.familymoney.exceptions.DatabaseExecutionException;
+import com.familymoney.familymoney.exceptions.GroupNotOwnedByUserException;
 import com.familymoney.familymoney.repositories.IBalanceRepository;
 import com.familymoney.familymoney.repositories.IGroupRepository;
 import com.familymoney.familymoney.repositories.ITransactionRepository;
 import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.GroupName;
 import com.familymoney.familymoney.types.UserId;
+import javax.money.CurrencyUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.stereotype.Service;
-
-import javax.money.CurrencyUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +27,21 @@ public class TransactionGroupService implements ITransactionGroupService {
   public GroupId createGroup(
       GroupName name, String description, CurrencyUnit currency, UserId createdBy) {
     // Create group in the database
-    val group = groupRepository.create(name, description, currency, createdBy);
+    val group =
+        groupRepository
+            .create(name, description, currency, createdBy)
+            .orElseThrow(() -> new DatabaseExecutionException("Unable to create group"));
+    return group.id();
+  }
+
+  @Override
+  public void deleteGroupOwnedBy(GroupId groupId, UserId userId) {
+    // Check if the user is a member of the group
+    if (!groupRepository.isUserInGroup(userId, groupId)) {
+      throw new GroupNotOwnedByUserException(
+          String.format("User %s is not a member of group %s", userId, groupId));
+    }
+    // Delete group
+    groupRepository.deleteById(groupId);
   }
 }

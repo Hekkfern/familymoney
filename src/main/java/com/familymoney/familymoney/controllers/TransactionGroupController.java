@@ -33,7 +33,12 @@ public class TransactionGroupController implements ITransactionGroupController {
   }
 
   @Override
-  public void deleteGroup(GroupId groupId) {}
+  public void deleteGroup(GroupId groupId) {
+    // Get user ID from security context (validated)
+    val userId = AuthenticationUtils.getUserIdFromSecurityContext();
+    // Delete group
+    transactionGroupService.deleteGroupOwnedBy(groupId, userId);
+  }
 
   @Override
   public GetGroupResponseDto getGroupInfo(GroupId groupId) {

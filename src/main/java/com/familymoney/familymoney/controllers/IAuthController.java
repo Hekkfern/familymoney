@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Tag(
     name = "Registration and Authentication APIs",
     description = "Operations to register a new user and authenticate")
-@RequestMapping("/auth")
+@RequestMapping("auth")
 public interface IAuthController {
 
   @Operation(summary = "Register a new user account")

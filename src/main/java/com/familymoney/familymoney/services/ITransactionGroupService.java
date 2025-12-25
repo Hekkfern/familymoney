@@ -8,4 +8,6 @@ import javax.money.CurrencyUnit;
 public interface ITransactionGroupService {
 
   GroupId createGroup(GroupName name, String description, CurrencyUnit currency, UserId createdBy);
+
+  void deleteGroupOwnedBy(GroupId groupId, UserId userId);
 }

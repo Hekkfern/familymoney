@@ -9,15 +9,15 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-@RequestMapping("/users")
+@RequestMapping("users")
 public interface IUserController {
 
-  @GetMapping(path = "/me", version = "1")
+  @GetMapping(path = "me", version = "1")
   GetMyUserResponseDto getMyUserInfo();
 
-  @DeleteMapping(path = "/me", version = "1")
+  @DeleteMapping(path = "me", version = "1")
   void deleteMyUser();
 
-  @PatchMapping(path = "/me", version = "1")
+  @PatchMapping(path = "me", version = "1")
   void updateMyUserInfo(@RequestBody @Valid UpdateUserRequestDto request);
 }
