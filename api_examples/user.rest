@@ -1,0 +1,82 @@
+@access-token = "aaaaa"
+
+
+// Get user data endpoint
+
+# @name Get user data
+GET {{BaseUrl}}/api/v1/users/register
+Authorization: Bearer {{access-token}}
+
+###
+
+# @name Get user data with wrong authentication
+GET {{BaseUrl}}/api/v1/users/register
+Authorization: Bearer aaaaaa
+
+###
+
+// Delete user endpoint
+
+# @name Delete user
+DELETE {{BaseUrl}}/api/v1/users/me
+Authorization: Bearer {{access-token}}
+
+###
+
+# @name Delete user with wrong authentication
+DELETE {{BaseUrl}}/api/v1/users/me
+Authorization: Bearer aaaaaa
+
+###
+
+// Update user data endpoint
+
+# @name Update all user data
+PATCH {{BaseUrl}}/api/v1/users/me
+Authorization: Bearer {{access-token}}
+Content-Type: application/json
+
+{
+  "username": "hector2222",
+  "email": "hector2@example.com",
+  "password": "hdgfgsYYASDSG!1112"
+}
+
+###
+
+# @name Update only one item of the user data
+PATCH {{BaseUrl}}/api/v1/users/me
+Authorization: Bearer {{access-token}}
+Content-Type: application/json
+
+{
+  "username": "hector3333"
+}
+
+###
+
+# @name Update user data with wrong authentication
+PATCH {{BaseUrl}}/api/v1/users/me
+Authorization: Bearer aaaaaa
+Content-Type: application/json
+
+{
+  "username": "hector2222",
+  "email": "hector2@example.com",
+  "password": "hdgfgsYYASDSG!1112"
+}
+
+###
+
+# @name Update user data with wrong parameters
+PATCH {{BaseUrl}}/api/v1/users/me
+Authorization: Bearer {{access-token}}
+Content-Type: application/json
+
+{
+  "username": "hector22",
+  "email": "aaa",
+  "password": "bbb"
+}
+
+###
