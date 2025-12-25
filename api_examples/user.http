@@ -1,6 +1,5 @@
 @access-token = "aaaaa"
 
-
 // Get user data endpoint
 
 # @name Get user data

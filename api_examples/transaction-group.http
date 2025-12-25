@@ -1,0 +1,16 @@
+@access-token = "aaaaa"
+
+// Create group endpoint
+
+# @name Create group
+POST {{BaseUrl}}/api/v1/groups
+Authorization: Bearer {{access-token}}
+Content-Type: application/json
+
+{
+  "name": "my group with friends",
+  "description": "my description",
+  "currencyCode": "EUR"
+}
+
+###
