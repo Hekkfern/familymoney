@@ -70,10 +70,10 @@ public class UserAdminControllerTests {
     when(jwtClock.now()).thenReturn(Date.from(now));
   }
 
-  // region GetUser Tests
+  // region GetUserInfo Tests
 
   @Test
-  void UserAdminController_GetMyUserInfo_Successful() {
+  void UserAdminController_GetUserInfo_Successful() {
     val username = UserName.fromString(FakeGenerator.username());
     val email = Email.fromString(FakeGenerator.email());
     val userId = UserId.fromUuid(UUID.randomUUID());
@@ -108,7 +108,7 @@ public class UserAdminControllerTests {
   }
 
   @Test
-  void UserAdminController_GetMyUserInfo_NonAdmin() {
+  void UserAdminController_GetUserInfo_NonAdmin() {
     val username = UserName.fromString(FakeGenerator.username());
     val email = Email.fromString(FakeGenerator.email());
     val userId = UserId.fromUuid(UUID.randomUUID());
@@ -135,7 +135,7 @@ public class UserAdminControllerTests {
   }
 
   @Test
-  void UserAdminController_GetMyUserInfo_Unauthenticated() {
+  void UserAdminController_GetUserInfo_Unauthenticated() {
     val userId = UserId.fromUuid(UUID.randomUUID());
 
     client
