@@ -1,5 +1,8 @@
 package com.familymoney.familymoney.controllers.dtos.group;
 
-import com.familymoney.familymoney.types.ShareGroupToken;
+import com.familymoney.familymoney.validation.ValidShareGroupToken;
+import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 
-public record GetInvitationTokenResponseDto(ShareGroupToken token) {}
+@Builder
+public record GetInvitationTokenResponseDto(@NotNull @ValidShareGroupToken String token) {}

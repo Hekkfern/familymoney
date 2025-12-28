@@ -8,6 +8,9 @@ import com.familymoney.familymoney.config.ThymeleafConfig;
 import com.familymoney.familymoney.properties.AppProperties;
 import com.familymoney.familymoney.properties.MailSenderProperties;
 import com.familymoney.familymoney.services.EmailSenderService;
+import com.familymoney.familymoney.types.Email;
+import com.familymoney.familymoney.types.EmailVerificationToken;
+import com.familymoney.familymoney.types.UserName;
 import com.familymoney.familymoney.utils.FakeGenerator;
 import jakarta.mail.Message;
 import jakarta.mail.internet.MimeMessage;
@@ -49,9 +52,9 @@ public class EmailSenderServiceTests {
 
   @Test
   void sendEmailVerificationEmail_sends_email_successfully() {
-    val email = FakeGenerator.email();
-    val username = FakeGenerator.username();
-    val token = FakeGenerator.emailVerificationToken();
+    val email = Email.fromString(FakeGenerator.email());
+    val username = UserName.fromString(FakeGenerator.username());
+    val token = EmailVerificationToken.fromString(FakeGenerator.emailVerificationToken());
 
     val messageCaptor = ArgumentCaptor.forClass(MimeMessage.class);
 

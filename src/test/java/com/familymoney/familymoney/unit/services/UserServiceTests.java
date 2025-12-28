@@ -9,9 +9,13 @@ import com.familymoney.familymoney.repositories.dbos.UserDbo;
 import com.familymoney.familymoney.security.UserPasswordEncoder;
 import com.familymoney.familymoney.services.UserService;
 import com.familymoney.familymoney.services.mappers.GetUserDataMapper;
+import com.familymoney.familymoney.types.Email;
+import com.familymoney.familymoney.types.UserId;
+import com.familymoney.familymoney.types.UserName;
 import com.familymoney.familymoney.utils.FakeGenerator;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.UUID;
 import lombok.val;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
@@ -40,9 +44,9 @@ public class UserServiceTests {
 
   @Test
   void getUserdata_gets_user_data_successfully() {
-    val userId = FakeGenerator.userId();
-    val username = FakeGenerator.username();
-    val email = FakeGenerator.email();
+    val userId = UserId.fromUuid(UUID.randomUUID());
+    val username = UserName.fromString(FakeGenerator.username());
+    val email = Email.fromString(FakeGenerator.email());
 
     when(userRepository.findById(userId))
         .thenReturn(
@@ -70,7 +74,7 @@ public class UserServiceTests {
 
   @Test
   void getUserdata_user_not_found_returns_empty_optional() {
-    val userId = FakeGenerator.userId();
+    val userId = UserId.fromUuid(UUID.randomUUID());
 
     when(userRepository.findById(userId)).thenReturn(Optional.empty());
 

@@ -9,7 +9,7 @@ import com.familymoney.familymoney.controllers.dtos.auth.RefreshTokenRequestDto;
 import com.familymoney.familymoney.controllers.dtos.auth.RegisterRequestDto;
 import com.familymoney.familymoney.controllers.dtos.auth.ResendVerificationEmailRequestDto;
 import com.familymoney.familymoney.controllers.dtos.auth.ResetPasswordRequestDto;
-import com.familymoney.familymoney.types.EmailVerificationToken;
+import com.familymoney.familymoney.validation.ValidEmailVerificationToken;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -89,7 +89,7 @@ public interface IAuthController {
 
   @Operation(summary = "Verify the email address of an user account using the verification token")
   @GetMapping(path = "verify-email/{token}", version = "1")
-  void verifyEmail(@PathVariable @NotNull EmailVerificationToken token);
+  void verifyEmail(@PathVariable @NotNull @ValidEmailVerificationToken String token);
 
   @Operation(summary = "Resend the email verification email to the user")
   @PostMapping(path = "verify-email/resend", version = "1")

@@ -1,5 +1,6 @@
 package com.familymoney.familymoney.controllers.dtos.group;
 
-import com.familymoney.familymoney.types.ShareGroupToken;
+import com.familymoney.familymoney.validation.ValidShareGroupToken;
+import jakarta.validation.constraints.NotNull;
 
-public record EnterGroupRequestDto(ShareGroupToken token) {}
+public record EnterGroupRequestDto(@NotNull @ValidShareGroupToken String token) {}

@@ -5,6 +5,8 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import com.familymoney.familymoney.controllers.AuthController;
+import com.familymoney.familymoney.controllers.mappers.LoginResponseMapper;
+import com.familymoney.familymoney.controllers.mappers.RefreshResponseMapper;
 import com.familymoney.familymoney.security.JwtUtil;
 import com.familymoney.familymoney.services.IAuthService;
 import com.familymoney.familymoney.services.IUserService;
@@ -12,6 +14,7 @@ import com.familymoney.familymoney.services.data.TokenPair;
 import com.familymoney.familymoney.types.*;
 import com.familymoney.familymoney.utils.AuthControllerUriFactory;
 import com.familymoney.familymoney.utils.FakeGenerator;
+import java.time.Instant;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,12 +25,17 @@ import org.junit.jupiter.params.provider.FieldSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 @WebMvcTest(controllers = AuthController.class)
+@Import({JwtUtil.class, LoginResponseMapper.class, RefreshResponseMapper.class})
 public class AuthControllerTests {
+
+  private final Instant now = Instant.parse("2025-01-01T00:00:00Z");
 
   // region Fields
 
@@ -36,14 +44,18 @@ public class AuthControllerTests {
   @Autowired private MockMvc mockMvc;
 
   @MockitoBean private IAuthService authService;
+  @MockitoBean private io.jsonwebtoken.Clock jwtClock;
   @MockitoBean private JwtUtil jwtUtil;
   @MockitoBean private IUserService userService;
+  @MockitoSpyBean private LoginResponseMapper loginResponseMapper;
+  @MockitoSpyBean private RefreshResponseMapper refreshResponseMapper;
 
   // endregion
 
   @BeforeEach
   public void setup() {
     client = RestTestClient.bindTo(mockMvc).build();
+    when(jwtClock.now()).thenReturn(java.util.Date.from(now));
   }
 
   // region /register Tests
@@ -51,47 +63,26 @@ public class AuthControllerTests {
   private static Stream<Arguments> provideValidRegisterParams() {
     return Stream.of(
         // minimal valid password length (12), simple username
-        Arguments.of(
-            UserName.fromString("hector"),
-            Email.fromString("hector.fernandez+dev@example.com"),
-            Password.fromString("StrongPass1!")),
+        Arguments.of("hector", "hector.fernandez+dev@example.com", "StrongPass1!"),
         // underscore in username, plus-addressing and multi-part TLD
-        Arguments.of(
-            UserName.fromString("user_123"),
-            Email.fromString("user+tag@example.co.uk"),
-            Password.fromString("Aa1$aaaaaaaa")),
+        Arguments.of("user_123", "user+tag@example.co.uk", "Aa1$aaaaaaaa"),
         // hyphen in username, dot in local-part
-        Arguments.of(
-            UserName.fromString("john-doe"),
-            Email.fromString("john.doe@example.com"),
-            Password.fromString("Password123$!")),
+        Arguments.of("john-doe", "john.doe@example.com", "Password123$!"),
         // max-length username (32 chars): 'a' + 31 'b'
         Arguments.of(
-            UserName.fromString("abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"),
-            Email.fromString("long.user@example-domain.com"),
-            Password.fromString("Zz9@aaaaaaaaaaa")),
+            "abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "long.user@example-domain.com", "Zz9@aaaaaaaaaaa"),
         // another valid combination with mixed allowed specials in password (ensure >=12 chars)
-        Arguments.of(
-            UserName.fromString("alpha1"),
-            Email.fromString("alpha1@mail.example.org"),
-            Password.fromString("GoodPass1@$a")));
+        Arguments.of("alpha1", "alpha1@mail.example.org", "GoodPass1@$a"));
   }
 
   @ParameterizedTest
   @MethodSource("provideValidRegisterParams")
-  void AuthController_Register_Successful(UserName username, Email email, Password password) {
+  void AuthController_Register_Successful(String username, String email, String password) {
     doNothing().when(authService).registerUser(any(), any(), any());
     client
         .post()
         .uri(AuthControllerUriFactory.getRegisterPath())
-        .body(
-            Map.of(
-                "username",
-                username.toString(),
-                "email",
-                email.toString(),
-                "password",
-                password.toString()))
+        .body(Map.of("username", username, "email", email, "password", password))
         .exchange()
         .expectStatus()
         .isOk();
@@ -108,9 +99,9 @@ public class AuthControllerTests {
                 "username",
                 username,
                 "email",
-                FakeGenerator.email().toString(),
+                FakeGenerator.email(),
                 "password",
-                FakeGenerator.password().toString()))
+                FakeGenerator.password()))
         .exchange()
         .expectStatus()
         .isBadRequest();
@@ -121,12 +112,7 @@ public class AuthControllerTests {
     client
         .post()
         .uri(AuthControllerUriFactory.getRegisterPath())
-        .body(
-            Map.of(
-                "email",
-                FakeGenerator.email().toString(),
-                "password",
-                FakeGenerator.password().toString()))
+        .body(Map.of("email", FakeGenerator.email(), "password", FakeGenerator.password()))
         .exchange()
         .expectStatus()
         .isBadRequest();
@@ -141,11 +127,11 @@ public class AuthControllerTests {
         .body(
             Map.of(
                 "username",
-                FakeGenerator.username().toString(),
+                FakeGenerator.username(),
                 "email",
                 email,
                 "password",
-                FakeGenerator.password().toString()))
+                FakeGenerator.password()))
         .exchange()
         .expectStatus()
         .isBadRequest();
@@ -156,12 +142,7 @@ public class AuthControllerTests {
     client
         .post()
         .uri(AuthControllerUriFactory.getRegisterPath())
-        .body(
-            Map.of(
-                "username",
-                FakeGenerator.username().toString(),
-                "password",
-                FakeGenerator.password().toString()))
+        .body(Map.of("username", FakeGenerator.username(), "password", FakeGenerator.password()))
         .exchange()
         .expectStatus()
         .isBadRequest();
@@ -176,9 +157,9 @@ public class AuthControllerTests {
         .body(
             Map.of(
                 "username",
-                FakeGenerator.username().toString(),
+                FakeGenerator.username(),
                 "email",
-                FakeGenerator.email().toString(),
+                FakeGenerator.email(),
                 "password",
                 password))
         .exchange()
@@ -191,12 +172,7 @@ public class AuthControllerTests {
     client
         .post()
         .uri(AuthControllerUriFactory.getRegisterPath())
-        .body(
-            Map.of(
-                "email",
-                FakeGenerator.email().toString(),
-                "username",
-                FakeGenerator.username().toString()))
+        .body(Map.of("email", FakeGenerator.email(), "username", FakeGenerator.username()))
         .exchange()
         .expectStatus()
         .isBadRequest();
@@ -209,33 +185,29 @@ public class AuthControllerTests {
   private static Stream<Arguments> provideValidLoginParams() {
     return Stream.of(
         // minimal valid password length (12), simple username
-        Arguments.of(
-            Email.fromString("hector.fernandez+dev@example.com"),
-            Password.fromString("StrongPass1!")),
+        Arguments.of("hector.fernandez+dev@example.com", "StrongPass1!"),
         // underscore in username, plus-addressing and multi-part TLD
-        Arguments.of(
-            Email.fromString("user+tag@example.co.uk"), Password.fromString("Aa1$aaaaaaaa")),
+        Arguments.of("user+tag@example.co.uk", "Aa1$aaaaaaaa"),
         // hyphen in username, dot in local-part
-        Arguments.of(
-            Email.fromString("john.doe@example.com"), Password.fromString("Password123$!")),
+        Arguments.of("john.doe@example.com", "Password123$!"),
         // max-length username (32 chars): 'a' + 31 'b'
-        Arguments.of(
-            Email.fromString("long.user@example-domain.com"),
-            Password.fromString("Zz9@aaaaaaaaaaa")),
+        Arguments.of("long.user@example-domain.com", "Zz9@aaaaaaaaaaa"),
         // another valid combination with mixed allowed specials in password (ensure >=12 chars)
-        Arguments.of(
-            Email.fromString("alpha1@mail.example.org"), Password.fromString("GoodPass1@$a")));
+        Arguments.of("alpha1@mail.example.org", "GoodPass1@$a"));
   }
 
   @ParameterizedTest
   @MethodSource("provideValidLoginParams")
-  void AuthController_Login_Successful(Email email, Password password) {
+  void AuthController_Login_Successful(String email, String password) {
     when(authService.loginUser(any(), any()))
-        .thenReturn(new TokenPair(FakeGenerator.accessToken(), FakeGenerator.refreshToken()));
+        .thenReturn(
+            new TokenPair(
+                JwtToken.fromString(FakeGenerator.accessToken()),
+                RefreshToken.fromString(FakeGenerator.refreshToken())));
     client
         .post()
         .uri(AuthControllerUriFactory.getLoginPath())
-        .body(Map.of("email", email.toString(), "password", password.toString()))
+        .body(Map.of("email", email, "password", password))
         .exchange()
         .expectStatus()
         .isOk();
@@ -247,7 +219,7 @@ public class AuthControllerTests {
     client
         .post()
         .uri(AuthControllerUriFactory.getLoginPath())
-        .body(Map.of("email", email, "password", FakeGenerator.password().toString()))
+        .body(Map.of("email", email, "password", FakeGenerator.password()))
         .exchange()
         .expectStatus()
         .isBadRequest();
@@ -258,7 +230,7 @@ public class AuthControllerTests {
     client
         .post()
         .uri(AuthControllerUriFactory.getLoginPath())
-        .body(Map.of("password", FakeGenerator.password().toString()))
+        .body(Map.of("password", FakeGenerator.password()))
         .exchange()
         .expectStatus()
         .isBadRequest();
@@ -270,7 +242,7 @@ public class AuthControllerTests {
     client
         .post()
         .uri(AuthControllerUriFactory.getLoginPath())
-        .body(Map.of("email", FakeGenerator.email().toString(), "password", password))
+        .body(Map.of("email", FakeGenerator.email(), "password", password))
         .exchange()
         .expectStatus()
         .isBadRequest();
@@ -281,7 +253,7 @@ public class AuthControllerTests {
     client
         .post()
         .uri(AuthControllerUriFactory.getLoginPath())
-        .body(Map.of("email", FakeGenerator.email().toString()))
+        .body(Map.of("email", FakeGenerator.email()))
         .exchange()
         .expectStatus()
         .isBadRequest();
@@ -296,9 +268,7 @@ public class AuthControllerTests {
     doNothing().when(authService).verifyEmail(any());
     client
         .get()
-        .uri(
-            AuthControllerUriFactory.getVerifyEmailPath(
-                FakeGenerator.emailVerificationToken().toString()))
+        .uri(AuthControllerUriFactory.getVerifyEmailPath(FakeGenerator.emailVerificationToken()))
         .exchange()
         .expectStatus()
         .isOk();
@@ -331,11 +301,14 @@ public class AuthControllerTests {
   @Test
   void AuthController_Refresh_Successful() {
     when(authService.refreshTokens(any()))
-        .thenReturn(new TokenPair(FakeGenerator.accessToken(), FakeGenerator.refreshToken()));
+        .thenReturn(
+            new TokenPair(
+                JwtToken.fromString(FakeGenerator.accessToken()),
+                RefreshToken.fromString(FakeGenerator.refreshToken())));
     client
         .post()
         .uri(AuthControllerUriFactory.getRefreshPath())
-        .body(Map.of("refreshToken", FakeGenerator.refreshToken().toString()))
+        .body(Map.of("refreshToken", FakeGenerator.refreshToken()))
         .exchange()
         .expectStatus()
         .isOk();
@@ -373,7 +346,7 @@ public class AuthControllerTests {
     client
         .post()
         .uri(AuthControllerUriFactory.getLogoutPath())
-        .body(Map.of("refreshToken", FakeGenerator.refreshToken().toString()))
+        .body(Map.of("refreshToken", FakeGenerator.refreshToken()))
         .exchange()
         .expectStatus()
         .isOk();

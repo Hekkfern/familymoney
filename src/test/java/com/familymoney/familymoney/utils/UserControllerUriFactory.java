@@ -4,7 +4,7 @@ public class UserControllerUriFactory {
 
   // region Constants
 
-  private static final String BASE_PATH = "/api/users";
+  private static final String BASE_PATH = "/api/v1/users";
   private static final String ME_PATH = BASE_PATH + "/me";
 
   // endregion

@@ -18,6 +18,7 @@ import com.familymoney.familymoney.utils.AdminControllerUriFactory;
 import com.familymoney.familymoney.utils.FakeGenerator;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.UUID;
 import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,7 @@ import org.springframework.test.web.servlet.client.RestTestClient;
       "spring.application.name=testapp",
       "jwt.key=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     })
-@Import({JwtUtil.class, GetUserResponseMapperImpl.class, UpdateUserRequestMapperImpl.class})
+@Import({JwtUtil.class, GetUserResponseMapper.class, UpdateUserRequestMapper.class})
 @EnableConfigurationProperties({AppProperties.class, JwtProperties.class})
 public class UserAdminControllerTests {
 
@@ -65,11 +66,20 @@ public class UserAdminControllerTests {
 
   @Test
   void UserAdminController_GetMyUserInfo_Successful() {
-    val username = FakeGenerator.username();
-    val email = FakeGenerator.email();
-    val userId = FakeGenerator.userId();
+    val username = UserName.fromString(FakeGenerator.username());
+    val email = Email.fromString(FakeGenerator.email());
+    val userId = UserId.fromUuid(UUID.randomUUID());
     when(userService.getUserData(any()))
-        .thenReturn(Optional.of(new GetUserData(username, email, Instant.now(), true, true)));
+        .thenReturn(
+            Optional.of(
+                GetUserData.builder()
+                    .id(userId)
+                    .username(username)
+                    .email(email)
+                    .createdAt(Instant.now())
+                    .isEmailVerified(true)
+                    .isEnabled(true)
+                    .build()));
     when(userService.getUserRole(any())).thenReturn(Optional.of(Role.ADMIN));
 
     val data =
@@ -84,17 +94,26 @@ public class UserAdminControllerTests {
             .returnResult()
             .getResponseBody();
     assertNotNull(data);
-    assertEquals(username, data.username());
-    assertEquals(email, data.email());
+    assertEquals(username.value(), data.username());
+    assertEquals(email.value(), data.email());
   }
 
   @Test
   void UserAdminController_GetMyUserInfo_NonAdmin() {
-    val username = FakeGenerator.username();
-    val email = FakeGenerator.email();
-    val userId = FakeGenerator.userId();
+    val username = UserName.fromString(FakeGenerator.username());
+    val email = Email.fromString(FakeGenerator.email());
+    val userId = UserId.fromUuid(UUID.randomUUID());
     when(userService.getUserData(any()))
-        .thenReturn(Optional.of(new GetUserData(username, email, Instant.now(), true, true)));
+        .thenReturn(
+            Optional.of(
+                GetUserData.builder()
+                    .id(userId)
+                    .username(username)
+                    .email(email)
+                    .createdAt(Instant.now())
+                    .isEmailVerified(true)
+                    .isEnabled(true)
+                    .build()));
     when(userService.getUserRole(any())).thenReturn(Optional.of(Role.USER));
 
     client

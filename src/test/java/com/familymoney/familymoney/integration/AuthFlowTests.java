@@ -46,7 +46,7 @@ public class AuthFlowTests {
 
   // region Helpers
 
-  private void registerAndVerifyNewUser(UserName username, Email email, Password password) {
+  private void registerAndVerifyNewUser(String username, String email, String password) {
     // Mock email sender
     val verificationTokenCaptor = ArgumentCaptor.forClass(EmailVerificationToken.class);
 
@@ -77,9 +77,9 @@ public class AuthFlowTests {
         .isEmpty();
   }
 
-  record TokenPair(JwtToken accessToken, RefreshToken refreshToken) {}
+  record TokenPair(String accessToken, String refreshToken) {}
 
-  private TokenPair loginUser(Email email, Password password) {
+  private TokenPair loginUser(String email, String password) {
     val loginResponse =
         client
             .post()
@@ -94,7 +94,7 @@ public class AuthFlowTests {
     return new TokenPair(loginResponse.accessToken(), loginResponse.refreshToken());
   }
 
-  private TokenPair refreshTokens(RefreshToken refreshToken) {
+  private TokenPair refreshTokens(String refreshToken) {
     val refreshResponse =
         client
             .post()
@@ -109,7 +109,7 @@ public class AuthFlowTests {
     return new TokenPair(refreshResponse.accessToken(), refreshResponse.refreshToken());
   }
 
-  private void logoutUser(RefreshToken refreshToken) {
+  private void logoutUser(String refreshToken) {
     client
         .post()
         .uri(AuthControllerUriFactory.getLogoutPath())

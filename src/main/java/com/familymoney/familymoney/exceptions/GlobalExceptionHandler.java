@@ -10,13 +10,6 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
-  @ExceptionHandler(IllegalArgumentException.class)
-  public ProblemDetail handleIllegalArgumentException(IllegalArgumentException e) {
-    logger.error(e.getMessage());
-    // Don't return any message to avoid leaking sensitive information
-    return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
-  }
-
   @ExceptionHandler(DatabaseExecutionException.class)
   public ProblemDetail handleDatabaseExecutionException(DatabaseExecutionException e) {
     logger.error(e.getMessage());

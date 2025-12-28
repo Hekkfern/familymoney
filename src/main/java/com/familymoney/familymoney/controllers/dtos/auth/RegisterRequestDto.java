@@ -1,9 +1,11 @@
 package com.familymoney.familymoney.controllers.dtos.auth;
 
-import com.familymoney.familymoney.types.Email;
-import com.familymoney.familymoney.types.Password;
-import com.familymoney.familymoney.types.UserName;
+import com.familymoney.familymoney.validation.ValidEmail;
+import com.familymoney.familymoney.validation.ValidPassword;
+import com.familymoney.familymoney.validation.ValidUserName;
 import jakarta.validation.constraints.NotNull;
 
 public record RegisterRequestDto(
-        @NotNull UserName username, @NotNull Email email, @NotNull Password password) {}
+    @NotNull @ValidUserName String username,
+    @NotNull @ValidEmail String email,
+    @NotNull @ValidPassword String password) {}

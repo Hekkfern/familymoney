@@ -2,11 +2,17 @@ package com.familymoney.familymoney.controllers.mappers;
 
 import com.familymoney.familymoney.controllers.dtos.admin.GetUserResponseDto;
 import com.familymoney.familymoney.services.data.GetUserData;
-import org.mapstruct.Mapper;
-import org.mapstruct.MappingConstants;
+import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
-public interface GetUserResponseMapper {
+@Component
+public class GetUserResponseMapper {
 
-  GetUserResponseDto toDto(GetUserData userData);
+  public GetUserResponseDto toDto(GetUserData userData) {
+    return GetUserResponseDto.builder()
+        .id(userData.id().value())
+        .username(userData.username().value())
+        .createdAt(userData.createdAt())
+        .isEnabled(userData.isEnabled())
+        .build();
+  }
 }

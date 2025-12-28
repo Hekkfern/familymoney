@@ -1,9 +1,11 @@
 package com.familymoney.familymoney.controllers.dtos.user;
 
-import com.familymoney.familymoney.types.Email;
-import com.familymoney.familymoney.types.Password;
-import com.familymoney.familymoney.types.UserName;
+import com.familymoney.familymoney.validation.ValidEmail;
+import com.familymoney.familymoney.validation.ValidPassword;
+import com.familymoney.familymoney.validation.ValidUserName;
 import org.jspecify.annotations.Nullable;
 
 public record UpdateUserRequestDto(
-        @Nullable UserName username, @Nullable Email email, @Nullable Password password) {}
+    @Nullable @ValidUserName String username,
+    @Nullable @ValidEmail String email,
+    @Nullable @ValidPassword String password) {}

@@ -1,27 +1,17 @@
 package com.familymoney.familymoney.types;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
-import java.util.regex.Pattern;
+import com.familymoney.familymoney.utils.RandomStringHelper;
 
 public record PasswordResetToken(String value) {
 
-  private static final Pattern VALIDATION_PATTERN = Pattern.compile("^[a-z][a-z0-9_-]{2,31}$");
+  private static final int LENGTH = 64;
 
-  public PasswordResetToken {
-    if (!VALIDATION_PATTERN.matcher(value).matches()) {
-      throw new IllegalArgumentException("Invalid token format");
-    }
-  }
-
-  @JsonValue
-  public String value() {
-    return value;
-  }
-
-  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static PasswordResetToken fromString(String value) {
     return new PasswordResetToken(value);
+  }
+
+  public static PasswordResetToken generate() {
+    return new PasswordResetToken(RandomStringHelper.generateRandomString(LENGTH));
   }
 
   @Override

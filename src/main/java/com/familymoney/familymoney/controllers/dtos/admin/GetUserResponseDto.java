@@ -1,9 +1,9 @@
 package com.familymoney.familymoney.controllers.dtos.admin;
 
-import com.familymoney.familymoney.types.Email;
-import com.familymoney.familymoney.types.UserId;
-import com.familymoney.familymoney.types.UserName;
 import java.time.Instant;
+import java.util.UUID;
+import lombok.Builder;
 
+@Builder
 public record GetUserResponseDto(
-    UserId id, UserName username, Email email, Instant createdAt, boolean isEnabled) {}
+    UUID id, String username, String email, Instant createdAt, boolean isEnabled) {}

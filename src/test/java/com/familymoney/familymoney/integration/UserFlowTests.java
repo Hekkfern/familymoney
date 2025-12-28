@@ -61,7 +61,7 @@ public class UserFlowTests {
    * @param password Password of the user account
    * @return Access Token for the logged-in user.
    */
-  private String registerAndLoginUser(UserName username, Email email, Password password) {
+  private String registerAndLoginUser(String username, String email, String password) {
     // Mock email sender
     val verificationTokenCaptor = ArgumentCaptor.forClass(EmailVerificationToken.class);
 

@@ -6,6 +6,7 @@ jjwt = "0.13.0"
 testcontainers = "2.0.2"
 mapstruct = "1.6.3"
 moneta = "1.4.5"
+assertj = "3.27.6"
 
 [libraries]
 flyway-postgresql = { module = "org.flywaydb:flyway-database-postgresql" }
@@ -20,6 +21,7 @@ testcontainers-postgresql = { module = "org.testcontainers:testcontainers-postgr
 mapstruct = { module = "org.mapstruct:mapstruct", version.ref = "mapstruct" }
 mapstruct-processor = { module = "org.mapstruct:mapstruct-processor", version.ref = "mapstruct" }
 moneta = { module = "org.javamoney:moneta", version.ref = "moneta" }
+assertj = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 
 [plugins]
 springboot = { id = "org.springframework.boot", version.ref = "springboot" }

@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.mapstruct)
     annotationProcessor(libs.mapstruct.processor)
     implementation(libs.moneta)
+    testCompileOnly("org.assertj:assertj-core:3.11.1")
 }
 
 tasks.withType<Test> {

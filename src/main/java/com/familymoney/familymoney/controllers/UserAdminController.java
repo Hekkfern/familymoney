@@ -9,6 +9,7 @@ import com.familymoney.familymoney.controllers.mappers.UpdateUserRequestMapper;
 import com.familymoney.familymoney.exceptions.UserNotFoundException;
 import com.familymoney.familymoney.services.IUserService;
 import com.familymoney.familymoney.types.*;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.springframework.data.domain.Pageable;
@@ -23,15 +24,12 @@ public class UserAdminController implements IUserAdminController {
   private final UpdateUserRequestMapper updateUserRequestMapper;
 
   @Override
-  public GetUserResponseDto getUser(UserId userId) {
+  public GetUserResponseDto getUser(UUID userId) {
     // Fetch user data
     val userData =
         userService
-            .getUserData(userId)
-            .orElseThrow(
-                () ->
-                    new UserNotFoundException(
-                        String.format("User with ID %s not found", userId.value())));
+            .getUserData(UserId.fromUuid(userId))
+            .orElseThrow(() -> new UserNotFoundException("User not found"));
     // Return response
     return getUserResponseMapper.toDto(userData);
   }
@@ -44,33 +42,30 @@ public class UserAdminController implements IUserAdminController {
   }
 
   @Override
-  public void enableUser(UserId userId, boolean enabled) {
-    userService.enableUser(userId, enabled);
+  public void enableUser(UUID userId, boolean enabled) {
+    userService.enableUser(UserId.fromUuid(userId), enabled);
   }
 
   @Override
-  public void deleteUser(UserId userId) {
-    userService.deleteUser(userId);
+  public void deleteUser(UUID userId) {
+    userService.deleteUser(UserId.fromUuid(userId));
   }
 
   @Override
-  public void updateUserInfo(UserId userId, UpdateUserRequestDto request) {
-    userService.updateUserInfo(userId, updateUserRequestMapper.fromDto(request));
+  public void updateUserInfo(UUID userId, UpdateUserRequestDto request) {
+    userService.updateUserInfo(UserId.fromUuid(userId), updateUserRequestMapper.fromDto(request));
   }
 
   @Override
-  public void setUserRole(UserId userId, String role) {
-    userService.setUserRole(userId, Role.fromString(role));
+  public void setUserRole(UUID userId, String role) {
+    userService.setUserRole(UserId.fromUuid(userId), Role.fromString(role));
   }
 
   @Override
-  public GetUserRoleResponseDto getUserRole(UserId userId) {
+  public GetUserRoleResponseDto getUserRole(UUID userId) {
     return userService
-        .getUserRole(userId)
+        .getUserRole(UserId.fromUuid(userId))
         .map(GetUserRoleResponseDto::new)
-        .orElseThrow(
-            () ->
-                new UserNotFoundException(
-                    String.format("User with ID %s not found", userId.value())));
+        .orElseThrow(() -> new UserNotFoundException("User not found"));
   }
 }

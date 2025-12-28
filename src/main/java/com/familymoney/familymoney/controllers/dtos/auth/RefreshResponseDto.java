@@ -1,6 +1,6 @@
 package com.familymoney.familymoney.controllers.dtos.auth;
 
-import com.familymoney.familymoney.types.JwtToken;
-import com.familymoney.familymoney.types.RefreshToken;
+import lombok.Builder;
 
-public record RefreshResponseDto(JwtToken accessToken, RefreshToken refreshToken) {}
+@Builder
+public record RefreshResponseDto(String accessToken, String refreshToken) {}

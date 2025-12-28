@@ -1,4 +1,4 @@
 @NullMarked
-package com.familymoney.familymoney.types.converter;
+package com.familymoney.familymoney.unit.security;
 
 import org.jspecify.annotations.NullMarked;

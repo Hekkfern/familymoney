@@ -1,10 +1,12 @@
 package com.familymoney.familymoney.controllers;
 
 import com.familymoney.familymoney.controllers.dtos.group.*;
+import com.familymoney.familymoney.controllers.mappers.CreateGroupResponseMapper;
 import com.familymoney.familymoney.services.ITransactionGroupService;
 import com.familymoney.familymoney.types.GroupId;
-import com.familymoney.familymoney.types.TransactionId;
+import com.familymoney.familymoney.types.GroupName;
 import com.familymoney.familymoney.utils.AuthenticationUtils;
+import java.util.UUID;
 import javax.money.Monetary;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class TransactionGroupController implements ITransactionGroupController {
 
   private final ITransactionGroupService transactionGroupService;
+  private final CreateGroupResponseMapper createGroupResponseMapper;
 
   @Override
   public CreateGroupResponseDto createGroup(CreateGroupRequestDto request) {
@@ -24,60 +27,60 @@ public class TransactionGroupController implements ITransactionGroupController {
     // Create group
     val groupId =
         transactionGroupService.createGroup(
-            request.name(),
+            GroupName.fromString(request.name()),
             request.description().trim(),
             Monetary.getCurrency(request.currencyCode()),
             userId);
     // Generate response
-    return CreateGroupResponseDto.builder().id(groupId).build();
+    return createGroupResponseMapper.toDto(groupId);
   }
 
   @Override
-  public void deleteGroup(GroupId groupId) {
+  public void deleteGroup(UUID groupId) {
     // Get user ID from security context (validated)
     val userId = AuthenticationUtils.getUserIdFromSecurityContext();
     // Delete group
-    transactionGroupService.deleteGroupOwnedBy(groupId, userId);
+    transactionGroupService.deleteGroupOwnedBy(GroupId.fromUuid(groupId), userId);
   }
 
   @Override
-  public GetGroupResponseDto getGroupInfo(GroupId groupId) {
+  public GetGroupResponseDto getGroupInfo(UUID groupId) {
     return null;
   }
 
   @Override
-  public void updateGroupInfo(GroupId groupId, UpdateGroupRequestDto request) {}
+  public void updateGroupInfo(UUID groupId, UpdateGroupRequestDto request) {}
 
   @Override
-  public GetInvitationTokenResponseDto getInvitationToken(GroupId groupId) {
+  public GetInvitationTokenResponseDto getInvitationToken(UUID groupId) {
     return null;
   }
 
   @Override
-  public void enterToGroup(GroupId groupId, EnterGroupRequestDto request) {}
+  public void enterToGroup(UUID groupId, EnterGroupRequestDto request) {}
 
   @Override
-  public GetUsersInGroupResponseDto getUsersInGroup(GroupId groupId) {
+  public GetUsersInGroupResponseDto getUsersInGroup(UUID groupId) {
     return null;
   }
 
   @Override
-  public GetGroupBalancesResponseDto getGroupBalances(GroupId groupId) {
+  public GetGroupBalancesResponseDto getGroupBalances(UUID groupId) {
     return null;
   }
 
   @Override
-  public GetTransactionsResponseDto getTransactions(GroupId groupId, Pageable pageable) {
+  public GetTransactionsResponseDto getTransactions(UUID groupId, Pageable pageable) {
     return null;
   }
 
   @Override
-  public void createTransaction(GroupId groupId) {}
+  public void createTransaction(UUID groupId) {}
 
   @Override
   public void updateTransaction(
-      GroupId groupId, TransactionId transactionId, UpdateTransactionRequestDto request) {}
+      UUID groupId, UUID transactionId, UpdateTransactionRequestDto request) {}
 
   @Override
-  public void deleteTransaction(GroupId groupId, TransactionId transactionId) {}
+  public void deleteTransaction(UUID groupId, UUID transactionId) {}
 }

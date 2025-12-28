@@ -1,8 +1,6 @@
 package com.familymoney.familymoney.utils;
 
 import com.familymoney.familymoney.types.*;
-import java.util.UUID;
-import lombok.val;
 import org.apache.commons.lang3.RandomStringUtils;
 
 /**
@@ -16,41 +14,32 @@ public final class FakeGenerator {
   private static final String NUMBER_CHARACTERS = "0123456789";
   private static final RandomStringUtils random = RandomStringUtils.insecure();
 
-  public static UserName username() {
-    return UserName.fromString(random.next(10, LOWER_CHARACTERS));
+  public static String username() {
+    return random.next(10, LOWER_CHARACTERS);
   }
 
-  public static Email email() {
-    return Email.fromString(random.next(12, LOWER_CHARACTERS) + "@gmail.com");
+  public static String email() {
+    return random.next(12, LOWER_CHARACTERS) + "@gmail.com";
   }
 
-  public static Password password() {
-    val value =
-        random.next(12, UPPER_CHARACTERS)
-            + random.next(4, LOWER_CHARACTERS)
-            + random.next(4, NUMBER_CHARACTERS)
-            + "!";
-    return Password.fromString(value);
+  public static String password() {
+    return random.next(12, UPPER_CHARACTERS)
+        + random.next(4, LOWER_CHARACTERS)
+        + random.next(4, NUMBER_CHARACTERS)
+        + "!";
   }
 
-  public static JwtToken accessToken() {
-    return JwtToken.fromString(
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30");
+  public static String accessToken() {
+    return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30";
   }
 
-  public static RefreshToken refreshToken() {
-    val value =
-        random.next(12, UPPER_CHARACTERS)
-            + random.next(10, LOWER_CHARACTERS)
-            + random.next(10, NUMBER_CHARACTERS);
-    return RefreshToken.fromString(value);
+  public static String refreshToken() {
+    return random.next(12, UPPER_CHARACTERS)
+        + random.next(10, LOWER_CHARACTERS)
+        + random.next(10, NUMBER_CHARACTERS);
   }
 
-  public static UserId userId() {
-    return new UserId(UUID.randomUUID());
-  }
-
-  public static EmailVerificationToken emailVerificationToken() {
-    return EmailVerificationToken.generate();
+  public static String emailVerificationToken() {
+    return EmailVerificationToken.generate().toString();
   }
 }

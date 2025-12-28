@@ -23,11 +23,13 @@ public class UserController implements IUserController {
     // Get user ID from security context (validated)
     val userId = AuthenticationUtils.getUserIdFromSecurityContext();
     // Fetch user data
-    val userDataOpt = userService.getUserData(userId);
-    // Return response or throw a clear exception if no user
-    return getUserResponseMapper.toDto(
-        userDataOpt.orElseThrow(
-            () -> new java.util.NoSuchElementException("User not found for id: " + userId)));
+    val userData =
+        userService
+            .getUserData(userId)
+            .orElseThrow(
+                () -> new java.util.NoSuchElementException("User not found for id: " + userId));
+    // Return response
+    return getUserResponseMapper.toDto(userData);
   }
 
   @Override

@@ -1,8 +1,10 @@
 package com.familymoney.familymoney.controllers.dtos.group;
 
-import com.familymoney.familymoney.types.GroupName;
 import com.familymoney.familymoney.validation.ValidCurrencyCode;
+import com.familymoney.familymoney.validation.ValidGroupName;
 import jakarta.validation.constraints.NotNull;
 
 public record CreateGroupRequestDto(
-    GroupName name, @NotNull String description, @ValidCurrencyCode String currencyCode) {}
+    @NotNull @ValidGroupName String name,
+    @NotNull String description,
+    @NotNull @ValidCurrencyCode String currencyCode) {}

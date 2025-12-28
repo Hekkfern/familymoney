@@ -2,11 +2,19 @@ package com.familymoney.familymoney.controllers.mappers;
 
 import com.familymoney.familymoney.controllers.dtos.user.UpdateUserRequestDto;
 import com.familymoney.familymoney.services.data.UpdateUserData;
-import org.mapstruct.Mapper;
-import org.mapstruct.MappingConstants;
+import com.familymoney.familymoney.types.Email;
+import com.familymoney.familymoney.types.Password;
+import com.familymoney.familymoney.types.UserName;
+import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
-public interface UpdateUserRequestMapper {
+@Component
+public class UpdateUserRequestMapper {
 
-  UpdateUserData fromDto(UpdateUserRequestDto dto);
+  public UpdateUserData fromDto(UpdateUserRequestDto dto) {
+    return UpdateUserData.builder()
+        .username(dto.username() != null ? UserName.fromString(dto.username()) : null)
+        .email(dto.email() != null ? Email.fromString(dto.email()) : null)
+        .password(dto.password() != null ? Password.fromString(dto.password()) : null)
+        .build();
+  }
 }
