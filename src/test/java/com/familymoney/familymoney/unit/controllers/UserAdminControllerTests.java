@@ -17,12 +17,12 @@ import com.familymoney.familymoney.types.*;
 import com.familymoney.familymoney.utils.AdminControllerUriFactory;
 import com.familymoney.familymoney.utils.FakeGenerator;
 import java.time.Instant;
+import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -42,7 +42,7 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 @EnableConfigurationProperties({AppProperties.class, JwtProperties.class})
 public class UserAdminControllerTests {
 
-  private static final String ROLE_PREFIX = "ROLE_";
+  private final Instant now = Instant.parse("2025-01-01T00:00:00Z");
 
   // region Fields
 
@@ -52,14 +52,16 @@ public class UserAdminControllerTests {
 
   @MockitoSpyBean private JwtUtil jwtUtil;
   @MockitoBean private IUserService userService;
-  @Spy private GetUserResponseMapper getUserResponseMapper;
-  @Spy private UpdateUserRequestMapper updateUserRequestMapper;
+  @MockitoBean private io.jsonwebtoken.Clock jwtClock;
+  @MockitoSpyBean private GetUserResponseMapper getUserResponseMapper;
+  @MockitoSpyBean private UpdateUserRequestMapper updateUserRequestMapper;
 
   // endregion
 
   @BeforeEach
   public void setup() {
     client = RestTestClient.bindTo(mockMvc).build();
+    when(jwtClock.now()).thenReturn(Date.from(now));
   }
 
   // region GetUser Tests
@@ -76,7 +78,7 @@ public class UserAdminControllerTests {
                     .id(userId)
                     .username(username)
                     .email(email)
-                    .createdAt(Instant.now())
+                    .createdAt(now)
                     .isEmailVerified(true)
                     .isEnabled(true)
                     .build()));
@@ -96,6 +98,7 @@ public class UserAdminControllerTests {
     assertNotNull(data);
     assertEquals(username.value(), data.username());
     assertEquals(email.value(), data.email());
+    assertEquals(now, data.createdAt());
   }
 
   @Test
@@ -123,5 +126,17 @@ public class UserAdminControllerTests {
         .exchange()
         .expectStatus()
         .isForbidden();
+  }
+
+  @Test
+  void UserAdminController_GetMyUserInfo_Unauthenticated() {
+    val userId = UserId.fromUuid(UUID.randomUUID());
+
+    client
+        .get()
+        .uri(AdminControllerUriFactory.getUserPath(userId))
+        .exchange()
+        .expectStatus()
+        .isUnauthorized();
   }
 }

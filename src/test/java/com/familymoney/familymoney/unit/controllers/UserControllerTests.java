@@ -18,6 +18,7 @@ import com.familymoney.familymoney.types.*;
 import com.familymoney.familymoney.utils.FakeGenerator;
 import com.familymoney.familymoney.utils.UserControllerUriFactory;
 import java.time.Instant;
+import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -43,7 +44,7 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 @EnableConfigurationProperties({AppProperties.class, JwtProperties.class})
 public class UserControllerTests {
 
-  private static final String ROLE_PREFIX = "ROLE_";
+  private final Instant now = Instant.parse("2025-01-01T00:00:00Z");
 
   // region Fields
 
@@ -53,6 +54,7 @@ public class UserControllerTests {
 
   @MockitoSpyBean private JwtUtil jwtUtil;
   @MockitoBean private IUserService userService;
+  @MockitoBean private io.jsonwebtoken.Clock jwtClock;
   @MockitoSpyBean private GetMyUserResponseMapper getMyUserResponseMapper;
   @MockitoSpyBean private UpdateUserRequestMapper updateUserRequestMapper;
 
@@ -61,6 +63,7 @@ public class UserControllerTests {
   @BeforeEach
   public void setup() {
     client = RestTestClient.bindTo(mockMvc).build();
+    when(jwtClock.now()).thenReturn(Date.from(now));
   }
 
   // region GET /me Tests
@@ -76,7 +79,7 @@ public class UserControllerTests {
                 GetUserData.builder()
                     .username(username)
                     .email(email)
-                    .createdAt(Instant.now())
+                    .createdAt(now)
                     .isEmailVerified(true)
                     .isEnabled(true)
                     .build()));
@@ -96,6 +99,7 @@ public class UserControllerTests {
     assertNotNull(data);
     assertEquals(username.value(), data.username());
     assertEquals(email.value(), data.email());
+    assertEquals(now, data.createdAt());
   }
 
   @Test
