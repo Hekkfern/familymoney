@@ -62,3 +62,17 @@ SELECT trigger_updated_at('transactions');
 CREATE INDEX idx_transactions_group_id ON transactions (group_id);
 CREATE INDEX idx_transactions_emitter_user_id ON transactions (lender);
 CREATE INDEX idx_transactions_receiver_user_id ON transactions (borrower);
+
+-- ******************* INVITATIONS *******************
+
+CREATE TABLE group_invitations
+(
+    id         UUID PRIMARY KEY                  DEFAULT uuidv7(),
+    group_id   UUID                     NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
+    token      VARCHAR(64)              NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL
+);
+
+CREATE INDEX idx_group_invitations_group_id ON group_invitations (group_id);
+CREATE INDEX idx_group_invitations_token ON group_invitations (token);

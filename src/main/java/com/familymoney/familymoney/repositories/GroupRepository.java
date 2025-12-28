@@ -2,7 +2,7 @@ package com.familymoney.familymoney.repositories;
 
 import com.familymoney.familymoney.repositories.dbos.GroupDbo;
 import com.familymoney.familymoney.repositories.dbos.UpdateGroupDbo;
-import com.familymoney.familymoney.repositories.mappers.GroupDboRowMapper;
+import com.familymoney.familymoney.repositories.mappers.GroupRowMapper;
 import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.GroupName;
 import com.familymoney.familymoney.types.UserId;
@@ -38,7 +38,7 @@ public class GroupRepository implements IGroupRepository {
         .param("description", description)
         .param("currency", currency.getCurrencyCode())
         .param("owner", owner.value())
-        .query(new GroupDboRowMapper())
+        .query(new GroupRowMapper())
         .optional();
   }
 
@@ -97,7 +97,7 @@ public class GroupRepository implements IGroupRepository {
             .param("userId", userId.value())
             .param("limit", pageable.getPageSize())
             .param("offset", pageable.getOffset())
-            .query(new GroupDboRowMapper())
+            .query(new GroupRowMapper())
             .list();
     return new PageImpl<>(data, pageable, total);
   }
@@ -110,7 +110,7 @@ public class GroupRepository implements IGroupRepository {
         FROM groups
         WHERE id = :id
         """;
-    return jdbcClient.sql(sql).param("id", id.value()).query(new GroupDboRowMapper()).optional();
+    return jdbcClient.sql(sql).param("id", id.value()).query(new GroupRowMapper()).optional();
   }
 
   @Override

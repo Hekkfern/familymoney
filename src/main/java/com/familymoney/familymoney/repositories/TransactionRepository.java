@@ -2,7 +2,7 @@ package com.familymoney.familymoney.repositories;
 
 import com.familymoney.familymoney.repositories.dbos.TransactionDbo;
 import com.familymoney.familymoney.repositories.dbos.UpdateTransactionDbo;
-import com.familymoney.familymoney.repositories.mappers.TransactionDboRowMapper;
+import com.familymoney.familymoney.repositories.mappers.TransactionRowMapper;
 import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.TransactionId;
 import com.familymoney.familymoney.types.UserId;
@@ -39,7 +39,7 @@ public class TransactionRepository implements ITransactionRepository {
         .param("currencyCode", amount.getCurrency().getCurrencyCode())
         .param("lender", lender.value())
         .param("borrower", borrower.value())
-        .query(new TransactionDboRowMapper())
+        .query(new TransactionRowMapper())
         .optional();
   }
 
@@ -93,7 +93,7 @@ public class TransactionRepository implements ITransactionRepository {
     return jdbcClient
         .sql(sql)
         .param("id", id.value())
-        .query(new TransactionDboRowMapper())
+        .query(new TransactionRowMapper())
         .optional();
   }
 
@@ -119,7 +119,7 @@ public class TransactionRepository implements ITransactionRepository {
             .sql(querySql)
             .param("limit", pageable.getPageSize())
             .param("offset", pageable.getOffset())
-            .query(new TransactionDboRowMapper())
+            .query(new TransactionRowMapper())
             .list();
     return new PageImpl<>(data, pageable, total);
   }

@@ -2,7 +2,7 @@ package com.familymoney.familymoney.repositories;
 
 import com.familymoney.familymoney.repositories.dbos.BalanceDbo;
 import com.familymoney.familymoney.repositories.dbos.UpdateBalanceDbo;
-import com.familymoney.familymoney.repositories.mappers.BalanceDboRowMapper;
+import com.familymoney.familymoney.repositories.mappers.BalanceRowMapper;
 import com.familymoney.familymoney.types.BalanceId;
 import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.UserId;
@@ -35,7 +35,7 @@ public class BalanceRepository implements IBalanceRepository {
         .param("currencyCode", amount.getCurrency().getCurrencyCode())
         .param("user1", user1.value())
         .param("user2", user2.value())
-        .query(new BalanceDboRowMapper())
+        .query(new BalanceRowMapper())
         .optional();
   }
 
@@ -51,7 +51,7 @@ public class BalanceRepository implements IBalanceRepository {
         .sql(sql)
         .param("userId", userId.value())
         .param("groupId", groupId.value())
-        .query(new BalanceDboRowMapper())
+        .query(new BalanceRowMapper())
         .list();
   }
 
@@ -89,6 +89,6 @@ public class BalanceRepository implements IBalanceRepository {
         FROM balances
         WHERE id = :id
         """;
-    return jdbcClient.sql(sql).param("id", id.value()).query(new BalanceDboRowMapper()).optional();
+    return jdbcClient.sql(sql).param("id", id.value()).query(new BalanceRowMapper()).optional();
   }
 }

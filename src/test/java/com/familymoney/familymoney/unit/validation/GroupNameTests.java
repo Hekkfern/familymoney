@@ -3,7 +3,7 @@ package com.familymoney.familymoney.unit.validation;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.familymoney.familymoney.validation.ValidEmailVerificationToken;
+import com.familymoney.familymoney.validation.ValidGroupName;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -12,7 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.FieldSource;
 
-public class EmailVerificationTokenTests {
+public class GroupNameTests {
 
   private Validator validator;
 
@@ -21,24 +21,25 @@ public class EmailVerificationTokenTests {
     validator = Validation.buildDefaultValidatorFactory().getValidator();
   }
 
-  record TestClass(@ValidEmailVerificationToken String value) {}
+  record TestClass(@ValidGroupName String value) {}
 
   @ParameterizedTest
-  @FieldSource("com.familymoney.familymoney.utils.TestDataFactory#VALID_EMAILVERIFICATIONTOKENS")
-  void EmailVerificationTokenType_Valid(String str) {
+  @FieldSource("com.familymoney.familymoney.utils.TestDataFactory#VALID_GROUPNAMES")
+  void GroupNameType_Valid(String str) {
     val testClass = new TestClass(str);
     val violations = validator.validate(testClass);
     assertTrue(violations.isEmpty());
   }
 
   @ParameterizedTest
-  @FieldSource("com.familymoney.familymoney.utils.TestDataFactory#INVALID_EMAILVERIFICATIONTOKENS")
-  void EmailVerificationTokenType_Invalid(String str) {
+  @FieldSource("com.familymoney.familymoney.utils.TestDataFactory#INVALID_GROUPNAMES")
+  void GroupNameType_Invalid(String str) {
     val testClass = new TestClass(str);
     val violations = validator.validate(testClass);
     assertThat(violations).isNotEmpty();
     assertThat(violations)
         .extracting(ConstraintViolation::getMessage)
-        .containsExactlyInAnyOrder("Invalid token format");
+        .containsExactlyInAnyOrder(
+            "Name must be alphanumeric, can contain some symbols, and have a max length of 64 characters");
   }
 }

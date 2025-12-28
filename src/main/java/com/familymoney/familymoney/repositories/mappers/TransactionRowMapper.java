@@ -6,12 +6,11 @@ import com.familymoney.familymoney.types.TransactionId;
 import com.familymoney.familymoney.types.UserId;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.UUID;
 import javax.money.Monetary;
 import org.javamoney.moneta.Money;
 import org.springframework.jdbc.core.RowMapper;
 
-public final class TransactionDboRowMapper implements RowMapper<TransactionDbo> {
+public final class TransactionRowMapper implements RowMapper<TransactionDbo> {
 
   @Override
   public TransactionDbo mapRow(ResultSet rs, int rowNum) throws SQLException {

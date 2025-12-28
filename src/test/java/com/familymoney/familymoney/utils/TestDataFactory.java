@@ -96,4 +96,11 @@ public final class TestDataFactory {
           "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
           "invalid-token-with-hyphens-0123456789012345678901234567",
           "contains space token01234567890123456789012345678901234567890123456");
+
+  public static List<String> VALID_GROUPNAMES =
+      List.of("user_123", "john-doe", "alice99", "bob_smith", "charlie01");
+
+  public static List<String> INVALID_GROUPNAMES =
+      List.of(
+          "thisusernameiswaytoolongtobevalid2s1af54saf54s5daf6s541adfkjadshfgakjhdsgfyugfhgafjkhfghjfguyasgff65as1");
 }

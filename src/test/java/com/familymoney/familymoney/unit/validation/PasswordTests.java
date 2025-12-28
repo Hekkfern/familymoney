@@ -25,7 +25,7 @@ public class PasswordTests {
 
   @ParameterizedTest
   @FieldSource("com.familymoney.familymoney.utils.TestDataFactory#VALID_PASSWORDS")
-  void EmailType_Valid(String str) {
+  void PasswordType_Valid(String str) {
     val testClass = new TestClass(str);
     val violations = validator.validate(testClass);
     assertTrue(violations.isEmpty());
@@ -33,7 +33,7 @@ public class PasswordTests {
 
   @ParameterizedTest
   @FieldSource("com.familymoney.familymoney.utils.TestDataFactory#INVALID_PASSWORDS")
-  void EmailType_Invalid(String str) {
+  void PasswordType_Invalid(String str) {
     val testClass = new TestClass(str);
     val violations = validator.validate(testClass);
     assertThat(violations).isNotEmpty();

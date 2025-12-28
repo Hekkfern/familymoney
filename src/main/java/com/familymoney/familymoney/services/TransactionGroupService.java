@@ -5,6 +5,8 @@ import com.familymoney.familymoney.exceptions.GroupNotOwnedByUserException;
 import com.familymoney.familymoney.repositories.IBalanceRepository;
 import com.familymoney.familymoney.repositories.IGroupRepository;
 import com.familymoney.familymoney.repositories.ITransactionRepository;
+import com.familymoney.familymoney.services.data.GetGroupData;
+import com.familymoney.familymoney.services.mappers.GetGroupDataMapper;
 import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.GroupName;
 import com.familymoney.familymoney.types.UserId;
@@ -22,6 +24,7 @@ public class TransactionGroupService implements ITransactionGroupService {
   private final IGroupRepository groupRepository;
   private final IBalanceRepository balanceRepository;
   private final ITransactionRepository transactionRepository;
+  private final GetGroupDataMapper getGroupDataMapper;
 
   @Override
   public GroupId createGroup(
@@ -43,5 +46,26 @@ public class TransactionGroupService implements ITransactionGroupService {
     }
     // Delete group
     groupRepository.deleteById(groupId);
+  }
+
+  @Override
+  public GetGroupData getGroupInfoOwnedBy(GroupId groupId, UserId userId) {
+    // Check if the user is a member of the group
+    if (!groupRepository.isUserInGroup(userId, groupId)) {
+      throw new GroupNotOwnedByUserException(
+          String.format("User %s is not a member of group %s", userId, groupId));
+    }
+    // Get data
+    return groupRepository
+        .findById(groupId)
+        .map(getGroupDataMapper::fromDbo)
+        .orElseThrow(
+            () ->
+                new DatabaseExecutionException(String.format("Unable to find group %s", groupId)));
+  }
+
+  @Override
+  public boolean isUserInGroup(UserId userId, GroupId groupId) {
+    return groupRepository.isUserInGroup(userId, groupId);
   }
 }

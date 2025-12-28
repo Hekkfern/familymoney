@@ -25,7 +25,7 @@ public class RefreshTokenTests {
 
   @ParameterizedTest
   @FieldSource("com.familymoney.familymoney.utils.TestDataFactory#VALID_REFRESHTOKENS")
-  void EmailType_Valid(String str) {
+  void RefreshTokenType_Valid(String str) {
     val testClass = new TestClass(str);
     val violations = validator.validate(testClass);
     assertTrue(violations.isEmpty());
@@ -33,7 +33,7 @@ public class RefreshTokenTests {
 
   @ParameterizedTest
   @FieldSource("com.familymoney.familymoney.utils.TestDataFactory#INVALID_REFRESHTOKENS")
-  void EmailType_Invalid(String str) {
+  void RefreshTokenType_Invalid(String str) {
     val testClass = new TestClass(str);
     val violations = validator.validate(testClass);
     assertThat(violations).isNotEmpty();

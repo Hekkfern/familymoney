@@ -25,7 +25,7 @@ public class UserNameTests {
 
   @ParameterizedTest
   @FieldSource("com.familymoney.familymoney.utils.TestDataFactory#VALID_USERNAMES")
-  void EmailType_Valid(String str) {
+  void UserNameType_Valid(String str) {
     val testClass = new TestClass(str);
     val violations = validator.validate(testClass);
     assertTrue(violations.isEmpty());
@@ -33,7 +33,7 @@ public class UserNameTests {
 
   @ParameterizedTest
   @FieldSource("com.familymoney.familymoney.utils.TestDataFactory#INVALID_USERNAMES")
-  void EmailType_Invalid(String str) {
+  void UserNameType_Invalid(String str) {
     val testClass = new TestClass(str);
     val violations = validator.validate(testClass);
     assertThat(violations).isNotEmpty();

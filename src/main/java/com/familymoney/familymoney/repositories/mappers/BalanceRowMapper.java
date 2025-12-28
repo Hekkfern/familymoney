@@ -10,7 +10,7 @@ import javax.money.Monetary;
 import org.javamoney.moneta.Money;
 import org.springframework.jdbc.core.RowMapper;
 
-public final class BalanceDboRowMapper implements RowMapper<BalanceDbo> {
+public final class BalanceRowMapper implements RowMapper<BalanceDbo> {
 
   @Override
   public BalanceDbo mapRow(ResultSet rs, int rowNum) throws SQLException {

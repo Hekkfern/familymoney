@@ -9,7 +9,7 @@ import java.sql.SQLException;
 import javax.money.Monetary;
 import org.springframework.jdbc.core.RowMapper;
 
-public final class GroupDboRowMapper implements RowMapper<GroupDbo> {
+public final class GroupRowMapper implements RowMapper<GroupDbo> {
 
   @Override
   public GroupDbo mapRow(ResultSet rs, int rowNum) throws SQLException {

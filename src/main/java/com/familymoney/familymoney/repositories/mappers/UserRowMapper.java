@@ -8,7 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.springframework.jdbc.core.RowMapper;
 
-public final class UserDboRowMapper implements RowMapper<UserDbo> {
+public final class UserRowMapper implements RowMapper<UserDbo> {
 
   @Override
   public UserDbo mapRow(ResultSet rs, int rowNum) throws SQLException {

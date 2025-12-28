@@ -2,7 +2,7 @@ package com.familymoney.familymoney.repositories;
 
 import com.familymoney.familymoney.repositories.dbos.UpdateUserDbo;
 import com.familymoney.familymoney.repositories.dbos.UserDbo;
-import com.familymoney.familymoney.repositories.mappers.UserDboRowMapper;
+import com.familymoney.familymoney.repositories.mappers.UserRowMapper;
 import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.UserId;
 import com.familymoney.familymoney.types.UserName;
@@ -36,7 +36,7 @@ public class UserRepository implements IUserRepository {
         .param("username", username.value())
         .param("email", email.value())
         .param("passwordHash", passwordHash)
-        .query(new UserDboRowMapper())
+        .query(new UserRowMapper())
         .optional();
   }
 
@@ -48,7 +48,7 @@ public class UserRepository implements IUserRepository {
         FROM users
         WHERE id = :id
         """;
-    return jdbcClient.sql(sql).param("id", id.value()).query(new UserDboRowMapper()).optional();
+    return jdbcClient.sql(sql).param("id", id.value()).query(new UserRowMapper()).optional();
   }
 
   @Override
@@ -62,7 +62,7 @@ public class UserRepository implements IUserRepository {
     return jdbcClient
         .sql(sql)
         .param("email", email.value())
-        .query(new UserDboRowMapper())
+        .query(new UserRowMapper())
         .optional();
   }
 
@@ -77,7 +77,7 @@ public class UserRepository implements IUserRepository {
     return jdbcClient
         .sql(sql)
         .param("username", username.value())
-        .query(new UserDboRowMapper())
+        .query(new UserRowMapper())
         .optional();
   }
 
@@ -171,7 +171,7 @@ public class UserRepository implements IUserRepository {
             .sql(querySql)
             .param("limit", pageable.getPageSize())
             .param("offset", pageable.getOffset())
-            .query(new UserDboRowMapper())
+            .query(new UserRowMapper())
             .list();
     return new PageImpl<>(data, pageable, total);
   }
