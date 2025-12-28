@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import com.familymoney.familymoney.config.SecurityConfig;
 import com.familymoney.familymoney.controllers.UserAdminController;
 import com.familymoney.familymoney.controllers.dtos.admin.GetUserResponseDto;
 import com.familymoney.familymoney.controllers.mappers.*;
@@ -38,7 +39,12 @@ import org.springframework.test.web.servlet.client.RestTestClient;
       "spring.application.name=testapp",
       "jwt.key=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     })
-@Import({JwtUtil.class, GetUserResponseMapper.class, UpdateUserRequestMapper.class})
+@Import({
+  JwtUtil.class,
+  SecurityConfig.class,
+  GetUserResponseMapper.class,
+  UpdateUserRequestMapper.class
+})
 @EnableConfigurationProperties({AppProperties.class, JwtProperties.class})
 public class UserAdminControllerTests {
 
