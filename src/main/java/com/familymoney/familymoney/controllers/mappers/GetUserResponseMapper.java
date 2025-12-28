@@ -11,6 +11,7 @@ public class GetUserResponseMapper {
     return GetUserResponseDto.builder()
         .id(userData.id().value())
         .username(userData.username().value())
+        .email(userData.email().value())
         .createdAt(userData.createdAt())
         .isEnabled(userData.isEnabled())
         .build();

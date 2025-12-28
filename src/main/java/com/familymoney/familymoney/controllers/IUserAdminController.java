@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.*;
 public interface IUserAdminController {
 
   @GetMapping(path = "{userId}", version = "1")
-  GetUserResponseDto getUser(@PathVariable @NotNull UUID userId);
+  GetUserResponseDto getUserInfo(@PathVariable @NotNull UUID userId);
 
   @GetMapping(path = "", version = "1")
-  GetUsersResponseDto getUsers(Pageable pageable);
+  GetUsersResponseDto getUsersInfo(Pageable pageable);
 
   @PutMapping(path = "{userId}/enable", version = "1")
   void enableUser(@PathVariable @NotNull UUID userId, @RequestParam boolean enabled);

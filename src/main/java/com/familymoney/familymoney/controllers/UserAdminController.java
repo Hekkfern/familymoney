@@ -24,7 +24,7 @@ public class UserAdminController implements IUserAdminController {
   private final UpdateUserRequestMapper updateUserRequestMapper;
 
   @Override
-  public GetUserResponseDto getUser(UUID userId) {
+  public GetUserResponseDto getUserInfo(UUID userId) {
     // Fetch user data
     val userData =
         userService
@@ -35,7 +35,7 @@ public class UserAdminController implements IUserAdminController {
   }
 
   @Override
-  public GetUsersResponseDto getUsers(Pageable pageable) {
+  public GetUsersResponseDto getUsersInfo(Pageable pageable) {
     val userDataPages = userService.getUsers(pageable);
     return new GetUsersResponseDto(
         userDataPages.getContent().stream().map(getUserResponseMapper::toDto).toList());
