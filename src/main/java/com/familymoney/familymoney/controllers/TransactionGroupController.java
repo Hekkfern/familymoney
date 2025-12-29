@@ -2,6 +2,7 @@ package com.familymoney.familymoney.controllers;
 
 import com.familymoney.familymoney.controllers.dtos.group.*;
 import com.familymoney.familymoney.controllers.mappers.CreateGroupResponseMapper;
+import com.familymoney.familymoney.controllers.mappers.GetGroupResponseMapper;
 import com.familymoney.familymoney.services.ITransactionGroupService;
 import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.GroupName;
@@ -19,6 +20,7 @@ public class TransactionGroupController implements ITransactionGroupController {
 
   private final ITransactionGroupService transactionGroupService;
   private final CreateGroupResponseMapper createGroupResponseMapper;
+  private final GetGroupResponseMapper getGroupResponseMapper;
 
   @Override
   public CreateGroupResponseDto createGroup(CreateGroupRequestDto request) {
@@ -45,7 +47,12 @@ public class TransactionGroupController implements ITransactionGroupController {
 
   @Override
   public GetGroupResponseDto getGroupInfo(UUID groupId) {
-    return null;
+    // Get user ID from security context (validated)
+    val userId = AuthenticationUtils.getUserIdFromSecurityContext();
+    // Get group info
+    val groupData = transactionGroupService.getGroupInfoOwnedBy(GroupId.fromUuid(groupId), userId);
+    // Generate response
+    return getGroupResponseMapper.toDto(groupData);
   }
 
   @Override
@@ -61,6 +68,11 @@ public class TransactionGroupController implements ITransactionGroupController {
 
   @Override
   public GetUsersInGroupResponseDto getUsersInGroup(UUID groupId) {
+    return null;
+  }
+
+  @Override
+  public GetUsersInGroupResponseDto getUsersInGroup(UUID groupId, RemoveUserRequestDto request) {
     return null;
   }
 

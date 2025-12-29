@@ -33,6 +33,10 @@ public interface ITransactionGroupController {
   @GetMapping(path = "{groupId}/users", version = "1")
   GetUsersInGroupResponseDto getUsersInGroup(@PathVariable @NotNull UUID groupId);
 
+  @DeleteMapping(path = "{groupId}/users", version = "1")
+  GetUsersInGroupResponseDto getUsersInGroup(
+      @PathVariable @NotNull UUID groupId, @RequestBody @Valid RemoveUserRequestDto request);
+
   @GetMapping(path = "{groupId}/balances", version = "1")
   GetGroupBalancesResponseDto getGroupBalances(@PathVariable @NotNull UUID groupId);
 

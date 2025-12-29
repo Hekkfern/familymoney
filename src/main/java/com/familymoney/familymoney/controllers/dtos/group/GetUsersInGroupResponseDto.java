@@ -1,8 +1,8 @@
 package com.familymoney.familymoney.controllers.dtos.group;
 
-import com.familymoney.familymoney.types.UserId;
 import java.util.List;
+import java.util.UUID;
 import lombok.Builder;
 
 @Builder
-public record GetUsersInGroupResponseDto(List<UserId> userIds) {}
+public record GetUsersInGroupResponseDto(List<UUID> userIds) {}
