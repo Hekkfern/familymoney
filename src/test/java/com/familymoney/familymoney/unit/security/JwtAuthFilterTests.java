@@ -6,7 +6,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import com.familymoney.familymoney.security.JwtAuthFilter;
-import com.familymoney.familymoney.security.JwtUtil;
+import com.familymoney.familymoney.security.JwtUtils;
 import com.familymoney.familymoney.services.IUserService;
 import com.familymoney.familymoney.types.JwtToken;
 import com.familymoney.familymoney.types.Role;
@@ -32,7 +32,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 @ExtendWith(MockitoExtension.class)
 public class JwtAuthFilterTests {
 
-  @Mock private JwtUtil jwtUtil;
+  @Mock private JwtUtils jwtUtils;
   @Mock private IUserService userService;
   @InjectMocks private JwtAuthFilter filter;
 
@@ -52,7 +52,8 @@ public class JwtAuthFilterTests {
     val response = mock(HttpServletResponse.class);
     val chain = mock(FilterChain.class);
 
-    when(request.getHeader("Authorization")).thenReturn(null);
+    when(jwtUtils.extractTokenFromHeader(any(HttpServletRequest.class)))
+        .thenReturn(Optional.empty());
 
     filter.doFilter(request, response, chain);
 
@@ -67,7 +68,8 @@ public class JwtAuthFilterTests {
     val response = mock(HttpServletResponse.class);
     val chain = mock(FilterChain.class);
 
-    when(request.getHeader("Authorization")).thenReturn("Basic abcdef");
+    when(jwtUtils.extractTokenFromHeader(any(HttpServletRequest.class)))
+        .thenReturn(Optional.empty());
 
     filter.doFilter(request, response, chain);
 
@@ -82,8 +84,9 @@ public class JwtAuthFilterTests {
     val chain = mock(FilterChain.class);
 
     // use a syntactically valid-looking token so JwtToken constructor doesn't throw
-    when(request.getHeader("Authorization")).thenReturn("Bearer aaa.bbb.ccc");
-    when(jwtUtil.parseAccessToken(any(JwtToken.class))).thenReturn(Optional.empty());
+    when(jwtUtils.extractTokenFromHeader(any(HttpServletRequest.class)))
+        .thenReturn(Optional.of(JwtToken.fromString("aaa.bbb.ccc")));
+    when(jwtUtils.parseAccessToken(any(JwtToken.class))).thenReturn(Optional.empty());
 
     filter.doFilter(request, response, chain);
 
@@ -93,16 +96,16 @@ public class JwtAuthFilterTests {
 
   @Test
   void validTokenButNoRole_shouldSkipAndNotAuthenticate() throws Exception {
-    val uuid = UUID.randomUUID().toString();
+    val userId = UserId.fromUuid(UUID.randomUUID());
     val request = mock(HttpServletRequest.class);
     val response = mock(HttpServletResponse.class);
     val chain = mock(FilterChain.class);
     val claims = mock(Claims.class);
 
-    when(request.getHeader("Authorization")).thenReturn("Bearer aaa.bbb.ccc");
-    when(jwtUtil.parseAccessToken(any(JwtToken.class))).thenReturn(Optional.of(claims));
-    when(claims.getSubject()).thenReturn(uuid);
-    when(userService.getUserRole(eq(UserId.fromString(uuid)))).thenReturn(Optional.empty());
+    when(jwtUtils.extractTokenFromHeader(any(HttpServletRequest.class)))
+        .thenReturn(Optional.of(JwtToken.fromString("aaa.bbb.ccc")));
+    when(jwtUtils.parseAccessToken(any(JwtToken.class))).thenReturn(Optional.of(userId));
+    when(userService.getUserRole(eq(userId))).thenReturn(Optional.empty());
 
     filter.doFilter(request, response, chain);
 
@@ -112,18 +115,17 @@ public class JwtAuthFilterTests {
 
   @Test
   void validTokenWithRole_shouldAuthenticateWithRoleAuthority() throws Exception {
-    val uuid = UUID.randomUUID().toString();
+    val userId = UserId.fromUuid(UUID.randomUUID());
     val request = mock(HttpServletRequest.class);
     val response = mock(HttpServletResponse.class);
     val chain = mock(FilterChain.class);
     val claims = mock(Claims.class);
 
-    when(request.getHeader("Authorization")).thenReturn("Bearer aaa.bbb.ccc");
-    when(jwtUtil.parseAccessToken(any(JwtToken.class))).thenReturn(Optional.of(claims));
-    when(claims.getSubject()).thenReturn(uuid);
+    when(jwtUtils.extractTokenFromHeader(any(HttpServletRequest.class)))
+        .thenReturn(Optional.of(JwtToken.fromString("aaa.bbb.ccc")));
+    when(jwtUtils.parseAccessToken(any(JwtToken.class))).thenReturn(Optional.of(userId));
 
-    val expectedUserId = UserId.fromString(uuid);
-    when(userService.getUserRole(eq(expectedUserId))).thenReturn(Optional.of(Role.ADMIN));
+    when(userService.getUserRole(eq(userId))).thenReturn(Optional.of(Role.ADMIN));
 
     filter.doFilter(request, response, chain);
 
@@ -132,8 +134,7 @@ public class JwtAuthFilterTests {
 
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
     assertNotNull(auth, "Authentication should be set in SecurityContext");
-    assertEquals(
-        expectedUserId, auth.getPrincipal(), "Principal should be the UserId from token subject");
+    assertEquals(userId, auth.getPrincipal(), "Principal should be the UserId from token subject");
     assertTrue(
         auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_" + Role.ADMIN)),
         "Authorities should contain ROLE_ADMIN");

@@ -9,7 +9,7 @@ import com.familymoney.familymoney.controllers.mappers.GetUserResponseMapper;
 import com.familymoney.familymoney.controllers.mappers.UpdateUserRequestMapper;
 import com.familymoney.familymoney.properties.AppProperties;
 import com.familymoney.familymoney.properties.JwtProperties;
-import com.familymoney.familymoney.security.JwtUtil;
+import com.familymoney.familymoney.security.JwtUtils;
 import com.familymoney.familymoney.services.IUserService;
 import java.time.Instant;
 import java.util.Date;
@@ -30,7 +30,7 @@ import org.springframework.test.web.servlet.client.RestTestClient;
       "jwt.key=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     })
 @Import({
-  JwtUtil.class,
+  JwtUtils.class,
   SecurityConfig.class,
   GetUserResponseMapper.class,
   UpdateUserRequestMapper.class
@@ -46,7 +46,7 @@ public class TransactionGroupControllerTests {
 
   @Autowired private MockMvc mockMvc;
 
-  @MockitoSpyBean private JwtUtil jwtUtil;
+  @MockitoSpyBean private JwtUtils jwtUtils;
   @MockitoBean private IUserService userService;
   @MockitoBean private io.jsonwebtoken.Clock jwtClock;
   @MockitoSpyBean private GetMyUserResponseMapper getMyUserResponseMapper;

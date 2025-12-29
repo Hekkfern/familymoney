@@ -24,7 +24,7 @@ public class EmailSenderService implements IEmailSenderService {
 
   @Override
   public void sendEmailVerificationEmail(
-          Email toEmail, UserName username, EmailVerificationToken verificationToken) {
+      Email toEmail, UserName username, EmailVerificationToken verificationToken) {
     val mimeMessage = mailSender.createMimeMessage();
     val mimeMessageHelper = new MimeMessageHelper(mimeMessage, "UTF-8");
 
@@ -52,7 +52,7 @@ public class EmailSenderService implements IEmailSenderService {
 
   @Override
   public void sendPasswordResetEmail(
-          Email toEmail, UserName username, EmailVerificationToken resetToken) {
+      Email toEmail, UserName username, EmailVerificationToken resetToken) {
     // TODO("Not yet implemented")
   }
 

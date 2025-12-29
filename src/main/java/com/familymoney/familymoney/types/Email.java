@@ -1,6 +1,5 @@
 package com.familymoney.familymoney.types;
 
-
 public record Email(String value) {
 
   public static Email fromString(String value) {

@@ -11,7 +11,7 @@ import com.familymoney.familymoney.controllers.dtos.admin.GetUserResponseDto;
 import com.familymoney.familymoney.controllers.mappers.*;
 import com.familymoney.familymoney.properties.AppProperties;
 import com.familymoney.familymoney.properties.JwtProperties;
-import com.familymoney.familymoney.security.JwtUtil;
+import com.familymoney.familymoney.security.JwtUtils;
 import com.familymoney.familymoney.services.IUserService;
 import com.familymoney.familymoney.services.data.GetUserData;
 import com.familymoney.familymoney.types.*;
@@ -40,7 +40,7 @@ import org.springframework.test.web.servlet.client.RestTestClient;
       "jwt.key=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     })
 @Import({
-  JwtUtil.class,
+  JwtUtils.class,
   SecurityConfig.class,
   GetUserResponseMapper.class,
   UpdateUserRequestMapper.class
@@ -56,7 +56,7 @@ public class UserAdminControllerTests {
 
   @Autowired private MockMvc mockMvc;
 
-  @MockitoSpyBean private JwtUtil jwtUtil;
+  @MockitoSpyBean private JwtUtils jwtUtils;
   @MockitoBean private IUserService userService;
   @MockitoBean private io.jsonwebtoken.Clock jwtClock;
   @MockitoSpyBean private GetUserResponseMapper getUserResponseMapper;
@@ -94,7 +94,7 @@ public class UserAdminControllerTests {
         client
             .get()
             .uri(AdminControllerUriFactory.getUserPath(userId))
-            .header("Authorization", "Bearer " + jwtUtil.generateAccessToken(userId))
+            .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId))
             .exchange()
             .expectStatus()
             .isOk()
@@ -128,7 +128,7 @@ public class UserAdminControllerTests {
     client
         .get()
         .uri(AdminControllerUriFactory.getUserPath(userId))
-        .header("Authorization", "Bearer " + jwtUtil.generateAccessToken(userId))
+        .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId))
         .exchange()
         .expectStatus()
         .isForbidden();

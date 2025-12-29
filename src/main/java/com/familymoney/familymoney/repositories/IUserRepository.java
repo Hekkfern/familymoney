@@ -5,7 +5,6 @@ import com.familymoney.familymoney.repositories.dbos.UserDbo;
 import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.UserId;
 import com.familymoney.familymoney.types.UserName;
-
 import java.time.Duration;
 import java.util.Optional;
 import org.springframework.data.domain.Page;

@@ -12,7 +12,7 @@ import com.familymoney.familymoney.controllers.mappers.GetMyUserResponseMapper;
 import com.familymoney.familymoney.controllers.mappers.UpdateUserRequestMapper;
 import com.familymoney.familymoney.properties.AppProperties;
 import com.familymoney.familymoney.properties.JwtProperties;
-import com.familymoney.familymoney.security.JwtUtil;
+import com.familymoney.familymoney.security.JwtUtils;
 import com.familymoney.familymoney.services.IUserService;
 import com.familymoney.familymoney.services.data.GetUserData;
 import com.familymoney.familymoney.types.*;
@@ -42,7 +42,7 @@ import org.springframework.test.web.servlet.client.RestTestClient;
       "jwt.key=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     })
 @Import({
-  JwtUtil.class,
+  JwtUtils.class,
   SecurityConfig.class,
   GetMyUserResponseMapper.class,
   UpdateUserRequestMapper.class
@@ -58,7 +58,7 @@ public class UserControllerTests {
 
   @Autowired private MockMvc mockMvc;
 
-  @MockitoSpyBean private JwtUtil jwtUtil;
+  @MockitoSpyBean private JwtUtils jwtUtils;
   @MockitoBean private IUserService userService;
   @MockitoBean private io.jsonwebtoken.Clock jwtClock;
   @MockitoSpyBean private GetMyUserResponseMapper getMyUserResponseMapper;
@@ -95,7 +95,7 @@ public class UserControllerTests {
         client
             .get()
             .uri(UserControllerUriFactory.getMePath())
-            .header("Authorization", "Bearer " + jwtUtil.generateAccessToken(userId))
+            .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId))
             .exchange()
             .expectStatus()
             .isOk()
@@ -127,7 +127,7 @@ public class UserControllerTests {
     client
         .get()
         .uri(UserControllerUriFactory.getMePath())
-        .header("Authorization", "Bearer " + jwtUtil.generateAccessToken(userId))
+        .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId))
         .exchange()
         .expectStatus()
         .isUnauthorized();
@@ -155,7 +155,7 @@ public class UserControllerTests {
     client
         .get()
         .uri(UserControllerUriFactory.getMePath())
-        .header("Authorization", "Bearer " + jwtUtil.generateAccessToken(userId))
+        .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId))
         .exchange()
         .expectStatus()
         .isUnauthorized();
@@ -186,7 +186,7 @@ public class UserControllerTests {
     client
         .delete()
         .uri(UserControllerUriFactory.getMePath())
-        .header("Authorization", "Bearer " + jwtUtil.generateAccessToken(userId))
+        .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId))
         .exchange()
         .expectStatus()
         .isOk();
@@ -230,7 +230,7 @@ public class UserControllerTests {
     client
         .patch()
         .uri(UserControllerUriFactory.getMePath())
-        .header("Authorization", "Bearer " + jwtUtil.generateAccessToken(userId))
+        .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId))
         .body(Map.of("username", newUsername, "email", newEmail, "password", newPassword))
         .exchange()
         .expectStatus()
@@ -259,7 +259,7 @@ public class UserControllerTests {
     client
         .patch()
         .uri(UserControllerUriFactory.getMePath())
-        .header("Authorization", "Bearer " + jwtUtil.generateAccessToken(userId))
+        .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId))
         .body(Map.of("username", newUsername))
         .exchange()
         .expectStatus()
@@ -288,7 +288,7 @@ public class UserControllerTests {
     client
         .patch()
         .uri(UserControllerUriFactory.getMePath())
-        .header("Authorization", "Bearer " + jwtUtil.generateAccessToken(userId))
+        .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId))
         .body(Map.of("email", newEmail))
         .exchange()
         .expectStatus()
@@ -317,7 +317,7 @@ public class UserControllerTests {
     client
         .patch()
         .uri(UserControllerUriFactory.getMePath())
-        .header("Authorization", "Bearer " + jwtUtil.generateAccessToken(userId))
+        .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId))
         .body(Map.of("password", newPassword))
         .exchange()
         .expectStatus()

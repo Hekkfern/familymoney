@@ -18,7 +18,7 @@ import com.familymoney.familymoney.repositories.IUserRepository;
 import com.familymoney.familymoney.repositories.dbos.EmailVerificationDbo;
 import com.familymoney.familymoney.repositories.dbos.RefreshTokenDbo;
 import com.familymoney.familymoney.repositories.dbos.UserDbo;
-import com.familymoney.familymoney.security.JwtUtil;
+import com.familymoney.familymoney.security.JwtUtils;
 import com.familymoney.familymoney.security.UserPasswordEncoder;
 import com.familymoney.familymoney.services.AuthService;
 import com.familymoney.familymoney.services.IEmailSenderService;
@@ -50,7 +50,7 @@ public class AuthServiceTests {
   @Spy private UserPasswordEncoder passwordEncoder;
   @Spy private final Clock clock = Clock.fixed(now, ZoneOffset.UTC);
   @Mock private IEmailVerificationRepository emailVerificationRepository;
-  @Mock private JwtUtil jwtUtil;
+  @Mock private JwtUtils jwtUtils;
   @Mock private IRefreshTokenRepository refreshTokenRepository;
 
   @InjectMocks private AuthService authService;
@@ -176,7 +176,7 @@ public class AuthServiceTests {
                     .isEnabled(true)
                     .build()));
     when(passwordEncoder.verify(eq(password.value()), anyString())).thenReturn(true);
-    when(jwtUtil.generateAccessToken(eq(userId)))
+    when(jwtUtils.generateAccessToken(eq(userId)))
         .thenReturn(JwtToken.fromString(FakeGenerator.accessToken()));
     when(refreshTokenRepository.create(eq(userId), any(), any()))
         .thenReturn(
@@ -256,7 +256,7 @@ public class AuthServiceTests {
                     .isEnabled(true)
                     .build()));
     when(passwordEncoder.verify(eq(password.value()), anyString())).thenReturn(true);
-    when(jwtUtil.generateAccessToken(eq(userId)))
+    when(jwtUtils.generateAccessToken(eq(userId)))
         .thenReturn(JwtToken.fromString(FakeGenerator.accessToken()));
     when(refreshTokenRepository.create(eq(userId), any(), any())).thenReturn(Optional.empty());
 
@@ -309,7 +309,7 @@ public class AuthServiceTests {
                     .family(family)
                     .build()));
     when(refreshTokenRepository.updateByToken(any(), any())).thenReturn(true);
-    when(jwtUtil.generateAccessToken(any()))
+    when(jwtUtils.generateAccessToken(any()))
         .thenReturn(JwtToken.fromString(FakeGenerator.accessToken()));
     when(refreshTokenRepository.create(any(), any(), any()))
         .thenReturn(
@@ -403,7 +403,7 @@ public class AuthServiceTests {
                     .family(family)
                     .build()));
     when(refreshTokenRepository.updateByToken(any(), any())).thenReturn(true);
-    when(jwtUtil.generateAccessToken(any()))
+    when(jwtUtils.generateAccessToken(any()))
         .thenReturn(JwtToken.fromString(FakeGenerator.accessToken()));
     when(refreshTokenRepository.create(any(), any(), any())).thenReturn(Optional.empty());
 

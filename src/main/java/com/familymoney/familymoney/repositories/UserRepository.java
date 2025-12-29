@@ -59,11 +59,7 @@ public class UserRepository implements IUserRepository {
         FROM users
         WHERE email = :email
         """;
-    return jdbcClient
-        .sql(sql)
-        .param("email", email.value())
-        .query(new UserRowMapper())
-        .optional();
+    return jdbcClient.sql(sql).param("email", email.value()).query(new UserRowMapper()).optional();
   }
 
   @Override

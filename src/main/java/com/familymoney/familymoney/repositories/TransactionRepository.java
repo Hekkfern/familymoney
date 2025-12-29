@@ -90,11 +90,7 @@ public class TransactionRepository implements ITransactionRepository {
         FROM transactions
         WHERE id = :id
         """;
-    return jdbcClient
-        .sql(sql)
-        .param("id", id.value())
-        .query(new TransactionRowMapper())
-        .optional();
+    return jdbcClient.sql(sql).param("id", id.value()).query(new TransactionRowMapper()).optional();
   }
 
   @Override

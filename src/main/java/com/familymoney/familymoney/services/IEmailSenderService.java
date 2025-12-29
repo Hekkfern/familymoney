@@ -7,7 +7,7 @@ import com.familymoney.familymoney.types.UserName;
 public interface IEmailSenderService {
 
   void sendEmailVerificationEmail(
-          Email toEmail, UserName username, EmailVerificationToken verificationToken);
+      Email toEmail, UserName username, EmailVerificationToken verificationToken);
 
   void sendPasswordResetEmail(Email toEmail, UserName username, EmailVerificationToken resetToken);
 

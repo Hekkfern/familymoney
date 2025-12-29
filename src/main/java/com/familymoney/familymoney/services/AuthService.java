@@ -15,7 +15,7 @@ import com.familymoney.familymoney.repositories.IUserRepository;
 import com.familymoney.familymoney.repositories.dbos.EmailVerificationDbo;
 import com.familymoney.familymoney.repositories.dbos.UpdateRefreshTokenDbo;
 import com.familymoney.familymoney.repositories.dbos.UpdateUserDbo;
-import com.familymoney.familymoney.security.JwtUtil;
+import com.familymoney.familymoney.security.JwtUtils;
 import com.familymoney.familymoney.security.UserPasswordEncoder;
 import com.familymoney.familymoney.services.data.TokenPair;
 import com.familymoney.familymoney.types.*;
@@ -37,7 +37,7 @@ public class AuthService implements IAuthService {
 
   private final IUserRepository userRepository;
   private final UserPasswordEncoder passwordEncoder;
-  private final JwtUtil jwtUtil;
+  private final JwtUtils jwtUtils;
   private final IEmailSenderService emailSenderService;
   private final IRefreshTokenRepository refreshTokenRepository;
   private final IEmailVerificationRepository emailVerificationRepository;
@@ -116,7 +116,7 @@ public class AuthService implements IAuthService {
       throw new BadCredentialsException("Wrong password for the given email");
     }
     // Generate access token
-    val accessToken = jwtUtil.generateAccessToken(userDb.id());
+    val accessToken = jwtUtils.generateAccessToken(userDb.id());
     // Generate refresh token
     val refreshToken = RefreshToken.generate();
     // Save refresh token in database
@@ -164,7 +164,7 @@ public class AuthService implements IAuthService {
         refreshTokenDb.token(),
         UpdateRefreshTokenDbo.builder().isUsed(true).usedAt(Instant.now(clock)).build());
     // Generate new tokens
-    val newAccessToken = jwtUtil.generateAccessToken(refreshTokenDb.userId());
+    val newAccessToken = jwtUtils.generateAccessToken(refreshTokenDb.userId());
     val newRefreshToken = RefreshToken.generate();
     // Save new refresh token in database
     refreshTokenRepository

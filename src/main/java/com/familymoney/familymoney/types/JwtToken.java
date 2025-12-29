@@ -1,6 +1,5 @@
 package com.familymoney.familymoney.types;
 
-
 public record JwtToken(String value) {
 
   public static JwtToken fromString(String value) {

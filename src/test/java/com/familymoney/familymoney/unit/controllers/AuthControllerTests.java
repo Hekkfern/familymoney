@@ -7,7 +7,7 @@ import static org.mockito.Mockito.when;
 import com.familymoney.familymoney.controllers.AuthController;
 import com.familymoney.familymoney.controllers.mappers.LoginResponseMapper;
 import com.familymoney.familymoney.controllers.mappers.RefreshResponseMapper;
-import com.familymoney.familymoney.security.JwtUtil;
+import com.familymoney.familymoney.security.JwtUtils;
 import com.familymoney.familymoney.services.IAuthService;
 import com.familymoney.familymoney.services.IUserService;
 import com.familymoney.familymoney.services.data.TokenPair;
@@ -32,7 +32,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 @WebMvcTest(controllers = AuthController.class)
-@Import({JwtUtil.class, LoginResponseMapper.class, RefreshResponseMapper.class})
+@Import({JwtUtils.class, LoginResponseMapper.class, RefreshResponseMapper.class})
 public class AuthControllerTests {
 
   private final Instant now = Instant.parse("2025-01-01T00:00:00Z");
@@ -45,7 +45,7 @@ public class AuthControllerTests {
 
   @MockitoBean private IAuthService authService;
   @MockitoBean private io.jsonwebtoken.Clock jwtClock;
-  @MockitoBean private JwtUtil jwtUtil;
+  @MockitoBean private JwtUtils jwtUtils;
   @MockitoBean private IUserService userService;
   @MockitoSpyBean private LoginResponseMapper loginResponseMapper;
   @MockitoSpyBean private RefreshResponseMapper refreshResponseMapper;
