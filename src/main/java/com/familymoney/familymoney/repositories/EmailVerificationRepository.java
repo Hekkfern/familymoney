@@ -22,7 +22,7 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
 
   @Override
   public Optional<EmailVerificationDbo> create(
-      UserId userId, EmailVerificationToken token, Instant expiresAt) {
+      final UserId userId, final EmailVerificationToken token, final Instant expiresAt) {
     var sql =
         """
         INSERT INTO email_verification_tokens (user_id, token, expires_at)
@@ -39,7 +39,7 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
   }
 
   @Override
-  public Optional<EmailVerificationDbo> findByToken(EmailVerificationToken token) {
+  public Optional<EmailVerificationDbo> findByToken(final EmailVerificationToken token) {
     var sql =
         """
         SELECT id, user_id, token, expires_at, created_at
@@ -54,7 +54,7 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
   }
 
   @Override
-  public boolean deleteByUserId(UserId userId) {
+  public boolean deleteByUserId(final UserId userId) {
     var sql =
         """
         DELETE FROM email_verification_tokens
@@ -65,7 +65,7 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
   }
 
   @Override
-  public void deleteOlderThan(Duration cutoff) {
+  public void deleteOlderThan(final Duration cutoff) {
     var sql =
         """
         DELETE FROM email_verification_tokens

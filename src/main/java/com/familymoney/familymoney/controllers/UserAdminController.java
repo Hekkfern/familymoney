@@ -1,11 +1,11 @@
 package com.familymoney.familymoney.controllers;
 
-import com.familymoney.familymoney.controllers.dtos.admin.GetUserResponseDto;
-import com.familymoney.familymoney.controllers.dtos.admin.GetUserRoleResponseDto;
-import com.familymoney.familymoney.controllers.dtos.admin.GetUsersResponseDto;
+import com.familymoney.familymoney.controllers.dtos.user.GetUserResponseDto;
+import com.familymoney.familymoney.controllers.dtos.user.GetUserRoleResponseDto;
+import com.familymoney.familymoney.controllers.dtos.user.GetUsersResponseDto;
 import com.familymoney.familymoney.controllers.dtos.user.UpdateUserRequestDto;
-import com.familymoney.familymoney.controllers.mappers.GetUserResponseMapper;
-import com.familymoney.familymoney.controllers.mappers.UpdateUserRequestMapper;
+import com.familymoney.familymoney.controllers.mappers.user.GetUserResponseMapper;
+import com.familymoney.familymoney.controllers.mappers.user.UpdateUserRequestMapper;
 import com.familymoney.familymoney.exceptions.UserNotFoundException;
 import com.familymoney.familymoney.services.IUserService;
 import com.familymoney.familymoney.types.*;

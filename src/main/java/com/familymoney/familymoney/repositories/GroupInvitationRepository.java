@@ -22,7 +22,7 @@ public class GroupInvitationRepository implements IGroupInvitationRepository {
 
   @Override
   public Optional<GroupInvitationDbo> create(
-      GroupId groupId, GroupInvitationToken token, Instant expiresAt) {
+      final GroupId groupId, final GroupInvitationToken token, final Instant expiresAt) {
     val sql =
         """
         INSERT INTO group_invitations (group_id, token, expires_at)
@@ -39,7 +39,7 @@ public class GroupInvitationRepository implements IGroupInvitationRepository {
   }
 
   @Override
-  public Optional<GroupInvitationDbo> findByToken(GroupInvitationToken token) {
+  public Optional<GroupInvitationDbo> findByToken(final GroupInvitationToken token) {
     val sql =
         """
         SELECT id, group_id, token, created_at, expires_at
@@ -54,7 +54,7 @@ public class GroupInvitationRepository implements IGroupInvitationRepository {
   }
 
   @Override
-  public void deleteOlderThan(Duration cutoff) {
+  public void deleteOlderThan(final Duration cutoff) {
     val sql =
         """
         DELETE FROM group_invitations

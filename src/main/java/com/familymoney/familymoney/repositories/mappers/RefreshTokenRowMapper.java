@@ -14,7 +14,7 @@ import org.springframework.jdbc.core.RowMapper;
 public final class RefreshTokenRowMapper implements RowMapper<RefreshTokenDbo> {
 
   @Override
-  public RefreshTokenDbo mapRow(ResultSet rs, int rowNum) throws SQLException {
+  public RefreshTokenDbo mapRow(ResultSet rs, final int rowNum) throws SQLException {
     Optional<Instant> usedAt =
         Optional.ofNullable(rs.getTimestamp("used_at")).map(Timestamp::toInstant);
     return RefreshTokenDbo.builder()

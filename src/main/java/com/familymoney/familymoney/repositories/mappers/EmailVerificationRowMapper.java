@@ -11,7 +11,7 @@ import org.springframework.jdbc.core.RowMapper;
 public final class EmailVerificationRowMapper implements RowMapper<EmailVerificationDbo> {
 
   @Override
-  public EmailVerificationDbo mapRow(ResultSet rs, int rowNum) throws SQLException {
+  public EmailVerificationDbo mapRow(ResultSet rs, final int rowNum) throws SQLException {
     return EmailVerificationDbo.builder()
         .id(UUID.fromString(rs.getString("id")))
         .userId(UserId.fromString(rs.getString("user_id")))

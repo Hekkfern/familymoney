@@ -11,7 +11,7 @@ import org.springframework.jdbc.core.RowMapper;
 public final class GroupInvitationRowMapper implements RowMapper<GroupInvitationDbo> {
 
   @Override
-  public GroupInvitationDbo mapRow(ResultSet rs, int rowNum) throws SQLException {
+  public GroupInvitationDbo mapRow(ResultSet rs, final int rowNum) throws SQLException {
     return GroupInvitationDbo.builder()
         .id(UUID.fromString(rs.getString("id")))
         .groupId(GroupId.fromString(rs.getString("group_id")))

@@ -2,8 +2,8 @@ package com.familymoney.familymoney.controllers;
 
 import com.familymoney.familymoney.controllers.dtos.user.GetMyUserResponseDto;
 import com.familymoney.familymoney.controllers.dtos.user.UpdateUserRequestDto;
-import com.familymoney.familymoney.controllers.mappers.GetMyUserResponseMapper;
-import com.familymoney.familymoney.controllers.mappers.UpdateUserRequestMapper;
+import com.familymoney.familymoney.controllers.mappers.user.GetMyUserResponseMapper;
+import com.familymoney.familymoney.controllers.mappers.user.UpdateUserRequestMapper;
 import com.familymoney.familymoney.services.IUserService;
 import com.familymoney.familymoney.utils.AuthenticationUtils;
 import lombok.RequiredArgsConstructor;

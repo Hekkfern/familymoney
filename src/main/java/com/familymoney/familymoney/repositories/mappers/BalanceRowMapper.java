@@ -13,7 +13,7 @@ import org.springframework.jdbc.core.RowMapper;
 public final class BalanceRowMapper implements RowMapper<BalanceDbo> {
 
   @Override
-  public BalanceDbo mapRow(ResultSet rs, int rowNum) throws SQLException {
+  public BalanceDbo mapRow(ResultSet rs, final int rowNum) throws SQLException {
     return BalanceDbo.builder()
         .id(BalanceId.fromString(rs.getString("id")))
         .groupId(GroupId.fromString(rs.getString("group_id")))

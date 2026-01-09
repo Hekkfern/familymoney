@@ -20,7 +20,7 @@ public class PasswordResetRepository implements IPasswordResetRepository {
 
   @Override
   public Optional<PasswordResetDbo> create(
-      UserId userId, PasswordResetToken token, Instant expiresAt) {
+      final UserId userId, final PasswordResetToken token, final Instant expiresAt) {
     var sql =
         """
         INSERT INTO password_reset_tokens (user_id, token, expires_at)
@@ -37,13 +37,13 @@ public class PasswordResetRepository implements IPasswordResetRepository {
   }
 
   @Override
-  public Optional<PasswordResetDbo> findByToken(PasswordResetToken token) {
+  public Optional<PasswordResetDbo> findByToken(final PasswordResetToken token) {
     // TODO
     return Optional.empty();
   }
 
   @Override
-  public boolean deleteByUserId(UserId userId) {
+  public boolean deleteByUserId(final UserId userId) {
     // TODO
     return true;
   }

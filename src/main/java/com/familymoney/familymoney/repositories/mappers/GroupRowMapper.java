@@ -12,7 +12,7 @@ import org.springframework.jdbc.core.RowMapper;
 public final class GroupRowMapper implements RowMapper<GroupDbo> {
 
   @Override
-  public GroupDbo mapRow(ResultSet rs, int rowNum) throws SQLException {
+  public GroupDbo mapRow(ResultSet rs, final int rowNum) throws SQLException {
     return GroupDbo.builder()
         .id(GroupId.fromString(rs.getString("id")))
         .name(GroupName.fromString(rs.getString("name")))

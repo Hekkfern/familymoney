@@ -53,8 +53,11 @@ CREATE TABLE transactions
     currency_code VARCHAR(3)               NOT NULL CHECK (currency_code ~ '^[A-Z]{3}$'),
     lender        UUID                     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     borrower      UUID                     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    done_at       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     created_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+
+    CONSTRAINT chk_transactions_lender_borrower_not_equal CHECK (lender <> borrower)
 );
 
 SELECT trigger_updated_at('transactions');

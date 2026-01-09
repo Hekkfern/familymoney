@@ -11,7 +11,7 @@ import org.springframework.jdbc.core.RowMapper;
 public final class PasswordResetRowMapper implements RowMapper<PasswordResetDbo> {
 
   @Override
-  public PasswordResetDbo mapRow(ResultSet rs, int rowNum) throws SQLException {
+  public PasswordResetDbo mapRow(ResultSet rs, final int rowNum) throws SQLException {
     return PasswordResetDbo.builder()
         .id(UUID.fromString(rs.getString("id")))
         .userId(UserId.fromString(rs.getString("user_id")))

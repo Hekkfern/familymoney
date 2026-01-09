@@ -15,5 +15,6 @@ public record TransactionDbo(
     Money amount,
     UserId lender,
     UserId borrower,
+    Instant doneAt,
     Instant createdAt,
     Instant updatedAt) {}

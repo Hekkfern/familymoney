@@ -22,7 +22,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
   private final JdbcClient jdbcClient;
 
   @Override
-  public Optional<RefreshTokenDbo> create(UserId userId, RefreshToken token, UUID family) {
+  public Optional<RefreshTokenDbo> create(final UserId userId, final RefreshToken token, final UUID family) {
     val sql =
         """
         INSERT INTO refresh_tokens (user_id, token, family)
@@ -39,7 +39,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
   }
 
   @Override
-  public Optional<RefreshTokenDbo> findByToken(RefreshToken token) {
+  public Optional<RefreshTokenDbo> findByToken(final RefreshToken token) {
     val sql =
         """
         SELECT id, user_id, token, created_at, expires_at, is_used, used_at, family
@@ -54,7 +54,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
   }
 
   @Override
-  public boolean updateByToken(RefreshToken token, UpdateRefreshTokenDbo data) {
+  public boolean updateByToken(final RefreshToken token, final UpdateRefreshTokenDbo data) {
     val sql =
         """
         UPDATE users
@@ -77,7 +77,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
   }
 
   @Override
-  public boolean updateByFamily(UUID family, UpdateRefreshTokenDbo data) {
+  public boolean updateByFamily(final UUID family, final UpdateRefreshTokenDbo data) {
     val sql =
         """
         UPDATE users
@@ -100,7 +100,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
   }
 
   @Override
-  public boolean updateByUserId(UserId userId, UpdateRefreshTokenDbo data) {
+  public boolean updateByUserId(final UserId userId, final UpdateRefreshTokenDbo data) {
     val sql =
         """
         UPDATE users
@@ -123,7 +123,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
   }
 
   @Override
-  public void deleteOlderThan(Duration cutoff) {
+  public void deleteOlderThan(final Duration cutoff) {
     val sql =
         """
         DELETE FROM refresh_tokens

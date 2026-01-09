@@ -4,9 +4,9 @@ import static org.mockito.Mockito.when;
 
 import com.familymoney.familymoney.config.SecurityConfig;
 import com.familymoney.familymoney.controllers.UserAdminController;
-import com.familymoney.familymoney.controllers.mappers.GetMyUserResponseMapper;
-import com.familymoney.familymoney.controllers.mappers.GetUserResponseMapper;
-import com.familymoney.familymoney.controllers.mappers.UpdateUserRequestMapper;
+import com.familymoney.familymoney.controllers.mappers.user.GetMyUserResponseMapper;
+import com.familymoney.familymoney.controllers.mappers.user.GetUserResponseMapper;
+import com.familymoney.familymoney.controllers.mappers.user.UpdateUserRequestMapper;
 import com.familymoney.familymoney.properties.AppProperties;
 import com.familymoney.familymoney.properties.JwtProperties;
 import com.familymoney.familymoney.security.JwtUtils;

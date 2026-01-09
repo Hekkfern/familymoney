@@ -25,7 +25,10 @@ public class GroupRepository implements IGroupRepository {
 
   @Override
   public Optional<GroupDbo> create(
-      GroupName name, String description, CurrencyUnit currency, UserId owner) {
+      final GroupName name,
+      final String description,
+      final CurrencyUnit currency,
+      final UserId owner) {
     val sql =
         """
         INSERT INTO groups (name, description, currency_code, created_by)
@@ -43,7 +46,7 @@ public class GroupRepository implements IGroupRepository {
   }
 
   @Override
-  public boolean updateById(GroupId id, UpdateGroupDbo data) {
+  public boolean updateById(final GroupId id, final UpdateGroupDbo data) {
     val sql =
         """
         UPDATE groups
@@ -62,7 +65,7 @@ public class GroupRepository implements IGroupRepository {
   }
 
   @Override
-  public boolean deleteById(GroupId id) {
+  public boolean deleteById(final GroupId id) {
     val sql =
         """
         DELETE FROM groups
@@ -73,7 +76,7 @@ public class GroupRepository implements IGroupRepository {
   }
 
   @Override
-  public Page<GroupDbo> findAllByUserId(UserId userId, Pageable pageable) {
+  public Page<GroupDbo> findAllByUserId(final UserId userId, final Pageable pageable) {
     val rowCountSql =
         """
         SELECT COUNT(1)
@@ -103,7 +106,7 @@ public class GroupRepository implements IGroupRepository {
   }
 
   @Override
-  public Optional<GroupDbo> findById(GroupId id) {
+  public Optional<GroupDbo> findById(final GroupId id) {
     val sql =
         """
         SELECT id, name, description, currency_code, created_by, created_at, updated_at
@@ -114,7 +117,7 @@ public class GroupRepository implements IGroupRepository {
   }
 
   @Override
-  public List<UserId> findUserIdsByGroupId(GroupId id) {
+  public List<UserId> findUserIdsByGroupId(final GroupId id) {
     val sql =
         """
         SELECT user_id
@@ -127,7 +130,7 @@ public class GroupRepository implements IGroupRepository {
   }
 
   @Override
-  public boolean isUserInGroup(UserId userId, GroupId groupId) {
+  public boolean isUserInGroup(final UserId userId, final GroupId groupId) {
     val sql =
         """
         SELECT COUNT(1)

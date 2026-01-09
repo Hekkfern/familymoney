@@ -5,6 +5,7 @@ import com.familymoney.familymoney.repositories.dbos.UpdateTransactionDbo;
 import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.TransactionId;
 import com.familymoney.familymoney.types.UserId;
+import java.time.Instant;
 import java.util.Optional;
 import org.javamoney.moneta.Money;
 import org.springframework.data.domain.Page;
@@ -13,7 +14,12 @@ import org.springframework.data.domain.Pageable;
 public interface ITransactionRepository {
 
   Optional<TransactionDbo> create(
-      String description, GroupId groupId, Money amount, UserId lender, UserId borrower);
+      String description,
+      GroupId groupId,
+      Money amount,
+      UserId lender,
+      UserId borrower,
+      Instant doneAt);
 
   boolean updateById(TransactionId id, UpdateTransactionDbo data);
 

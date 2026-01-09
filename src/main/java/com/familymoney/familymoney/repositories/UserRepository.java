@@ -24,7 +24,8 @@ public class UserRepository implements IUserRepository {
   private final JdbcClient jdbcClient;
 
   @Override
-  public Optional<UserDbo> create(UserName username, Email email, String passwordHash) {
+  public Optional<UserDbo> create(
+      final UserName username, final Email email, final String passwordHash) {
     val sql =
         """
         INSERT INTO users (username, email, hashed_password)
@@ -41,7 +42,7 @@ public class UserRepository implements IUserRepository {
   }
 
   @Override
-  public Optional<UserDbo> findById(UserId id) {
+  public Optional<UserDbo> findById(final UserId id) {
     val sql =
         """
         SELECT id, username, email, hashed_password, created_at, updated_at, is_email_verified, is_enabled
@@ -52,7 +53,7 @@ public class UserRepository implements IUserRepository {
   }
 
   @Override
-  public Optional<UserDbo> findByEmail(Email email) {
+  public Optional<UserDbo> findByEmail(final Email email) {
     val sql =
         """
         SELECT id, username, email, hashed_password, created_at, updated_at, is_email_verified, is_enabled
@@ -63,7 +64,7 @@ public class UserRepository implements IUserRepository {
   }
 
   @Override
-  public Optional<UserDbo> findByUsername(UserName username) {
+  public Optional<UserDbo> findByUsername(final UserName username) {
     val sql =
         """
         SELECT id, username, email, hashed_password, created_at, updated_at, is_email_verified, is_enabled
@@ -78,7 +79,7 @@ public class UserRepository implements IUserRepository {
   }
 
   @Override
-  public boolean existsByEmailOrUsername(Email email, UserName username) {
+  public boolean existsByEmailOrUsername(final Email email, final UserName username) {
     val sql =
         """
         SELECT COUNT(*)
@@ -96,7 +97,7 @@ public class UserRepository implements IUserRepository {
   }
 
   @Override
-  public boolean updateById(UserId id, UpdateUserDbo data) {
+  public boolean updateById(final UserId id, final UpdateUserDbo data) {
     val sql =
         """
         UPDATE users
@@ -125,7 +126,7 @@ public class UserRepository implements IUserRepository {
   }
 
   @Override
-  public boolean deleteById(UserId id) {
+  public boolean deleteById(final UserId id) {
     val sql =
         """
         DELETE FROM users
@@ -136,7 +137,7 @@ public class UserRepository implements IUserRepository {
   }
 
   @Override
-  public void deleteByIsUnverifiedAndOlderThan(Duration cutoff) {
+  public void deleteByIsUnverifiedAndOlderThan(final Duration cutoff) {
     val sql =
         """
         DELETE FROM users
@@ -148,7 +149,7 @@ public class UserRepository implements IUserRepository {
 
   @Transactional
   @Override
-  public Page<UserDbo> findAll(Pageable pageable) {
+  public Page<UserDbo> findAll(final Pageable pageable) {
     val rowCountSql =
         """
           SELECT COUNT(1)

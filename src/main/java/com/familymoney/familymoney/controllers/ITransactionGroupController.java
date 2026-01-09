@@ -1,6 +1,6 @@
 package com.familymoney.familymoney.controllers;
 
-import com.familymoney.familymoney.controllers.dtos.group.*;
+import com.familymoney.familymoney.controllers.dtos.grouptransaction.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
@@ -23,35 +23,35 @@ public interface ITransactionGroupController {
   void updateGroupInfo(
       @PathVariable @NotNull UUID groupId, @RequestBody @Valid UpdateGroupRequestDto request);
 
-  @GetMapping(path = "{groupId}/users/share", version = "1")
+  @GetMapping(path = "{groupId}/share", version = "1")
   GetInvitationTokenResponseDto getInvitationToken(@PathVariable @NotNull UUID groupId);
 
-  @PostMapping(path = "{groupId}/users/access", version = "1")
-  void enterToGroup(
-      @PathVariable @NotNull UUID groupId, @RequestBody @Valid EnterGroupRequestDto request);
+  @PostMapping(path = "enter", version = "1")
+  void enterToGroup(@RequestBody @Valid EnterGroupRequestDto request);
 
   @GetMapping(path = "{groupId}/users", version = "1")
   GetUsersInGroupResponseDto getUsersInGroup(@PathVariable @NotNull UUID groupId);
 
   @DeleteMapping(path = "{groupId}/users", version = "1")
-  GetUsersInGroupResponseDto getUsersInGroup(
+  void removeUserInGroup(
       @PathVariable @NotNull UUID groupId, @RequestBody @Valid RemoveUserRequestDto request);
 
   @GetMapping(path = "{groupId}/balances", version = "1")
   GetGroupBalancesResponseDto getGroupBalances(@PathVariable @NotNull UUID groupId);
 
   @GetMapping(path = "{groupId}/transactions", version = "1")
-  GetTransactionsResponseDto getTransactions(
+  GetTransactionsResponseDto getGroupTransactions(
       @PathVariable @NotNull UUID groupId, Pageable pageable);
 
   @PostMapping(path = "{groupId}/transactions", version = "1")
-  void createTransaction(@PathVariable @NotNull UUID groupId);
+  void createTransaction(
+      @PathVariable @NotNull UUID groupId, @RequestBody @Valid CreateTransactionRequestDto request);
 
   @PatchMapping(path = "{groupId}/transactions/{transactionId}", version = "1")
   void updateTransaction(
       @PathVariable @NotNull UUID groupId,
       @PathVariable @NotNull UUID transactionId,
-      UpdateTransactionRequestDto request);
+      @RequestBody @Valid UpdateTransactionRequestDto request);
 
   @DeleteMapping(path = "{groupId}/transactions/{transactionId}", version = "1")
   void deleteTransaction(

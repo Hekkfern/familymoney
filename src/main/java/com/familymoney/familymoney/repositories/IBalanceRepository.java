@@ -15,7 +15,7 @@ public interface IBalanceRepository {
 
   List<BalanceDbo> findByUserAndGroup(UserId userId, GroupId groupId);
 
-  boolean updateById(BalanceId id, UpdateBalanceDbo data);
+  boolean updateById(final BalanceId id, UpdateBalanceDbo data);
 
   Optional<BalanceDbo> findById(BalanceId id);
 }

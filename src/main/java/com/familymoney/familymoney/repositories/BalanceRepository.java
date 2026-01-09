@@ -21,7 +21,8 @@ public class BalanceRepository implements IBalanceRepository {
   private final JdbcClient jdbcClient;
 
   @Override
-  public Optional<BalanceDbo> create(GroupId groupId, Money amount, UserId user1, UserId user2) {
+  public Optional<BalanceDbo> create(
+      final GroupId groupId, final Money amount, final UserId user1, final UserId user2) {
     val sql =
         """
         INSERT INTO balances (group_id, amount, currency_code, user_id_1, user_id_2)
@@ -40,7 +41,7 @@ public class BalanceRepository implements IBalanceRepository {
   }
 
   @Override
-  public List<BalanceDbo> findByUserAndGroup(UserId userId, GroupId groupId) {
+  public List<BalanceDbo> findByUserAndGroup(final UserId userId, final GroupId groupId) {
     val sql =
         """
         SELECT id, group_id, amount, currency_code, user_id_1, user_id_2
@@ -56,7 +57,7 @@ public class BalanceRepository implements IBalanceRepository {
   }
 
   @Override
-  public boolean updateById(BalanceId id, UpdateBalanceDbo data) {
+  public boolean updateById(final BalanceId id, final UpdateBalanceDbo data) {
     val sql =
         """
         UPDATE balances
@@ -82,7 +83,7 @@ public class BalanceRepository implements IBalanceRepository {
   }
 
   @Override
-  public Optional<BalanceDbo> findById(BalanceId id) {
+  public Optional<BalanceDbo> findById(final BalanceId id) {
     val sql =
         """
         SELECT id, group_id, amount, currency_code, user_id_1, user_id_2

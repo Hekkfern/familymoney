@@ -13,7 +13,7 @@ import org.springframework.jdbc.core.RowMapper;
 public final class TransactionRowMapper implements RowMapper<TransactionDbo> {
 
   @Override
-  public TransactionDbo mapRow(ResultSet rs, int rowNum) throws SQLException {
+  public TransactionDbo mapRow(ResultSet rs, final int rowNum) throws SQLException {
     return TransactionDbo.builder()
         .id(TransactionId.fromString(rs.getString("id")))
         .description(rs.getString("username"))
@@ -23,6 +23,7 @@ public final class TransactionRowMapper implements RowMapper<TransactionDbo> {
                 rs.getBigDecimal("amount"), Monetary.getCurrency(rs.getString("currency_code"))))
         .lender(UserId.fromString(rs.getString("lender")))
         .borrower(UserId.fromString(rs.getString("borrower")))
+        .doneAt(rs.getTimestamp("done_at").toInstant())
         .createdAt(rs.getTimestamp("created_at").toInstant())
         .updatedAt(rs.getTimestamp("updated_at").toInstant())
         .build();

@@ -15,7 +15,7 @@ public class RoleRepository implements IRoleRepository {
   private final JdbcClient jdbcClient;
 
   @Override
-  public Optional<Role> getRoleByUserId(UserId userId) {
+  public Optional<Role> getRoleByUserId(final UserId userId) {
     var sql =
         """
         SELECT r.name
@@ -28,7 +28,7 @@ public class RoleRepository implements IRoleRepository {
   }
 
   @Override
-  public boolean setRoleForUserId(UserId userId, Role role) {
+  public boolean setRoleForUserId(final UserId userId, final Role role) {
     var sql =
         """
         WITH r AS (
@@ -39,7 +39,7 @@ public class RoleRepository implements IRoleRepository {
         ON CONFLICT (user_id) DO UPDATE
             SET role_id = EXCLUDED.role_id;
         """;
-    int rowsAffected =
+    val rowsAffected =
         jdbcClient.sql(sql).param("userId", userId.value()).param("role", role.toString()).update();
     return rowsAffected > 0;
   }

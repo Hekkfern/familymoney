@@ -11,7 +11,7 @@ import org.springframework.jdbc.core.RowMapper;
 public final class UserRowMapper implements RowMapper<UserDbo> {
 
   @Override
-  public UserDbo mapRow(ResultSet rs, int rowNum) throws SQLException {
+  public UserDbo mapRow(ResultSet rs, final int rowNum) throws SQLException {
     return UserDbo.builder()
         .id(UserId.fromString(rs.getString("id")))
         .username(UserName.fromString(rs.getString("username")))

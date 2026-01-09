@@ -5,8 +5,8 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import com.familymoney.familymoney.controllers.AuthController;
-import com.familymoney.familymoney.controllers.mappers.LoginResponseMapper;
-import com.familymoney.familymoney.controllers.mappers.RefreshResponseMapper;
+import com.familymoney.familymoney.controllers.mappers.auth.LoginResponseMapper;
+import com.familymoney.familymoney.controllers.mappers.auth.RefreshResponseMapper;
 import com.familymoney.familymoney.security.JwtUtils;
 import com.familymoney.familymoney.services.IAuthService;
 import com.familymoney.familymoney.services.IUserService;

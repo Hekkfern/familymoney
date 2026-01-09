@@ -1,8 +1,8 @@
 package com.familymoney.familymoney.controllers;
 
-import com.familymoney.familymoney.controllers.dtos.admin.GetUserResponseDto;
-import com.familymoney.familymoney.controllers.dtos.admin.GetUserRoleResponseDto;
-import com.familymoney.familymoney.controllers.dtos.admin.GetUsersResponseDto;
+import com.familymoney.familymoney.controllers.dtos.user.GetUserResponseDto;
+import com.familymoney.familymoney.controllers.dtos.user.GetUserRoleResponseDto;
+import com.familymoney.familymoney.controllers.dtos.user.GetUsersResponseDto;
 import com.familymoney.familymoney.controllers.dtos.user.UpdateUserRequestDto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
