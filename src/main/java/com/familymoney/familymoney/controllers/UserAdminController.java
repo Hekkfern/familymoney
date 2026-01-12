@@ -37,8 +37,9 @@ public class UserAdminController implements IUserAdminController {
   @Override
   public GetUsersResponseDto getUsersInfo(Pageable pageable) {
     val userDataPages = userService.getUsers(pageable);
-    return new GetUsersResponseDto(
-        userDataPages.getContent().stream().map(getUserResponseMapper::toDto).toList());
+    return GetUsersResponseDto.builder()
+        .users(userDataPages.getContent().stream().map(getUserResponseMapper::toDto).toList())
+        .build();
   }
 
   @Override

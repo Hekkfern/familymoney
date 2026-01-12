@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-public class TransactionGroupController implements ITransactionGroupController {
+public class GroupController implements IGroupController {
 
   private final ITransactionGroupService transactionGroupService;
   private final CreateGroupResponseMapper createGroupResponseMapper;
@@ -23,8 +23,6 @@ public class TransactionGroupController implements ITransactionGroupController {
   private final GetInvitationTokenResponseMapper getInvitationTokenResponseMapper;
   private final GetUsersInGroupResponseMapper getUsersInGroupResponseMapper;
   private final GetGroupBalancesResponseMapper getGroupBalancesResponseMapper;
-  private final GetGroupTransactionsResponseMapper getGroupTransactionsResponseMapper;
-  private final UpdateTransactionRequestMapper updateTransactionRequestMapper;
 
   @Override
   public CreateGroupResponseDto createGroup(CreateGroupRequestDto request) {
@@ -41,7 +39,19 @@ public class TransactionGroupController implements ITransactionGroupController {
     return createGroupResponseMapper.toDto(groupId);
   }
 
-  @Override
+    @Override
+    public GetGroupsResponseDto getGroupsOfUser(Pageable pageable) {
+        // Get user ID from security context (validated)
+        val user = AuthenticationUtils.getUserIdFromSecurityContext();
+        // Get groups of user
+        val groupPages = transactionGroupService.getGroups(user, pageable);
+        // Generate response
+        return GetGroupsResponseDto.builder()
+                .groups(groupPages.getContent().stream().map(getGroupResponseMapper::toDto).toList())
+                .build();
+    }
+
+    @Override
   public void deleteGroup(UUID groupId) {
     // Get user ID from security context (validated)
     val user = AuthenticationUtils.getUserIdFromSecurityContext();
@@ -114,50 +124,5 @@ public class TransactionGroupController implements ITransactionGroupController {
     val balances = transactionGroupService.getGroupBalances(GroupId.fromUuid(groupId), user);
     // Generate response
     return getGroupBalancesResponseMapper.toDto(balances);
-  }
-
-  @Override
-  public GetTransactionsResponseDto getGroupTransactions(UUID groupId, Pageable pageable) {
-    // Get user ID from security context (validated)
-    val user = AuthenticationUtils.getUserIdFromSecurityContext();
-    // Get balances
-    val transactions =
-        transactionGroupService.getGroupTransactions(GroupId.fromUuid(groupId), user);
-    // Generate response
-    return getGroupTransactionsResponseMapper.toDto(transactions);
-  }
-
-  @Override
-  public void createTransaction(UUID groupId, CreateTransactionRequestDto request) {
-    // Get user ID from security context (validated)
-    val user = AuthenticationUtils.getUserIdFromSecurityContext();
-    // Create transaction
-    transactionGroupService.createTransactionInGroup(
-        GroupId.fromUuid(groupId),
-        user,
-        request.description(),
-        request.from(),
-        request.to(),
-        request.amount(),
-        request.doneAt());
-  }
-
-  @Override
-  public void updateTransaction(
-      UUID groupId, UUID transactionId, UpdateTransactionRequestDto request) {
-    // Get user ID from security context (validated)
-    val user = AuthenticationUtils.getUserIdFromSecurityContext();
-    // Update transaction
-    transactionGroupService.updateTransactionInGroup(
-        GroupId.fromUuid(groupId), user, updateTransactionRequestMapper.fromDto(request));
-  }
-
-  @Override
-  public void deleteTransaction(UUID groupId, UUID transactionId) {
-    // Get user ID from security context (validated)
-    val user = AuthenticationUtils.getUserIdFromSecurityContext();
-    // Delete transaction
-    transactionGroupService.deleteTransactionInGroup(
-        GroupId.fromUuid(groupId), user.id(), TransactionId.fromUuid(transactionId));
   }
 }
