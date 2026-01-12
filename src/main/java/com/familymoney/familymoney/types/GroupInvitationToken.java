@@ -1,6 +1,6 @@
 package com.familymoney.familymoney.types;
 
-import com.familymoney.familymoney.utils.RandomStringHelper;
+import com.familymoney.familymoney.utils.RandomUtil;
 
 public record GroupInvitationToken(String value) {
 
@@ -11,7 +11,7 @@ public record GroupInvitationToken(String value) {
   }
 
   public static GroupInvitationToken generate() {
-    return new GroupInvitationToken(RandomStringHelper.generateRandomString(LENGTH));
+    return new GroupInvitationToken(RandomUtil.generateRandomString(LENGTH));
   }
 
   @Override

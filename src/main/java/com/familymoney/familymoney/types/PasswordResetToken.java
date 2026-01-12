@@ -1,6 +1,6 @@
 package com.familymoney.familymoney.types;
 
-import com.familymoney.familymoney.utils.RandomStringHelper;
+import com.familymoney.familymoney.utils.RandomUtil;
 
 public record PasswordResetToken(String value) {
 
@@ -11,7 +11,7 @@ public record PasswordResetToken(String value) {
   }
 
   public static PasswordResetToken generate() {
-    return new PasswordResetToken(RandomStringHelper.generateRandomString(LENGTH));
+    return new PasswordResetToken(RandomUtil.generateRandomString(LENGTH));
   }
 
   @Override

@@ -1,0 +1,19 @@
+package com.familymoney.familymoney.utils;
+
+import java.security.SecureRandom;
+
+public class RandomUtil {
+
+  private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+  private static final String ALPHANUMERIC =
+      "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+  public static String generateRandomString(final int length) {
+    StringBuilder sb = new StringBuilder(length);
+    for (int i = 0; i < length; i++) {
+      int idx = SECURE_RANDOM.nextInt(ALPHANUMERIC.length());
+      sb.append(ALPHANUMERIC.charAt(idx));
+    }
+    return sb.toString();
+  }
+}

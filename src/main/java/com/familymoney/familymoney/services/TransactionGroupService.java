@@ -9,7 +9,9 @@ import com.familymoney.familymoney.services.data.GetGroupData;
 import com.familymoney.familymoney.services.mappers.GetGroupDataMapper;
 import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.GroupName;
+import com.familymoney.familymoney.types.Role;
 import com.familymoney.familymoney.types.UserId;
+import com.familymoney.familymoney.utils.AuthorizedUser;
 import javax.money.CurrencyUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +28,10 @@ public class TransactionGroupService implements ITransactionGroupService {
   private final ITransactionRepository transactionRepository;
   private final GetGroupDataMapper getGroupDataMapper;
 
+  private boolean isUserAllowedToOperateGroup(AuthorizedUser user, GroupId groupId) {
+    return user.role().equals(Role.ADMIN) && isUserInGroup(user.id(), groupId);
+  }
+
   @Override
   public GroupId createGroup(
       GroupName name, String description, CurrencyUnit currency, UserId createdBy) {
@@ -38,7 +44,7 @@ public class TransactionGroupService implements ITransactionGroupService {
   }
 
   @Override
-  public void deleteGroupOwnedBy(GroupId groupId, UserId userId) {
+  public void deleteGroup(GroupId groupId, AuthorizedUser userId) {
     // Check if the user is a member of the group
     if (!groupRepository.isUserInGroup(userId, groupId)) {
       throw new GroupNotOwnedByUserException(

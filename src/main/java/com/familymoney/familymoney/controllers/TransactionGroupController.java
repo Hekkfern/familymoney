@@ -24,18 +24,19 @@ public class TransactionGroupController implements ITransactionGroupController {
   private final GetUsersInGroupResponseMapper getUsersInGroupResponseMapper;
   private final GetGroupBalancesResponseMapper getGroupBalancesResponseMapper;
   private final GetGroupTransactionsResponseMapper getGroupTransactionsResponseMapper;
+  private final UpdateTransactionRequestMapper updateTransactionRequestMapper;
 
   @Override
   public CreateGroupResponseDto createGroup(CreateGroupRequestDto request) {
     // Get user ID from security context (validated)
-    val userId = AuthenticationUtils.getUserIdFromSecurityContext();
+    val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Create group
     val groupId =
         transactionGroupService.createGroup(
             GroupName.fromString(request.name()),
             request.description().trim(),
             Monetary.getCurrency(request.currencyCode()),
-            userId);
+            user.id());
     // Generate response
     return createGroupResponseMapper.toDto(groupId);
   }
@@ -43,17 +44,17 @@ public class TransactionGroupController implements ITransactionGroupController {
   @Override
   public void deleteGroup(UUID groupId) {
     // Get user ID from security context (validated)
-    val userId = AuthenticationUtils.getUserIdFromSecurityContext();
+    val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Delete group
-    transactionGroupService.deleteGroupOwnedBy(GroupId.fromUuid(groupId), userId);
+    transactionGroupService.deleteGroup(GroupId.fromUuid(groupId), user);
   }
 
   @Override
   public GetGroupResponseDto getGroupInfo(UUID groupId) {
     // Get user ID from security context (validated)
-    val userId = AuthenticationUtils.getUserIdFromSecurityContext();
+    val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Get group info
-    val groupData = transactionGroupService.getGroupInfoOwnedBy(GroupId.fromUuid(groupId), userId);
+    val groupData = transactionGroupService.getGroupInfo(GroupId.fromUuid(groupId), user);
     // Generate response
     return getGroupResponseMapper.toDto(groupData);
   }
@@ -61,19 +62,18 @@ public class TransactionGroupController implements ITransactionGroupController {
   @Override
   public void updateGroupInfo(UUID groupId, UpdateGroupRequestDto request) {
     // Get user ID from security context (validated)
-    val userId = AuthenticationUtils.getUserIdFromSecurityContext();
+    val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Update group info
-    transactionGroupService.updateGroupInfoOwnedBy(
-        GroupId.fromUuid(groupId), userId, updateGroupRequestMapper.fromDto(request));
+    transactionGroupService.updateGroupInfo(
+        GroupId.fromUuid(groupId), user, updateGroupRequestMapper.fromDto(request));
   }
 
   @Override
   public GetInvitationTokenResponseDto getInvitationToken(UUID groupId) {
     // Get user ID from security context (validated)
-    val userId = AuthenticationUtils.getUserIdFromSecurityContext();
+    val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Get invitation token
-    val token =
-        transactionGroupService.getInvitationTokenOwnedBy(GroupId.fromUuid(groupId), userId);
+    val token = transactionGroupService.getInvitationToken(GroupId.fromUuid(groupId), user);
     // Generate response
     return getInvitationTokenResponseMapper.toDto(token);
   }
@@ -81,18 +81,18 @@ public class TransactionGroupController implements ITransactionGroupController {
   @Override
   public void enterToGroup(EnterGroupRequestDto request) {
     // Get user ID from security context (validated)
-    val userId = AuthenticationUtils.getUserIdFromSecurityContext();
+    val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Enter to group
     transactionGroupService.enterToGroupWithToken(
-        GroupInvitationToken.fromString(request.token()), userId);
+        GroupInvitationToken.fromString(request.token()), user);
   }
 
   @Override
   public GetUsersInGroupResponseDto getUsersInGroup(UUID groupId) {
     // Get user ID from security context (validated)
-    val userId = AuthenticationUtils.getUserIdFromSecurityContext();
+    val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Get users in group
-    val users = transactionGroupService.getUsersInGroupOwnedBy(GroupId.fromUuid(groupId), userId);
+    val users = transactionGroupService.getUsersInGroup(GroupId.fromUuid(groupId), user);
     // Generate response
     return getUsersInGroupResponseMapper.toDto(users);
   }
@@ -100,18 +100,18 @@ public class TransactionGroupController implements ITransactionGroupController {
   @Override
   public void removeUserInGroup(UUID groupId, RemoveUserRequestDto request) {
     // Get user ID from security context (validated)
-    val userId = AuthenticationUtils.getUserIdFromSecurityContext();
+    val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Remove user from group
     transactionGroupService.removeUserFromGroup(
-        GroupId.fromUuid(groupId), userId, UserId.fromUuid(request.userId()));
+        GroupId.fromUuid(groupId), user, UserId.fromUuid(request.userId()));
   }
 
   @Override
   public GetGroupBalancesResponseDto getGroupBalances(UUID groupId) {
     // Get user ID from security context (validated)
-    val userId = AuthenticationUtils.getUserIdFromSecurityContext();
+    val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Get balances
-    val balances = transactionGroupService.getGroupBalances(GroupId.fromUuid(groupId), userId);
+    val balances = transactionGroupService.getGroupBalances(GroupId.fromUuid(groupId), user);
     // Generate response
     return getGroupBalancesResponseMapper.toDto(balances);
   }
@@ -119,10 +119,10 @@ public class TransactionGroupController implements ITransactionGroupController {
   @Override
   public GetTransactionsResponseDto getGroupTransactions(UUID groupId, Pageable pageable) {
     // Get user ID from security context (validated)
-    val userId = AuthenticationUtils.getUserIdFromSecurityContext();
+    val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Get balances
     val transactions =
-        transactionGroupService.getGroupTransactions(GroupId.fromUuid(groupId), userId);
+        transactionGroupService.getGroupTransactions(GroupId.fromUuid(groupId), user);
     // Generate response
     return getGroupTransactionsResponseMapper.toDto(transactions);
   }
@@ -130,11 +130,11 @@ public class TransactionGroupController implements ITransactionGroupController {
   @Override
   public void createTransaction(UUID groupId, CreateTransactionRequestDto request) {
     // Get user ID from security context (validated)
-    val userId = AuthenticationUtils.getUserIdFromSecurityContext();
+    val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Create transaction
     transactionGroupService.createTransactionInGroup(
         GroupId.fromUuid(groupId),
-        userId,
+        user,
         request.description(),
         request.from(),
         request.to(),
@@ -146,20 +146,18 @@ public class TransactionGroupController implements ITransactionGroupController {
   public void updateTransaction(
       UUID groupId, UUID transactionId, UpdateTransactionRequestDto request) {
     // Get user ID from security context (validated)
-    val userId = AuthenticationUtils.getUserIdFromSecurityContext();
+    val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Update transaction
     transactionGroupService.updateTransactionInGroup(
-        GroupId.fromUuid(groupId),
-        userId,
-        data);
+        GroupId.fromUuid(groupId), user, updateTransactionRequestMapper.fromDto(request));
   }
 
   @Override
   public void deleteTransaction(UUID groupId, UUID transactionId) {
     // Get user ID from security context (validated)
-    val userId = AuthenticationUtils.getUserIdFromSecurityContext();
+    val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Delete transaction
     transactionGroupService.deleteTransactionInGroup(
-        GroupId.fromUuid(groupId), userId, TransactionId.fromUuid(transactionId));
+        GroupId.fromUuid(groupId), user.id(), TransactionId.fromUuid(transactionId));
   }
 }

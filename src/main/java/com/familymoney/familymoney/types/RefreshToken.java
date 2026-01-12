@@ -1,6 +1,6 @@
 package com.familymoney.familymoney.types;
 
-import com.familymoney.familymoney.utils.RandomStringHelper;
+import com.familymoney.familymoney.utils.RandomUtil;
 
 public record RefreshToken(String value) {
 
@@ -11,7 +11,7 @@ public record RefreshToken(String value) {
   }
 
   public static RefreshToken generate() {
-    return new RefreshToken(RandomStringHelper.generateRandomString(LENGTH));
+    return new RefreshToken(RandomUtil.generateRandomString(LENGTH));
   }
 
   @Override

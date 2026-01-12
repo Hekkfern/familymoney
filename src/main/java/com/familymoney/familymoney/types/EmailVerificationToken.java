@@ -1,6 +1,6 @@
 package com.familymoney.familymoney.types;
 
-import com.familymoney.familymoney.utils.RandomStringHelper;
+import com.familymoney.familymoney.utils.RandomUtil;
 
 public record EmailVerificationToken(String value) {
 
@@ -11,7 +11,7 @@ public record EmailVerificationToken(String value) {
   }
 
   public static EmailVerificationToken generate() {
-    return new EmailVerificationToken(RandomStringHelper.generateRandomString(LENGTH));
+    return new EmailVerificationToken(RandomUtil.generateRandomString(LENGTH));
   }
 
   @Override
