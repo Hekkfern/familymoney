@@ -72,7 +72,7 @@ CREATE TABLE group_invitations
 (
     id         UUID PRIMARY KEY                  DEFAULT uuidv7(),
     group_id   UUID                     NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
-    token      VARCHAR(64)              NOT NULL,
+    token      VARCHAR(255) UNIQUE      NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL
 );

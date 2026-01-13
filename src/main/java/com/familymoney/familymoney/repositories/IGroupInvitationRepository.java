@@ -14,5 +14,7 @@ public interface IGroupInvitationRepository {
 
   Optional<GroupInvitationDbo> findByToken(GroupInvitationToken token);
 
+  boolean deleteByToken(GroupInvitationToken token);
+
   void deleteOlderThan(Duration cutoff);
 }

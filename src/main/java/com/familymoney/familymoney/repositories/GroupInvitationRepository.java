@@ -54,6 +54,17 @@ public class GroupInvitationRepository implements IGroupInvitationRepository {
   }
 
   @Override
+  public boolean deleteByToken(GroupInvitationToken token) {
+    val sql =
+        """
+        DELETE FROM group_invitations
+        WHERE token = :token
+        """;
+    val rowsAffected = jdbcClient.sql(sql).param("token", token.value()).update();
+    return rowsAffected > 0;
+  }
+
+  @Override
   public void deleteOlderThan(final Duration cutoff) {
     val sql =
         """

@@ -2,7 +2,9 @@ package com.familymoney.familymoney.repositories;
 
 import com.familymoney.familymoney.repositories.dbos.GroupDbo;
 import com.familymoney.familymoney.repositories.dbos.UpdateGroupDbo;
+import com.familymoney.familymoney.repositories.dbos.UserGroupDbo;
 import com.familymoney.familymoney.repositories.mappers.GroupRowMapper;
+import com.familymoney.familymoney.repositories.mappers.UserGroupRowMapper;
 import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.GroupName;
 import com.familymoney.familymoney.types.UserId;
@@ -76,7 +78,7 @@ public class GroupRepository implements IGroupRepository {
   }
 
   @Override
-  public Page<GroupDbo> findAllByUserId(final UserId userId, final Pageable pageable) {
+  public Page<GroupDbo> findByUserId(final UserId userId, final Pageable pageable) {
     val rowCountSql =
         """
         SELECT COUNT(1)
@@ -146,5 +148,27 @@ public class GroupRepository implements IGroupRepository {
             .query(Long.class)
             .single();
     return count > 0;
+  }
+
+  @Override
+  public Optional<UserGroupDbo> addUser(UserId userId, GroupId groupId) {
+    val sql =
+        """
+        INSERT INTO user_groups (user_id, group_id)
+        VALUES (:userId, :groupId)
+        RETURNING user_id, group_id, joined_at
+        """;
+    return jdbcClient
+        .sql(sql)
+        .param("userId", userId.value())
+        .param("groupId", groupId.value())
+        .query(new UserGroupRowMapper())
+        .optional();
+  }
+
+  @Override
+  public boolean deleteUser(UserId userId, GroupId groupId) {
+    // TODO
+    return false;
   }
 }

@@ -17,4 +17,10 @@ public class TransactionGroupExceptionHandler extends ResponseEntityExceptionHan
     logger.info(e.getMessage());
     return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "Invalid credentials");
   }
+
+    @ExceptionHandler(GroupInvitationNotFoundException.class)
+    public ProblemDetail handleGroupInvitationNotFoundException(GroupInvitationNotFoundException e) {
+        logger.info(e.getMessage());
+    return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+    }
 }
