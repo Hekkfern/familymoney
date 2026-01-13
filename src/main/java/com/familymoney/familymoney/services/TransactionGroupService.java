@@ -6,16 +6,23 @@ import com.familymoney.familymoney.repositories.IBalanceRepository;
 import com.familymoney.familymoney.repositories.IGroupRepository;
 import com.familymoney.familymoney.repositories.ITransactionRepository;
 import com.familymoney.familymoney.services.data.GetGroupData;
+import com.familymoney.familymoney.services.data.TransactionData;
+import com.familymoney.familymoney.services.data.UpdateGroupData;
+import com.familymoney.familymoney.services.data.UpdateTransactionData;
 import com.familymoney.familymoney.services.mappers.GetGroupDataMapper;
-import com.familymoney.familymoney.types.GroupId;
-import com.familymoney.familymoney.types.GroupName;
-import com.familymoney.familymoney.types.Role;
-import com.familymoney.familymoney.types.UserId;
-import com.familymoney.familymoney.utils.AuthorizedUser;
+import com.familymoney.familymoney.services.mappers.UpdateGroupDataMapper;
+import com.familymoney.familymoney.types.*;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import javax.money.CurrencyUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.javamoney.moneta.Money;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -27,10 +34,7 @@ public class TransactionGroupService implements ITransactionGroupService {
   private final IBalanceRepository balanceRepository;
   private final ITransactionRepository transactionRepository;
   private final GetGroupDataMapper getGroupDataMapper;
-
-  private boolean isUserAllowedToOperateGroup(AuthorizedUser user, GroupId groupId) {
-    return user.role().equals(Role.ADMIN) && isUserInGroup(user.id(), groupId);
-  }
+  private final UpdateGroupDataMapper updateGroupDataMapper;
 
   @Override
   public GroupId createGroup(
@@ -43,24 +47,27 @@ public class TransactionGroupService implements ITransactionGroupService {
     return group.id();
   }
 
-  @Override
-  public void deleteGroup(GroupId groupId, AuthorizedUser userId) {
-    // Check if the user is a member of the group
+  private void checkIfUserIsInGroup(UserId userId, GroupId groupId)
+      throws GroupNotOwnedByUserException {
     if (!groupRepository.isUserInGroup(userId, groupId)) {
+      log.info("User {} is not a member of group {}", userId, groupId);
       throw new GroupNotOwnedByUserException(
           String.format("User %s is not a member of group %s", userId, groupId));
     }
+  }
+
+  @Override
+  public void deleteGroup(GroupId groupId, UserId userId) {
+    // Check if the user is a member of the group
+    checkIfUserIsInGroup(userId, groupId);
     // Delete group
     groupRepository.deleteById(groupId);
   }
 
   @Override
-  public GetGroupData getGroupInfoOwnedBy(GroupId groupId, UserId userId) {
+  public GetGroupData getGroupInfo(GroupId groupId, UserId userId) {
     // Check if the user is a member of the group
-    if (!groupRepository.isUserInGroup(userId, groupId)) {
-      throw new GroupNotOwnedByUserException(
-          String.format("User %s is not a member of group %s", userId, groupId));
-    }
+    checkIfUserIsInGroup(userId, groupId);
     // Get data
     return groupRepository
         .findById(groupId)
@@ -71,7 +78,74 @@ public class TransactionGroupService implements ITransactionGroupService {
   }
 
   @Override
-  public boolean isUserInGroup(UserId userId, GroupId groupId) {
-    return groupRepository.isUserInGroup(userId, groupId);
+  public void updateGroupInfo(GroupId groupId, UserId userId, UpdateGroupData data) {
+    // Check if the user is a member of the group
+    checkIfUserIsInGroup(userId, groupId);
+    // Update data
+    groupRepository.updateById(groupId, updateGroupDataMapper.toDbo(data));
+  }
+
+  @Override
+  public GroupInvitationToken getInvitationToken(GroupId groupId, UserId userId) {
+    // TODO
+    return null;
+  }
+
+  @Override
+  public void enterToGroupWithToken(GroupInvitationToken groupInvitationToken, UserId userId) {
+    // TODO
+
+  }
+
+  @Override
+  public List<UserId> getUsersInGroup(GroupId groupId, UserId userId) {
+    // TODO
+    return List.of();
+  }
+
+  @Override
+  public void removeUserFromGroup(GroupId groupId, UserId userId, UserId userIdToRemove) {
+    // TODO
+
+  }
+
+  @Override
+  public Map<UserId, Money> getGroupBalances(GroupId groupId, UserId userId) {
+    // TODO
+    return Map.of();
+  }
+
+  @Override
+  public List<TransactionData> getGroupTransactions(GroupId groupId, UserId userId) {
+    // TODO
+    return List.of();
+  }
+
+  @Override
+  public void createTransactionInGroup(
+      GroupId groupId,
+      UserId userId,
+      String description,
+      UUID from,
+      UUID to,
+      Money amount,
+      Instant doneAt) {
+    // TODO
+  }
+
+  @Override
+  public void updateTransaction(UserId userId, UpdateTransactionData data) {
+    // TODO
+  }
+
+  @Override
+  public void deleteTransaction(UserId id, TransactionId transactionId) {
+    // TODO
+  }
+
+  @Override
+  public Page<GetGroupData> getGroups(UserId userId, Pageable pageable) {
+    // TODO
+    return null;
   }
 }

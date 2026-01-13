@@ -39,19 +39,19 @@ public class GroupController implements IGroupController {
     return createGroupResponseMapper.toDto(groupId);
   }
 
-    @Override
-    public GetGroupsResponseDto getGroupsOfUser(Pageable pageable) {
-        // Get user ID from security context (validated)
-        val user = AuthenticationUtils.getUserIdFromSecurityContext();
-        // Get groups of user
-        val groupPages = transactionGroupService.getGroups(user, pageable);
-        // Generate response
-        return GetGroupsResponseDto.builder()
-                .groups(groupPages.getContent().stream().map(getGroupResponseMapper::toDto).toList())
-                .build();
-    }
+  @Override
+  public GetGroupsResponseDto getGroupsOfUser(Pageable pageable) {
+    // Get user ID from security context (validated)
+    val user = AuthenticationUtils.getUserIdFromSecurityContext();
+    // Get groups of user
+    val groupPages = transactionGroupService.getGroups(user, pageable);
+    // Generate response
+    return GetGroupsResponseDto.builder()
+        .groups(groupPages.getContent().stream().map(getGroupResponseMapper::toDto).toList())
+        .build();
+  }
 
-    @Override
+  @Override
   public void deleteGroup(UUID groupId) {
     // Get user ID from security context (validated)
     val user = AuthenticationUtils.getUserIdFromSecurityContext();

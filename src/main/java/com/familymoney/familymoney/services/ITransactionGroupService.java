@@ -5,7 +5,6 @@ import com.familymoney.familymoney.services.data.TransactionData;
 import com.familymoney.familymoney.services.data.UpdateGroupData;
 import com.familymoney.familymoney.services.data.UpdateTransactionData;
 import com.familymoney.familymoney.types.*;
-import com.familymoney.familymoney.utils.AuthorizedUser;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -33,40 +32,38 @@ public interface ITransactionGroupService {
    * group, or if the group does not exist
    *
    * @param groupId Identifier of the group to delete
-   * @param user User attempting to delete the group
+   * @param userId Identifier of the user attempting to delete the group
    */
-  void deleteGroup(GroupId groupId, AuthorizedUser user);
+  void deleteGroup(GroupId groupId, UserId userId);
 
-  GetGroupData getGroupInfo(GroupId groupId, AuthorizedUser user);
+  GetGroupData getGroupInfo(GroupId groupId, UserId user);
 
-  boolean isUserInGroup(UserId userId, GroupId groupId);
+  void updateGroupInfo(GroupId groupId, UserId userId, UpdateGroupData data);
 
-  void updateGroupInfo(GroupId groupId, AuthorizedUser user, UpdateGroupData updateGroupData);
+  GroupInvitationToken getInvitationToken(GroupId groupId, UserId userId);
 
-  GroupInvitationToken getInvitationToken(GroupId groupId, AuthorizedUser user);
+  void enterToGroupWithToken(GroupInvitationToken groupInvitationToken, UserId userId);
 
-  void enterToGroupWithToken(GroupInvitationToken groupInvitationToken, AuthorizedUser user);
+  List<UserId> getUsersInGroup(GroupId groupId, UserId userId);
 
-  List<UserId> getUsersInGroup(GroupId groupId, AuthorizedUser user);
+  void removeUserFromGroup(GroupId groupId, UserId userId, UserId userIdToRemove);
 
-  void removeUserFromGroup(GroupId groupId, AuthorizedUser user, UserId userIdToRemove);
+  Map<UserId, Money> getGroupBalances(GroupId groupId, UserId userId);
 
-  Map<UserId, Money> getGroupBalances(GroupId groupId, AuthorizedUser user);
-
-  List<TransactionData> getGroupTransactions(GroupId groupId, AuthorizedUser user);
+  List<TransactionData> getGroupTransactions(GroupId groupId, UserId userId);
 
   void createTransactionInGroup(
       GroupId groupId,
-      AuthorizedUser user,
+      UserId userId,
       String description,
       UUID from,
       UUID to,
       Money amount,
       Instant doneAt);
 
-  void updateTransaction(AuthorizedUser user, UpdateTransactionData data);
+  void updateTransaction(UserId userId, UpdateTransactionData data);
 
   void deleteTransaction(UserId id, TransactionId transactionId);
 
-  Page<GetGroupData> getGroups(AuthorizedUser user, Pageable pageable);
+  Page<GetGroupData> getGroups(UserId userId, Pageable pageable);
 }
