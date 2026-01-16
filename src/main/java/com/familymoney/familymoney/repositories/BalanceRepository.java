@@ -41,6 +41,21 @@ public class BalanceRepository implements IBalanceRepository {
   }
 
   @Override
+  public List<BalanceDbo> findByGroup(GroupId groupId) {
+    val sql =
+        """
+        SELECT id, group_id, amount, currency_code, user_id_1, user_id_2
+        FROM balances
+        WHERE group_id = :groupId
+        """;
+    return jdbcClient
+        .sql(sql)
+        .param("groupId", groupId.value())
+        .query(new BalanceRowMapper())
+        .list();
+  }
+
+  @Override
   public List<BalanceDbo> findByUserAndGroup(final UserId userId, final GroupId groupId) {
     val sql =
         """

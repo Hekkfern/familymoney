@@ -44,7 +44,7 @@ public class GroupController implements IGroupController {
     // Get user ID from security context (validated)
     val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Get groups of user
-    val groupPages = transactionGroupService.getGroups(user, pageable);
+    val groupPages = transactionGroupService.getGroups(user.id(), pageable);
     // Generate response
     return GetGroupsResponseDto.builder()
         .groups(groupPages.getContent().stream().map(getGroupResponseMapper::toDto).toList())
@@ -56,7 +56,7 @@ public class GroupController implements IGroupController {
     // Get user ID from security context (validated)
     val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Delete group
-    transactionGroupService.deleteGroup(GroupId.fromUuid(groupId), user);
+    transactionGroupService.deleteGroup(GroupId.fromUuid(groupId), user.id());
   }
 
   @Override
@@ -64,7 +64,7 @@ public class GroupController implements IGroupController {
     // Get user ID from security context (validated)
     val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Get group info
-    val groupData = transactionGroupService.getGroupInfo(GroupId.fromUuid(groupId), user);
+    val groupData = transactionGroupService.getGroupInfo(GroupId.fromUuid(groupId), user.id());
     // Generate response
     return getGroupResponseMapper.toDto(groupData);
   }
@@ -75,7 +75,7 @@ public class GroupController implements IGroupController {
     val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Update group info
     transactionGroupService.updateGroupInfo(
-        GroupId.fromUuid(groupId), user, updateGroupRequestMapper.fromDto(request));
+        GroupId.fromUuid(groupId), user.id(), updateGroupRequestMapper.fromDto(request));
   }
 
   @Override
@@ -83,7 +83,7 @@ public class GroupController implements IGroupController {
     // Get user ID from security context (validated)
     val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Get invitation token
-    val token = transactionGroupService.getInvitationToken(GroupId.fromUuid(groupId), user);
+    val token = transactionGroupService.getInvitationToken(GroupId.fromUuid(groupId), user.id());
     // Generate response
     return getInvitationTokenResponseMapper.toDto(token);
   }
@@ -94,7 +94,7 @@ public class GroupController implements IGroupController {
     val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Enter to group
     transactionGroupService.enterToGroupWithToken(
-        GroupInvitationToken.fromString(request.token()), user);
+        GroupInvitationToken.fromString(request.token()), user.id());
   }
 
   @Override
@@ -102,7 +102,7 @@ public class GroupController implements IGroupController {
     // Get user ID from security context (validated)
     val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Get users in group
-    val users = transactionGroupService.getUsersInGroup(GroupId.fromUuid(groupId), user);
+    val users = transactionGroupService.getUsersInGroup(GroupId.fromUuid(groupId), user.id());
     // Generate response
     return getUsersInGroupResponseMapper.toDto(users);
   }
@@ -113,7 +113,7 @@ public class GroupController implements IGroupController {
     val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Remove user from group
     transactionGroupService.removeUserFromGroup(
-        GroupId.fromUuid(groupId), user, UserId.fromUuid(request.userId()));
+        GroupId.fromUuid(groupId), user.id(), UserId.fromUuid(request.userId()));
   }
 
   @Override
@@ -121,7 +121,7 @@ public class GroupController implements IGroupController {
     // Get user ID from security context (validated)
     val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Get balances
-    val balances = transactionGroupService.getGroupBalances(GroupId.fromUuid(groupId), user);
+    val balances = transactionGroupService.getAllGroupBalances(GroupId.fromUuid(groupId), user.id());
     // Generate response
     return getGroupBalancesResponseMapper.toDto(balances);
   }

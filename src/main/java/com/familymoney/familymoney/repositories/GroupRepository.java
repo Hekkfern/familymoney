@@ -9,6 +9,7 @@ import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.GroupName;
 import com.familymoney.familymoney.types.UserId;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import javax.money.CurrencyUnit;
 import lombok.RequiredArgsConstructor;
@@ -127,6 +128,7 @@ public class GroupRepository implements IGroupRepository {
         WHERE group_id = :groupId
         """;
     return jdbcClient.sql(sql).param("groupId", id.value()).query(String.class).stream()
+        .filter(Objects::nonNull)
         .map(UserId::fromString)
         .toList();
   }

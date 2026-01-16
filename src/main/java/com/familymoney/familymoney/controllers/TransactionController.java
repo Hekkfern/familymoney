@@ -25,7 +25,7 @@ public class TransactionController implements ITransactionController {
     val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Get balances
     val transactions =
-        transactionGroupService.getGroupTransactions(GroupId.fromUuid(groupId), user);
+        transactionGroupService.getGroupTransactions(GroupId.fromUuid(groupId), user.id(), pageable);
     // Generate response
     return getGroupTransactionsResponseMapper.toDto(transactions);
   }
@@ -37,12 +37,8 @@ public class TransactionController implements ITransactionController {
     // Create transaction
     transactionGroupService.createTransactionInGroup(
         GroupId.fromUuid(groupId),
-        user,
-        request.description(),
-        request.from(),
-        request.to(),
-        request.amount(),
-        request.doneAt());
+            request.description(), request.from(), request.to(), request.amount(), request.doneAt(), user.id()
+    );
   }
 
   @Override
@@ -51,7 +47,7 @@ public class TransactionController implements ITransactionController {
     val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Update transaction
     transactionGroupService.updateTransaction(
-        user, updateTransactionRequestMapper.fromDto(request));
+        user.id(), transactionId, updateTransactionRequestMapper.fromDto(request));
   }
 
   @Override

@@ -13,6 +13,8 @@ public interface IBalanceRepository {
 
   Optional<BalanceDbo> create(GroupId groupId, Money amount, UserId user1, UserId user2);
 
+  List<BalanceDbo> findByGroup(GroupId groupId);
+
   List<BalanceDbo> findByUserAndGroup(UserId userId, GroupId groupId);
 
   boolean updateById(final BalanceId id, UpdateBalanceDbo data);

@@ -3,23 +3,27 @@ package com.familymoney.familymoney.services;
 import com.familymoney.familymoney.exceptions.DatabaseExecutionException;
 import com.familymoney.familymoney.exceptions.GroupInvitationNotFoundException;
 import com.familymoney.familymoney.exceptions.GroupNotOwnedByUserException;
+import com.familymoney.familymoney.exceptions.TransactionNotFoundException;
 import com.familymoney.familymoney.repositories.IBalanceRepository;
 import com.familymoney.familymoney.repositories.IGroupInvitationRepository;
 import com.familymoney.familymoney.repositories.IGroupRepository;
 import com.familymoney.familymoney.repositories.ITransactionRepository;
+import com.familymoney.familymoney.repositories.dbos.BalanceDbo;
 import com.familymoney.familymoney.services.data.GetGroupData;
 import com.familymoney.familymoney.services.data.TransactionData;
 import com.familymoney.familymoney.services.data.UpdateGroupData;
 import com.familymoney.familymoney.services.data.UpdateTransactionData;
 import com.familymoney.familymoney.services.mappers.GetGroupDataMapper;
+import com.familymoney.familymoney.services.mappers.GetTransactionDataMapper;
 import com.familymoney.familymoney.services.mappers.UpdateGroupDataMapper;
+import com.familymoney.familymoney.services.mappers.UpdateTransactionDataMapper;
 import com.familymoney.familymoney.types.*;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+import java.util.stream.Collectors;
 import javax.money.CurrencyUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +46,8 @@ public class TransactionGroupService implements ITransactionGroupService {
   private final IGroupInvitationRepository groupInvitationRepository;
   private final GetGroupDataMapper getGroupDataMapper;
   private final UpdateGroupDataMapper updateGroupDataMapper;
+  private final GetTransactionDataMapper getTransactionDataMapper;
+  private final UpdateTransactionDataMapper updateTransactionDataMapper;
   private final Clock clock;
 
   @Override
@@ -73,6 +79,11 @@ public class TransactionGroupService implements ITransactionGroupService {
   }
 
   @Override
+  public Page<GetGroupData> getGroups(UserId userId, Pageable pageable) {
+    return groupRepository.findByUserId(userId, pageable).map(getGroupDataMapper::fromDbo);
+  }
+
+  @Override
   public GetGroupData getGroupInfo(GroupId groupId, UserId userId) {
     // Check if the user is a member of the group
     checkIfUserIsInGroup(userId, groupId);
@@ -101,11 +112,11 @@ public class TransactionGroupService implements ITransactionGroupService {
     val token = GroupInvitationToken.generate();
 
     val expiresAt = Instant.now(clock).plus(INVITATION_TOKEN_EXPIRY);
-    val invitationDbo =
+    val invitationDb =
         groupInvitationRepository
             .create(groupId, token, expiresAt)
             .orElseThrow(() -> new DatabaseExecutionException("Unable to create invitation token"));
-    return invitationDbo.token();
+    return invitationDb.token();
   }
 
   @Override
@@ -128,53 +139,85 @@ public class TransactionGroupService implements ITransactionGroupService {
 
   @Override
   public List<UserId> getUsersInGroup(GroupId groupId, UserId userId) {
-    // TODO
-    return List.of();
+    // Check if the user is a member of the group
+    checkIfUserIsInGroup(userId, groupId);
+    // Get users in group
+    return groupRepository.findUserIdsByGroupId(groupId);
   }
 
   @Override
   public void removeUserFromGroup(GroupId groupId, UserId userId, UserId userIdToRemove) {
-    // TODO
-
+    // Check if the user is a member of the group
+    checkIfUserIsInGroup(userId, groupId);
+    // Remove user from group
+    groupRepository.deleteUser(userId, groupId);
   }
 
   @Override
-  public Map<UserId, Money> getGroupBalances(GroupId groupId, UserId userId) {
-    // TODO
-    return Map.of();
+  public Map<UserId, Money> getAllGroupBalances(GroupId groupId, UserId userId) {
+    // Check if the user is a member of the group
+    checkIfUserIsInGroup(userId, groupId);
+    // Get balances
+    val balancesDb = balanceRepository.findByGroup(groupId);
+    // Map balances to user money map
+    return balancesDb.stream()
+        .collect(
+            Collectors.toMap(
+                b -> b.user1().equals(userId) ? b.user2() : b.user1(),
+                BalanceDbo::amount,
+                (existing, replacement) -> existing));
   }
 
   @Override
-  public List<TransactionData> getGroupTransactions(GroupId groupId, UserId userId) {
-    // TODO
-    return List.of();
+  public Page<TransactionData> getGroupTransactions(
+      GroupId groupId, UserId userId, Pageable pageable) {
+    // Check if the user is a member of the group
+    checkIfUserIsInGroup(userId, groupId);
+    // Get transactions
+    val transactionsDb = transactionRepository.findAllByGroupId(groupId, pageable);
+    // Generate result
+    return transactionsDb.map(getTransactionDataMapper::fromDbo);
   }
 
   @Override
   public void createTransactionInGroup(
       GroupId groupId,
-      UserId userId,
       String description,
-      UUID from,
-      UUID to,
+      UserId from,
+      UserId to,
       Money amount,
-      Instant doneAt) {
-    // TODO
+      Instant doneAt,
+      UserId createdBy) {
+    // Check if the user is a member of the group
+    checkIfUserIsInGroup(createdBy, groupId);
+    // create transaction
+    transactionRepository.create(description, groupId, amount, from, to, doneAt);
   }
 
   @Override
-  public void updateTransaction(UserId userId, UpdateTransactionData data) {
-    // TODO
+  public void updateTransaction(
+      UserId userId, TransactionId transactionId, UpdateTransactionData data) {
+    // Get transaction
+    var transactionDb =
+        transactionRepository
+            .findById(transactionId)
+            .orElseThrow(() -> new TransactionNotFoundException("Transaction not found"));
+    // Check if the user is a member of the group
+    checkIfUserIsInGroup(userId, transactionDb.groupId());
+    // Update transaction
+    transactionRepository.updateById(transactionId, updateTransactionDataMapper.toDbo(data));
   }
 
   @Override
-  public void deleteTransaction(UserId id, TransactionId transactionId) {
-    // TODO
-  }
-
-  @Override
-  public Page<GetGroupData> getGroups(UserId userId, Pageable pageable) {
-    // TODO
-    return null;
+  public void deleteTransaction(UserId userId, TransactionId transactionId) {
+    // Get transaction
+    var transactionDb =
+        transactionRepository
+            .findById(transactionId)
+            .orElseThrow(() -> new TransactionNotFoundException("Transaction not found"));
+    // Check if the user is a member of the group
+    checkIfUserIsInGroup(userId, transactionDb.groupId());
+    // Delete transaction
+    transactionRepository.deleteById(transactionId);
   }
 }

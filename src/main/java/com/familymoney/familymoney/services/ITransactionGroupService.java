@@ -8,7 +8,6 @@ import com.familymoney.familymoney.types.*;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import javax.money.CurrencyUnit;
 import org.javamoney.moneta.Money;
 import org.springframework.data.domain.Page;
@@ -36,6 +35,8 @@ public interface ITransactionGroupService {
    */
   void deleteGroup(GroupId groupId, UserId userId);
 
+  Page<GetGroupData> getGroups(UserId userId, Pageable pageable);
+
   GetGroupData getGroupInfo(GroupId groupId, UserId user);
 
   void updateGroupInfo(GroupId groupId, UserId userId, UpdateGroupData data);
@@ -48,22 +49,20 @@ public interface ITransactionGroupService {
 
   void removeUserFromGroup(GroupId groupId, UserId userId, UserId userIdToRemove);
 
-  Map<UserId, Money> getGroupBalances(GroupId groupId, UserId userId);
+  Map<UserId, Money> getAllGroupBalances(GroupId groupId, UserId userId);
 
-  List<TransactionData> getGroupTransactions(GroupId groupId, UserId userId);
+  Page<TransactionData> getGroupTransactions(GroupId groupId, UserId userId, Pageable pageable);
 
   void createTransactionInGroup(
       GroupId groupId,
-      UserId userId,
       String description,
-      UUID from,
-      UUID to,
+      UserId from,
+      UserId to,
       Money amount,
-      Instant doneAt);
+      Instant doneAt,
+      UserId createdBy);
 
-  void updateTransaction(UserId userId, UpdateTransactionData data);
+  void updateTransaction(UserId userId, TransactionId transactionId, UpdateTransactionData data);
 
-  void deleteTransaction(UserId id, TransactionId transactionId);
-
-  Page<GetGroupData> getGroups(UserId userId, Pageable pageable);
+  void deleteTransaction(UserId userId, TransactionId transactionId);
 }
