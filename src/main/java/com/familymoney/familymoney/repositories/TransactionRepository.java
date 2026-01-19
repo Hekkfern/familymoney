@@ -30,14 +30,14 @@ public class TransactionRepository implements ITransactionRepository {
       final String description,
       final GroupId groupId,
       final Money amount,
-      final UserId lender,
-      final UserId borrower,
+      final UserId from,
+      final UserId to,
       final Instant doneAt) {
     val sql =
         """
-        INSERT INTO transactions (description, group_id, amount, currency_code, lender, borrower, done_at)
-        VALUES (:description, :groupId, :amount, :currencyCode, :lender, :borrower, :doneAt)
-        RETURNING id, description, group_id, currency_code, lender,borrower, done_at, created_at, updated_at
+        INSERT INTO transactions (description, group_id, amount, currency_code, from_user_id, to_user_id, done_at)
+        VALUES (:description, :groupId, :amount, :currencyCode, :from, :to, :doneAt)
+        RETURNING id, description, group_id, currency_code, from_user_id, to_user_id, done_at, created_at, updated_at
         """;
     return jdbcClient
         .sql(sql)
@@ -45,8 +45,8 @@ public class TransactionRepository implements ITransactionRepository {
         .param("groupId", groupId.value())
         .param("amount", amount.getNumber().toString())
         .param("currencyCode", amount.getCurrency().getCurrencyCode())
-        .param("lender", lender.value())
-        .param("borrower", borrower.value())
+        .param("from", from.value())
+        .param("to", to.value())
         .param("doneAt", OffsetDateTime.ofInstant(doneAt, ZoneOffset.UTC))
         .query(new TransactionRowMapper())
         .optional();
@@ -60,8 +60,8 @@ public class TransactionRepository implements ITransactionRepository {
         SET amount = COALESCE(:amount, amount),
             currency_code = COALESCE(:currencyCode, currency_code),
             description = COALESCE(:description, description),
-            lender = COALESCE(:lender, lender),
-            borrower = COALESCE(:borrower, borrower)
+            from_user_id = COALESCE(:from, from_user_id),
+            to_user_id = COALESCE(:to, to_user_id),
             done_at = COALESCE(:doneAt, done_at)
         WHERE id = :id
         """;
@@ -75,8 +75,8 @@ public class TransactionRepository implements ITransactionRepository {
                 "currencyCode",
                 data.getAmount() != null ? data.getAmount().getCurrency().getCurrencyCode() : null)
             .param("description", data.getDescription() != null ? data.getDescription() : null)
-            .param("lender", data.getLender() != null ? data.getLender().value() : null)
-            .param("borrower", data.getBorrower() != null ? data.getBorrower().value() : null)
+            .param("from", data.getFrom() != null ? data.getFrom().value() : null)
+            .param("to", data.getTo() != null ? data.getTo().value() : null)
             .param(
                 "doneAt",
                 data.getDoneAt() != null
@@ -101,7 +101,7 @@ public class TransactionRepository implements ITransactionRepository {
   public Optional<TransactionDbo> findById(final TransactionId id) {
     val sql =
         """
-        SELECT id, description, group_id, currency_code, lender,borrower, done_at, created_at, updated_at
+        SELECT id, description, group_id, currency_code, from_user_id, to_user_id, done_at, created_at, updated_at
         FROM transactions
         WHERE id = :id
         """;
@@ -120,7 +120,7 @@ public class TransactionRepository implements ITransactionRepository {
         jdbcClient.sql(rowCountSql).param("groupId", groupId.value()).query(Long.class).single();
     val querySql =
         """
-        SELECT id, description, group_id, currency_code, lender,borrower, done_at, created_at, updated_at
+        SELECT id, description, group_id, currency_code, from_user_id, to_user_id, done_at, created_at, updated_at
         FROM transactions
         LIMIT :limit
         OFFSET :offset

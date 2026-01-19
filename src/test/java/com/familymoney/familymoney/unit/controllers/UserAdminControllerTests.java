@@ -14,7 +14,7 @@ import com.familymoney.familymoney.properties.AppProperties;
 import com.familymoney.familymoney.properties.JwtProperties;
 import com.familymoney.familymoney.security.JwtUtils;
 import com.familymoney.familymoney.services.IUserService;
-import com.familymoney.familymoney.services.data.GetUserData;
+import com.familymoney.familymoney.services.data.UserData;
 import com.familymoney.familymoney.types.*;
 import com.familymoney.familymoney.utils.AdminControllerUriFactory;
 import com.familymoney.familymoney.utils.FakeGenerator;
@@ -81,7 +81,7 @@ public class UserAdminControllerTests {
     when(userService.getUserData(any()))
         .thenReturn(
             Optional.of(
-                GetUserData.builder()
+                UserData.builder()
                     .id(userId)
                     .username(username)
                     .email(email)
@@ -116,7 +116,7 @@ public class UserAdminControllerTests {
     when(userService.getUserData(any()))
         .thenReturn(
             Optional.of(
-                GetUserData.builder()
+                UserData.builder()
                     .id(userId)
                     .username(username)
                     .email(email)

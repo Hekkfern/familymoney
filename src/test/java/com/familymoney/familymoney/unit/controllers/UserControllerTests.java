@@ -14,7 +14,7 @@ import com.familymoney.familymoney.properties.AppProperties;
 import com.familymoney.familymoney.properties.JwtProperties;
 import com.familymoney.familymoney.security.JwtUtils;
 import com.familymoney.familymoney.services.IUserService;
-import com.familymoney.familymoney.services.data.GetUserData;
+import com.familymoney.familymoney.services.data.UserData;
 import com.familymoney.familymoney.types.*;
 import com.familymoney.familymoney.utils.FakeGenerator;
 import com.familymoney.familymoney.utils.UserControllerUriFactory;
@@ -82,7 +82,7 @@ public class UserControllerTests {
     when(userService.getUserData(any()))
         .thenReturn(
             Optional.of(
-                GetUserData.builder()
+                UserData.builder()
                     .username(username)
                     .email(email)
                     .createdAt(now)
@@ -141,7 +141,7 @@ public class UserControllerTests {
     when(userService.getUserData(any()))
         .thenReturn(
             Optional.of(
-                GetUserData.builder()
+                UserData.builder()
                     .id(userId)
                     .username(username)
                     .email(email)
@@ -173,7 +173,7 @@ public class UserControllerTests {
     when(userService.getUserData(any()))
         .thenReturn(
             Optional.of(
-                GetUserData.builder()
+                UserData.builder()
                     .id(UserId.fromUuid(UUID.randomUUID()))
                     .username(username)
                     .email(email)
@@ -214,7 +214,7 @@ public class UserControllerTests {
     when(userService.getUserData(any()))
         .thenReturn(
             Optional.of(
-                GetUserData.builder()
+                UserData.builder()
                     .id(userId)
                     .username(username)
                     .email(email)
@@ -245,7 +245,7 @@ public class UserControllerTests {
     when(userService.getUserData(any()))
         .thenReturn(
             Optional.of(
-                GetUserData.builder()
+                UserData.builder()
                     .id(userId)
                     .username(username)
                     .email(email)
@@ -274,7 +274,7 @@ public class UserControllerTests {
     when(userService.getUserData(any()))
         .thenReturn(
             Optional.of(
-                GetUserData.builder()
+                UserData.builder()
                     .id(userId)
                     .username(username)
                     .email(email)
@@ -303,7 +303,7 @@ public class UserControllerTests {
     when(userService.getUserData(any()))
         .thenReturn(
             Optional.of(
-                GetUserData.builder()
+                UserData.builder()
                     .id(userId)
                     .username(username)
                     .email(email)

@@ -7,7 +7,7 @@ import java.time.Instant;
 import lombok.Builder;
 
 @Builder
-public record GetUserData(
+public record UserData(
     UserId id,
     UserName username,
     Email email,

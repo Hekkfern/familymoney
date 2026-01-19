@@ -1,6 +1,6 @@
 package com.familymoney.familymoney.services;
 
-import com.familymoney.familymoney.services.data.GetGroupData;
+import com.familymoney.familymoney.services.data.GroupData;
 import com.familymoney.familymoney.services.data.TransactionData;
 import com.familymoney.familymoney.services.data.UpdateGroupData;
 import com.familymoney.familymoney.services.data.UpdateTransactionData;
@@ -35,9 +35,9 @@ public interface ITransactionGroupService {
    */
   void deleteGroup(GroupId groupId, UserId userId);
 
-  Page<GetGroupData> getGroups(UserId userId, Pageable pageable);
+  Page<GroupData> getGroups(UserId userId, Pageable pageable);
 
-  GetGroupData getGroupInfo(GroupId groupId, UserId user);
+  GroupData getGroupInfo(GroupId groupId, UserId user);
 
   void updateGroupInfo(GroupId groupId, UserId userId, UpdateGroupData data);
 

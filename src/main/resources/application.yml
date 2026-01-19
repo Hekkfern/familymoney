@@ -56,4 +56,5 @@ admin:
   username: ${ADMIN_USERNAME}
   email: ${ADMIN_EMAIL}
   password: ${ADMIN_PASSWORD}
-
+docker:
+  image: ${POSTGRES_DOCKER_IMAGE}

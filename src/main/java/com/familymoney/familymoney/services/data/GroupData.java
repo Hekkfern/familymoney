@@ -6,7 +6,7 @@ import javax.money.CurrencyUnit;
 import lombok.Builder;
 
 @Builder
-public record GetGroupData(
+public record GroupData(
     GroupId id,
     GroupName name,
     String description,

@@ -4,9 +4,9 @@ import com.familymoney.familymoney.repositories.IRoleRepository;
 import com.familymoney.familymoney.repositories.IUserRepository;
 import com.familymoney.familymoney.repositories.dbos.UpdateUserDbo;
 import com.familymoney.familymoney.security.UserPasswordEncoder;
-import com.familymoney.familymoney.services.data.GetUserData;
+import com.familymoney.familymoney.services.data.UserData;
 import com.familymoney.familymoney.services.data.UpdateUserData;
-import com.familymoney.familymoney.services.mappers.GetUserDataMapper;
+import com.familymoney.familymoney.services.mappers.UserDataMapper;
 import com.familymoney.familymoney.types.*;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -25,12 +25,12 @@ public class UserService implements IUserService {
   private final IUserRepository userRepository;
   private final IRoleRepository roleRepository;
   private final UserPasswordEncoder passwordEncoder;
-  private final GetUserDataMapper getUserDataMapper;
+  private final UserDataMapper userDataMapper;
 
   @Override
-  public Optional<GetUserData> getUserData(UserId userId) {
+  public Optional<UserData> getUserData(UserId userId) {
     val userOpt = userRepository.findById(userId);
-    return userOpt.map(getUserDataMapper::fromDbo);
+    return userOpt.map(userDataMapper::fromDbo);
   }
 
   @Override
@@ -56,8 +56,8 @@ public class UserService implements IUserService {
   }
 
   @Override
-  public Page<GetUserData> getUsers(Pageable pageable) {
-    return userRepository.findAll(pageable).map(getUserDataMapper::fromDbo);
+  public Page<UserData> getUsers(Pageable pageable) {
+    return userRepository.findAll(pageable).map(userDataMapper::fromDbo);
   }
 
   @Override

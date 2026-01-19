@@ -11,7 +11,7 @@ public record TransactionData(
     String description,
     GroupId groupId,
     Money amount,
-    UserId lender,
-    UserId borrower,
+    UserId from,
+    UserId to,
     Instant doneAt,
     Instant createdAt) {}

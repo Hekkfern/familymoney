@@ -1,13 +1,13 @@
 package com.familymoney.familymoney.controllers.mappers.grouptransaction;
 
 import com.familymoney.familymoney.controllers.dtos.grouptransaction.GetGroupResponseDto;
-import com.familymoney.familymoney.services.data.GetGroupData;
+import com.familymoney.familymoney.services.data.GroupData;
 import org.springframework.stereotype.Component;
 
 @Component
 public class GetGroupResponseMapper {
 
-  public GetGroupResponseDto toDto(GetGroupData groupData) {
+  public GetGroupResponseDto toDto(GroupData groupData) {
     return GetGroupResponseDto.builder()
         .id(groupData.id().value())
         .name(groupData.name().value())

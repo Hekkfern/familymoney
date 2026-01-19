@@ -13,15 +13,15 @@ import org.jspecify.annotations.Nullable;
 public class UpdateTransactionDbo {
   @Nullable @Default private Money amount = null;
   @Nullable @Default private String description = null;
-  @Nullable @Default private UserId lender = null;
-  @Nullable @Default private UserId borrower = null;
+  @Nullable @Default private UserId from = null;
+  @Nullable @Default private UserId to = null;
   @Nullable @Default private Instant doneAt = null;
 
   public boolean isEmpty() {
     return amount == null
         && description == null
-        && lender == null
-        && borrower == null
+        && from == null
+        && to == null
         && doneAt == null;
   }
 }

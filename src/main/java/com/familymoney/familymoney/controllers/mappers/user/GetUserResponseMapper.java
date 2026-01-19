@@ -1,13 +1,13 @@
 package com.familymoney.familymoney.controllers.mappers.user;
 
 import com.familymoney.familymoney.controllers.dtos.user.GetUserResponseDto;
-import com.familymoney.familymoney.services.data.GetUserData;
+import com.familymoney.familymoney.services.data.UserData;
 import org.springframework.stereotype.Component;
 
 @Component
 public class GetUserResponseMapper {
 
-  public GetUserResponseDto toDto(GetUserData userData) {
+  public GetUserResponseDto toDto(UserData userData) {
     return GetUserResponseDto.builder()
         .id(userData.id().value())
         .username(userData.username().value())

@@ -1,7 +1,7 @@
 package com.familymoney.familymoney.controllers.dtos.grouptransaction;
 
-import java.util.List;
 import lombok.Builder;
+import org.springframework.data.domain.Page;
 
 @Builder
-public record GetTransactionsResponseDto(List<TransactionDto> transactions) {}
+public record GetTransactionsResponseDto(Page<TransactionDto> transactions) {}

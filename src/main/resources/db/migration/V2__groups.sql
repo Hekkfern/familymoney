@@ -2,13 +2,13 @@
 
 CREATE TABLE groups
 (
-    id            UUID PRIMARY KEY                  DEFAULT uuidv7(),
-    name          VARCHAR(64)              NOT NULL,
-    description   VARCHAR(255)             NOT NULL,
-    currency_code VARCHAR(3)               NOT NULL CHECK (currency_code ~ '^[A-Z]{3}$'),
-    created_by    UUID                     REFERENCES users (id) ON DELETE SET NULL,
-    created_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    updated_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+    id                 UUID PRIMARY KEY                  DEFAULT uuidv7(),
+    name               VARCHAR(64)              NOT NULL,
+    description        VARCHAR(255)             NOT NULL,
+    currency_code      VARCHAR(3)               NOT NULL CHECK (currency_code ~ '^[A-Z]{3}$'),
+    created_by_user_id UUID                     REFERENCES users (id) ON DELETE SET NULL,
+    created_at         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 SELECT trigger_updated_at('groups');
@@ -51,13 +51,13 @@ CREATE TABLE transactions
     group_id      UUID                     NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
     amount        DECIMAL(19, 4)           NOT NULL CHECK (amount > 0),
     currency_code VARCHAR(3)               NOT NULL CHECK (currency_code ~ '^[A-Z]{3}$'),
-    lender        UUID                     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    borrower      UUID                     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    from_user_id  UUID                     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    to_user_id    UUID                     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     done_at       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     created_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 
-    CONSTRAINT chk_transactions_lender_borrower_not_equal CHECK (lender <> borrower)
+        CONSTRAINT chk_transactions_lender_borrower_not_equal CHECK (lender <> borrower)
 );
 
 SELECT trigger_updated_at('transactions');

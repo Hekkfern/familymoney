@@ -9,12 +9,12 @@ import com.familymoney.familymoney.repositories.IGroupInvitationRepository;
 import com.familymoney.familymoney.repositories.IGroupRepository;
 import com.familymoney.familymoney.repositories.ITransactionRepository;
 import com.familymoney.familymoney.repositories.dbos.BalanceDbo;
-import com.familymoney.familymoney.services.data.GetGroupData;
+import com.familymoney.familymoney.services.data.GroupData;
 import com.familymoney.familymoney.services.data.TransactionData;
 import com.familymoney.familymoney.services.data.UpdateGroupData;
 import com.familymoney.familymoney.services.data.UpdateTransactionData;
-import com.familymoney.familymoney.services.mappers.GetGroupDataMapper;
-import com.familymoney.familymoney.services.mappers.GetTransactionDataMapper;
+import com.familymoney.familymoney.services.mappers.GroupDataMapper;
+import com.familymoney.familymoney.services.mappers.TransactionDataMapper;
 import com.familymoney.familymoney.services.mappers.UpdateGroupDataMapper;
 import com.familymoney.familymoney.services.mappers.UpdateTransactionDataMapper;
 import com.familymoney.familymoney.types.*;
@@ -44,9 +44,9 @@ public class TransactionGroupService implements ITransactionGroupService {
   private final IBalanceRepository balanceRepository;
   private final ITransactionRepository transactionRepository;
   private final IGroupInvitationRepository groupInvitationRepository;
-  private final GetGroupDataMapper getGroupDataMapper;
+  private final GroupDataMapper groupDataMapper;
   private final UpdateGroupDataMapper updateGroupDataMapper;
-  private final GetTransactionDataMapper getTransactionDataMapper;
+  private final TransactionDataMapper transactionDataMapper;
   private final UpdateTransactionDataMapper updateTransactionDataMapper;
   private final Clock clock;
 
@@ -79,18 +79,18 @@ public class TransactionGroupService implements ITransactionGroupService {
   }
 
   @Override
-  public Page<GetGroupData> getGroups(UserId userId, Pageable pageable) {
-    return groupRepository.findByUserId(userId, pageable).map(getGroupDataMapper::fromDbo);
+  public Page<GroupData> getGroups(UserId userId, Pageable pageable) {
+    return groupRepository.findByUserId(userId, pageable).map(groupDataMapper::fromDbo);
   }
 
   @Override
-  public GetGroupData getGroupInfo(GroupId groupId, UserId userId) {
+  public GroupData getGroupInfo(GroupId groupId, UserId userId) {
     // Check if the user is a member of the group
     checkIfUserIsInGroup(userId, groupId);
     // Get data
     return groupRepository
         .findById(groupId)
-        .map(getGroupDataMapper::fromDbo)
+        .map(groupDataMapper::fromDbo)
         .orElseThrow(
             () ->
                 new DatabaseExecutionException(String.format("Unable to find group %s", groupId)));
@@ -176,7 +176,7 @@ public class TransactionGroupService implements ITransactionGroupService {
     // Get transactions
     val transactionsDb = transactionRepository.findAllByGroupId(groupId, pageable);
     // Generate result
-    return transactionsDb.map(getTransactionDataMapper::fromDbo);
+    return transactionsDb.map(transactionDataMapper::fromDbo);
   }
 
   @Override

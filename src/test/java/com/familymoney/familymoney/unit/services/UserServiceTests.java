@@ -8,7 +8,7 @@ import com.familymoney.familymoney.repositories.IUserRepository;
 import com.familymoney.familymoney.repositories.dbos.UserDbo;
 import com.familymoney.familymoney.security.UserPasswordEncoder;
 import com.familymoney.familymoney.services.UserService;
-import com.familymoney.familymoney.services.mappers.GetUserDataMapper;
+import com.familymoney.familymoney.services.mappers.UserDataMapper;
 import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.UserId;
 import com.familymoney.familymoney.types.UserName;
@@ -36,7 +36,7 @@ public class UserServiceTests {
   @Mock private IUserRepository userRepository;
   @Mock private IRoleRepository roleRepository;
   @Spy private UserPasswordEncoder passwordEncoder;
-  @Spy private GetUserDataMapper getUserDataMapper = Mappers.getMapper(GetUserDataMapper.class);
+  @Spy private UserDataMapper userDataMapper = Mappers.getMapper(UserDataMapper.class);
 
   @InjectMocks private UserService userService;
 

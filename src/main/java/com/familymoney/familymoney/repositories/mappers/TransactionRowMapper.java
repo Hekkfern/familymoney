@@ -21,8 +21,8 @@ public final class TransactionRowMapper implements RowMapper<TransactionDbo> {
         .amount(
             Money.of(
                 rs.getBigDecimal("amount"), Monetary.getCurrency(rs.getString("currency_code"))))
-        .lender(UserId.fromString(rs.getString("lender")))
-        .borrower(UserId.fromString(rs.getString("borrower")))
+        .lender(UserId.fromString(rs.getString("from")))
+        .borrower(UserId.fromString(rs.getString("to")))
         .doneAt(rs.getTimestamp("done_at").toInstant())
         .createdAt(rs.getTimestamp("created_at").toInstant())
         .updatedAt(rs.getTimestamp("updated_at").toInstant())
