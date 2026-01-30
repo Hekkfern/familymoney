@@ -1,7 +1,8 @@
 package com.familymoney.familymoney.repositories;
 
+import com.familymoney.familymoney.generated.tables.EmailVerificationTokens;
 import com.familymoney.familymoney.repositories.dbos.EmailVerificationDbo;
-import com.familymoney.familymoney.repositories.mappers.EmailVerificationRowMapper;
+import com.familymoney.familymoney.repositories.mappers.EmailVerificationJooqMapper;
 import com.familymoney.familymoney.types.EmailVerificationToken;
 import com.familymoney.familymoney.types.UserId;
 import java.time.Duration;
@@ -11,66 +12,62 @@ import java.time.ZoneOffset;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
-import org.springframework.jdbc.core.simple.JdbcClient;
+import org.jooq.DSLContext;
 import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
 public class EmailVerificationRepository implements IEmailVerificationRepository {
 
-  private final JdbcClient jdbcClient;
+  private final DSLContext db;
 
   @Override
   public Optional<EmailVerificationDbo> create(
       final UserId userId, final EmailVerificationToken token, final Instant expiresAt) {
-    val sql =
-        """
-        INSERT INTO email_verification_tokens (user_id, token, expires_at)
-        VALUES (:userId, :token, :expiresAt)
-        RETURNING id, user_id, token, expires_at, created_at
-        """;
-    return jdbcClient
-        .sql(sql)
-        .param("userId", userId.value())
-        .param("token", token.value())
-        .param("expiresAt", OffsetDateTime.ofInstant(expiresAt, ZoneOffset.UTC))
-        .query(new EmailVerificationRowMapper())
-        .optional();
+    return db.insertInto(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS)
+        .columns(
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.USER_ID,
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN,
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.EXPIRES_AT)
+        .values(userId.value(), token.value(), OffsetDateTime.ofInstant(expiresAt, ZoneOffset.UTC))
+        .returning(
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.ID,
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.USER_ID,
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN,
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.EXPIRES_AT,
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.CREATED_AT)
+        .fetchOptional()
+        .map(EmailVerificationJooqMapper::toDbo);
   }
 
   @Override
   public Optional<EmailVerificationDbo> findByToken(final EmailVerificationToken token) {
-    val sql =
-        """
-        SELECT id, user_id, token, expires_at, created_at
-        FROM email_verification_tokens
-        WHERE token = :token
-        """;
-    return jdbcClient
-        .sql(sql)
-        .param("token", token.value())
-        .query(new EmailVerificationRowMapper())
-        .optional();
+    return db.select(
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.ID,
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.USER_ID,
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN,
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.EXPIRES_AT,
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.CREATED_AT)
+        .from(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS)
+        .where(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN.eq(token.value()))
+        .fetchOptional()
+        .map(EmailVerificationJooqMapper::toDbo);
   }
 
   @Override
   public boolean deleteByUserId(final UserId userId) {
-    val sql =
-        """
-        DELETE FROM email_verification_tokens
-        WHERE user_id = :userId
-        """;
-    val rowsAffected = jdbcClient.sql(sql).param("userId", userId.value()).update();
+    val rowsAffected =
+        db.deleteFrom(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS)
+            .where(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.USER_ID.eq(userId.value()))
+            .execute();
     return rowsAffected > 0;
   }
 
   @Override
   public void deleteOlderThan(final Duration cutoff) {
-    val sql =
-        """
-        DELETE FROM email_verification_tokens
-        WHERE created_at < NOW() - INTERVAL ':duration seconds'
-        """;
-    jdbcClient.sql(sql).param("duration", cutoff.getSeconds()).update();
+    val threshold = OffsetDateTime.now(ZoneOffset.UTC).minusSeconds(cutoff.getSeconds());
+    db.deleteFrom(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS)
+        .where(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.CREATED_AT.lt(threshold))
+        .execute();
   }
 }

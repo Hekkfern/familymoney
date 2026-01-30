@@ -10,11 +10,11 @@ public class TransactionMapper {
   public TransactionDto toDto(TransactionData data) {
     return TransactionDto.builder()
         .id(data.id().value())
-        .from(data.)
-        .to()
-        .amount()
-        .description()
-        .doneAt()
+        .from(data.from().value())
+        .to(data.to().value())
+        .amount(data.amount())
+        .description(data.description())
+        .doneAt(data.doneAt())
         .build();
   }
 }

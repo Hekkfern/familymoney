@@ -1,5 +1,5 @@
 [versions]
-springboot = "4.0.0"
+springboot = "4.0.1"
 springboot-dependencymanagement = "1.1.7"
 springdoc-openapi = "2.8.14"
 jjwt = "0.13.0"
@@ -7,10 +7,11 @@ testcontainers = "2.0.2"
 mapstruct = "1.6.3"
 moneta = "1.4.5"
 assertj = "3.27.6"
+jooq-plugin = "8.0.11"
+lombok-plugin = "9.2.0"
 
 [libraries]
 flyway-postgresql = { module = "org.flywaydb:flyway-database-postgresql" }
-lombok = { module = "org.projectlombok:lombok" }
 springdoc-openapi = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc-openapi" }
 jjwt-api = { module = "io.jsonwebtoken:jjwt-api", version.ref = "jjwt" }
 jjwt-impl = { module = "io.jsonwebtoken:jjwt-impl", version.ref = "jjwt" }
@@ -26,5 +27,7 @@ assertj = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 [plugins]
 springboot = { id = "org.springframework.boot", version.ref = "springboot" }
 springboot-dependencymanagement = { id = "io.spring.dependency-management", version.ref = "springboot-dependencymanagement" }
+jooq = { id = "dev.monosoul.jooq-docker", version.ref = "jooq-plugin" }
+lombok = { id = "io.freefair.lombok", version.ref = "lombok-plugin" }
 
 [bundles]

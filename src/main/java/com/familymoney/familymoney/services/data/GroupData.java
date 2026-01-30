@@ -11,5 +11,4 @@ public record GroupData(
     GroupName name,
     String description,
     CurrencyUnit currency,
-    UserId createdBy,
     Instant createdAt) {}

@@ -1,10 +1,12 @@
 package com.familymoney.familymoney.repositories;
 
+import com.familymoney.familymoney.generated.tables.Groups;
+import com.familymoney.familymoney.generated.tables.UserGroups;
 import com.familymoney.familymoney.repositories.dbos.GroupDbo;
 import com.familymoney.familymoney.repositories.dbos.UpdateGroupDbo;
 import com.familymoney.familymoney.repositories.dbos.UserGroupDbo;
-import com.familymoney.familymoney.repositories.mappers.GroupRowMapper;
-import com.familymoney.familymoney.repositories.mappers.UserGroupRowMapper;
+import com.familymoney.familymoney.repositories.mappers.GroupJooqMapper;
+import com.familymoney.familymoney.repositories.mappers.UserGroupJooqMapper;
 import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.GroupName;
 import com.familymoney.familymoney.types.UserId;
@@ -14,17 +16,18 @@ import java.util.Optional;
 import javax.money.CurrencyUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
+import org.jooq.DSLContext;
+import org.jooq.impl.DSL;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
 public class GroupRepository implements IGroupRepository {
 
-  private final JdbcClient jdbcClient;
+  private final DSLContext db;
 
   @Override
   public Optional<GroupDbo> create(
@@ -32,145 +35,139 @@ public class GroupRepository implements IGroupRepository {
       final String description,
       final CurrencyUnit currency,
       final UserId owner) {
-    val sql =
-        """
-        INSERT INTO groups (name, description, currency_code, created_by)
-        VALUES (:name, :description, :currency, :owner)
-        RETURNING id, name, description, currency_code, created_by, created_at, updated_at
-        """;
-    return jdbcClient
-        .sql(sql)
-        .param("name", name.value())
-        .param("description", description)
-        .param("currency", currency.getCurrencyCode())
-        .param("owner", owner.value())
-        .query(new GroupRowMapper())
-        .optional();
+    return db.insertInto(Groups.GROUPS)
+        .columns(Groups.GROUPS.NAME, Groups.GROUPS.DESCRIPTION, Groups.GROUPS.CURRENCY_CODE)
+        .values(name.value(), description, currency.getCurrencyCode())
+        .returning(
+            Groups.GROUPS.ID,
+            Groups.GROUPS.NAME,
+            Groups.GROUPS.DESCRIPTION,
+            Groups.GROUPS.CURRENCY_CODE,
+            Groups.GROUPS.CREATED_AT,
+            Groups.GROUPS.UPDATED_AT)
+        .fetchOptional()
+        .map(GroupJooqMapper::toDbo);
   }
 
   @Override
   public boolean updateById(final GroupId id, final UpdateGroupDbo data) {
-    val sql =
-        """
-        UPDATE groups
-        SET name = COALESCE(:name, name),
-            description = COALESCE(:description, description)
-        WHERE id = :id
-        """;
     val rowsAffected =
-        jdbcClient
-            .sql(sql)
-            .param("id", id.value())
-            .param("name", data.getName() != null ? data.getName().value() : null)
-            .param("description", data.getDescription() != null ? data.getDescription() : null)
-            .update();
+        db.update(Groups.GROUPS)
+            .set(
+                Groups.GROUPS.NAME,
+                DSL.coalesce(
+                    DSL.val(data.getName() != null ? data.getName().value() : null),
+                    Groups.GROUPS.NAME))
+            .set(
+                Groups.GROUPS.DESCRIPTION,
+                DSL.coalesce(
+                    DSL.val(data.getDescription() != null ? data.getDescription() : null),
+                    Groups.GROUPS.DESCRIPTION))
+            .where(Groups.GROUPS.ID.eq(id.value()))
+            .execute();
     return rowsAffected > 0;
   }
 
   @Override
   public boolean deleteById(final GroupId id) {
-    val sql =
-        """
-        DELETE FROM groups
-        WHERE id = :id
-        """;
-    val rowsAffected = jdbcClient.sql(sql).param("id", id.value()).update();
+    val rowsAffected =
+        db.deleteFrom(Groups.GROUPS).where(Groups.GROUPS.ID.eq(id.value())).execute();
     return rowsAffected > 0;
   }
 
   @Override
   public Page<GroupDbo> findByUserId(final UserId userId, final Pageable pageable) {
-    val rowCountSql =
-        """
-        SELECT COUNT(1)
-        FROM user_groups
-        WHERE user_id = :userId
-        """;
     val total =
-        jdbcClient.sql(rowCountSql).param("userId", userId.value()).query(Long.class).single();
-    val querySql =
-        """
-        SELECT g.id, g.name, g.description, g.currency_code, g.created_by, g.created_at, g.updated_at
-        FROM user_groups ug
-        INNER JOIN groups g ON g.id = ug.group_id
-        WHERE ug.user_id = :userId
-        LIMIT :limit
-        OFFSET :offset
-        """;
+        db.selectCount()
+            .from(UserGroups.USER_GROUPS)
+            .where(UserGroups.USER_GROUPS.USER_ID.eq(userId.value()))
+            .fetchOne(0, Long.class);
+    val safeTotal = total != null ? total : 0L;
+
     val data =
-        jdbcClient
-            .sql(querySql)
-            .param("userId", userId.value())
-            .param("limit", pageable.getPageSize())
-            .param("offset", pageable.getOffset())
-            .query(new GroupRowMapper())
-            .list();
-    return new PageImpl<>(data, pageable, total);
+        db.select(
+                Groups.GROUPS.ID,
+                Groups.GROUPS.NAME,
+                Groups.GROUPS.DESCRIPTION,
+                Groups.GROUPS.CURRENCY_CODE,
+                Groups.GROUPS.CREATED_AT,
+                Groups.GROUPS.UPDATED_AT)
+            .from(UserGroups.USER_GROUPS)
+            .join(Groups.GROUPS)
+            .on(Groups.GROUPS.ID.eq(UserGroups.USER_GROUPS.GROUP_ID))
+            .where(UserGroups.USER_GROUPS.USER_ID.eq(userId.value()))
+            .limit(pageable.getPageSize())
+            .offset(pageable.getOffset())
+            .fetch()
+            .map(GroupJooqMapper::toDbo);
+
+    return new PageImpl<>(data, pageable, safeTotal);
   }
 
   @Override
   public Optional<GroupDbo> findById(final GroupId id) {
-    val sql =
-        """
-        SELECT id, name, description, currency_code, created_by, created_at, updated_at
-        FROM groups
-        WHERE id = :id
-        """;
-    return jdbcClient.sql(sql).param("id", id.value()).query(new GroupRowMapper()).optional();
+    return db.select(
+            Groups.GROUPS.ID,
+            Groups.GROUPS.NAME,
+            Groups.GROUPS.DESCRIPTION,
+            Groups.GROUPS.CURRENCY_CODE,
+            Groups.GROUPS.CREATED_AT,
+            Groups.GROUPS.UPDATED_AT)
+        .from(Groups.GROUPS)
+        .where(Groups.GROUPS.ID.eq(id.value()))
+        .fetchOptional()
+        .map(GroupJooqMapper::toDbo);
   }
 
   @Override
   public List<UserId> findUserIdsByGroupId(final GroupId id) {
-    val sql =
-        """
-        SELECT user_id
-        FROM user_groups
-        WHERE group_id = :groupId
-        """;
-    return jdbcClient.sql(sql).param("groupId", id.value()).query(String.class).stream()
+    return db
+        .select(UserGroups.USER_GROUPS.USER_ID)
+        .from(UserGroups.USER_GROUPS)
+        .where(UserGroups.USER_GROUPS.GROUP_ID.eq(id.value()))
+        .fetch()
+        .stream()
+        .map(r -> r.get(UserGroups.USER_GROUPS.USER_ID))
         .filter(Objects::nonNull)
-        .map(UserId::fromString)
+        .map(UserId::fromUuid)
         .toList();
   }
 
   @Override
   public boolean isUserInGroup(final UserId userId, final GroupId groupId) {
-    val sql =
-        """
-        SELECT COUNT(1)
-        FROM user_groups
-        WHERE user_id = :userId
-          AND group_id = :groupId
-        """;
-    val count =
-        jdbcClient
-            .sql(sql)
-            .param("userId", userId.value())
-            .param("groupId", groupId.value())
-            .query(Long.class)
-            .single();
-    return count > 0;
+    return db.fetchExists(
+        db.selectOne()
+            .from(UserGroups.USER_GROUPS)
+            .where(
+                UserGroups.USER_GROUPS
+                    .USER_ID
+                    .eq(userId.value())
+                    .and(UserGroups.USER_GROUPS.GROUP_ID.eq(groupId.value()))));
   }
 
   @Override
   public Optional<UserGroupDbo> addUser(UserId userId, GroupId groupId) {
-    val sql =
-        """
-        INSERT INTO user_groups (user_id, group_id)
-        VALUES (:userId, :groupId)
-        RETURNING user_id, group_id, joined_at
-        """;
-    return jdbcClient
-        .sql(sql)
-        .param("userId", userId.value())
-        .param("groupId", groupId.value())
-        .query(new UserGroupRowMapper())
-        .optional();
+    return db.insertInto(UserGroups.USER_GROUPS)
+        .columns(UserGroups.USER_GROUPS.USER_ID, UserGroups.USER_GROUPS.GROUP_ID)
+        .values(userId.value(), groupId.value())
+        .returning(
+            UserGroups.USER_GROUPS.USER_ID,
+            UserGroups.USER_GROUPS.GROUP_ID,
+            UserGroups.USER_GROUPS.JOINED_AT)
+        .fetchOptional()
+        .map(UserGroupJooqMapper::toDbo);
   }
 
   @Override
   public boolean deleteUser(UserId userId, GroupId groupId) {
-    // TODO
-    return false;
+    val rowsAffected =
+        db.deleteFrom(UserGroups.USER_GROUPS)
+            .where(
+                UserGroups.USER_GROUPS
+                    .USER_ID
+                    .eq(userId.value())
+                    .and(UserGroups.USER_GROUPS.GROUP_ID.eq(groupId.value())))
+            .execute();
+    return rowsAffected > 0;
   }
 }

@@ -1,110 +1,135 @@
 package com.familymoney.familymoney.repositories;
 
+import com.familymoney.familymoney.generated.tables.Balances;
 import com.familymoney.familymoney.repositories.dbos.BalanceDbo;
 import com.familymoney.familymoney.repositories.dbos.UpdateBalanceDbo;
-import com.familymoney.familymoney.repositories.mappers.BalanceRowMapper;
+import com.familymoney.familymoney.repositories.mappers.BalanceJooqMapper;
 import com.familymoney.familymoney.types.BalanceId;
 import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.UserId;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.javamoney.moneta.Money;
-import org.springframework.jdbc.core.simple.JdbcClient;
+import org.jooq.DSLContext;
+import org.jooq.impl.DSL;
 import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
 public class BalanceRepository implements IBalanceRepository {
 
-  private final JdbcClient jdbcClient;
+  private final DSLContext db;
 
   @Override
   public Optional<BalanceDbo> create(
       final GroupId groupId, final Money amount, final UserId user1, final UserId user2) {
-    val sql =
-        """
-        INSERT INTO balances (group_id, amount, currency_code, user_id_1, user_id_2)
-        VALUES (:groupId, :amount, :currencyCode, :user1, :user2)
-        RETURNING id, group_id, amount, currency_code, user_id_1, user_id_2
-        """;
-    return jdbcClient
-        .sql(sql)
-        .param("groupId", groupId.value())
-        .param("amount", amount.getNumber().toString())
-        .param("currencyCode", amount.getCurrency().getCurrencyCode())
-        .param("user1", user1.value())
-        .param("user2", user2.value())
-        .query(new BalanceRowMapper())
-        .optional();
+    return db.insertInto(Balances.BALANCES)
+        .columns(
+            Balances.BALANCES.GROUP_ID,
+            Balances.BALANCES.AMOUNT,
+            Balances.BALANCES.CURRENCY_CODE,
+            Balances.BALANCES.USER_ID_1,
+            Balances.BALANCES.USER_ID_2)
+        .values(
+            groupId.value(),
+            amount.getNumber().numberValue(BigDecimal.class),
+            amount.getCurrency().getCurrencyCode(),
+            user1.value(),
+            user2.value())
+        .returning(
+            Balances.BALANCES.ID,
+            Balances.BALANCES.GROUP_ID,
+            Balances.BALANCES.AMOUNT,
+            Balances.BALANCES.CURRENCY_CODE,
+            Balances.BALANCES.USER_ID_1,
+            Balances.BALANCES.USER_ID_2)
+        .fetchOptional()
+        .map(BalanceJooqMapper::toDbo);
   }
 
   @Override
   public List<BalanceDbo> findByGroup(GroupId groupId) {
-    val sql =
-        """
-        SELECT id, group_id, amount, currency_code, user_id_1, user_id_2
-        FROM balances
-        WHERE group_id = :groupId
-        """;
-    return jdbcClient
-        .sql(sql)
-        .param("groupId", groupId.value())
-        .query(new BalanceRowMapper())
-        .list();
+    return db.select(
+            Balances.BALANCES.ID,
+            Balances.BALANCES.GROUP_ID,
+            Balances.BALANCES.AMOUNT,
+            Balances.BALANCES.CURRENCY_CODE,
+            Balances.BALANCES.USER_ID_1,
+            Balances.BALANCES.USER_ID_2)
+        .from(Balances.BALANCES)
+        .where(Balances.BALANCES.GROUP_ID.eq(groupId.value()))
+        .fetch()
+        .map(BalanceJooqMapper::toDbo);
   }
 
   @Override
   public List<BalanceDbo> findByUserAndGroup(final UserId userId, final GroupId groupId) {
-    val sql =
-        """
-        SELECT id, group_id, amount, currency_code, user_id_1, user_id_2
-        FROM balances
-        WHERE (user_id_1 = :userId OR user_id_2 = :userId) AND group_id = :groupId
-        """;
-    return jdbcClient
-        .sql(sql)
-        .param("userId", userId.value())
-        .param("groupId", groupId.value())
-        .query(new BalanceRowMapper())
-        .list();
+    return db.select(
+            Balances.BALANCES.ID,
+            Balances.BALANCES.GROUP_ID,
+            Balances.BALANCES.AMOUNT,
+            Balances.BALANCES.CURRENCY_CODE,
+            Balances.BALANCES.USER_ID_1,
+            Balances.BALANCES.USER_ID_2)
+        .from(Balances.BALANCES)
+        .where(
+            Balances.BALANCES
+                .GROUP_ID
+                .eq(groupId.value())
+                .and(
+                    Balances.BALANCES
+                        .USER_ID_1
+                        .eq(userId.value())
+                        .or(Balances.BALANCES.USER_ID_2.eq(userId.value()))))
+        .fetch()
+        .map(BalanceJooqMapper::toDbo);
   }
 
   @Override
   public boolean updateById(final BalanceId id, final UpdateBalanceDbo data) {
-    val sql =
-        """
-        UPDATE balances
-        SET amount = COALESCE(:amount, amount),
-            currency_code = COALESCE(:currencyCode, currency_code),
-            user_id_1 = COALESCE(:user1, user_id_1),
-            user_id_2 = COALESCE(:user2, user_id_2)
-        WHERE id = :id
-        """;
-    val rowsAffected =
-        jdbcClient
-            .sql(sql)
-            .param("id", id.value())
-            .param(
-                "amount", data.getAmount() != null ? data.getAmount().getNumber().toString() : null)
-            .param(
-                "currencyCode",
-                data.getAmount() != null ? data.getAmount().getCurrency().getCurrencyCode() : null)
-            .param("user1", data.getUser1() != null ? data.getUser1().value() : null)
-            .param("user2", data.getUser2() != null ? data.getUser2().value() : null)
-            .update();
+    val amountValue =
+        data.getAmount() != null
+            ? data.getAmount().getNumber().numberValue(BigDecimal.class)
+            : null;
+    val currencyValue =
+        data.getAmount() != null ? data.getAmount().getCurrency().getCurrencyCode() : null;
+    val user1Value = data.getUser1() != null ? data.getUser1().value() : null;
+    val user2Value = data.getUser2() != null ? data.getUser2().value() : null;
+
+    int rowsAffected =
+        db.update(Balances.BALANCES)
+            .set(
+                Balances.BALANCES.AMOUNT,
+                DSL.coalesce(DSL.val(amountValue), Balances.BALANCES.AMOUNT))
+            .set(
+                Balances.BALANCES.CURRENCY_CODE,
+                DSL.coalesce(DSL.val(currencyValue), Balances.BALANCES.CURRENCY_CODE))
+            .set(
+                Balances.BALANCES.USER_ID_1,
+                DSL.coalesce(DSL.val(user1Value), Balances.BALANCES.USER_ID_1))
+            .set(
+                Balances.BALANCES.USER_ID_2,
+                DSL.coalesce(DSL.val(user2Value), Balances.BALANCES.USER_ID_2))
+            .where(Balances.BALANCES.ID.eq(id.value()))
+            .execute();
     return rowsAffected > 0;
   }
 
   @Override
   public Optional<BalanceDbo> findById(final BalanceId id) {
-    val sql =
-        """
-        SELECT id, group_id, amount, currency_code, user_id_1, user_id_2
-        FROM balances
-        WHERE id = :id
-        """;
-    return jdbcClient.sql(sql).param("id", id.value()).query(new BalanceRowMapper()).optional();
+    return db.select(
+            Balances.BALANCES.ID,
+            Balances.BALANCES.GROUP_ID,
+            Balances.BALANCES.AMOUNT,
+            Balances.BALANCES.CURRENCY_CODE,
+            Balances.BALANCES.USER_ID_1,
+            Balances.BALANCES.USER_ID_2)
+        .from(Balances.BALANCES)
+        .where(Balances.BALANCES.ID.eq(id.value()))
+        .fetchOptional()
+        .map(BalanceJooqMapper::toDbo);
   }
 }

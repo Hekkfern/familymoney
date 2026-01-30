@@ -5,42 +5,41 @@ import com.familymoney.familymoney.types.UserId;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
-import org.springframework.jdbc.core.simple.JdbcClient;
+import org.jooq.DSLContext;
+import org.jooq.impl.DSL;
 import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
 public class RoleRepository implements IRoleRepository {
 
-  private final JdbcClient jdbcClient;
+  private final DSLContext db;
 
   @Override
   public Optional<Role> getRoleByUserId(final UserId userId) {
-    var sql =
-        """
-        SELECT r.name
-        FROM users_roles ur
-        JOIN roles r ON ur.role_id = r.id
-        WHERE ur.user_id = :userId
-        """;
-    val role = jdbcClient.sql(sql).param("userId", userId.value()).query(String.class).optional();
-    return role.map(Role::fromString);
+    return db.select(DSL.field("r.name", String.class))
+        .from(DSL.table("users_roles").as("ur"))
+        .join(DSL.table("roles").as("r"))
+        .on(DSL.field("ur.role_id").eq(DSL.field("r.id")))
+        .where(DSL.field("ur.user_id").eq(userId.value()))
+        .fetchOptional()
+        .map(r -> r.get(0, String.class))
+        .map(Role::fromString);
   }
 
   @Override
   public boolean setRoleForUserId(final UserId userId, final Role role) {
-    var sql =
+    val sql =
         """
         WITH r AS (
-            SELECT id AS role_id FROM roles WHERE name = :role
+            SELECT id AS role_id FROM roles WHERE name = ?
         )
         INSERT INTO users_roles (user_id, role_id)
-        SELECT :userId, r.role_id FROM r
+        SELECT ?, r.role_id FROM r
         ON CONFLICT (user_id) DO UPDATE
             SET role_id = EXCLUDED.role_id;
         """;
-    val rowsAffected =
-        jdbcClient.sql(sql).param("userId", userId.value()).param("role", role.toString()).update();
+    val rowsAffected = db.query(sql, role.toString(), userId.value()).execute();
     return rowsAffected > 0;
   }
 }

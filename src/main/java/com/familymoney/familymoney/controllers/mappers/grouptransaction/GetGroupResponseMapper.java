@@ -13,7 +13,6 @@ public class GetGroupResponseMapper {
         .name(groupData.name().value())
         .description(groupData.description())
         .currency(groupData.currency().getCurrencyCode())
-        .createdBy(groupData.createdBy().value())
         .createdAt(groupData.createdAt())
         .build();
   }

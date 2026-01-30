@@ -18,10 +18,6 @@ public class UpdateTransactionDbo {
   @Nullable @Default private Instant doneAt = null;
 
   public boolean isEmpty() {
-    return amount == null
-        && description == null
-        && from == null
-        && to == null
-        && doneAt == null;
+    return amount == null && description == null && from == null && to == null && doneAt == null;
   }
 }

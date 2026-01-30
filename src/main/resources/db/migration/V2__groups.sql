@@ -2,13 +2,12 @@
 
 CREATE TABLE groups
 (
-    id                 UUID PRIMARY KEY                  DEFAULT uuidv7(),
-    name               VARCHAR(64)              NOT NULL,
-    description        VARCHAR(255)             NOT NULL,
-    currency_code      VARCHAR(3)               NOT NULL CHECK (currency_code ~ '^[A-Z]{3}$'),
-    created_by_user_id UUID                     REFERENCES users (id) ON DELETE SET NULL,
-    created_at         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    updated_at         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+    id              UUID PRIMARY KEY                  DEFAULT uuidv7(),
+    name            VARCHAR(64)              NOT NULL,
+    description     VARCHAR(255)             NOT NULL,
+    currency_code   VARCHAR(3)               NOT NULL CHECK (currency_code ~ '^[A-Z]{3}$'),
+    created_at      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 SELECT trigger_updated_at('groups');
@@ -32,7 +31,7 @@ CREATE TABLE balances
     user_id_1     UUID           NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     user_id_2     UUID           NOT NULL REFERENCES users (id) ON DELETE CASCADE,
 
-    CONSTRAINT chk_balances_lender_borrower_not_equal CHECK (user_id_1 <> user_id_2)
+    CONSTRAINT chk_balances_user1_user2_not_equal CHECK (user_id_1 <> user_id_2)
 );
 
 CREATE UNIQUE INDEX ux_balances_group_unordered_pair
@@ -55,16 +54,16 @@ CREATE TABLE transactions
     to_user_id    UUID                     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     done_at       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     created_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    updated_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+    updated_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
-        CONSTRAINT chk_transactions_lender_borrower_not_equal CHECK (lender <> borrower)
+    CONSTRAINT chk_transactions_from_to_not_equal CHECK (from_user_id <> to_user_id)
 );
 
 SELECT trigger_updated_at('transactions');
 
 CREATE INDEX idx_transactions_group_id ON transactions (group_id);
-CREATE INDEX idx_transactions_emitter_user_id ON transactions (lender);
-CREATE INDEX idx_transactions_receiver_user_id ON transactions (borrower);
+CREATE INDEX idx_transactions_from_user_id ON transactions (from_user_id);
+CREATE INDEX idx_transactions_to_user_id ON transactions (to_user_id);
 
 -- ******************* INVITATIONS *******************
 

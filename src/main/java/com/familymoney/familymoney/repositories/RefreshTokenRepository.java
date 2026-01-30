@@ -1,8 +1,9 @@
 package com.familymoney.familymoney.repositories;
 
+import com.familymoney.familymoney.generated.tables.RefreshTokens;
 import com.familymoney.familymoney.repositories.dbos.RefreshTokenDbo;
 import com.familymoney.familymoney.repositories.dbos.UpdateRefreshTokenDbo;
-import com.familymoney.familymoney.repositories.mappers.RefreshTokenRowMapper;
+import com.familymoney.familymoney.repositories.mappers.RefreshTokenJooqMapper;
 import com.familymoney.familymoney.types.RefreshToken;
 import com.familymoney.familymoney.types.UserId;
 import java.time.Duration;
@@ -12,123 +13,117 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
-import org.springframework.jdbc.core.simple.JdbcClient;
+import org.jooq.DSLContext;
+import org.jooq.impl.DSL;
 import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
 public class RefreshTokenRepository implements IRefreshTokenRepository {
 
-  private final JdbcClient jdbcClient;
+  private final DSLContext db;
 
   @Override
-  public Optional<RefreshTokenDbo> create(final UserId userId, final RefreshToken token, final UUID family) {
-    val sql =
-        """
-        INSERT INTO refresh_tokens (user_id, token, family)
-        VALUES (:userId, :token, :family)
-        RETURNING id, user_id, token, created_at, expires_at, is_used, used_at, family
-        """;
-    return jdbcClient
-        .sql(sql)
-        .param("userId", userId.value())
-        .param("token", token.value())
-        .param("family", family)
-        .query(new RefreshTokenRowMapper())
-        .optional();
+  public Optional<RefreshTokenDbo> create(
+      final UserId userId, final RefreshToken token, final UUID family) {
+    return db.insertInto(RefreshTokens.REFRESH_TOKENS)
+        .columns(
+            RefreshTokens.REFRESH_TOKENS.USER_ID,
+            RefreshTokens.REFRESH_TOKENS.TOKEN,
+            RefreshTokens.REFRESH_TOKENS.FAMILY)
+        .values(userId.value(), token.value(), family)
+        .returning(
+            RefreshTokens.REFRESH_TOKENS.ID,
+            RefreshTokens.REFRESH_TOKENS.USER_ID,
+            RefreshTokens.REFRESH_TOKENS.TOKEN,
+            RefreshTokens.REFRESH_TOKENS.CREATED_AT,
+            RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,
+            RefreshTokens.REFRESH_TOKENS.IS_USED,
+            RefreshTokens.REFRESH_TOKENS.USED_AT,
+            RefreshTokens.REFRESH_TOKENS.FAMILY)
+        .fetchOptional()
+        .map(RefreshTokenJooqMapper::toDbo);
   }
 
   @Override
   public Optional<RefreshTokenDbo> findByToken(final RefreshToken token) {
-    val sql =
-        """
-        SELECT id, user_id, token, created_at, expires_at, is_used, used_at, family
-        FROM refresh_tokens
-        WHERE token = :token
-        """;
-    return jdbcClient
-        .sql(sql)
-        .param("token", token.value())
-        .query(new RefreshTokenRowMapper())
-        .optional();
+    return db.select(
+            RefreshTokens.REFRESH_TOKENS.ID,
+            RefreshTokens.REFRESH_TOKENS.USER_ID,
+            RefreshTokens.REFRESH_TOKENS.TOKEN,
+            RefreshTokens.REFRESH_TOKENS.CREATED_AT,
+            RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,
+            RefreshTokens.REFRESH_TOKENS.IS_USED,
+            RefreshTokens.REFRESH_TOKENS.USED_AT,
+            RefreshTokens.REFRESH_TOKENS.FAMILY)
+        .from(RefreshTokens.REFRESH_TOKENS)
+        .where(RefreshTokens.REFRESH_TOKENS.TOKEN.eq(token.value()))
+        .fetchOptional()
+        .map(RefreshTokenJooqMapper::toDbo);
   }
 
   @Override
   public boolean updateByToken(final RefreshToken token, final UpdateRefreshTokenDbo data) {
-    val sql =
-        """
-        UPDATE users
-        SET is_used = COALESCE(:isUsed, is_used),
-            used_at = COALESCE(:usedAt, used_at)
-        WHERE token = :token
-        """;
+    val usedAtVal =
+        data.getUsedAt() != null
+            ? OffsetDateTime.ofInstant(data.getUsedAt(), ZoneOffset.UTC)
+            : null;
     val rowsAffected =
-        jdbcClient
-            .sql(sql)
-            .param("token", token.value())
-            .param("isUsed", data.getIsUsed())
-            .param(
-                "usedAt",
-                data.getUsedAt() != null
-                    ? OffsetDateTime.ofInstant(data.getUsedAt(), ZoneOffset.UTC)
-                    : null)
-            .update();
+        db.update(RefreshTokens.REFRESH_TOKENS)
+            .set(
+                RefreshTokens.REFRESH_TOKENS.IS_USED,
+                DSL.coalesce(DSL.val(data.getIsUsed()), RefreshTokens.REFRESH_TOKENS.IS_USED))
+            .set(
+                RefreshTokens.REFRESH_TOKENS.USED_AT,
+                DSL.coalesce(DSL.val(usedAtVal), RefreshTokens.REFRESH_TOKENS.USED_AT))
+            .where(RefreshTokens.REFRESH_TOKENS.TOKEN.eq(token.value()))
+            .execute();
     return rowsAffected > 0;
   }
 
   @Override
   public boolean updateByFamily(final UUID family, final UpdateRefreshTokenDbo data) {
-    val sql =
-        """
-        UPDATE users
-        SET is_used = COALESCE(:isUsed, is_used),
-            used_at = COALESCE(:usedAt, used_at)
-        WHERE family = :family
-        """;
+    val usedAtVal =
+        data.getUsedAt() != null
+            ? OffsetDateTime.ofInstant(data.getUsedAt(), ZoneOffset.UTC)
+            : null;
     val rowsAffected =
-        jdbcClient
-            .sql(sql)
-            .param("family", family)
-            .param("isUsed", data.getIsUsed())
-            .param(
-                "usedAt",
-                data.getUsedAt() != null
-                    ? OffsetDateTime.ofInstant(data.getUsedAt(), ZoneOffset.UTC)
-                    : null)
-            .update();
+        db.update(RefreshTokens.REFRESH_TOKENS)
+            .set(
+                RefreshTokens.REFRESH_TOKENS.IS_USED,
+                DSL.coalesce(DSL.val(data.getIsUsed()), RefreshTokens.REFRESH_TOKENS.IS_USED))
+            .set(
+                RefreshTokens.REFRESH_TOKENS.USED_AT,
+                DSL.coalesce(DSL.val(usedAtVal), RefreshTokens.REFRESH_TOKENS.USED_AT))
+            .where(RefreshTokens.REFRESH_TOKENS.FAMILY.eq(family))
+            .execute();
     return rowsAffected > 0;
   }
 
   @Override
   public boolean updateByUserId(final UserId userId, final UpdateRefreshTokenDbo data) {
-    val sql =
-        """
-        UPDATE users
-        SET is_used = COALESCE(:isUsed, is_used),
-            used_at = COALESCE(:usedAt, used_at)
-        WHERE user_id = :userId
-        """;
+    val usedAtVal =
+        data.getUsedAt() != null
+            ? OffsetDateTime.ofInstant(data.getUsedAt(), ZoneOffset.UTC)
+            : null;
     val rowsAffected =
-        jdbcClient
-            .sql(sql)
-            .param("userId", userId.value())
-            .param("isUsed", data.getIsUsed())
-            .param(
-                "usedAt",
-                data.getUsedAt() != null
-                    ? OffsetDateTime.ofInstant(data.getUsedAt(), ZoneOffset.UTC)
-                    : null)
-            .update();
+        db.update(RefreshTokens.REFRESH_TOKENS)
+            .set(
+                RefreshTokens.REFRESH_TOKENS.IS_USED,
+                DSL.coalesce(DSL.val(data.getIsUsed()), RefreshTokens.REFRESH_TOKENS.IS_USED))
+            .set(
+                RefreshTokens.REFRESH_TOKENS.USED_AT,
+                DSL.coalesce(DSL.val(usedAtVal), RefreshTokens.REFRESH_TOKENS.USED_AT))
+            .where(RefreshTokens.REFRESH_TOKENS.USER_ID.eq(userId.value()))
+            .execute();
     return rowsAffected > 0;
   }
 
   @Override
   public void deleteOlderThan(final Duration cutoff) {
-    val sql =
-        """
-        DELETE FROM refresh_tokens
-        WHERE created_at < NOW() - INTERVAL ':duration seconds'
-        """;
-    jdbcClient.sql(sql).param("duration", cutoff.toSeconds()).update();
+    val threshold = OffsetDateTime.now(ZoneOffset.UTC).minusSeconds(cutoff.getSeconds());
+    db.deleteFrom(RefreshTokens.REFRESH_TOKENS)
+        .where(RefreshTokens.REFRESH_TOKENS.CREATED_AT.lt(threshold))
+        .execute();
   }
 }

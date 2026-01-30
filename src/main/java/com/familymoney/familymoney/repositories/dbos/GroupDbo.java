@@ -13,6 +13,5 @@ public record GroupDbo(
     GroupName name,
     String description,
     CurrencyUnit currency,
-    UserId createdBy,
     Instant createdAt,
     Instant updatedAt) {}

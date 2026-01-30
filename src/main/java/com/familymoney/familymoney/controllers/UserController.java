@@ -21,13 +21,13 @@ public class UserController implements IUserController {
   @Override
   public GetMyUserResponseDto getMyUserInfo() {
     // Get user ID from security context (validated)
-    val userId = AuthenticationUtils.getUserIdFromSecurityContext();
+    val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Fetch user data
     val userData =
         userService
-            .getUserData(userId)
+            .getUserData(user.id())
             .orElseThrow(
-                () -> new java.util.NoSuchElementException("User not found for id: " + userId));
+                () -> new java.util.NoSuchElementException("User not found for id: " + user.id()));
     // Return response
     return getUserResponseMapper.toDto(userData);
   }
@@ -35,16 +35,16 @@ public class UserController implements IUserController {
   @Override
   public void deleteMyUser() {
     // Get user ID from security context (validated)
-    val userId = AuthenticationUtils.getUserIdFromSecurityContext();
+    val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Delete user
-    userService.deleteUser(userId);
+    userService.deleteUser(user.id());
   }
 
   @Override
   public void updateMyUserInfo(UpdateUserRequestDto request) {
     // Get user ID from security context (validated)
-    val userId = AuthenticationUtils.getUserIdFromSecurityContext();
+    val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Update user
-    userService.updateUserInfo(userId, updateUserRequestMapper.fromDto(request));
+    userService.updateUserInfo(user.id(), updateUserRequestMapper.fromDto(request));
   }
 }

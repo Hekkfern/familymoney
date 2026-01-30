@@ -1,9 +1,13 @@
+import dev.monosoul.jooq.RecommendedVersions.JOOQ_VERSION
+
 plugins {
     java
     alias(libs.plugins.springboot)
     alias(libs.plugins.springboot.dependencymanagement)
     idea
     checkstyle
+    alias(libs.plugins.jooq)
+    alias(libs.plugins.lombok)
 }
 
 group = "com.familymoney"
@@ -39,12 +43,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-flyway")
+    implementation("org.springframework.boot:spring-boot-starter-jooq")
     implementation(libs.flyway.postgresql)
     implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
-    compileOnly(libs.lombok)
-    annotationProcessor(libs.lombok)
-    testCompileOnly(libs.lombok)
-    testAnnotationProcessor(libs.lombok)
     runtimeOnly("org.postgresql:postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
@@ -64,6 +65,8 @@ dependencies {
     annotationProcessor(libs.mapstruct.processor)
     implementation(libs.moneta)
     testCompileOnly("org.assertj:assertj-core:3.11.1")
+    implementation("org.jooq:jooq:${JOOQ_VERSION}")
+    jooqCodegen("org.postgresql:postgresql")
 }
 
 tasks.withType<Test> {
@@ -77,3 +80,17 @@ tasks.withType<Test>().configureEach {
     this.jvmArgumentProviders.add { listOf("-javaagent:${mockito.get().asFile}") }
 }
 
+tasks {
+    generateJooqClasses {
+        withContainer {
+            image {
+                name = "postgres:18.1-alpine"
+            }
+        }
+        schemas.set(listOf("public"))
+        basePackageName.set("com.familymoney.familymoney.generated")
+        migrationLocations.setFromFilesystem(
+            project.files("$projectDir/src/main/resources/db/migration"),
+        )
+    }
+}
