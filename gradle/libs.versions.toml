@@ -9,8 +9,27 @@ moneta = "1.4.5"
 assertj = "3.27.7"
 jooq-plugin = "8.0.11"
 lombok-plugin = "9.2.0"
+thymeleafextras-springsecurity6 = "3.1.3.RELEASE"
 
 [libraries]
+spring-starter-actuator = { module = "org.springframework.boot:spring-boot-starter-actuator" }
+spring-starter-data-jdbc = { module = "org.springframework.boot:spring-boot-starter-data-jdbc" }
+spring-starter-mail = { module = "org.springframework.boot:spring-boot-starter-mail" }
+spring-starter-security = { module = "org.springframework.boot:spring-boot-starter-security" }
+spring-starter-thymeleaf = { module = "org.springframework.boot:spring-boot-starter-thymeleaf" }
+spring-starter-validation = { module = "org.springframework.boot:spring-boot-starter-validation" }
+spring-starter-web = { module = "org.springframework.boot:spring-boot-starter-web" }
+spring-starter-flyway = { module = "org.springframework.boot:spring-boot-starter-flyway" }
+spring-starter-jooq = { module = "org.springframework.boot:spring-boot-starter-jooq" }
+spring-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
+spring-testcontainers = { module = "org.springframework.boot:spring-boot-testcontainers" }
+spring-starter-flyway-test = { module = "org.springframework.boot:spring-boot-starter-flyway-test" }
+spring-starter-jooq-test = { module = "org.springframework.boot:spring-boot-starter-jooq-test" }
+spring-resttestclient = { module = "org.springframework.boot:spring-boot-resttestclient" }
+spring-starter-webmvc-test = { module = "org.springframework.boot:spring-boot-starter-webmvc-test" }
+spring-security-test = { module = "org.springframework.security:spring-security-test" }
+
+thymeleafextras-springsecurity6 = { module = "org.thymeleaf.extras:thymeleaf-extras-springsecurity6", version.ref = "thymeleafextras-springsecurity6" }
 flyway-postgresql = { module = "org.flywaydb:flyway-database-postgresql" }
 springdoc-openapi = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc-openapi" }
 jjwt-api = { module = "io.jsonwebtoken:jjwt-api", version.ref = "jjwt" }
