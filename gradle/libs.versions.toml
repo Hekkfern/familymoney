@@ -6,7 +6,7 @@ jjwt = "0.13.0"
 testcontainers = "2.0.2"
 mapstruct = "1.6.3"
 moneta = "1.4.5"
-assertj = "3.27.6"
+assertj = "3.27.7"
 jooq-plugin = "8.0.11"
 lombok-plugin = "9.2.0"
 

@@ -8,6 +8,7 @@ plugins {
     checkstyle
     alias(libs.plugins.jooq)
     alias(libs.plugins.lombok)
+    id("com.coditory.integration-test") version "2.2.5"
 }
 
 group = "com.familymoney"
@@ -51,6 +52,7 @@ dependencies {
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.springframework.boot:spring-boot-starter-flyway-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-jooq-test")
     testImplementation(libs.testcontainers)
     testImplementation(libs.testcontainers.junit)
     testImplementation(libs.testcontainers.postgresql)
@@ -64,9 +66,16 @@ dependencies {
     implementation(libs.mapstruct)
     annotationProcessor(libs.mapstruct.processor)
     implementation(libs.moneta)
-    testCompileOnly("org.assertj:assertj-core:3.11.1")
+    testCompileOnly(libs.assertj)
     implementation("org.jooq:jooq:${JOOQ_VERSION}")
     jooqCodegen("org.postgresql:postgresql")
+    integrationImplementation("org.springframework.boot:spring-boot-starter-test")
+    integrationImplementation("org.springframework.boot:spring-boot-testcontainers")
+    integrationImplementation("org.springframework.boot:spring-boot-starter-flyway-test")
+    integrationImplementation("org.springframework.boot:spring-boot-starter-jooq-test")
+    integrationImplementation(libs.testcontainers)
+    integrationImplementation(libs.testcontainers.junit)
+    integrationImplementation(libs.testcontainers.postgresql)
 }
 
 tasks.withType<Test> {
