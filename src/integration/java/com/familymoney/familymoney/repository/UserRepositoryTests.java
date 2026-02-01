@@ -1,14 +1,14 @@
 package com.familymoney.familymoney.repository;
 
 import static com.familymoney.familymoney.utils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.familymoney.familymoney.repositories.UserRepository;
 import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.UserName;
 import com.familymoney.familymoney.utils.FakeGenerator;
+import java.time.Instant;
 import lombok.val;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,15 +43,19 @@ public class UserRepositoryTests {
     val email = Email.fromString(FakeGenerator.email());
     val passwordHash = "hashed-password";
 
-    val created = userRepository.create(username, email, passwordHash);
+    val now = Instant.now();
 
-    assertTrue(created.isPresent());
-    val user = created.get();
-    assertNotNull(user.id());
-    assertEquals(username, user.username());
-    assertEquals(email, user.email());
-    assertEquals(passwordHash, user.hashedPassword());
-    assertNotNull(user.createdAt());
-    assertNotNull(user.updatedAt());
+    val userCreated = userRepository.create(username, email, passwordHash);
+
+    assertTrue(userCreated.isPresent());
+    val user = userCreated.get();
+    assertThat(user.id()).isNotNull();
+    assertThat(user.username()).isEqualTo(username);
+    assertThat(user.email()).isEqualTo(email);
+    assertThat(user.hashedPassword()).isEqualTo(passwordHash);
+    assertThat(user.createdAt()).isNotNull().isAfterOrEqualTo(now);
+    assertThat(user.updatedAt()).isNotNull().isAfterOrEqualTo(now);
+    assertThat(user.isEnabled()).isTrue();
+    assertThat(user.isEmailVerified()).isFalse();
   }
 }
