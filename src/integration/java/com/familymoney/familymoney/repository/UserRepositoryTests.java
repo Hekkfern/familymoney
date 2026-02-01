@@ -2,9 +2,7 @@ package com.familymoney.familymoney.repository;
 
 import static com.familymoney.familymoney.utils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.familymoney.familymoney.generated.tables.Users;
 import com.familymoney.familymoney.repositories.UserRepository;
@@ -48,7 +46,7 @@ public class UserRepositoryTests {
     this.userRepository = new UserRepository(dslContext);
   }
 
-  private UserDbo createUser(final String username,final String email) {
+  private UserDbo createUser(final String username, final String email) {
     return userRepository
         .create(UserName.fromString(username), Email.fromString(email), "hashed-password")
         .orElseThrow();
@@ -94,14 +92,14 @@ public class UserRepositoryTests {
 
     val userCreated = userRepository.create(username, email, passwordHash);
 
-    assertTrue(userCreated.isPresent());
+    assertThat(userCreated).isPresent();
     val user = userCreated.get();
     assertThat(user.id()).isNotNull();
     assertThat(user.username()).isEqualTo(username);
     assertThat(user.email()).isEqualTo(email);
     assertThat(user.hashedPassword()).isEqualTo(passwordHash);
-    assertThat(user.createdAt()).isNotNull().isAfterOrEqualTo(now);
-    assertThat(user.updatedAt()).isNotNull().isAfterOrEqualTo(now);
+    assertThat(user.createdAt()).isNotNull().isBetween(now.minusSeconds(1), now.plusSeconds(1));
+    assertThat(user.updatedAt()).isNotNull().isBetween(now.minusSeconds(1), now.plusSeconds(1));
     assertThat(user.isEnabled()).isTrue();
     assertThat(user.isEmailVerified()).isFalse();
   }
@@ -114,11 +112,11 @@ public class UserRepositoryTests {
 
     userRepository.create(username, email, passwordHash);
 
-    assertThrows(
-        DuplicateKeyException.class,
-        () ->
-            userRepository.create(
-                UserName.fromString(FakeGenerator.username()), email, passwordHash));
+    assertThatThrownBy(
+            () ->
+                userRepository.create(
+                    UserName.fromString(FakeGenerator.username()), email, passwordHash))
+        .isInstanceOf(DuplicateKeyException.class);
   }
 
   @Test
@@ -129,10 +127,10 @@ public class UserRepositoryTests {
 
     userRepository.create(username, email, passwordHash);
 
-    assertThrows(
-        DuplicateKeyException.class,
-        () ->
-            userRepository.create(username, Email.fromString(FakeGenerator.email()), passwordHash));
+    assertThatThrownBy(
+            () ->
+                userRepository.create(username, Email.fromString(FakeGenerator.email()), passwordHash))
+        .isInstanceOf(DuplicateKeyException.class);
   }
 
   @Test
@@ -141,7 +139,7 @@ public class UserRepositoryTests {
 
     val found = userRepository.findById(created.id());
 
-    assertTrue(found.isPresent());
+    assertThat(found).isPresent();
     assertThat(found.get().id()).isEqualTo(created.id());
   }
 
@@ -151,7 +149,7 @@ public class UserRepositoryTests {
 
     val found = userRepository.findById(missing);
 
-    assertTrue(found.isEmpty());
+    assertThat(found).isEmpty();
   }
 
   @Test
@@ -161,7 +159,7 @@ public class UserRepositoryTests {
 
     val found = userRepository.findByEmail(Email.fromString(email));
 
-    assertTrue(found.isPresent());
+    assertThat(found).isPresent();
     assertThat(found.get().id()).isEqualTo(created.id());
   }
 
@@ -169,7 +167,7 @@ public class UserRepositoryTests {
   void findByEmail_returns_empty_when_missing() {
     val found = userRepository.findByEmail(Email.fromString(FakeGenerator.email()));
 
-    assertTrue(found.isEmpty());
+    assertThat(found).isEmpty();
   }
 
   @Test
@@ -179,7 +177,7 @@ public class UserRepositoryTests {
 
     val found = userRepository.findByUsername(UserName.fromString(username));
 
-    assertTrue(found.isPresent());
+    assertThat(found).isPresent();
     assertThat(found.get().id()).isEqualTo(created.id());
   }
 
@@ -187,7 +185,7 @@ public class UserRepositoryTests {
   void findByUsername_returns_empty_when_missing() {
     val found = userRepository.findByUsername(UserName.fromString(FakeGenerator.username()));
 
-    assertTrue(found.isEmpty());
+    assertThat(found).isEmpty();
   }
 
   @Test
@@ -196,12 +194,14 @@ public class UserRepositoryTests {
     val email = FakeGenerator.email();
     createUser(username, email);
 
-    assertTrue(
-        userRepository.existsByEmailOrUsername(
-            Email.fromString(email), UserName.fromString(FakeGenerator.username())));
-    assertTrue(
-        userRepository.existsByEmailOrUsername(
-            Email.fromString(FakeGenerator.email()), UserName.fromString(username)));
+    assertThat(
+            userRepository.existsByEmailOrUsername(
+                Email.fromString(email), UserName.fromString(FakeGenerator.username())))
+        .isTrue();
+    assertThat(
+            userRepository.existsByEmailOrUsername(
+                Email.fromString(FakeGenerator.email()), UserName.fromString(username)))
+        .isTrue();
   }
 
   @Test
@@ -210,7 +210,7 @@ public class UserRepositoryTests {
         userRepository.existsByEmailOrUsername(
             Email.fromString(FakeGenerator.email()), UserName.fromString(FakeGenerator.username()));
 
-    assertFalse(exists);
+    assertThat(exists).isFalse();
   }
 
   @Test
@@ -227,7 +227,7 @@ public class UserRepositoryTests {
 
     val updated = userRepository.updateById(created.id(), updateData);
 
-    assertTrue(updated);
+    assertThat(updated).isTrue();
     val found = userRepository.findById(created.id()).orElseThrow();
     assertThat(found.username()).isEqualTo(updateData.getUsername());
     assertThat(found.email()).isEqualTo(updateData.getEmail());
@@ -243,7 +243,7 @@ public class UserRepositoryTests {
     val updated =
         userRepository.updateById(UserId.fromUuid(java.util.UUID.randomUUID()), updateData);
 
-    assertFalse(updated);
+    assertThat(updated).isFalse();
   }
 
   @Test
@@ -252,15 +252,15 @@ public class UserRepositoryTests {
 
     val deleted = userRepository.deleteById(created.id());
 
-    assertTrue(deleted);
-    assertTrue(userRepository.findById(created.id()).isEmpty());
+    assertThat(deleted).isTrue();
+    assertThat(userRepository.findById(created.id()).isEmpty()).isTrue();
   }
 
   @Test
   void deleteById_returns_false_when_missing() {
     val deleted = userRepository.deleteById(UserId.fromUuid(java.util.UUID.randomUUID()));
 
-    assertFalse(deleted);
+    assertThat(deleted).isFalse();
   }
 
   @Test
@@ -278,9 +278,9 @@ public class UserRepositoryTests {
 
     userRepository.deleteByIsUnverifiedAndOlderThan(Duration.ofDays(2));
 
-    assertTrue(userRepository.findById(oldUnverified).isEmpty());
-    assertTrue(userRepository.findById(recentUnverified).isPresent());
-    assertTrue(userRepository.findById(oldVerified).isPresent());
+    assertThat(userRepository.findById(oldUnverified).isEmpty()).isTrue();
+    assertThat(userRepository.findById(recentUnverified).isPresent()).isTrue();
+    assertThat(userRepository.findById(oldVerified).isPresent()).isTrue();
   }
 
   @Test
