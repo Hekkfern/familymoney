@@ -8,7 +8,7 @@ plugins {
     checkstyle
     alias(libs.plugins.jooq)
     alias(libs.plugins.lombok)
-    id("com.coditory.integration-test") version "2.2.5"
+    alias(libs.plugins.integrationtest)
 }
 
 group = "com.familymoney"
@@ -83,9 +83,10 @@ tasks.withType<Test> {
 }
 
 tasks.withType<Test>().configureEach {
-    val mockito = this.classpath.elements.map { files ->
-        files.single { it.asFile.name.startsWith("mockito-core-") }
-    }
+    val mockito =
+        this.classpath.elements.map { files ->
+            files.single { it.asFile.name.startsWith("mockito-core-") }
+        }
     this.jvmArgumentProviders.add { listOf("-javaagent:${mockito.get().asFile}") }
 }
 
