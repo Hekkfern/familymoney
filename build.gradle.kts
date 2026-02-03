@@ -66,6 +66,7 @@ dependencies {
     implementation(libs.mapstruct)
     annotationProcessor(libs.mapstruct.processor)
     implementation(libs.moneta)
+    implementation("org.jooq:jooq:${JOOQ_VERSION}")
     testCompileOnly(libs.assertj)
     jooqCodegen("org.postgresql:postgresql")
     integrationImplementation(libs.spring.starter.test)
