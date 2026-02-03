@@ -32,6 +32,7 @@ import org.javamoney.moneta.Money;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -51,6 +52,7 @@ public class TransactionGroupService implements ITransactionGroupService {
   private final Clock clock;
 
   @Override
+  @Transactional
   public GroupId createGroup(
       GroupName name, String description, CurrencyUnit currency, UserId createdBy) {
     // Create group in the database
@@ -58,6 +60,11 @@ public class TransactionGroupService implements ITransactionGroupService {
         groupRepository
             .create(name, description, currency, createdBy)
             .orElseThrow(() -> new DatabaseExecutionException("Unable to create group"));
+    // Add creator to the group
+    groupRepository
+        .addUser(createdBy, group.id())
+        .orElseThrow(
+            () -> new DatabaseExecutionException("Unable to assign owner to the new group"));
     return group.id();
   }
 

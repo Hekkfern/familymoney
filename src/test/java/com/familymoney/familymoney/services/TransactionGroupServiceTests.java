@@ -119,18 +119,23 @@ public class TransactionGroupServiceTests {
   }
 
   // -------- createGroup --------
-
   @Test
   void createGroup_returns_id_when_repository_succeeds() {
     val groupId = GroupId.fromUuid(UUID.randomUUID());
+    val createdBy = UserId.fromUuid(UUID.randomUUID());
     val group = groupDbo(groupId);
-    when(groupRepository.create(any(), anyString(), any(), any())).thenReturn(Optional.of(group));
+    when(groupRepository.create(any(), anyString(), any(), eq(createdBy)))
+        .thenReturn(Optional.of(group));
+    when(groupRepository.addUser(eq(createdBy), eq(groupId)))
+        .thenReturn(
+            Optional.of(
+                UserGroupDbo.builder().userId(createdBy).groupId(groupId).joinedAt(now).build()));
 
     val result =
-        transactionGroupService.createGroup(
-            GroupName.fromString("n"), "d", usd, UserId.fromUuid(UUID.randomUUID()));
+        transactionGroupService.createGroup(GroupName.fromString("n"), "d", usd, createdBy);
 
     assertThat(result).isEqualTo(groupId);
+    verify(groupRepository).addUser(eq(createdBy), eq(groupId));
   }
 
   @Test
@@ -143,6 +148,22 @@ public class TransactionGroupServiceTests {
                     GroupName.fromString("n"), "d", usd, UserId.fromUuid(UUID.randomUUID())))
         .isInstanceOf(DatabaseExecutionException.class)
         .hasMessageContaining("Unable to create group");
+  }
+
+  @Test
+  void createGroup_throws_when_addUser_returns_empty() {
+    val groupId = GroupId.fromUuid(UUID.randomUUID());
+    val createdBy = UserId.fromUuid(UUID.randomUUID());
+    val group = groupDbo(groupId);
+    when(groupRepository.create(any(), anyString(), any(), eq(createdBy)))
+        .thenReturn(Optional.of(group));
+    when(groupRepository.addUser(eq(createdBy), eq(groupId))).thenReturn(Optional.empty());
+
+    assertThatThrownBy(
+            () ->
+                transactionGroupService.createGroup(GroupName.fromString("n"), "d", usd, createdBy))
+        .isInstanceOf(DatabaseExecutionException.class)
+        .hasMessageContaining("Unable to assign owner to the new group");
   }
 
   // -------- deleteGroup --------
