@@ -9,8 +9,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.familymoney.familymoney.exceptions.DatabaseExecutionException;
-import com.familymoney.familymoney.exceptions.GroupInvitationNotFoundException;
-import com.familymoney.familymoney.exceptions.GroupNotOwnedByUserException;
+import com.familymoney.familymoney.exceptions.GroupInvitationInvalidException;
+import com.familymoney.familymoney.exceptions.UserIsNotMemberOfGroupException;
 import com.familymoney.familymoney.exceptions.TransactionNotFoundException;
 import com.familymoney.familymoney.repositories.*;
 import com.familymoney.familymoney.repositories.dbos.*;
@@ -186,20 +186,20 @@ public class TransactionGroupServiceTests {
     when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
 
     assertThatThrownBy(() -> transactionGroupService.deleteGroup(gid, user))
-        .isInstanceOf(GroupNotOwnedByUserException.class);
+        .isInstanceOf(UserIsNotMemberOfGroupException.class);
   }
 
-  // -------- getGroups --------
+  // -------- getGroupsByUser --------
 
   @Test
-  void getGroups_maps_page_from_repository() {
+  void getGroups_ByUserId_maps_page_from_repository() {
     val user = UserId.fromUuid(UUID.randomUUID());
     val gid = GroupId.fromUuid(UUID.randomUUID());
     val g = groupDbo(gid);
     Pageable p = PageRequest.of(0, 10);
     when(groupRepository.findByUserId(user, p)).thenReturn(new PageImpl<>(List.of(g)));
 
-    val page = transactionGroupService.getGroups(user, p);
+    val page = transactionGroupService.getGroupsByUser(user, p);
 
     assertThat(page.getContent()).hasSize(1);
     assertThat(page.getContent().get(0).id()).isEqualTo(gid);
@@ -227,7 +227,7 @@ public class TransactionGroupServiceTests {
     when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
 
     assertThatThrownBy(() -> transactionGroupService.getGroupInfo(gid, user))
-        .isInstanceOf(GroupNotOwnedByUserException.class);
+        .isInstanceOf(UserIsNotMemberOfGroupException.class);
   }
 
   @Test
@@ -264,7 +264,7 @@ public class TransactionGroupServiceTests {
 
     val data = UpdateGroupData.builder().description("new").build();
     assertThatThrownBy(() -> transactionGroupService.updateGroupInfo(gid, user, data))
-        .isInstanceOf(GroupNotOwnedByUserException.class);
+        .isInstanceOf(UserIsNotMemberOfGroupException.class);
   }
 
   // -------- getInvitationToken --------
@@ -291,7 +291,7 @@ public class TransactionGroupServiceTests {
     when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
 
     assertThatThrownBy(() -> transactionGroupService.getInvitationToken(gid, user))
-        .isInstanceOf(GroupNotOwnedByUserException.class);
+        .isInstanceOf(UserIsNotMemberOfGroupException.class);
   }
 
   @Test
@@ -329,7 +329,7 @@ public class TransactionGroupServiceTests {
     when(groupInvitationRepository.findByToken(token)).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> transactionGroupService.enterToGroupWithToken(token, user))
-        .isInstanceOf(GroupInvitationNotFoundException.class);
+        .isInstanceOf(GroupInvitationInvalidException.class);
   }
 
   @Test
@@ -341,7 +341,7 @@ public class TransactionGroupServiceTests {
     when(groupInvitationRepository.findByToken(token)).thenReturn(Optional.of(invitation));
 
     assertThatThrownBy(() -> transactionGroupService.enterToGroupWithToken(token, user))
-        .isInstanceOf(GroupInvitationNotFoundException.class)
+        .isInstanceOf(GroupInvitationInvalidException.class)
         .hasMessageContaining("expired");
   }
 
@@ -367,7 +367,7 @@ public class TransactionGroupServiceTests {
     when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
 
     assertThatThrownBy(() -> transactionGroupService.getUsersInGroup(gid, user))
-        .isInstanceOf(GroupNotOwnedByUserException.class);
+        .isInstanceOf(UserIsNotMemberOfGroupException.class);
   }
 
   // -------- removeUserFromGroup --------
@@ -393,7 +393,7 @@ public class TransactionGroupServiceTests {
     when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
 
     assertThatThrownBy(() -> transactionGroupService.removeUserFromGroup(gid, user, toRemove))
-        .isInstanceOf(GroupNotOwnedByUserException.class);
+        .isInstanceOf(UserIsNotMemberOfGroupException.class);
   }
 
   // -------- getAllGroupBalances --------
@@ -420,7 +420,7 @@ public class TransactionGroupServiceTests {
     when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
 
     assertThatThrownBy(() -> transactionGroupService.getAllGroupBalances(gid, user))
-        .isInstanceOf(GroupNotOwnedByUserException.class);
+        .isInstanceOf(UserIsNotMemberOfGroupException.class);
   }
 
   // -------- getGroupTransactions --------
@@ -448,7 +448,7 @@ public class TransactionGroupServiceTests {
     when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
 
     assertThatThrownBy(() -> transactionGroupService.getGroupTransactions(gid, user, p))
-        .isInstanceOf(GroupNotOwnedByUserException.class);
+        .isInstanceOf(UserIsNotMemberOfGroupException.class);
   }
 
   // -------- createTransactionInGroup --------
@@ -487,7 +487,7 @@ public class TransactionGroupServiceTests {
                     Money.of(1, usd),
                     now,
                     creator))
-        .isInstanceOf(GroupNotOwnedByUserException.class);
+        .isInstanceOf(UserIsNotMemberOfGroupException.class);
   }
 
   // -------- updateTransaction --------
@@ -533,7 +533,7 @@ public class TransactionGroupServiceTests {
             () ->
                 transactionGroupService.updateTransaction(
                     user, txId, UpdateTransactionData.builder().build()))
-        .isInstanceOf(GroupNotOwnedByUserException.class);
+        .isInstanceOf(UserIsNotMemberOfGroupException.class);
   }
 
   // -------- deleteTransaction --------
@@ -572,6 +572,6 @@ public class TransactionGroupServiceTests {
     when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
 
     assertThatThrownBy(() -> transactionGroupService.deleteTransaction(user, txId))
-        .isInstanceOf(GroupNotOwnedByUserException.class);
+        .isInstanceOf(UserIsNotMemberOfGroupException.class);
   }
 }

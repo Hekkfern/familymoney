@@ -12,14 +12,14 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
     assignableTypes = {GroupController.class, TransactionGroupService.class})
 public class TransactionGroupExceptionHandler extends ResponseEntityExceptionHandler {
 
-  @ExceptionHandler(GroupNotOwnedByUserException.class)
-  public ProblemDetail handleGroupNotOwnedByUserException(GroupNotOwnedByUserException e) {
+  @ExceptionHandler(UserIsNotMemberOfGroupException.class)
+  public ProblemDetail handleGroupNotOwnedByUserException(UserIsNotMemberOfGroupException e) {
     logger.info(e.getMessage());
     return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "Invalid credentials");
   }
 
-    @ExceptionHandler(GroupInvitationNotFoundException.class)
-    public ProblemDetail handleGroupInvitationNotFoundException(GroupInvitationNotFoundException e) {
+    @ExceptionHandler(GroupInvitationInvalidException.class)
+    public ProblemDetail handleGroupInvitationNotFoundException(GroupInvitationInvalidException e) {
         logger.info(e.getMessage());
     return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
     }

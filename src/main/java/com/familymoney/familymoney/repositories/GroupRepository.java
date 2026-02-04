@@ -120,6 +120,12 @@ public class GroupRepository implements IGroupRepository {
   }
 
   @Override
+  public boolean existsById(GroupId id) {
+    return db.fetchExists(
+        db.selectOne().from(Groups.GROUPS).where(Groups.GROUPS.ID.eq(id.value())));
+  }
+
+  @Override
   public List<UserId> findUserIdsByGroupId(final GroupId id) {
     return db
         .select(UserGroups.USER_GROUPS.USER_ID)

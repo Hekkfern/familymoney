@@ -44,7 +44,7 @@ public class GroupController implements IGroupController {
     // Get user ID from security context (validated)
     val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Get groups of user
-    val groupPages = transactionGroupService.getGroups(user.id(), pageable);
+    val groupPages = transactionGroupService.getGroupsByUser(user.id(), pageable);
     // Generate response
     return GetGroupsResponseDto.builder()
         .groups(groupPages.getContent().stream().map(getGroupResponseMapper::toDto).toList())

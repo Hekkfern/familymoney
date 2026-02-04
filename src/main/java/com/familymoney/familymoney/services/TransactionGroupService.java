@@ -1,13 +1,7 @@
 package com.familymoney.familymoney.services;
 
-import com.familymoney.familymoney.exceptions.DatabaseExecutionException;
-import com.familymoney.familymoney.exceptions.GroupInvitationNotFoundException;
-import com.familymoney.familymoney.exceptions.GroupNotOwnedByUserException;
-import com.familymoney.familymoney.exceptions.TransactionNotFoundException;
-import com.familymoney.familymoney.repositories.IBalanceRepository;
-import com.familymoney.familymoney.repositories.IGroupInvitationRepository;
-import com.familymoney.familymoney.repositories.IGroupRepository;
-import com.familymoney.familymoney.repositories.ITransactionRepository;
+import com.familymoney.familymoney.exceptions.*;
+import com.familymoney.familymoney.repositories.*;
 import com.familymoney.familymoney.repositories.dbos.BalanceDbo;
 import com.familymoney.familymoney.services.data.GroupData;
 import com.familymoney.familymoney.services.data.TransactionData;
@@ -45,6 +39,7 @@ public class TransactionGroupService implements ITransactionGroupService {
   private final IBalanceRepository balanceRepository;
   private final ITransactionRepository transactionRepository;
   private final IGroupInvitationRepository groupInvitationRepository;
+  private final IUserRepository userRepository;
   private final GroupDataMapper groupDataMapper;
   private final UpdateGroupDataMapper updateGroupDataMapper;
   private final TransactionDataMapper transactionDataMapper;
@@ -68,17 +63,49 @@ public class TransactionGroupService implements ITransactionGroupService {
     return group.id();
   }
 
+  /**
+   * Checks if a user is a member of a group, throwing an exception if not.
+   *
+   * @param userId Identifier of the user
+   * @param groupId Identifier of the group
+   * @throws UserIsNotMemberOfGroupException if the user is not a member of the group
+   */
   private void checkIfUserIsInGroup(UserId userId, GroupId groupId)
-      throws GroupNotOwnedByUserException {
+      throws UserIsNotMemberOfGroupException {
     if (!groupRepository.isUserInGroup(userId, groupId)) {
       log.info("User {} is not a member of group {}", userId, groupId);
-      throw new GroupNotOwnedByUserException(
+      throw new UserIsNotMemberOfGroupException(
           String.format("User %s is not a member of group %s", userId, groupId));
+    }
+  }
+
+  /**
+   * Checks if a group exists, throwing an exception if not.
+   *
+   * @param groupId Identifier of the group
+   * @throws TransactionGroupNotFoundException if the group does not exist
+   */
+  private void checkIfGroupExists(GroupId groupId) {
+    val exists = groupRepository.existsById(groupId);
+    if (!exists) {
+      log.info("Group {} does not exist", groupId);
+      throw new TransactionGroupNotFoundException(
+          String.format("Group %s does not exist", groupId));
+    }
+  }
+
+  private void checkIfUserExists(UserId userId) {
+    val exists = userRepository.existsById(userId);
+    if (!exists) {
+      log.info("User {} does not exist", userId);
+      throw new UserNotFoundException(String.format("Group %s does not exist", userId));
     }
   }
 
   @Override
   public void deleteGroup(GroupId groupId, UserId userId) {
+    // Check if the group exists
+    checkIfGroupExists(groupId);
     // Check if the user is a member of the group
     checkIfUserIsInGroup(userId, groupId);
     // Delete group
@@ -86,12 +113,14 @@ public class TransactionGroupService implements ITransactionGroupService {
   }
 
   @Override
-  public Page<GroupData> getGroups(UserId userId, Pageable pageable) {
+  public Page<GroupData> getGroupsByUser(UserId userId, Pageable pageable) {
     return groupRepository.findByUserId(userId, pageable).map(groupDataMapper::fromDbo);
   }
 
   @Override
   public GroupData getGroupInfo(GroupId groupId, UserId userId) {
+    // Check if the group exists
+    checkIfGroupExists(groupId);
     // Check if the user is a member of the group
     checkIfUserIsInGroup(userId, groupId);
     // Get data
@@ -100,11 +129,14 @@ public class TransactionGroupService implements ITransactionGroupService {
         .map(groupDataMapper::fromDbo)
         .orElseThrow(
             () ->
-                new DatabaseExecutionException(String.format("Unable to find group %s", groupId)));
+                new TransactionGroupNotFoundException(
+                    String.format("Unable to find group %s", groupId)));
   }
 
   @Override
   public void updateGroupInfo(GroupId groupId, UserId userId, UpdateGroupData data) {
+    // Check if the group exists
+    checkIfGroupExists(groupId);
     // Check if the user is a member of the group
     checkIfUserIsInGroup(userId, groupId);
     // Update data
@@ -113,6 +145,8 @@ public class TransactionGroupService implements ITransactionGroupService {
 
   @Override
   public GroupInvitationToken getInvitationToken(GroupId groupId, UserId userId) {
+    // Check if the group exists
+    checkIfGroupExists(groupId);
     // Check if the user is a member of the group
     checkIfUserIsInGroup(userId, groupId);
     // Generate token
@@ -127,16 +161,17 @@ public class TransactionGroupService implements ITransactionGroupService {
   }
 
   @Override
+  @Transactional
   public void enterToGroupWithToken(GroupInvitationToken token, UserId userId) {
     // Get the invitation, if it exists
     val invitationDb =
         groupInvitationRepository
             .findByToken(token)
-            .orElseThrow(() -> new GroupInvitationNotFoundException("Invitation token not found"));
+            .orElseThrow(() -> new GroupInvitationInvalidException("Invitation token not found"));
     // Check if the invitation is expired
     if (invitationDb.expiresAt().isBefore(Instant.now(clock))) {
       log.info("Invitation token {} is expired", token);
-      throw new GroupInvitationNotFoundException("Invitation token expired");
+      throw new GroupInvitationInvalidException("Invitation token expired");
     }
     // Remove token after use
     groupInvitationRepository.deleteByToken(token);
@@ -146,6 +181,8 @@ public class TransactionGroupService implements ITransactionGroupService {
 
   @Override
   public List<UserId> getUsersInGroup(GroupId groupId, UserId userId) {
+    // Check if the group exists
+    checkIfGroupExists(groupId);
     // Check if the user is a member of the group
     checkIfUserIsInGroup(userId, groupId);
     // Get users in group
@@ -154,10 +191,14 @@ public class TransactionGroupService implements ITransactionGroupService {
 
   @Override
   public void removeUserFromGroup(GroupId groupId, UserId userId, UserId userIdToRemove) {
+    // Check if the group exists
+    checkIfGroupExists(groupId);
+    // Check if the user to remove exists
+    checkIfUserExists(userIdToRemove);
     // Check if the user is a member of the group
     checkIfUserIsInGroup(userId, groupId);
     // Remove user from group
-    groupRepository.deleteUser(userId, groupId);
+    groupRepository.deleteUser(userIdToRemove, groupId);
   }
 
   @Override

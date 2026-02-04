@@ -55,6 +55,21 @@ public interface IUserRepository {
    */
   boolean existsByEmailOrUsername(Email email, UserName username);
 
+  /**
+   * Check if a user exists by its ID
+   *
+   * @param id ID of the user to check
+   * @return true if the user exists, false otherwise
+   */
+  boolean existsById(UserId id);
+
+  /**
+   * Updates one or more fields of a user record identified by its ID
+   *
+   * @param id ID of the user to update
+   * @param data Data to update. Only non-null fields will be updated
+   * @return true if the update was successful, false otherwise
+   */
   boolean updateById(UserId id, UpdateUserDbo data);
 
   /**

@@ -25,6 +25,8 @@ public interface IGroupRepository {
 
   Optional<GroupDbo> findById(GroupId id);
 
+  boolean existsById(GroupId id);
+
   List<UserId> findUserIdsByGroupId(GroupId id);
 
   boolean isUserInGroup(UserId userId, GroupId groupId);

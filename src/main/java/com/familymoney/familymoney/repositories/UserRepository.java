@@ -108,6 +108,11 @@ public class UserRepository implements IUserRepository {
   }
 
   @Override
+  public boolean existsById(UserId id) {
+    return db.fetchExists(db.selectOne().from(Users.USERS).where(Users.USERS.ID.eq(id.value())));
+  }
+
+  @Override
   public boolean updateById(final UserId id, final UpdateUserDbo data) {
     val rowsAffected =
         db.update(Users.USERS)
