@@ -1,9 +1,6 @@
 package com.familymoney.familymoney.services;
 
-import com.familymoney.familymoney.exceptions.DatabaseExecutionException;
-import com.familymoney.familymoney.exceptions.GroupInvitationInvalidException;
-import com.familymoney.familymoney.exceptions.TransactionGroupNotFoundException;
-import com.familymoney.familymoney.exceptions.UserIsNotMemberOfGroupException;
+import com.familymoney.familymoney.exceptions.*;
 import com.familymoney.familymoney.services.data.GroupData;
 import com.familymoney.familymoney.services.data.TransactionData;
 import com.familymoney.familymoney.services.data.UpdateGroupData;
@@ -114,10 +111,40 @@ public interface ITransactionGroupService {
    */
   void removeUserFromGroup(GroupId groupId, UserId userId, UserId userIdToRemove);
 
+  /**
+   * Get the balance between all users in a group
+   *
+   * @param groupId Identifier of the group
+   * @param userId Identifier of the user requesting the balances
+   * @return Map of user identifiers to their respective balances
+   * @throws TransactionGroupNotFoundException if the group does not exist
+   * @throws UserIsNotMemberOfGroupException if the user is not a member of the group
+   */
   Map<UserId, Money> getAllGroupBalances(GroupId groupId, UserId userId);
 
+  /**
+   * Get a paginated list of individual transactions in a group, ordered by most recent first
+   *
+   * @param groupId Identifier of the group
+   * @param userId Identifier of the user requesting the balances
+   * @param pageable Pagination information
+   * @return Paginated list of transactions
+   * @throws TransactionGroupNotFoundException if the group does not exist
+   * @throws UserIsNotMemberOfGroupException if the user is not a member of the group
+   */
   Page<TransactionData> getGroupTransactions(GroupId groupId, UserId userId, Pageable pageable);
 
+  /**
+   * Create a new transaction in a group
+   *
+   * @param groupId Identifier of the group
+   * @param description Description of the transaction
+   * @param from Identifier of the user sending the money
+   * @param to Identifier of the user receiving the money
+   * @param amount Amount of money
+   * @param doneAt Timestamp when the transaction was done
+   * @param createdBy Identifier of the user creating the transaction
+   */
   void createTransactionInGroup(
       GroupId groupId,
       String description,
@@ -127,7 +154,25 @@ public interface ITransactionGroupService {
       Instant doneAt,
       UserId createdBy);
 
+  /**
+   * Update one or more fields of a transaction. Only non-null fields in the data parameter will be
+   * updated.
+   *
+   * @param userId Identifier of the user requesting the update
+   * @param transactionId Identifier of the transaction to update
+   * @param data Data to update. Only non-null fields will be updated
+   * @throws TransactionNotFoundException if the transaction does not exist
+   * @throws UserIsNotMemberOfGroupException if the user is not a member of the group
+   */
   void updateTransaction(UserId userId, TransactionId transactionId, UpdateTransactionData data);
 
+  /**
+   * Delete a transaction
+   *
+   * @param userId Identifier of the user requesting the deletion
+   * @param transactionId Identifier of the transaction to delete
+   * @throws TransactionNotFoundException if the transaction does not exist
+   * @throws UserIsNotMemberOfGroupException if the user is not a member of the group
+   */
   void deleteTransaction(UserId userId, TransactionId transactionId);
 }

@@ -203,6 +203,8 @@ public class TransactionGroupService implements ITransactionGroupService {
 
   @Override
   public Map<UserId, Money> getAllGroupBalances(GroupId groupId, UserId userId) {
+    // Check if the group exists
+    checkIfGroupExists(groupId);
     // Check if the user is a member of the group
     checkIfUserIsInGroup(userId, groupId);
     // Get balances
@@ -219,6 +221,8 @@ public class TransactionGroupService implements ITransactionGroupService {
   @Override
   public Page<TransactionData> getGroupTransactions(
       GroupId groupId, UserId userId, Pageable pageable) {
+    // Check if the group exists
+    checkIfGroupExists(groupId);
     // Check if the user is a member of the group
     checkIfUserIsInGroup(userId, groupId);
     // Get transactions
@@ -236,6 +240,8 @@ public class TransactionGroupService implements ITransactionGroupService {
       Money amount,
       Instant doneAt,
       UserId createdBy) {
+    // Check if the group exists
+    checkIfGroupExists(groupId);
     // Check if the user is a member of the group
     checkIfUserIsInGroup(createdBy, groupId);
     // create transaction
