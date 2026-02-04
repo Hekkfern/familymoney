@@ -45,6 +45,7 @@ dependencies {
     implementation(libs.spring.starter.web)
     implementation(libs.spring.starter.flyway)
     implementation(libs.spring.starter.jooq)
+    implementation(libs.spring.starter.redis)
     implementation(libs.flyway.postgresql)
     implementation(libs.thymeleafextras.springsecurity6)
     runtimeOnly("org.postgresql:postgresql")

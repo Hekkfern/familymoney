@@ -30,6 +30,7 @@ spring-starter-jooq-test = { module = "org.springframework.boot:spring-boot-star
 spring-resttestclient = { module = "org.springframework.boot:spring-boot-resttestclient" }
 spring-starter-webmvc-test = { module = "org.springframework.boot:spring-boot-starter-webmvc-test" }
 spring-security-test = { module = "org.springframework.security:spring-security-test" }
+spring-starter_redis = { module = "org.springframework.boot:spring-boot-starter-data-redis" }
 
 # Third party dependencies
 thymeleafextras-springsecurity6 = { module = "org.thymeleaf.extras:thymeleaf-extras-springsecurity6", version.ref = "thymeleafextras-springsecurity6" }
