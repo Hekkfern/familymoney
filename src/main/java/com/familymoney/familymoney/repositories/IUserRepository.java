@@ -10,88 +10,103 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+/**
+ * Repository contract for user persistence operations.
+ *
+ * <p>Implementations are responsible for CRUD operations and queries related to application users.
+ * Methods use domain-specific DTOs (Dbo) and value objects for strong typing.
+ */
 public interface IUserRepository {
 
   /**
-   * Create a new user record
+   * Create a new user record.
    *
-   * @param username Nametag of the user
-   * @param email Email address of the user
-   * @param passwordHash Hashed password of the user
-   * @return Created UserDbo wrapped in Optional, or empty Optional if creation failed
+   * @param username the user's display/handle. Must not be null.
+   * @param email the user's email address. Must not be null.
+   * @param passwordHash the hashed password to store for the user. Must not be null.
+   * @return an {@link Optional} containing the created {@link UserDbo} when successful; empty
+   *     Optional if the creation failed (e.g., uniqueness violation).
    */
   Optional<UserDbo> create(UserName username, Email email, String passwordHash);
 
   /**
-   * Find a user record by its ID
+   * Find a user record by its identifier.
    *
-   * @param id ID of the user
-   * @return Found UserDbo wrapped in Optional, or empty Optional if not found
+   * @param id the identifier of the user to find. Must not be null.
+   * @return an {@link Optional} containing the {@link UserDbo} if a user with the id exists,
+   *     otherwise an empty Optional.
    */
   Optional<UserDbo> findById(UserId id);
 
   /**
-   * Find a user record by its email
+   * Find a user record by its email address.
    *
-   * @param email Email address of the user
-   * @return Found UserDbo wrapped in Optional, or empty Optional if not found
+   * @param email the email address to search for. Must not be null.
+   * @return an {@link Optional} containing the {@link UserDbo} if found, otherwise empty.
    */
   Optional<UserDbo> findByEmail(Email email);
 
   /**
-   * Find a user record by its username
+   * Find a user record by its username.
    *
-   * @param username Nametag of the user
-   * @return Found UserDbo wrapped in Optional, or empty Optional if not found
+   * @param username the username to search for. Must not be null.
+   * @return an {@link Optional} containing the {@link UserDbo} if found, otherwise empty.
    */
   Optional<UserDbo> findByUsername(UserName username);
 
   /**
-   * Check if there is any other user record with the given email or username
+   * Check whether any user exists with the given email or username.
    *
-   * @param email Email address to check
-   * @param username Nametag to check
-   * @return true if a user with the given email or username exists, false otherwise
+   * <p>Typical implementations use this to guard uniqueness before creation or update. Note that
+   * there may still be a race condition: callers should handle uniqueness constraint violations
+   * from the database in addition to using this check.
+   *
+   * @param email the email to check for. Must not be null.
+   * @param username the username to check for. Must not be null.
+   * @return true if a record with the given email or username exists, false otherwise.
    */
   boolean existsByEmailOrUsername(Email email, UserName username);
 
   /**
-   * Check if a user exists by its ID
+   * Check whether a user exists by its id.
    *
-   * @param id ID of the user to check
-   * @return true if the user exists, false otherwise
+   * @param id the id to check for. Must not be null.
+   * @return true if a user with the provided id exists, false otherwise.
    */
   boolean existsById(UserId id);
 
   /**
-   * Updates one or more fields of a user record identified by its ID
+   * Update one or more fields of a user record identified by its id.
    *
-   * @param id ID of the user to update
-   * @param data Data to update. Only non-null fields will be updated
-   * @return true if the update was successful, false otherwise
+   * @param id the id of the user to update. Must not be null.
+   * @param data a {@link UpdateUserDbo} containing fields to change. Must not be null. Only
+   *     non-null fields will be applied.
+   * @return true if the update affected an existing record, false otherwise.
    */
   boolean updateById(UserId id, UpdateUserDbo data);
 
   /**
-   * Delete a user record by its ID
+   * Delete a user record by its id.
    *
-   * @param id ID of the user to delete
-   * @return true if deletion was successful, false otherwise
+   * @param id the id of the user to delete. Must not be null.
+   * @return true if a record was deleted, false if no matching record existed.
    */
   boolean deleteById(UserId id);
 
   /**
-   * Delete unverified user records older than the specified duration from the current time
+   * Delete unverified user records older than the provided duration.
    *
-   * @param cutoff Duration to determine the age of records to delete
+   * @param cutoff users created after now() - cutoff and unverified should be removed. Must not be
+   *     null.
    */
   void deleteByIsUnverifiedAndOlderThan(Duration cutoff);
 
   /**
-   * Retrieve a paginated list of all users
+   * Retrieve a paginated list of users.
    *
-   * @param pageable Pagination information
-   * @return A page of UserDbo records
+   * @param pageable paging information (page number, size, sort). Must not be null.
+   * @return a {@link Page} of {@link UserDbo} containing the users for the requested page. If no
+   *     users exist, the page will be empty.
    */
   Page<UserDbo> findAll(Pageable pageable);
 }

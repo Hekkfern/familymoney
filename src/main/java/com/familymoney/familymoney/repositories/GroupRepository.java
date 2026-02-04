@@ -33,8 +33,7 @@ public class GroupRepository implements IGroupRepository {
   public Optional<GroupDbo> create(
       final GroupName name,
       final String description,
-      final CurrencyUnit currency,
-      final UserId owner) {
+      final CurrencyUnit currency) {
     return db.insertInto(Groups.GROUPS)
         .columns(Groups.GROUPS.NAME, Groups.GROUPS.DESCRIPTION, Groups.GROUPS.CURRENCY_CODE)
         .values(name.value(), description, currency.getCurrencyCode())
