@@ -10,8 +10,8 @@ import static org.mockito.Mockito.when;
 
 import com.familymoney.familymoney.exceptions.DatabaseExecutionException;
 import com.familymoney.familymoney.exceptions.GroupInvitationInvalidException;
-import com.familymoney.familymoney.exceptions.UserIsNotMemberOfGroupException;
 import com.familymoney.familymoney.exceptions.TransactionNotFoundException;
+import com.familymoney.familymoney.exceptions.UserIsNotMemberOfGroupException;
 import com.familymoney.familymoney.repositories.*;
 import com.familymoney.familymoney.repositories.dbos.*;
 import com.familymoney.familymoney.services.data.UpdateGroupData;
@@ -124,7 +124,7 @@ public class TransactionGroupServiceTests {
     val groupId = GroupId.fromUuid(UUID.randomUUID());
     val createdBy = UserId.fromUuid(UUID.randomUUID());
     val group = groupDbo(groupId);
-    when(groupRepository.create(any(), anyString(), any(), eq(createdBy)))
+    when(groupRepository.create(any(), anyString(), any()))
         .thenReturn(Optional.of(group));
     when(groupRepository.addUser(eq(createdBy), eq(groupId)))
         .thenReturn(
@@ -140,7 +140,7 @@ public class TransactionGroupServiceTests {
 
   @Test
   void createGroup_throws_when_repository_returns_empty() {
-    when(groupRepository.create(any(), anyString(), any(), any())).thenReturn(Optional.empty());
+    when(groupRepository.create(any(), anyString(), any())).thenReturn(Optional.empty());
 
     assertThatThrownBy(
             () ->
@@ -155,7 +155,7 @@ public class TransactionGroupServiceTests {
     val groupId = GroupId.fromUuid(UUID.randomUUID());
     val createdBy = UserId.fromUuid(UUID.randomUUID());
     val group = groupDbo(groupId);
-    when(groupRepository.create(any(), anyString(), any(), eq(createdBy)))
+    when(groupRepository.create(any(), anyString(), any()))
         .thenReturn(Optional.of(group));
     when(groupRepository.addUser(eq(createdBy), eq(groupId))).thenReturn(Optional.empty());
 
