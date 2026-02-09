@@ -53,7 +53,7 @@ public class TransactionGroupService implements ITransactionGroupService {
     // Create group in the database
     val group =
         groupRepository
-            .create(name, description, currency, createdBy)
+            .create(name, description, currency)
             .orElseThrow(() -> new DatabaseExecutionException("Unable to create group"));
     // Add creator to the group
     groupRepository

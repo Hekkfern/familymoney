@@ -35,6 +35,8 @@ public class TransactionRepository implements ITransactionRepository {
       final UserId from,
       final UserId to,
       final Instant doneAt) {
+    assert amount.isGreaterThan(Money.zero(amount.getCurrency())) : "Amount must be positive";
+    assert !from.equals(to) : "Lender and borrower must be different users";
     return db.insertInto(Transactions.TRANSACTIONS)
         .columns(
             Transactions.TRANSACTIONS.DESCRIPTION,

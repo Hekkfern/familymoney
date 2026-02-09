@@ -8,6 +8,13 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
+/**
+ * Application runner that creates the first admin user on application startup.
+ *
+ * <p>This runner checks if an admin user already exists and creates one using the configured
+ * credentials if not. It ensures that there is always at least one default admin user available after
+ * deployment.
+ */
 @Component
 @Slf4j
 @RequiredArgsConstructor

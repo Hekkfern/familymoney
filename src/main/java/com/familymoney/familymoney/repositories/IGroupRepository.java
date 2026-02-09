@@ -102,9 +102,9 @@ public interface IGroupRepository {
    *
    * @param userId ID of the user to add. Must not be null.
    * @param groupId ID of the group to which the user should be added. Must not be null.
-   * @return Optional containing the created {@link UserGroupDbo} when the user was added
-   *     successfully, or empty Optional when the operation failed (for example if the user or group
-   *     doesn't exist or the user is already a member).
+   * @return {@link Optional} containing the created {@link UserGroupDbo} when the user was added
+   *     successfully, or empty {@link Optional} when the operation failed (for example if the user
+   *     or group doesn't exist or the user is already a member).
    */
   Optional<UserGroupDbo> addUser(UserId userId, GroupId groupId);
 

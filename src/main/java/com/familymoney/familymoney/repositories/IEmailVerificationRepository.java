@@ -15,7 +15,8 @@ public interface IEmailVerificationRepository {
    * @param userId ID of the user
    * @param token Email Verification token
    * @param expiresAt Timestamp when the token expires
-   * @return Created EmailVerificationDbo wrapped in Optional, or empty Optional if creation failed
+   * @return Created {@link EmailVerificationDbo} wrapped in Optional, or empty Optional if creation
+   *     failed
    */
   Optional<EmailVerificationDbo> create(
       UserId userId, EmailVerificationToken token, Instant expiresAt);
