@@ -7,6 +7,7 @@ import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.UserId;
 import java.util.List;
 import java.util.Optional;
+import javax.money.CurrencyUnit;
 
 /**
  * The IBalanceRepository interface defines the contract for managing balance entries within the
@@ -18,19 +19,21 @@ public interface IBalanceRepository {
   /**
    * Creates a new balance entry for a specific group and two users.
    *
+   * @param groupId the identifier of the group for which the balance is being created
+   * @param user1 the identifier of the first user involved in the balance
+   * @param user2 the identifier of the second user involved in the balance
+   * @param currency the currency unit for the balance amount (e.g., USD, EUR). This indicates the
+   *     currency in which the balance amount is denominated.
+   * @return an Optional containing the created BalanceDbo if the creation was successful, or an
+   *     empty Optional if the creation failed (e.g., due to invalid input or database constraints)
    * @implNote When a new balance is created, it is initialized with a default amount of zero,
    *     indicating that there are no outstanding debts between the two users at the time of
    *     creation. This method ensures that a balance entry is established for the given group and
    *     user pair, allowing for future updates as transactions occur within the group.
-   * @param groupId the identifier of the group for which the balance is being created
-   * @param user1 the identifier of the first user involved in the balance
-   * @param user2 the identifier of the second user involved in the balance
-   * @return an Optional containing the created BalanceDbo if the creation was successful, or an
-   *     empty Optional if the creation failed (e.g., due to invalid input or database constraints)
    * @apiNote user1 and user2 are interchangeable in the context of the balance, meaning that the
    *     balance between user1 and user2 is the same as the balance between user2 and user1.
    */
-  Optional<BalanceDbo> create(GroupId groupId, UserId user1, UserId user2);
+  Optional<BalanceDbo> create(GroupId groupId, UserId user1, UserId user2, CurrencyUnit currency);
 
   /**
    * Retrieves a list of balance entries associated with a specific group.

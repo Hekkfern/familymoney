@@ -10,9 +10,9 @@ import com.familymoney.familymoney.types.UserId;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import javax.money.CurrencyUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
-import org.javamoney.moneta.Money;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 import org.springframework.stereotype.Repository;
@@ -25,20 +25,14 @@ public class BalanceRepository implements IBalanceRepository {
 
   @Override
   public Optional<BalanceDbo> create(
-      final GroupId groupId, final Money amount, final UserId user1, final UserId user2) {
+      final GroupId groupId, final UserId user1, final UserId user2, CurrencyUnit currency) {
     return db.insertInto(Balances.BALANCES)
         .columns(
             Balances.BALANCES.GROUP_ID,
-            Balances.BALANCES.AMOUNT,
             Balances.BALANCES.CURRENCY_CODE,
             Balances.BALANCES.USER_ID_1,
             Balances.BALANCES.USER_ID_2)
-        .values(
-            groupId.value(),
-            amount.getNumber().numberValue(BigDecimal.class),
-            amount.getCurrency().getCurrencyCode(),
-            user1.value(),
-            user2.value())
+        .values(groupId.value(), currency.getCurrencyCode(), user1.value(), user2.value())
         .returning(
             Balances.BALANCES.ID,
             Balances.BALANCES.GROUP_ID,
