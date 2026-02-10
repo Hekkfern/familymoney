@@ -7,7 +7,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.familymoney.familymoney.generated.tables.RefreshTokens;
 import com.familymoney.familymoney.generated.tables.Users;
 import com.familymoney.familymoney.repositories.RefreshTokenRepository;
-import com.familymoney.familymoney.repositories.dbos.RefreshTokenDbo;
 import com.familymoney.familymoney.repositories.dbos.UpdateRefreshTokenDbo;
 import com.familymoney.familymoney.types.RefreshToken;
 import com.familymoney.familymoney.types.UserId;
@@ -16,7 +15,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.Optional;
 import java.util.UUID;
 import lombok.val;
 import org.jooq.DSLContext;
@@ -59,14 +57,13 @@ public class RefreshTokenRepositoryTests {
     return UserId.fromUuid(record.getId());
   }
 
-  private RefreshTokenDbo insertToken(
+  private void insertToken(
       final UserId userId,
       final RefreshToken token,
       final UUID family,
       final OffsetDateTime createdAt,
       final boolean isUsed,
       @Nullable final OffsetDateTime usedAt) {
-    val record =
         dslContext
             .insertInto(RefreshTokens.REFRESH_TOKENS)
             .columns(
@@ -94,17 +91,7 @@ public class RefreshTokenRepositoryTests {
                 RefreshTokens.REFRESH_TOKENS.IS_USED,
                 RefreshTokens.REFRESH_TOKENS.USED_AT,
                 RefreshTokens.REFRESH_TOKENS.FAMILY)
-            .fetchOne();
-    return RefreshTokenDbo.builder()
-        .id(record.getId())
-        .userId(UserId.fromUuid(record.getUserId()))
-        .token(RefreshToken.fromString(record.getToken()))
-        .createdAt(record.getCreatedAt().toInstant())
-        .expiresAt(record.getExpiresAt().toInstant())
-        .isUsed(record.getIsUsed())
-        .usedAt(Optional.ofNullable(record.getUsedAt()).map(OffsetDateTime::toInstant))
-        .family(record.getFamily())
-        .build();
+            .execute();
   }
 
   @Test
