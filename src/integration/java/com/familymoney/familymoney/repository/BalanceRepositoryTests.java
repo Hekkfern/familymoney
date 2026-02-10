@@ -14,6 +14,7 @@ import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.UserId;
 import com.familymoney.familymoney.utils.FakeGenerator;
 import java.util.UUID;
+import javax.money.CurrencyUnit;
 import javax.money.Monetary;
 import lombok.val;
 import org.javamoney.moneta.Money;
@@ -68,69 +69,70 @@ public class BalanceRepositoryTests {
   }
 
   private BalanceDbo createBalance(
-      final GroupId groupId, final Money amount, final UserId user1, final UserId user2) {
-    return balanceRepository.create(groupId, amount, user1, user2).orElseThrow();
+      final GroupId groupId, final UserId user1, final UserId user2, final CurrencyUnit currency) {
+    return balanceRepository.create(groupId, user1, user2, currency).orElseThrow();
   }
 
   @Test
   void create_persists_balance() {
+    val currency = Monetary.getCurrency("USD");
     val groupId = insertGroup("group-" + FakeGenerator.username(), "desc", "USD");
     val user1 = insertUser(FakeGenerator.username(), FakeGenerator.email());
     val user2 = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val amount = Money.of(12.50, Monetary.getCurrency("USD"));
 
-    val created = balanceRepository.create(groupId, amount, user1, user2);
+    val created = balanceRepository.create(groupId, user1, user2, currency);
 
     assertThat(created).isPresent();
     val dbo = created.get();
     assertThat(dbo.id()).isNotNull();
     assertThat(dbo.groupId()).isEqualTo(groupId);
-    assertThat(dbo.amount()).isEqualTo(amount);
+    assertThat(dbo.amount()).isEqualTo(Money.zero(currency));
     assertThat(dbo.user1()).isEqualTo(user1);
     assertThat(dbo.user2()).isEqualTo(user2);
   }
 
   @Test
   void create_throws_when_user_missing() {
+    val currency = Monetary.getCurrency("USD");
     val groupId = insertGroup("group-" + FakeGenerator.username(), "desc", "USD");
-    val missingUser = UserId.fromUuid(UUID.randomUUID());
-    val amount = Money.of(5, Monetary.getCurrency("USD"));
+    val missingUser1 = UserId.fromUuid(UUID.randomUUID());
+    val missingUser2 = UserId.fromUuid(UUID.randomUUID());
 
     assertThatThrownBy(
-            () -> balanceRepository.create(groupId, amount, missingUser, missingUser))
+            () -> balanceRepository.create(groupId, missingUser1, missingUser2, currency))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 
   @Test
   void create_throws_when_user_pair_is_duplicate() {
+    val currency = Monetary.getCurrency("USD");
     val groupId = insertGroup("group-" + FakeGenerator.username(), "desc", "USD");
     val user1 = insertUser(FakeGenerator.username(), FakeGenerator.email());
     val user2 = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val amount = Money.of(7, Monetary.getCurrency("USD"));
 
-    balanceRepository.create(groupId, amount, user1, user2);
+    balanceRepository.create(groupId, user1, user2, currency);
 
-    assertThatThrownBy(() -> balanceRepository.create(groupId, amount, user2, user1))
+    assertThatThrownBy(() -> balanceRepository.create(groupId, user2, user1, currency))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 
   @Test
   void create_throws_when_users_are_same() {
+    val currency = Monetary.getCurrency("USD");
     val groupId = insertGroup("group-" + FakeGenerator.username(), "desc", "USD");
     val user1 = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val amount = Money.of(10, Monetary.getCurrency("USD"));
 
-    assertThatThrownBy(() -> balanceRepository.create(groupId, amount, user1, user1))
+    assertThatThrownBy(() -> balanceRepository.create(groupId, user1, user1, currency))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 
   @Test
   void findById_returns_balance_when_exists() {
+    val currency = Monetary.getCurrency("USD");
     val groupId = insertGroup("group-" + FakeGenerator.username(), "desc", "USD");
     val user1 = insertUser(FakeGenerator.username(), FakeGenerator.email());
     val user2 = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val amount = Money.of(9, Monetary.getCurrency("USD"));
-    val created = createBalance(groupId, amount, user1, user2);
+    val created = createBalance(groupId, user1, user2, currency);
 
     val found = balanceRepository.findById(created.id());
 
@@ -147,14 +149,14 @@ public class BalanceRepositoryTests {
 
   @Test
   void findByGroup_returns_all_balances_in_group() {
+    val currency = Monetary.getCurrency("USD");
     val groupId = insertGroup("group-" + FakeGenerator.username(), "desc", "USD");
     val otherGroupId = insertGroup("group-" + FakeGenerator.username(), "desc", "USD");
     val user1 = insertUser(FakeGenerator.username(), FakeGenerator.email());
     val user2 = insertUser(FakeGenerator.username(), FakeGenerator.email());
     val user3 = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val amount = Money.of(11, Monetary.getCurrency("USD"));
-    val inGroup = createBalance(groupId, amount, user1, user2);
-    createBalance(otherGroupId, amount, user1, user3);
+    val inGroup = createBalance(groupId, user1, user2, currency);
+    createBalance(otherGroupId, user1, user3, currency);
 
     val balances = balanceRepository.findByGroup(groupId);
 
@@ -163,13 +165,13 @@ public class BalanceRepositoryTests {
 
   @Test
   void findByUserAndGroup_returns_balances_for_user() {
+    val currency = Monetary.getCurrency("USD");
     val groupId = insertGroup("group-" + FakeGenerator.username(), "desc", "USD");
     val user1 = insertUser(FakeGenerator.username(), FakeGenerator.email());
     val user2 = insertUser(FakeGenerator.username(), FakeGenerator.email());
     val user3 = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val amount = Money.of(8, Monetary.getCurrency("USD"));
-    val balance = createBalance(groupId, amount, user1, user2);
-    createBalance(groupId, amount, user2, user3);
+    val balance = createBalance(groupId, user1, user2, currency);
+    createBalance(groupId, user2, user3, currency);
 
     val balancesForUser1 = balanceRepository.findByUserAndGroup(user1, groupId);
 
@@ -178,17 +180,13 @@ public class BalanceRepositoryTests {
 
   @Test
   void updateById_updates_balance() {
+    val currency = Monetary.getCurrency("USD");
     val groupId = insertGroup("group-" + FakeGenerator.username(), "desc", "USD");
     val user1 = insertUser(FakeGenerator.username(), FakeGenerator.email());
     val user2 = insertUser(FakeGenerator.username(), FakeGenerator.email());
     val user3 = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val created =
-        createBalance(groupId, Money.of(4, Monetary.getCurrency("USD")), user1, user2);
-    val update =
-        UpdateBalanceDbo.builder()
-            .amount(Money.of(15.75, Monetary.getCurrency("USD")))
-            .user2(user3)
-            .build();
+    val created = createBalance(groupId, user1, user2, currency);
+    val update = UpdateBalanceDbo.builder().amount(Money.of(15.75, currency)).user2(user3).build();
 
     val updated = balanceRepository.updateById(created.id(), update);
 

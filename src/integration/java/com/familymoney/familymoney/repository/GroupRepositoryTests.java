@@ -57,29 +57,23 @@ public class GroupRepositoryTests {
 
   private GroupDbo createGroup(final String name, final String description, final UserId owner) {
     return groupRepository
-        .create(
-            GroupName.fromString(name),
-            description,
-            Monetary.getCurrency("USD"),
-            owner)
+        .create(GroupName.fromString(name), description, Monetary.getCurrency("USD"))
         .orElseThrow();
   }
 
   @Test
   void create_persists_group() {
-    val owner = insertUser(FakeGenerator.username(), FakeGenerator.email());
+    val currency = Monetary.getCurrency("USD");
     val name = "group-" + FakeGenerator.username();
 
-    val created =
-        groupRepository.create(
-            GroupName.fromString(name), "desc", Monetary.getCurrency("USD"), owner);
+    val created = groupRepository.create(GroupName.fromString(name), "desc", currency);
 
     assertThat(created).isPresent();
     val dbo = created.get();
     assertThat(dbo.id()).isNotNull();
     assertThat(dbo.name()).isEqualTo(GroupName.fromString(name));
     assertThat(dbo.description()).isEqualTo("desc");
-    assertThat(dbo.currency()).isEqualTo(Monetary.getCurrency("USD"));
+    assertThat(dbo.currency()).isEqualTo(currency);
   }
 
   @Test
@@ -234,10 +228,7 @@ public class GroupRepositoryTests {
   void addUser_throws_when_group_missing() {
     val user = insertUser(FakeGenerator.username(), FakeGenerator.email());
 
-    assertThatThrownBy(
-            () ->
-                groupRepository.addUser(
-                    user, GroupId.fromUuid(UUID.randomUUID())))
+    assertThatThrownBy(() -> groupRepository.addUser(user, GroupId.fromUuid(UUID.randomUUID())))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 }
