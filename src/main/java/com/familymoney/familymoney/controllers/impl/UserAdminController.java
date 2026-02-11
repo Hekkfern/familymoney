@@ -1,5 +1,6 @@
-package com.familymoney.familymoney.controllers;
+package com.familymoney.familymoney.controllers.impl;
 
+import com.familymoney.familymoney.controllers.IUserAdminController;
 import com.familymoney.familymoney.controllers.dtos.user.GetUserResponseDto;
 import com.familymoney.familymoney.controllers.dtos.user.GetUserRoleResponseDto;
 import com.familymoney.familymoney.controllers.dtos.user.GetUsersResponseDto;

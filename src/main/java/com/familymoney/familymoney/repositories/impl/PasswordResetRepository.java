@@ -1,6 +1,7 @@
-package com.familymoney.familymoney.repositories;
+package com.familymoney.familymoney.repositories.impl;
 
 import com.familymoney.familymoney.generated.tables.PasswordResetTokens;
+import com.familymoney.familymoney.repositories.IPasswordResetRepository;
 import com.familymoney.familymoney.repositories.dbos.PasswordResetDbo;
 import com.familymoney.familymoney.repositories.mappers.PasswordResetJooqMapper;
 import com.familymoney.familymoney.types.PasswordResetToken;

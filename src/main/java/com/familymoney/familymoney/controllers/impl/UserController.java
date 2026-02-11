@@ -1,5 +1,6 @@
-package com.familymoney.familymoney.controllers;
+package com.familymoney.familymoney.controllers.impl;
 
+import com.familymoney.familymoney.controllers.IUserController;
 import com.familymoney.familymoney.controllers.dtos.user.GetMyUserResponseDto;
 import com.familymoney.familymoney.controllers.dtos.user.UpdateUserRequestDto;
 import com.familymoney.familymoney.controllers.mappers.user.GetMyUserResponseMapper;

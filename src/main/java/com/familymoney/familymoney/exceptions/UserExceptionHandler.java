@@ -1,8 +1,8 @@
 package com.familymoney.familymoney.exceptions;
 
-import com.familymoney.familymoney.controllers.UserAdminController;
-import com.familymoney.familymoney.controllers.UserController;
-import com.familymoney.familymoney.services.UserService;
+import com.familymoney.familymoney.controllers.impl.UserAdminController;
+import com.familymoney.familymoney.controllers.impl.UserController;
+import com.familymoney.familymoney.services.impl.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;

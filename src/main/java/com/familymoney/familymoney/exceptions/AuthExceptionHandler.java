@@ -1,7 +1,7 @@
 package com.familymoney.familymoney.exceptions;
 
-import com.familymoney.familymoney.controllers.AuthController;
-import com.familymoney.familymoney.services.AuthService;
+import com.familymoney.familymoney.controllers.impl.AuthController;
+import com.familymoney.familymoney.services.impl.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.authentication.BadCredentialsException;

@@ -1,6 +1,7 @@
-package com.familymoney.familymoney.repositories;
+package com.familymoney.familymoney.repositories.impl;
 
 import com.familymoney.familymoney.generated.tables.RefreshTokens;
+import com.familymoney.familymoney.repositories.IRefreshTokenRepository;
 import com.familymoney.familymoney.repositories.dbos.RefreshTokenDbo;
 import com.familymoney.familymoney.repositories.dbos.UpdateRefreshTokenDbo;
 import com.familymoney.familymoney.repositories.mappers.RefreshTokenJooqMapper;

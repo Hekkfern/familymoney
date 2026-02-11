@@ -6,7 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import com.familymoney.familymoney.config.SecurityConfig;
-import com.familymoney.familymoney.controllers.UserController;
+import com.familymoney.familymoney.controllers.impl.UserController;
 import com.familymoney.familymoney.controllers.dtos.user.GetMyUserResponseDto;
 import com.familymoney.familymoney.controllers.mappers.user.GetMyUserResponseMapper;
 import com.familymoney.familymoney.controllers.mappers.user.UpdateUserRequestMapper;

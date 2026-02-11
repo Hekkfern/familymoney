@@ -1,6 +1,7 @@
-package com.familymoney.familymoney.repositories;
+package com.familymoney.familymoney.repositories.impl;
 
 import com.familymoney.familymoney.generated.tables.GroupInvitations;
+import com.familymoney.familymoney.repositories.IGroupInvitationRepository;
 import com.familymoney.familymoney.repositories.dbos.GroupInvitationDbo;
 import com.familymoney.familymoney.repositories.mappers.GroupInvitationJooqMapper;
 import com.familymoney.familymoney.types.GroupId;

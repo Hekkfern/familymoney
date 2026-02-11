@@ -1,6 +1,7 @@
-package com.familymoney.familymoney.repositories;
+package com.familymoney.familymoney.repositories.impl;
 
 import com.familymoney.familymoney.generated.tables.Users;
+import com.familymoney.familymoney.repositories.IUserRepository;
 import com.familymoney.familymoney.repositories.dbos.UpdateUserDbo;
 import com.familymoney.familymoney.repositories.dbos.UserDbo;
 import com.familymoney.familymoney.repositories.mappers.UserJooqMapper;

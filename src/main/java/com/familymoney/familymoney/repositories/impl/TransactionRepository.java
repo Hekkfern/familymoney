@@ -1,6 +1,7 @@
-package com.familymoney.familymoney.repositories;
+package com.familymoney.familymoney.repositories.impl;
 
 import com.familymoney.familymoney.generated.tables.Transactions;
+import com.familymoney.familymoney.repositories.ITransactionRepository;
 import com.familymoney.familymoney.repositories.dbos.TransactionDbo;
 import com.familymoney.familymoney.repositories.dbos.UpdateTransactionDbo;
 import com.familymoney.familymoney.repositories.mappers.TransactionJooqMapper;

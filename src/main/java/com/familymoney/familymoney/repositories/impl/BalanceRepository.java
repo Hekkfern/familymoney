@@ -1,6 +1,7 @@
-package com.familymoney.familymoney.repositories;
+package com.familymoney.familymoney.repositories.impl;
 
 import com.familymoney.familymoney.generated.tables.Balances;
+import com.familymoney.familymoney.repositories.IBalanceRepository;
 import com.familymoney.familymoney.repositories.dbos.BalanceDbo;
 import com.familymoney.familymoney.repositories.dbos.UpdateBalanceDbo;
 import com.familymoney.familymoney.repositories.mappers.BalanceJooqMapper;

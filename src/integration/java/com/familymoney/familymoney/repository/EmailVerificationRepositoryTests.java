@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.familymoney.familymoney.generated.tables.EmailVerificationTokens;
 import com.familymoney.familymoney.generated.tables.Users;
-import com.familymoney.familymoney.repositories.EmailVerificationRepository;
+import com.familymoney.familymoney.repositories.impl.EmailVerificationRepository;
 import com.familymoney.familymoney.repositories.dbos.EmailVerificationDbo;
 import com.familymoney.familymoney.types.EmailVerificationToken;
 import com.familymoney.familymoney.types.UserId;

@@ -7,7 +7,7 @@ import com.familymoney.familymoney.repositories.IRoleRepository;
 import com.familymoney.familymoney.repositories.IUserRepository;
 import com.familymoney.familymoney.repositories.dbos.UserDbo;
 import com.familymoney.familymoney.security.UserPasswordEncoder;
-import com.familymoney.familymoney.services.UserService;
+import com.familymoney.familymoney.services.impl.UserService;
 import com.familymoney.familymoney.services.mappers.UserDataMapper;
 import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.UserId;

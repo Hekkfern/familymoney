@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.familymoney.familymoney.generated.tables.Users;
-import com.familymoney.familymoney.repositories.UserRepository;
+import com.familymoney.familymoney.repositories.impl.UserRepository;
 import com.familymoney.familymoney.repositories.dbos.UpdateUserDbo;
 import com.familymoney.familymoney.repositories.dbos.UserDbo;
 import com.familymoney.familymoney.types.Email;

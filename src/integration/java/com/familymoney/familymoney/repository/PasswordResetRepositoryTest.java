@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.familymoney.familymoney.generated.tables.Users;
-import com.familymoney.familymoney.repositories.PasswordResetRepository;
+import com.familymoney.familymoney.repositories.impl.PasswordResetRepository;
 import com.familymoney.familymoney.types.PasswordResetToken;
 import com.familymoney.familymoney.types.UserId;
 import com.familymoney.familymoney.utils.FakeGenerator;

@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.familymoney.familymoney.generated.tables.Groups;
 import com.familymoney.familymoney.generated.tables.Users;
-import com.familymoney.familymoney.repositories.BalanceRepository;
+import com.familymoney.familymoney.repositories.impl.BalanceRepository;
 import com.familymoney.familymoney.repositories.dbos.BalanceDbo;
 import com.familymoney.familymoney.repositories.dbos.UpdateBalanceDbo;
 import com.familymoney.familymoney.types.BalanceId;

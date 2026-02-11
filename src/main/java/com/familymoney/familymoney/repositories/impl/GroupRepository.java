@@ -1,7 +1,8 @@
-package com.familymoney.familymoney.repositories;
+package com.familymoney.familymoney.repositories.impl;
 
 import com.familymoney.familymoney.generated.tables.Groups;
 import com.familymoney.familymoney.generated.tables.UserGroups;
+import com.familymoney.familymoney.repositories.IGroupRepository;
 import com.familymoney.familymoney.repositories.dbos.GroupDbo;
 import com.familymoney.familymoney.repositories.dbos.UpdateGroupDbo;
 import com.familymoney.familymoney.repositories.dbos.UserGroupDbo;

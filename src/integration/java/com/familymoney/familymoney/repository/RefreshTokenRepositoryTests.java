@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.familymoney.familymoney.generated.tables.RefreshTokens;
 import com.familymoney.familymoney.generated.tables.Users;
-import com.familymoney.familymoney.repositories.RefreshTokenRepository;
+import com.familymoney.familymoney.repositories.impl.RefreshTokenRepository;
 import com.familymoney.familymoney.repositories.dbos.UpdateRefreshTokenDbo;
 import com.familymoney.familymoney.types.RefreshToken;
 import com.familymoney.familymoney.types.UserId;

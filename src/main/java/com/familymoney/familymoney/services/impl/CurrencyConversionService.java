@@ -1,7 +1,9 @@
-package com.familymoney.familymoney.services;
+package com.familymoney.familymoney.services.impl;
 
 import javax.money.CurrencyUnit;
 import javax.money.convert.MonetaryConversions;
+
+import com.familymoney.familymoney.services.ICurrencyConversionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;

@@ -1,6 +1,7 @@
-package com.familymoney.familymoney.repositories;
+package com.familymoney.familymoney.repositories.impl;
 
 import com.familymoney.familymoney.generated.tables.EmailVerificationTokens;
+import com.familymoney.familymoney.repositories.IEmailVerificationRepository;
 import com.familymoney.familymoney.repositories.dbos.EmailVerificationDbo;
 import com.familymoney.familymoney.repositories.mappers.EmailVerificationJooqMapper;
 import com.familymoney.familymoney.types.EmailVerificationToken;

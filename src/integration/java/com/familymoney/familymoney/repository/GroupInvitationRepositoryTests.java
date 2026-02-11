@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.familymoney.familymoney.generated.tables.GroupInvitations;
 import com.familymoney.familymoney.generated.tables.Groups;
-import com.familymoney.familymoney.repositories.GroupInvitationRepository;
+import com.familymoney.familymoney.repositories.impl.GroupInvitationRepository;
 import com.familymoney.familymoney.repositories.dbos.GroupInvitationDbo;
 import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.GroupInvitationToken;

@@ -1,7 +1,8 @@
-package com.familymoney.familymoney.services;
+package com.familymoney.familymoney.services.impl;
 
 import com.familymoney.familymoney.properties.AppProperties;
 import com.familymoney.familymoney.properties.MailSenderProperties;
+import com.familymoney.familymoney.services.IEmailSenderService;
 import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.EmailVerificationToken;
 import com.familymoney.familymoney.types.UserName;

@@ -1,5 +1,6 @@
-package com.familymoney.familymoney.repositories;
+package com.familymoney.familymoney.repositories.impl;
 
+import com.familymoney.familymoney.repositories.IRoleRepository;
 import com.familymoney.familymoney.types.Role;
 import com.familymoney.familymoney.types.UserId;
 import java.util.Optional;

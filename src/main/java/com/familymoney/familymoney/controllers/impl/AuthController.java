@@ -1,5 +1,6 @@
-package com.familymoney.familymoney.controllers;
+package com.familymoney.familymoney.controllers.impl;
 
+import com.familymoney.familymoney.controllers.IAuthController;
 import com.familymoney.familymoney.controllers.dtos.auth.ForgotPasswordRequestDto;
 import com.familymoney.familymoney.controllers.dtos.auth.LoginRequestDto;
 import com.familymoney.familymoney.controllers.dtos.auth.LoginResponseDto;

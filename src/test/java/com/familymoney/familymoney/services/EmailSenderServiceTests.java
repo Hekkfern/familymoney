@@ -7,7 +7,7 @@ import static org.mockito.Mockito.when;
 import com.familymoney.familymoney.config.ThymeleafConfig;
 import com.familymoney.familymoney.properties.AppProperties;
 import com.familymoney.familymoney.properties.MailSenderProperties;
-import com.familymoney.familymoney.services.EmailSenderService;
+import com.familymoney.familymoney.services.impl.EmailSenderService;
 import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.EmailVerificationToken;
 import com.familymoney.familymoney.types.UserName;

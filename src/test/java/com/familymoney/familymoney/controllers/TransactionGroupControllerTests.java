@@ -3,7 +3,7 @@ package com.familymoney.familymoney.controllers;
 import static org.mockito.Mockito.when;
 
 import com.familymoney.familymoney.config.SecurityConfig;
-import com.familymoney.familymoney.controllers.UserAdminController;
+import com.familymoney.familymoney.controllers.impl.UserAdminController;
 import com.familymoney.familymoney.controllers.mappers.user.GetMyUserResponseMapper;
 import com.familymoney.familymoney.controllers.mappers.user.GetUserResponseMapper;
 import com.familymoney.familymoney.controllers.mappers.user.UpdateUserRequestMapper;

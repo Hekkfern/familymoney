@@ -1,5 +1,6 @@
-package com.familymoney.familymoney.controllers;
+package com.familymoney.familymoney.controllers.impl;
 
+import com.familymoney.familymoney.controllers.ITransactionController;
 import com.familymoney.familymoney.controllers.dtos.grouptransaction.*;
 import com.familymoney.familymoney.controllers.mappers.grouptransaction.*;
 import com.familymoney.familymoney.services.ITransactionGroupService;
