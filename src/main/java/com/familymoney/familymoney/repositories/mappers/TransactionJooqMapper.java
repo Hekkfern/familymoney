@@ -1,7 +1,7 @@
 package com.familymoney.familymoney.repositories.mappers;
 
 import com.familymoney.familymoney.generated.tables.Transactions;
-import com.familymoney.familymoney.repositories.dbos.TransactionDbo;
+import com.familymoney.familymoney.repositories.entities.TransactionEntity;
 import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.TransactionId;
 import com.familymoney.familymoney.types.UserId;
@@ -14,12 +14,12 @@ public final class TransactionJooqMapper {
 
   private TransactionJooqMapper() {}
 
-  public static TransactionDbo toDbo(final Record r) {
+  public static TransactionEntity toEntity(final Record r) {
     OffsetDateTime doneAt = r.get(Transactions.TRANSACTIONS.DONE_AT);
     OffsetDateTime createdAt = r.get(Transactions.TRANSACTIONS.CREATED_AT);
     OffsetDateTime updatedAt = r.get(Transactions.TRANSACTIONS.UPDATED_AT);
 
-    return TransactionDbo.builder()
+    return TransactionEntity.builder()
         .id(TransactionId.fromUuid(r.get(Transactions.TRANSACTIONS.ID)))
         .description(r.get(Transactions.TRANSACTIONS.DESCRIPTION))
         .groupId(GroupId.fromUuid(r.get(Transactions.TRANSACTIONS.GROUP_ID)))

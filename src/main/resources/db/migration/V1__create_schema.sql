@@ -29,7 +29,7 @@ $$ language plpgsql;
 
 CREATE TABLE users
 (
-    id                UUID PRIMARY KEY                  DEFAULT uuidv7(),
+    id                UUID PRIMARY KEY,
     username          VARCHAR(128) UNIQUE      NOT NULL,
     email             VARCHAR(255) UNIQUE      NOT NULL,
     hashed_password   VARCHAR(255)             NOT NULL,
@@ -68,7 +68,7 @@ VALUES ('ADMIN', 'Administrator with full access'),
 
 CREATE TABLE email_verification_tokens
 (
-    id         UUID PRIMARY KEY                  DEFAULT uuidv7(),
+    id         UUID PRIMARY KEY,
     user_id    UUID                     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     token      VARCHAR(255) UNIQUE      NOT NULL,
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -82,7 +82,7 @@ CREATE INDEX idx_email_verification_tokens_expires_at ON email_verification_toke
 
 CREATE TABLE password_reset_tokens
 (
-    id         UUID PRIMARY KEY                  DEFAULT uuidv7(),
+    id         UUID PRIMARY KEY,
     user_id    UUID                     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     token      VARCHAR(255) UNIQUE      NOT NULL,
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -96,7 +96,7 @@ CREATE INDEX idx_password_reset_tokens_expires_at ON password_reset_tokens (expi
 
 CREATE TABLE refresh_tokens
 (
-    id         UUID PRIMARY KEY                  DEFAULT uuidv7(),
+    id         UUID PRIMARY KEY,
     user_id    UUID                     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     token      VARCHAR(255) UNIQUE      NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),

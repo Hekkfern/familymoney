@@ -5,9 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.familymoney.familymoney.generated.tables.Users;
+import com.familymoney.familymoney.repositories.dtos.UpdateGroupDto;
 import com.familymoney.familymoney.repositories.impl.GroupRepository;
-import com.familymoney.familymoney.repositories.dbos.GroupDbo;
-import com.familymoney.familymoney.repositories.dbos.UpdateGroupDbo;
+import com.familymoney.familymoney.repositories.entities.GroupEntity;
 import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.GroupName;
 import com.familymoney.familymoney.types.UserId;
@@ -55,7 +55,7 @@ public class GroupRepositoryTests {
     return UserId.fromUuid(record.getId());
   }
 
-  private GroupDbo createGroup(final String name, final String description, final UserId owner) {
+  private GroupEntity createGroup(final String name, final String description, final UserId owner) {
     return groupRepository
         .create(GroupName.fromString(name), description, Monetary.getCurrency("USD"))
         .orElseThrow();
@@ -99,7 +99,7 @@ public class GroupRepositoryTests {
     val owner = insertUser(FakeGenerator.username(), FakeGenerator.email());
     val created = createGroup("group-" + FakeGenerator.username(), "desc", owner);
     val update =
-        UpdateGroupDbo.builder()
+        UpdateGroupDto.builder()
             .name(GroupName.fromString("updated-" + FakeGenerator.username()))
             .description("new-desc")
             .build();
@@ -114,7 +114,7 @@ public class GroupRepositoryTests {
 
   @Test
   void updateById_returns_false_when_missing() {
-    val update = UpdateGroupDbo.builder().description("new-desc").build();
+    val update = UpdateGroupDto.builder().description("new-desc").build();
 
     val updated = groupRepository.updateById(GroupId.fromUuid(UUID.randomUUID()), update);
 
@@ -151,7 +151,7 @@ public class GroupRepositoryTests {
     assertThat(groupRepository.isUserInGroup(user, created.id())).isTrue();
     assertThat(groupRepository.findUserIdsByGroupId(created.id())).contains(user);
     val page = groupRepository.findByUserId(user, PageRequest.of(0, 10));
-    assertThat(page.getContent()).extracting(GroupDbo::id).contains(created.id());
+    assertThat(page.getContent()).extracting(GroupEntity::id).contains(created.id());
   }
 
   @Test
@@ -221,7 +221,7 @@ public class GroupRepositoryTests {
 
     val page = groupRepository.findByUserId(user, PageRequest.of(0, 10));
 
-    assertThat(page.getContent()).extracting(GroupDbo::id).contains(groupA.id(), groupB.id());
+    assertThat(page.getContent()).extracting(GroupEntity::id).contains(groupA.id(), groupB.id());
   }
 
   @Test

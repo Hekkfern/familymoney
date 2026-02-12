@@ -1,4 +1,4 @@
-package com.familymoney.familymoney.repositories.dbos;
+package com.familymoney.familymoney.repositories.dtos;
 
 import com.familymoney.familymoney.types.GroupName;
 import lombok.Builder;
@@ -8,7 +8,7 @@ import org.jspecify.annotations.Nullable;
 
 @Data
 @Builder
-public class UpdateGroupDbo {
+public class UpdateGroupDto {
   @Nullable @Default private GroupName name = null;
   @Nullable @Default private String description = null;
 

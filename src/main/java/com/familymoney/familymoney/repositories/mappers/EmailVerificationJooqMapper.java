@@ -1,7 +1,7 @@
 package com.familymoney.familymoney.repositories.mappers;
 
 import com.familymoney.familymoney.generated.tables.EmailVerificationTokens;
-import com.familymoney.familymoney.repositories.dbos.EmailVerificationDbo;
+import com.familymoney.familymoney.repositories.entities.EmailVerificationEntity;
 import com.familymoney.familymoney.types.EmailVerificationToken;
 import com.familymoney.familymoney.types.UserId;
 import java.time.OffsetDateTime;
@@ -11,11 +11,11 @@ public final class EmailVerificationJooqMapper {
 
   private EmailVerificationJooqMapper() {}
 
-  public static EmailVerificationDbo toDbo(final Record r) {
+  public static EmailVerificationEntity toEntity(final Record r) {
     OffsetDateTime createdAt = r.get(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.CREATED_AT);
     OffsetDateTime expiresAt = r.get(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.EXPIRES_AT);
 
-    return EmailVerificationDbo.builder()
+    return EmailVerificationEntity.builder()
         .id(r.get(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.ID))
         .userId(UserId.fromUuid(r.get(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.USER_ID)))
         .token(

@@ -1,7 +1,7 @@
 package com.familymoney.familymoney.repositories.mappers;
 
 import com.familymoney.familymoney.generated.tables.Balances;
-import com.familymoney.familymoney.repositories.dbos.BalanceDbo;
+import com.familymoney.familymoney.repositories.entities.BalanceEntity;
 import com.familymoney.familymoney.types.BalanceId;
 import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.UserId;
@@ -13,8 +13,8 @@ public final class BalanceJooqMapper {
 
   private BalanceJooqMapper() {}
 
-  public static BalanceDbo toDbo(final Record r) {
-    return BalanceDbo.builder()
+  public static BalanceEntity toEntity(final Record r) {
+    return BalanceEntity.builder()
         .id(BalanceId.fromString(String.valueOf(r.get(Balances.BALANCES.ID))))
         .groupId(GroupId.fromString(String.valueOf(r.get(Balances.BALANCES.GROUP_ID))))
         .amount(

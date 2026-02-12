@@ -1,4 +1,4 @@
-package com.familymoney.familymoney.repositories.dbos;
+package com.familymoney.familymoney.repositories.dtos;
 
 import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.UserName;
@@ -9,7 +9,7 @@ import org.jspecify.annotations.Nullable;
 
 @Data
 @Builder
-public class UpdateUserDbo {
+public class UpdateUserDto {
   @Nullable @Default private UserName username = null;
   @Nullable @Default private Email email = null;
   @Nullable @Default private String hashedPassword = null;

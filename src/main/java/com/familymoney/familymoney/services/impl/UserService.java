@@ -2,7 +2,7 @@ package com.familymoney.familymoney.services.impl;
 
 import com.familymoney.familymoney.repositories.IRoleRepository;
 import com.familymoney.familymoney.repositories.IUserRepository;
-import com.familymoney.familymoney.repositories.dbos.UpdateUserDbo;
+import com.familymoney.familymoney.repositories.dtos.UpdateUserDto;
 import com.familymoney.familymoney.security.UserPasswordEncoder;
 import com.familymoney.familymoney.services.IUserService;
 import com.familymoney.familymoney.services.data.UserData;
@@ -45,7 +45,7 @@ public class UserService implements IUserService {
     if (!data.isEmpty()) {
       userRepository.updateById(
           userId,
-          UpdateUserDbo.builder()
+          UpdateUserDto.builder()
               .username(data.getUsername())
               .email(data.getEmail())
               .hashedPassword(
@@ -63,7 +63,7 @@ public class UserService implements IUserService {
 
   @Override
   public void enableUser(UserId userId, boolean enabled) {
-    userRepository.updateById(userId, UpdateUserDbo.builder().isEnabled(enabled).build());
+    userRepository.updateById(userId, UpdateUserDto.builder().isEnabled(enabled).build());
   }
 
   @Override
@@ -94,7 +94,7 @@ public class UserService implements IUserService {
     // Assign user permissions (default role)
     roleRepository.setRoleForUserId(userDb.id(), Role.ADMIN);
     // verify email
-    userRepository.updateById(userDb.id(), UpdateUserDbo.builder().isEmailVerified(true).build());
+    userRepository.updateById(userDb.id(), UpdateUserDto.builder().isEmailVerified(true).build());
     log.info("Admin user created successfully");
   }
 }

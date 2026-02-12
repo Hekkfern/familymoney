@@ -1,4 +1,4 @@
-package com.familymoney.familymoney.repositories.dbos;
+package com.familymoney.familymoney.repositories.entities;
 
 import com.familymoney.familymoney.types.RefreshToken;
 import com.familymoney.familymoney.types.UserId;
@@ -8,7 +8,7 @@ import java.util.UUID;
 import lombok.Builder;
 
 @Builder
-public record RefreshTokenDbo(
+public record RefreshTokenEntity(
     UUID id,
     UserId userId,
     RefreshToken token,

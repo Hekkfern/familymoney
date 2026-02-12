@@ -1,4 +1,4 @@
-package com.familymoney.familymoney.repositories.dbos;
+package com.familymoney.familymoney.repositories.dtos;
 
 import com.familymoney.familymoney.types.UserId;
 import java.time.Instant;
@@ -10,7 +10,7 @@ import org.jspecify.annotations.Nullable;
 
 @Data
 @Builder
-public class UpdateTransactionDbo {
+public class UpdateTransactionDto {
   @Nullable @Default private Money amount = null;
   @Nullable @Default private String description = null;
   @Nullable @Default private UserId from = null;

@@ -13,7 +13,7 @@ import com.familymoney.familymoney.exceptions.GroupInvitationInvalidException;
 import com.familymoney.familymoney.exceptions.TransactionNotFoundException;
 import com.familymoney.familymoney.exceptions.UserIsNotMemberOfGroupException;
 import com.familymoney.familymoney.repositories.*;
-import com.familymoney.familymoney.repositories.dbos.*;
+import com.familymoney.familymoney.repositories.entities.*;
 import com.familymoney.familymoney.services.data.UpdateGroupData;
 import com.familymoney.familymoney.services.data.UpdateTransactionData;
 import com.familymoney.familymoney.services.impl.TransactionGroupService;
@@ -73,8 +73,8 @@ public class TransactionGroupServiceTests {
   private CurrencyUnit usd = Monetary.getCurrency("USD");
 
   // Helpers to build DB objects
-  private GroupDbo groupDbo(GroupId id) {
-    return GroupDbo.builder()
+  private GroupEntity groupDbo(GroupId id) {
+    return GroupEntity.builder()
         .id(id)
         .name(GroupName.fromString("group"))
         .description("desc")
@@ -84,8 +84,8 @@ public class TransactionGroupServiceTests {
         .build();
   }
 
-  private TransactionDbo transactionDbo(TransactionId id, GroupId groupId) {
-    return TransactionDbo.builder()
+  private TransactionEntity transactionDbo(TransactionId id, GroupId groupId) {
+    return TransactionEntity.builder()
         .id(id)
         .description("tx-desc")
         .groupId(groupId)
@@ -98,8 +98,8 @@ public class TransactionGroupServiceTests {
         .build();
   }
 
-  private BalanceDbo balanceDbo(BalanceId id, GroupId groupId, UserId u1, UserId u2) {
-    return BalanceDbo.builder()
+  private BalanceEntity balanceDbo(BalanceId id, GroupId groupId, UserId u1, UserId u2) {
+    return BalanceEntity.builder()
         .id(id)
         .groupId(groupId)
         .amount(Money.of(5, usd))
@@ -108,9 +108,9 @@ public class TransactionGroupServiceTests {
         .build();
   }
 
-  private GroupInvitationDbo invitationDbo(
+  private GroupInvitationEntity invitationDbo(
       GroupId groupId, GroupInvitationToken token, Instant expiresAt) {
-    return GroupInvitationDbo.builder()
+    return GroupInvitationEntity.builder()
         .id(UUID.randomUUID())
         .groupId(groupId)
         .token(token)
@@ -130,7 +130,7 @@ public class TransactionGroupServiceTests {
     when(groupRepository.addUser(eq(createdBy), eq(groupId)))
         .thenReturn(
             Optional.of(
-                UserGroupDbo.builder().userId(createdBy).groupId(groupId).joinedAt(now).build()));
+                UserGroupEntity.builder().userId(createdBy).groupId(groupId).joinedAt(now).build()));
 
     val result =
         transactionGroupService.createGroup(GroupName.fromString("n"), "d", usd, createdBy);

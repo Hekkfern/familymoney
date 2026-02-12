@@ -1,7 +1,7 @@
 package com.familymoney.familymoney.repositories.mappers;
 
 import com.familymoney.familymoney.generated.tables.RefreshTokens;
-import com.familymoney.familymoney.repositories.dbos.RefreshTokenDbo;
+import com.familymoney.familymoney.repositories.entities.RefreshTokenEntity;
 import com.familymoney.familymoney.types.RefreshToken;
 import com.familymoney.familymoney.types.UserId;
 import java.time.OffsetDateTime;
@@ -12,12 +12,12 @@ public final class RefreshTokenJooqMapper {
 
   private RefreshTokenJooqMapper() {}
 
-  public static RefreshTokenDbo toDbo(final Record r) {
+  public static RefreshTokenEntity toEntity(final Record r) {
     OffsetDateTime createdAt = r.get(RefreshTokens.REFRESH_TOKENS.CREATED_AT);
     OffsetDateTime expiresAt = r.get(RefreshTokens.REFRESH_TOKENS.EXPIRES_AT);
     OffsetDateTime usedAt = r.get(RefreshTokens.REFRESH_TOKENS.USED_AT);
 
-    return RefreshTokenDbo.builder()
+    return RefreshTokenEntity.builder()
         .id(r.get(RefreshTokens.REFRESH_TOKENS.ID))
         .userId(UserId.fromUuid(r.get(RefreshTokens.REFRESH_TOKENS.USER_ID)))
         .token(RefreshToken.fromString(r.get(RefreshTokens.REFRESH_TOKENS.TOKEN)))

@@ -15,9 +15,9 @@ import com.familymoney.familymoney.repositories.IEmailVerificationRepository;
 import com.familymoney.familymoney.repositories.IRefreshTokenRepository;
 import com.familymoney.familymoney.repositories.IRoleRepository;
 import com.familymoney.familymoney.repositories.IUserRepository;
-import com.familymoney.familymoney.repositories.dbos.EmailVerificationDbo;
-import com.familymoney.familymoney.repositories.dbos.RefreshTokenDbo;
-import com.familymoney.familymoney.repositories.dbos.UserDbo;
+import com.familymoney.familymoney.repositories.entities.EmailVerificationEntity;
+import com.familymoney.familymoney.repositories.entities.RefreshTokenEntity;
+import com.familymoney.familymoney.repositories.entities.UserEntity;
 import com.familymoney.familymoney.security.JwtUtils;
 import com.familymoney.familymoney.security.UserPasswordEncoder;
 import com.familymoney.familymoney.services.impl.AuthService;
@@ -67,7 +67,7 @@ public class AuthServiceTests {
     when(userRepository.create(eq(username), eq(email), any()))
         .thenReturn(
             Optional.of(
-                UserDbo.builder()
+                UserEntity.builder()
                     .id(userId)
                     .username(username)
                     .email(email)
@@ -80,7 +80,7 @@ public class AuthServiceTests {
     when(emailVerificationRepository.create(eq(userId), any(), any()))
         .thenReturn(
             Optional.of(
-                EmailVerificationDbo.builder()
+                EmailVerificationEntity.builder()
                     .id(UUID.randomUUID())
                     .userId(userId)
                     .token(
@@ -134,7 +134,7 @@ public class AuthServiceTests {
     when(userRepository.create(eq(username), eq(email), any()))
         .thenReturn(
             Optional.of(
-                UserDbo.builder()
+                UserEntity.builder()
                     .id(userId)
                     .username(username)
                     .email(email)
@@ -164,7 +164,7 @@ public class AuthServiceTests {
     when(userRepository.findByEmail(eq(email)))
         .thenReturn(
             Optional.of(
-                UserDbo.builder()
+                UserEntity.builder()
                     .id(userId)
                     .username(UserName.fromString(FakeGenerator.username()))
                     .email(email)
@@ -180,7 +180,7 @@ public class AuthServiceTests {
     when(refreshTokenRepository.create(eq(userId), any(), any()))
         .thenReturn(
             Optional.of(
-                RefreshTokenDbo.builder()
+                RefreshTokenEntity.builder()
                     .id(UUID.randomUUID())
                     .userId(userId)
                     .token(RefreshToken.fromString(FakeGenerator.refreshToken()))
@@ -210,7 +210,7 @@ public class AuthServiceTests {
     when(userRepository.findByEmail(eq(email)))
         .thenReturn(
             Optional.of(
-                UserDbo.builder()
+                UserEntity.builder()
                     .id(UserId.fromUuid(UUID.randomUUID()))
                     .username(UserName.fromString(FakeGenerator.username()))
                     .email(email)
@@ -244,7 +244,7 @@ public class AuthServiceTests {
     when(userRepository.findByEmail(eq(email)))
         .thenReturn(
             Optional.of(
-                UserDbo.builder()
+                UserEntity.builder()
                     .id(userId)
                     .username(UserName.fromString(FakeGenerator.username()))
                     .email(email)
@@ -270,7 +270,7 @@ public class AuthServiceTests {
     when(userRepository.findByEmail(any()))
         .thenReturn(
             Optional.of(
-                UserDbo.builder()
+                UserEntity.builder()
                     .id(UserId.fromUuid(UUID.randomUUID()))
                     .username(UserName.fromString(FakeGenerator.username()))
                     .email(email)
@@ -297,7 +297,7 @@ public class AuthServiceTests {
     when(refreshTokenRepository.findByToken(any()))
         .thenReturn(
             Optional.of(
-                RefreshTokenDbo.builder()
+                RefreshTokenEntity.builder()
                     .id(UUID.randomUUID())
                     .userId(userId)
                     .token(token)
@@ -313,7 +313,7 @@ public class AuthServiceTests {
     when(refreshTokenRepository.create(any(), any(), any()))
         .thenReturn(
             Optional.of(
-                RefreshTokenDbo.builder()
+                RefreshTokenEntity.builder()
                     .id(UUID.randomUUID())
                     .userId(userId)
                     .token(RefreshToken.fromString(FakeGenerator.refreshToken()))
@@ -350,7 +350,7 @@ public class AuthServiceTests {
     when(refreshTokenRepository.findByToken(any()))
         .thenReturn(
             Optional.of(
-                RefreshTokenDbo.builder()
+                RefreshTokenEntity.builder()
                     .id(UUID.randomUUID())
                     .userId(userId)
                     .token(token)
@@ -364,7 +364,7 @@ public class AuthServiceTests {
     when(userRepository.findById(any()))
         .thenReturn(
             Optional.of(
-                UserDbo.builder()
+                UserEntity.builder()
                     .id(userId)
                     .username(UserName.fromString(FakeGenerator.username()))
                     .email(Email.fromString(FakeGenerator.email()))
@@ -391,7 +391,7 @@ public class AuthServiceTests {
     when(refreshTokenRepository.findByToken(any()))
         .thenReturn(
             Optional.of(
-                RefreshTokenDbo.builder()
+                RefreshTokenEntity.builder()
                     .id(UUID.randomUUID())
                     .userId(userId)
                     .token(token)
@@ -418,7 +418,7 @@ public class AuthServiceTests {
     when(refreshTokenRepository.findByToken(any()))
         .thenReturn(
             Optional.of(
-                RefreshTokenDbo.builder()
+                RefreshTokenEntity.builder()
                     .id(UUID.randomUUID())
                     .userId(userId)
                     .token(token)
@@ -444,7 +444,7 @@ public class AuthServiceTests {
     when(emailVerificationRepository.findByToken(eq(token)))
         .thenReturn(
             Optional.of(
-                EmailVerificationDbo.builder()
+                EmailVerificationEntity.builder()
                     .id(UUID.randomUUID())
                     .userId(userId)
                     .token(token)
@@ -468,7 +468,7 @@ public class AuthServiceTests {
     when(emailVerificationRepository.findByToken(eq(token)))
         .thenReturn(
             Optional.of(
-                EmailVerificationDbo.builder()
+                EmailVerificationEntity.builder()
                     .id(UUID.randomUUID())
                     .userId(userId)
                     .token(token)
@@ -501,7 +501,7 @@ public class AuthServiceTests {
     when(emailVerificationRepository.findByToken(eq(token)))
         .thenReturn(
             Optional.of(
-                EmailVerificationDbo.builder()
+                EmailVerificationEntity.builder()
                     .id(UUID.randomUUID())
                     .userId(userId)
                     .token(token)
@@ -523,7 +523,7 @@ public class AuthServiceTests {
     when(emailVerificationRepository.findByToken(eq(token)))
         .thenReturn(
             Optional.of(
-                EmailVerificationDbo.builder()
+                EmailVerificationEntity.builder()
                     .id(UUID.randomUUID())
                     .userId(userId)
                     .token(token)
@@ -547,7 +547,7 @@ public class AuthServiceTests {
     when(emailVerificationRepository.findByToken(eq(token)))
         .thenReturn(
             Optional.of(
-                EmailVerificationDbo.builder()
+                EmailVerificationEntity.builder()
                     .id(UUID.randomUUID())
                     .userId(userId)
                     .token(token)
@@ -576,7 +576,7 @@ public class AuthServiceTests {
     when(userRepository.findByEmail(eq(email)))
         .thenReturn(
             Optional.of(
-                UserDbo.builder()
+                UserEntity.builder()
                     .id(userId)
                     .username(UserName.fromString(FakeGenerator.username()))
                     .email(email)
@@ -589,7 +589,7 @@ public class AuthServiceTests {
     when(emailVerificationRepository.create(eq(userId), any(), any()))
         .thenReturn(
             Optional.of(
-                EmailVerificationDbo.builder()
+                EmailVerificationEntity.builder()
                     .id(UUID.randomUUID())
                     .userId(userId)
                     .token(
@@ -613,7 +613,7 @@ public class AuthServiceTests {
     when(userRepository.findByEmail(eq(email)))
         .thenReturn(
             Optional.of(
-                UserDbo.builder()
+                UserEntity.builder()
                     .id(userId)
                     .username(UserName.fromString(FakeGenerator.username()))
                     .email(email)
@@ -626,7 +626,7 @@ public class AuthServiceTests {
     when(emailVerificationRepository.create(eq(userId), any(), any()))
         .thenReturn(
             Optional.of(
-                EmailVerificationDbo.builder()
+                EmailVerificationEntity.builder()
                     .id(UUID.randomUUID())
                     .userId(userId)
                     .token(
@@ -661,7 +661,7 @@ public class AuthServiceTests {
     when(refreshTokenRepository.findByToken(eq(refreshToken)))
         .thenReturn(
             Optional.of(
-                RefreshTokenDbo.builder()
+                RefreshTokenEntity.builder()
                     .id(UUID.randomUUID())
                     .userId(userId)
                     .token(refreshToken)
@@ -695,7 +695,7 @@ public class AuthServiceTests {
     when(refreshTokenRepository.findByToken(eq(refreshToken)))
         .thenReturn(
             Optional.of(
-                RefreshTokenDbo.builder()
+                RefreshTokenEntity.builder()
                     .id(UUID.randomUUID())
                     .userId(UserId.fromUuid(UUID.randomUUID()))
                     .token(refreshToken)
@@ -719,7 +719,7 @@ public class AuthServiceTests {
     when(refreshTokenRepository.findByToken(eq(refreshToken)))
         .thenReturn(
             Optional.of(
-                RefreshTokenDbo.builder()
+                RefreshTokenEntity.builder()
                     .id(UUID.randomUUID())
                     .userId(UserId.fromUuid(UUID.randomUUID()))
                     .token(refreshToken)
@@ -743,7 +743,7 @@ public class AuthServiceTests {
     when(refreshTokenRepository.findByToken(eq(refreshToken)))
         .thenReturn(
             Optional.of(
-                RefreshTokenDbo.builder()
+                RefreshTokenEntity.builder()
                     .id(UUID.randomUUID())
                     .userId(UserId.fromUuid(UUID.randomUUID()))
                     .token(refreshToken)

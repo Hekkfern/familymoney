@@ -2,8 +2,9 @@ package com.familymoney.familymoney.repositories.impl;
 
 import com.familymoney.familymoney.generated.tables.Balances;
 import com.familymoney.familymoney.repositories.IBalanceRepository;
-import com.familymoney.familymoney.repositories.dbos.BalanceDbo;
-import com.familymoney.familymoney.repositories.dbos.UpdateBalanceDbo;
+import com.familymoney.familymoney.repositories.dtos.CreateBalanceDto;
+import com.familymoney.familymoney.repositories.dtos.UpdateBalanceDto;
+import com.familymoney.familymoney.repositories.entities.BalanceEntity;
 import com.familymoney.familymoney.repositories.mappers.BalanceJooqMapper;
 import com.familymoney.familymoney.types.BalanceId;
 import com.familymoney.familymoney.types.GroupId;
@@ -11,7 +12,6 @@ import com.familymoney.familymoney.types.UserId;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
-import javax.money.CurrencyUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.jooq.DSLContext;
@@ -25,15 +25,20 @@ public class BalanceRepository implements IBalanceRepository {
   private final DSLContext db;
 
   @Override
-  public Optional<BalanceDbo> create(
-      final GroupId groupId, final UserId user1, final UserId user2, CurrencyUnit currency) {
+  public Optional<BalanceEntity> create(final CreateBalanceDto data) {
     return db.insertInto(Balances.BALANCES)
         .columns(
+            Balances.BALANCES.ID,
             Balances.BALANCES.GROUP_ID,
             Balances.BALANCES.CURRENCY_CODE,
             Balances.BALANCES.USER_ID_1,
             Balances.BALANCES.USER_ID_2)
-        .values(groupId.value(), currency.getCurrencyCode(), user1.value(), user2.value())
+        .values(
+            data.id().value(),
+            data.groupId().value(),
+            data.currency().getCurrencyCode(),
+            data.user1().value(),
+            data.user2().value())
         .returning(
             Balances.BALANCES.ID,
             Balances.BALANCES.GROUP_ID,
@@ -42,11 +47,11 @@ public class BalanceRepository implements IBalanceRepository {
             Balances.BALANCES.USER_ID_1,
             Balances.BALANCES.USER_ID_2)
         .fetchOptional()
-        .map(BalanceJooqMapper::toDbo);
+        .map(BalanceJooqMapper::toEntity);
   }
 
   @Override
-  public List<BalanceDbo> findByGroup(GroupId groupId) {
+  public List<BalanceEntity> findByGroup(GroupId groupId) {
     return db.select(
             Balances.BALANCES.ID,
             Balances.BALANCES.GROUP_ID,
@@ -57,11 +62,11 @@ public class BalanceRepository implements IBalanceRepository {
         .from(Balances.BALANCES)
         .where(Balances.BALANCES.GROUP_ID.eq(groupId.value()))
         .fetch()
-        .map(BalanceJooqMapper::toDbo);
+        .map(BalanceJooqMapper::toEntity);
   }
 
   @Override
-  public List<BalanceDbo> findByUserAndGroup(final UserId userId, final GroupId groupId) {
+  public List<BalanceEntity> findByUserAndGroup(final UserId userId, final GroupId groupId) {
     return db.select(
             Balances.BALANCES.ID,
             Balances.BALANCES.GROUP_ID,
@@ -80,11 +85,11 @@ public class BalanceRepository implements IBalanceRepository {
                         .eq(userId.value())
                         .or(Balances.BALANCES.USER_ID_2.eq(userId.value()))))
         .fetch()
-        .map(BalanceJooqMapper::toDbo);
+        .map(BalanceJooqMapper::toEntity);
   }
 
   @Override
-  public boolean updateById(final BalanceId id, final UpdateBalanceDbo data) {
+  public boolean updateById(final BalanceId id, final UpdateBalanceDto data) {
     val amountValue =
         data.getAmount() != null
             ? data.getAmount().getNumber().numberValue(BigDecimal.class)
@@ -114,7 +119,7 @@ public class BalanceRepository implements IBalanceRepository {
   }
 
   @Override
-  public Optional<BalanceDbo> findById(final BalanceId id) {
+  public Optional<BalanceEntity> findById(final BalanceId id) {
     return db.select(
             Balances.BALANCES.ID,
             Balances.BALANCES.GROUP_ID,
@@ -125,6 +130,6 @@ public class BalanceRepository implements IBalanceRepository {
         .from(Balances.BALANCES)
         .where(Balances.BALANCES.ID.eq(id.value()))
         .fetchOptional()
-        .map(BalanceJooqMapper::toDbo);
+        .map(BalanceJooqMapper::toEntity);
   }
 }

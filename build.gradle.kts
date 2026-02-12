@@ -76,6 +76,7 @@ dependencies {
     integrationImplementation(libs.testcontainers)
     integrationImplementation(libs.testcontainers.junit)
     integrationImplementation(libs.testcontainers.postgresql)
+    implementation(libs.uuidcreator)
 }
 
 tasks.withType<Test> {

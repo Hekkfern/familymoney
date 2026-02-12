@@ -2,12 +2,12 @@ package com.familymoney.familymoney.repositories.impl;
 
 import com.familymoney.familymoney.generated.tables.RefreshTokens;
 import com.familymoney.familymoney.repositories.IRefreshTokenRepository;
-import com.familymoney.familymoney.repositories.dbos.RefreshTokenDbo;
-import com.familymoney.familymoney.repositories.dbos.UpdateRefreshTokenDbo;
+import com.familymoney.familymoney.repositories.dtos.CreateRefreshTokenDto;
+import com.familymoney.familymoney.repositories.dtos.UpdateRefreshTokenDto;
+import com.familymoney.familymoney.repositories.entities.RefreshTokenEntity;
 import com.familymoney.familymoney.repositories.mappers.RefreshTokenJooqMapper;
 import com.familymoney.familymoney.types.RefreshToken;
 import com.familymoney.familymoney.types.UserId;
-import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Optional;
@@ -25,14 +25,14 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
   private final DSLContext db;
 
   @Override
-  public Optional<RefreshTokenDbo> create(
-      final UserId userId, final RefreshToken token, final UUID family) {
+  public Optional<RefreshTokenEntity> create(final CreateRefreshTokenDto data) {
     return db.insertInto(RefreshTokens.REFRESH_TOKENS)
         .columns(
+            RefreshTokens.REFRESH_TOKENS.ID,
             RefreshTokens.REFRESH_TOKENS.USER_ID,
             RefreshTokens.REFRESH_TOKENS.TOKEN,
             RefreshTokens.REFRESH_TOKENS.FAMILY)
-        .values(userId.value(), token.value(), family)
+        .values(data.id(), data.userId().value(), data.token().value(), data.family())
         .returning(
             RefreshTokens.REFRESH_TOKENS.ID,
             RefreshTokens.REFRESH_TOKENS.USER_ID,
@@ -43,11 +43,11 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
             RefreshTokens.REFRESH_TOKENS.USED_AT,
             RefreshTokens.REFRESH_TOKENS.FAMILY)
         .fetchOptional()
-        .map(RefreshTokenJooqMapper::toDbo);
+        .map(RefreshTokenJooqMapper::toEntity);
   }
 
   @Override
-  public Optional<RefreshTokenDbo> findByToken(final RefreshToken token) {
+  public Optional<RefreshTokenEntity> findByToken(final RefreshToken token) {
     return db.select(
             RefreshTokens.REFRESH_TOKENS.ID,
             RefreshTokens.REFRESH_TOKENS.USER_ID,
@@ -60,11 +60,11 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
         .from(RefreshTokens.REFRESH_TOKENS)
         .where(RefreshTokens.REFRESH_TOKENS.TOKEN.eq(token.value()))
         .fetchOptional()
-        .map(RefreshTokenJooqMapper::toDbo);
+        .map(RefreshTokenJooqMapper::toEntity);
   }
 
   @Override
-  public boolean updateByToken(final RefreshToken token, final UpdateRefreshTokenDbo data) {
+  public boolean updateByToken(final RefreshToken token, final UpdateRefreshTokenDto data) {
     val usedAtVal =
         data.getUsedAt() != null
             ? OffsetDateTime.ofInstant(data.getUsedAt(), ZoneOffset.UTC)
@@ -83,7 +83,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
   }
 
   @Override
-  public boolean updateByFamily(final UUID family, final UpdateRefreshTokenDbo data) {
+  public boolean updateByFamily(final UUID family, final UpdateRefreshTokenDto data) {
     val usedAtVal =
         data.getUsedAt() != null
             ? OffsetDateTime.ofInstant(data.getUsedAt(), ZoneOffset.UTC)
@@ -102,7 +102,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
   }
 
   @Override
-  public boolean updateByUserId(final UserId userId, final UpdateRefreshTokenDbo data) {
+  public boolean updateByUserId(final UserId userId, final UpdateRefreshTokenDto data) {
     val usedAtVal =
         data.getUsedAt() != null
             ? OffsetDateTime.ofInstant(data.getUsedAt(), ZoneOffset.UTC)

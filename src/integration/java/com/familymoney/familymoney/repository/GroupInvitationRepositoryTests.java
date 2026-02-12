@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.familymoney.familymoney.generated.tables.GroupInvitations;
 import com.familymoney.familymoney.generated.tables.Groups;
 import com.familymoney.familymoney.repositories.impl.GroupInvitationRepository;
-import com.familymoney.familymoney.repositories.dbos.GroupInvitationDbo;
+import com.familymoney.familymoney.repositories.entities.GroupInvitationEntity;
 import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.GroupInvitationToken;
 import com.familymoney.familymoney.utils.FakeGenerator;
@@ -56,7 +56,7 @@ public class GroupInvitationRepositoryTests {
     return GroupId.fromUuid(record.getId());
   }
 
-  private GroupInvitationDbo insertInvitation(
+  private GroupInvitationEntity insertInvitation(
       final GroupId groupId, final GroupInvitationToken token, final OffsetDateTime createdAt) {
     val record =
         dslContext
@@ -78,7 +78,7 @@ public class GroupInvitationRepositoryTests {
                 GroupInvitations.GROUP_INVITATIONS.CREATED_AT,
                 GroupInvitations.GROUP_INVITATIONS.EXPIRES_AT)
             .fetchOne();
-    return GroupInvitationDbo.builder()
+    return GroupInvitationEntity.builder()
         .id(record.getId())
         .groupId(GroupId.fromUuid(record.getGroupId()))
         .token(GroupInvitationToken.fromString(record.getToken()))

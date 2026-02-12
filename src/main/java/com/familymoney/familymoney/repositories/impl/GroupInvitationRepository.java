@@ -2,12 +2,11 @@ package com.familymoney.familymoney.repositories.impl;
 
 import com.familymoney.familymoney.generated.tables.GroupInvitations;
 import com.familymoney.familymoney.repositories.IGroupInvitationRepository;
-import com.familymoney.familymoney.repositories.dbos.GroupInvitationDbo;
+import com.familymoney.familymoney.repositories.dtos.CreateGroupInvitationDto;
+import com.familymoney.familymoney.repositories.entities.GroupInvitationEntity;
 import com.familymoney.familymoney.repositories.mappers.GroupInvitationJooqMapper;
-import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.GroupInvitationToken;
 import java.time.Duration;
-import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Optional;
@@ -23,14 +22,18 @@ public class GroupInvitationRepository implements IGroupInvitationRepository {
   private final DSLContext db;
 
   @Override
-  public Optional<GroupInvitationDbo> create(
-      final GroupId groupId, final GroupInvitationToken token, final Instant expiresAt) {
+  public Optional<GroupInvitationEntity> create(final CreateGroupInvitationDto data) {
     return db.insertInto(GroupInvitations.GROUP_INVITATIONS)
         .columns(
+            GroupInvitations.GROUP_INVITATIONS.ID,
             GroupInvitations.GROUP_INVITATIONS.GROUP_ID,
             GroupInvitations.GROUP_INVITATIONS.TOKEN,
             GroupInvitations.GROUP_INVITATIONS.EXPIRES_AT)
-        .values(groupId.value(), token.value(), OffsetDateTime.ofInstant(expiresAt, ZoneOffset.UTC))
+        .values(
+            data.id(),
+            data.groupId().value(),
+            data.token().value(),
+            OffsetDateTime.ofInstant(data.expiresAt(), ZoneOffset.UTC))
         .returning(
             GroupInvitations.GROUP_INVITATIONS.ID,
             GroupInvitations.GROUP_INVITATIONS.GROUP_ID,
@@ -38,11 +41,11 @@ public class GroupInvitationRepository implements IGroupInvitationRepository {
             GroupInvitations.GROUP_INVITATIONS.CREATED_AT,
             GroupInvitations.GROUP_INVITATIONS.EXPIRES_AT)
         .fetchOptional()
-        .map(GroupInvitationJooqMapper::toDbo);
+        .map(GroupInvitationJooqMapper::toEntity);
   }
 
   @Override
-  public Optional<GroupInvitationDbo> findByToken(final GroupInvitationToken token) {
+  public Optional<GroupInvitationEntity> findByToken(final GroupInvitationToken token) {
     return db.select(
             GroupInvitations.GROUP_INVITATIONS.ID,
             GroupInvitations.GROUP_INVITATIONS.GROUP_ID,
@@ -52,7 +55,7 @@ public class GroupInvitationRepository implements IGroupInvitationRepository {
         .from(GroupInvitations.GROUP_INVITATIONS)
         .where(GroupInvitations.GROUP_INVITATIONS.TOKEN.eq(token.value()))
         .fetchOptional()
-        .map(GroupInvitationJooqMapper::toDbo);
+        .map(GroupInvitationJooqMapper::toEntity);
   }
 
   @Override

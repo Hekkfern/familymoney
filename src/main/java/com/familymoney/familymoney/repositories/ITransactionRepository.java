@@ -1,13 +1,11 @@
 package com.familymoney.familymoney.repositories;
 
-import com.familymoney.familymoney.repositories.dbos.TransactionDbo;
-import com.familymoney.familymoney.repositories.dbos.UpdateTransactionDbo;
+import com.familymoney.familymoney.repositories.dtos.CreateTransactionDto;
+import com.familymoney.familymoney.repositories.dtos.UpdateTransactionDto;
+import com.familymoney.familymoney.repositories.entities.TransactionEntity;
 import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.TransactionId;
-import com.familymoney.familymoney.types.UserId;
-import java.time.Instant;
 import java.util.Optional;
-import org.javamoney.moneta.Money;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -26,23 +24,12 @@ public interface ITransactionRepository {
   /**
    * Creates a new transaction record with the provided details.
    *
-   * @param description Optional textual description for the transaction. May be empty.
-   * @param groupId ID of the group to which the transaction belongs.
-   * @param amount The monetary amount of the transaction. Must be positive.
-   * @param lender ID of the user who lent the money.
-   * @param borrower ID of the user who borrowed the money. Must be different from lender.
-   * @param doneAt The timestamp indicating when the transaction was completed.
+   * @param data values to store
    * @return an {@link Optional} containing the created TransactionDbo if the creation was
    *     successful, or an empty {@link Optional} if the creation failed (e.g., due to invalid input
    *     or database constraints).
    */
-  Optional<TransactionDbo> create(
-      String description,
-      GroupId groupId,
-      Money amount,
-      UserId lender,
-      UserId borrower,
-      Instant doneAt);
+  Optional<TransactionEntity> create(CreateTransactionDto data);
 
   /**
    * Updates the transaction record identified by the given TransactionId with the provided data.
@@ -50,12 +37,12 @@ public interface ITransactionRepository {
    *
    * @param id the identifier of the transaction to be updated
    * @param data the data containing the updated information for the transaction. Non-null fields in
-   *     the {@link UpdateTransactionDbo} will be used to update the corresponding fields in the
+   *     the {@link UpdateTransactionDto} will be used to update the corresponding fields in the
    *     transaction record.
    * @return true if the transaction was updated (record existed and changes were applied), false
    *     otherwise.
    */
-  boolean updateById(TransactionId id, UpdateTransactionDbo data);
+  boolean updateById(TransactionId id, UpdateTransactionDto data);
 
   /**
    * Deletes the transaction record identified by the given TransactionId.
@@ -72,7 +59,7 @@ public interface ITransactionRepository {
    * @param id the identifier of the transaction to retrieve
    * @return an {@link Optional} containing the TransactionDbo if found, otherwise empty.
    */
-  Optional<TransactionDbo> findById(TransactionId id);
+  Optional<TransactionEntity> findById(TransactionId id);
 
   /**
    * Retrieves a paginated list of transactions associated with a specific group.
@@ -83,5 +70,5 @@ public interface ITransactionRepository {
    *     specified group. If no transactions are found for the group, the returned page will be
    *     empty.
    */
-  Page<TransactionDbo> findAllByGroupId(GroupId groupId, Pageable pageable);
+  Page<TransactionEntity> findAllByGroupId(GroupId groupId, Pageable pageable);
 }

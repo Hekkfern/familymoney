@@ -1,11 +1,11 @@
 package com.familymoney.familymoney.repositories;
 
-import com.familymoney.familymoney.repositories.dbos.UpdateUserDbo;
-import com.familymoney.familymoney.repositories.dbos.UserDbo;
+import com.familymoney.familymoney.repositories.dtos.CreateUserDto;
+import com.familymoney.familymoney.repositories.dtos.UpdateUserDto;
+import com.familymoney.familymoney.repositories.entities.UserEntity;
 import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.UserId;
 import com.familymoney.familymoney.types.UserName;
-import java.time.Duration;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,40 +19,38 @@ import org.springframework.data.domain.Pageable;
 public interface IUserRepository {
 
   /**
-   * Create a new user record.
+   * Store a new user.
    *
-   * @param username the user's display/handle. Must not be null.
-   * @param email the user's email address. Must not be null.
-   * @param passwordHash the hashed password to store for the user. Must not be null.
-   * @return an {@link Optional} containing the created {@link UserDbo} when successful; empty
+   * @param data values to store.
+   * @return an {@link Optional} containing the created {@link UserEntity} when successful; empty
    *     Optional if the creation failed (e.g., uniqueness violation).
    */
-  Optional<UserDbo> create(UserName username, Email email, String passwordHash);
+  Optional<UserEntity> create(CreateUserDto data);
 
   /**
-   * Find a user record by its identifier.
+   * Find a user by its identifier.
    *
    * @param id the identifier of the user to find. Must not be null.
-   * @return an {@link Optional} containing the {@link UserDbo} if a user with the id exists,
+   * @return an {@link Optional} containing the {@link UserEntity} if a user with the id exists,
    *     otherwise an empty Optional.
    */
-  Optional<UserDbo> findById(UserId id);
+  Optional<UserEntity> findById(UserId id);
 
   /**
-   * Find a user record by its email address.
+   * Find a user by its email address.
    *
    * @param email the email address to search for. Must not be null.
-   * @return an {@link Optional} containing the {@link UserDbo} if found, otherwise empty.
+   * @return an {@link Optional} containing the {@link UserEntity} if found, otherwise empty.
    */
-  Optional<UserDbo> findByEmail(Email email);
+  Optional<UserEntity> findByEmail(Email email);
 
   /**
-   * Find a user record by its username.
+   * Find a user by its username.
    *
    * @param username the username to search for. Must not be null.
-   * @return an {@link Optional} containing the {@link UserDbo} if found, otherwise empty.
+   * @return an {@link Optional} containing the {@link UserEntity} if found, otherwise empty.
    */
-  Optional<UserDbo> findByUsername(UserName username);
+  Optional<UserEntity> findByUsername(UserName username);
 
   /**
    * Check whether any user exists with the given email or username.
@@ -76,17 +74,17 @@ public interface IUserRepository {
   boolean existsById(UserId id);
 
   /**
-   * Update one or more fields of a user record identified by its id.
+   * Update one or more fields of a user identified by its id.
    *
    * @param id the id of the user to update. Must not be null.
-   * @param data a {@link UpdateUserDbo} containing fields to change. Must not be null. Only
+   * @param data a {@link UpdateUserDto} containing fields to change. Must not be null. Only
    *     non-null fields will be applied.
    * @return true if the update affected an existing record, false otherwise.
    */
-  boolean updateById(UserId id, UpdateUserDbo data);
+  boolean updateById(UserId id, UpdateUserDto data);
 
   /**
-   * Delete a user record by its id.
+   * Delete a user by its id.
    *
    * @param id the id of the user to delete. Must not be null.
    * @return true if a record was deleted, false if no matching record existed.
@@ -97,8 +95,8 @@ public interface IUserRepository {
    * Retrieve a paginated list of users.
    *
    * @param pageable paging information (page number, size, sort). Must not be null.
-   * @return a {@link Page} of {@link UserDbo} containing the users for the requested page. If no
+   * @return a {@link Page} of {@link UserEntity} containing the users for the requested page. If no
    *     users exist, the page will be empty.
    */
-  Page<UserDbo> findAll(Pageable pageable);
+  Page<UserEntity> findAll(Pageable pageable);
 }

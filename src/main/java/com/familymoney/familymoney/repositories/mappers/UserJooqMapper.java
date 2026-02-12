@@ -1,7 +1,7 @@
 package com.familymoney.familymoney.repositories.mappers;
 
 import com.familymoney.familymoney.generated.tables.Users;
-import com.familymoney.familymoney.repositories.dbos.UserDbo;
+import com.familymoney.familymoney.repositories.entities.UserEntity;
 import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.UserId;
 import com.familymoney.familymoney.types.UserName;
@@ -12,11 +12,11 @@ public final class UserJooqMapper {
 
   private UserJooqMapper() {}
 
-  public static UserDbo toDbo(final Record r) {
+  public static UserEntity toEntity(final Record r) {
     OffsetDateTime createdAt = r.get(Users.USERS.CREATED_AT);
     OffsetDateTime updatedAt = r.get(Users.USERS.UPDATED_AT);
 
-    return UserDbo.builder()
+    return UserEntity.builder()
         .id(UserId.fromUuid(r.get(Users.USERS.ID)))
         .username(UserName.fromString(r.get(Users.USERS.USERNAME)))
         .email(Email.fromString(r.get(Users.USERS.EMAIL)))

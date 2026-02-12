@@ -6,8 +6,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.familymoney.familymoney.generated.tables.Users;
 import com.familymoney.familymoney.repositories.impl.UserRepository;
-import com.familymoney.familymoney.repositories.dbos.UpdateUserDbo;
-import com.familymoney.familymoney.repositories.dbos.UserDbo;
+import com.familymoney.familymoney.repositories.dtos.UpdateUserDto;
+import com.familymoney.familymoney.repositories.entities.UserEntity;
 import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.UserId;
 import com.familymoney.familymoney.types.UserName;
@@ -46,7 +46,7 @@ public class UserRepositoryTests {
     this.userRepository = new UserRepository(dslContext);
   }
 
-  private UserDbo createUser(final String username, final String email) {
+  private UserEntity createUser(final String username, final String email) {
     return userRepository
         .create(UserName.fromString(username), Email.fromString(email), "hashed-password")
         .orElseThrow();
@@ -217,7 +217,7 @@ public class UserRepositoryTests {
   void updateById_updates_fields_and_returns_true() {
     val created = createUser(FakeGenerator.username(), FakeGenerator.email());
     val updateData =
-        UpdateUserDbo.builder()
+        UpdateUserDto.builder()
             .username(UserName.fromString(FakeGenerator.username()))
             .email(Email.fromString(FakeGenerator.email()))
             .hashedPassword("updated-hash")
@@ -238,7 +238,7 @@ public class UserRepositoryTests {
 
   @Test
   void updateById_returns_false_when_missing() {
-    val updateData = UpdateUserDbo.builder().email(Email.fromString(FakeGenerator.email())).build();
+    val updateData = UpdateUserDto.builder().email(Email.fromString(FakeGenerator.email())).build();
 
     val updated =
         userRepository.updateById(UserId.fromUuid(java.util.UUID.randomUUID()), updateData);

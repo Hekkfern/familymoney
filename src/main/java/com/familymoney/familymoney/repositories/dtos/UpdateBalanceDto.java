@@ -1,4 +1,4 @@
-package com.familymoney.familymoney.repositories.dbos;
+package com.familymoney.familymoney.repositories.dtos;
 
 import com.familymoney.familymoney.types.UserId;
 import lombok.Builder;
@@ -9,7 +9,7 @@ import org.jspecify.annotations.Nullable;
 
 @Data
 @Builder
-public class UpdateBalanceDbo {
+public class UpdateBalanceDto {
   @Nullable @Default private Money amount = null;
   @Nullable @Default private UserId user1 = null;
   @Nullable @Default private UserId user2 = null;

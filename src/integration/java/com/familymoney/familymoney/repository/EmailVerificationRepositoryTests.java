@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.familymoney.familymoney.generated.tables.EmailVerificationTokens;
 import com.familymoney.familymoney.generated.tables.Users;
 import com.familymoney.familymoney.repositories.impl.EmailVerificationRepository;
-import com.familymoney.familymoney.repositories.dbos.EmailVerificationDbo;
+import com.familymoney.familymoney.repositories.entities.EmailVerificationEntity;
 import com.familymoney.familymoney.types.EmailVerificationToken;
 import com.familymoney.familymoney.types.UserId;
 import com.familymoney.familymoney.utils.FakeGenerator;
@@ -55,7 +55,7 @@ public class EmailVerificationRepositoryTests {
     return UserId.fromUuid(record.getId());
   }
 
-  private EmailVerificationDbo insertToken(
+  private EmailVerificationEntity insertToken(
       UserId userId, EmailVerificationToken token, OffsetDateTime createdAt) {
     val record =
         dslContext
@@ -73,7 +73,7 @@ public class EmailVerificationRepositoryTests {
                 EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.EXPIRES_AT,
                 EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.CREATED_AT)
             .fetchOne();
-    return EmailVerificationDbo.builder()
+    return EmailVerificationEntity.builder()
         .id(record.getId())
         .userId(UserId.fromUuid(record.getUserId()))
         .token(EmailVerificationToken.fromString(record.getToken()))

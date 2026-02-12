@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.familymoney.familymoney.generated.tables.RefreshTokens;
 import com.familymoney.familymoney.generated.tables.Users;
 import com.familymoney.familymoney.repositories.impl.RefreshTokenRepository;
-import com.familymoney.familymoney.repositories.dbos.UpdateRefreshTokenDbo;
+import com.familymoney.familymoney.repositories.dtos.UpdateRefreshTokenDto;
 import com.familymoney.familymoney.types.RefreshToken;
 import com.familymoney.familymoney.types.UserId;
 import com.familymoney.familymoney.utils.FakeGenerator;
@@ -163,7 +163,7 @@ public class RefreshTokenRepositoryTests {
     val token = RefreshToken.generate();
     val family = UUID.randomUUID();
     refreshTokenRepository.create(userId, token, family);
-    val update = UpdateRefreshTokenDbo.builder().isUsed(true).usedAt(Instant.now()).build();
+    val update = UpdateRefreshTokenDto.builder().isUsed(true).usedAt(Instant.now()).build();
 
     val updated = refreshTokenRepository.updateByToken(token, update);
 
@@ -175,7 +175,7 @@ public class RefreshTokenRepositoryTests {
 
   @Test
   void updateByToken_returns_false_when_missing() {
-    val update = UpdateRefreshTokenDbo.builder().isUsed(true).build();
+    val update = UpdateRefreshTokenDto.builder().isUsed(true).build();
 
     val updated = refreshTokenRepository.updateByToken(RefreshToken.generate(), update);
 
@@ -190,7 +190,7 @@ public class RefreshTokenRepositoryTests {
     val tokenB = RefreshToken.generate();
     refreshTokenRepository.create(userId, tokenA, family);
     refreshTokenRepository.create(userId, tokenB, family);
-    val update = UpdateRefreshTokenDbo.builder().isUsed(true).usedAt(Instant.now()).build();
+    val update = UpdateRefreshTokenDto.builder().isUsed(true).usedAt(Instant.now()).build();
 
     val updated = refreshTokenRepository.updateByFamily(family, update);
 
@@ -202,7 +202,7 @@ public class RefreshTokenRepositoryTests {
 
   @Test
   void updateByFamily_returns_false_when_missing() {
-    val update = UpdateRefreshTokenDbo.builder().isUsed(true).build();
+    val update = UpdateRefreshTokenDto.builder().isUsed(true).build();
 
     val updated = refreshTokenRepository.updateByFamily(UUID.randomUUID(), update);
 
@@ -215,7 +215,7 @@ public class RefreshTokenRepositoryTests {
     val family = UUID.randomUUID();
     val token = RefreshToken.generate();
     refreshTokenRepository.create(userId, token, family);
-    val update = UpdateRefreshTokenDbo.builder().isUsed(true).usedAt(Instant.now()).build();
+    val update = UpdateRefreshTokenDto.builder().isUsed(true).usedAt(Instant.now()).build();
 
     val updated = refreshTokenRepository.updateByUserId(userId, update);
 
@@ -225,7 +225,7 @@ public class RefreshTokenRepositoryTests {
 
   @Test
   void updateByUserId_returns_false_when_missing() {
-    val update = UpdateRefreshTokenDbo.builder().isUsed(true).build();
+    val update = UpdateRefreshTokenDto.builder().isUsed(true).build();
 
     val updated = refreshTokenRepository.updateByUserId(UserId.fromUuid(UUID.randomUUID()), update);
 

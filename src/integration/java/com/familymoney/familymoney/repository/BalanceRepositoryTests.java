@@ -7,8 +7,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.familymoney.familymoney.generated.tables.Groups;
 import com.familymoney.familymoney.generated.tables.Users;
 import com.familymoney.familymoney.repositories.impl.BalanceRepository;
-import com.familymoney.familymoney.repositories.dbos.BalanceDbo;
-import com.familymoney.familymoney.repositories.dbos.UpdateBalanceDbo;
+import com.familymoney.familymoney.repositories.entities.BalanceEntity;
+import com.familymoney.familymoney.repositories.dtos.UpdateBalanceDto;
 import com.familymoney.familymoney.types.BalanceId;
 import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.UserId;
@@ -68,7 +68,7 @@ public class BalanceRepositoryTests {
     return GroupId.fromUuid(record.getId());
   }
 
-  private BalanceDbo createBalance(
+  private BalanceEntity createBalance(
       final GroupId groupId, final UserId user1, final UserId user2, final CurrencyUnit currency) {
     return balanceRepository.create(groupId, user1, user2, currency).orElseThrow();
   }
@@ -160,7 +160,7 @@ public class BalanceRepositoryTests {
 
     val balances = balanceRepository.findByGroup(groupId);
 
-    assertThat(balances).extracting(BalanceDbo::id).contains(inGroup.id());
+    assertThat(balances).extracting(BalanceEntity::id).contains(inGroup.id());
   }
 
   @Test
@@ -175,7 +175,7 @@ public class BalanceRepositoryTests {
 
     val balancesForUser1 = balanceRepository.findByUserAndGroup(user1, groupId);
 
-    assertThat(balancesForUser1).extracting(BalanceDbo::id).contains(balance.id());
+    assertThat(balancesForUser1).extracting(BalanceEntity::id).contains(balance.id());
   }
 
   @Test
@@ -186,7 +186,7 @@ public class BalanceRepositoryTests {
     val user2 = insertUser(FakeGenerator.username(), FakeGenerator.email());
     val user3 = insertUser(FakeGenerator.username(), FakeGenerator.email());
     val created = createBalance(groupId, user1, user2, currency);
-    val update = UpdateBalanceDbo.builder().amount(Money.of(15.75, currency)).user2(user3).build();
+    val update = UpdateBalanceDto.builder().amount(Money.of(15.75, currency)).user2(user3).build();
 
     val updated = balanceRepository.updateById(created.id(), update);
 
@@ -198,7 +198,7 @@ public class BalanceRepositoryTests {
 
   @Test
   void updateById_returns_false_when_missing() {
-    val update = UpdateBalanceDbo.builder().user1(UserId.fromUuid(UUID.randomUUID())).build();
+    val update = UpdateBalanceDto.builder().user1(UserId.fromUuid(UUID.randomUUID())).build();
 
     val updated = balanceRepository.updateById(BalanceId.fromUuid(UUID.randomUUID()), update);
 

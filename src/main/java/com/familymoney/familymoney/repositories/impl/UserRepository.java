@@ -2,15 +2,13 @@ package com.familymoney.familymoney.repositories.impl;
 
 import com.familymoney.familymoney.generated.tables.Users;
 import com.familymoney.familymoney.repositories.IUserRepository;
-import com.familymoney.familymoney.repositories.dbos.UpdateUserDbo;
-import com.familymoney.familymoney.repositories.dbos.UserDbo;
+import com.familymoney.familymoney.repositories.dtos.CreateUserDto;
+import com.familymoney.familymoney.repositories.dtos.UpdateUserDto;
+import com.familymoney.familymoney.repositories.entities.UserEntity;
 import com.familymoney.familymoney.repositories.mappers.UserJooqMapper;
 import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.UserId;
 import com.familymoney.familymoney.types.UserName;
-import java.time.Duration;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
@@ -29,12 +27,13 @@ public class UserRepository implements IUserRepository {
   private final DSLContext db;
 
   @Override
-  public Optional<UserDbo> create(
-      final UserName username, final Email email, final String passwordHash) {
+  public Optional<UserEntity> create(final CreateUserDto data) {
 
     return db.insertInto(Users.USERS)
-        .columns(Users.USERS.USERNAME, Users.USERS.EMAIL, Users.USERS.HASHED_PASSWORD)
-        .values(username.value(), email.value(), passwordHash)
+        .columns(
+            Users.USERS.ID, Users.USERS.USERNAME, Users.USERS.EMAIL, Users.USERS.HASHED_PASSWORD)
+        .values(
+            data.id().value(), data.username().value(), data.email().value(), data.passwordHash())
         .returning(
             Users.USERS.ID,
             Users.USERS.USERNAME,
@@ -45,11 +44,11 @@ public class UserRepository implements IUserRepository {
             Users.USERS.IS_EMAIL_VERIFIED,
             Users.USERS.IS_ENABLED)
         .fetchOptional()
-        .map(UserJooqMapper::toDbo);
+        .map(UserJooqMapper::toEntity);
   }
 
   @Override
-  public Optional<UserDbo> findById(final UserId id) {
+  public Optional<UserEntity> findById(final UserId id) {
     return db.select(
             Users.USERS.ID,
             Users.USERS.USERNAME,
@@ -62,11 +61,11 @@ public class UserRepository implements IUserRepository {
         .from(Users.USERS)
         .where(Users.USERS.ID.eq(id.value()))
         .fetchOptional()
-        .map(UserJooqMapper::toDbo);
+        .map(UserJooqMapper::toEntity);
   }
 
   @Override
-  public Optional<UserDbo> findByEmail(final Email email) {
+  public Optional<UserEntity> findByEmail(final Email email) {
     return db.select(
             Users.USERS.ID,
             Users.USERS.USERNAME,
@@ -79,11 +78,11 @@ public class UserRepository implements IUserRepository {
         .from(Users.USERS)
         .where(Users.USERS.EMAIL.eq(email.value()))
         .fetchOptional()
-        .map(UserJooqMapper::toDbo);
+        .map(UserJooqMapper::toEntity);
   }
 
   @Override
-  public Optional<UserDbo> findByUsername(final UserName username) {
+  public Optional<UserEntity> findByUsername(final UserName username) {
     return db.select(
             Users.USERS.ID,
             Users.USERS.USERNAME,
@@ -96,7 +95,7 @@ public class UserRepository implements IUserRepository {
         .from(Users.USERS)
         .where(Users.USERS.USERNAME.eq(username.value()))
         .fetchOptional()
-        .map(UserJooqMapper::toDbo);
+        .map(UserJooqMapper::toEntity);
   }
 
   @Override
@@ -114,7 +113,7 @@ public class UserRepository implements IUserRepository {
   }
 
   @Override
-  public boolean updateById(final UserId id, final UpdateUserDbo data) {
+  public boolean updateById(final UserId id, final UpdateUserDto data) {
     val rowsAffected =
         db.update(Users.USERS)
             .set(
@@ -150,7 +149,7 @@ public class UserRepository implements IUserRepository {
 
   @Transactional
   @Override
-  public Page<UserDbo> findAll(final Pageable pageable) {
+  public Page<UserEntity> findAll(final Pageable pageable) {
     val total = db.selectCount().from(Users.USERS).fetchOne(0, Long.class);
     val safeTotal = total != null ? total : 0L;
     val data =
@@ -168,7 +167,7 @@ public class UserRepository implements IUserRepository {
             .limit(pageable.getPageSize())
             .offset(pageable.getOffset())
             .fetch()
-            .map(UserJooqMapper::toDbo);
+            .map(UserJooqMapper::toEntity);
     return new PageImpl<>(data, pageable, safeTotal);
   }
 }

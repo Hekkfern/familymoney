@@ -1,7 +1,7 @@
 package com.familymoney.familymoney.repositories.mappers;
 
 import com.familymoney.familymoney.generated.tables.Groups;
-import com.familymoney.familymoney.repositories.dbos.GroupDbo;
+import com.familymoney.familymoney.repositories.entities.GroupEntity;
 import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.GroupName;
 import java.time.OffsetDateTime;
@@ -12,11 +12,11 @@ public final class GroupJooqMapper {
 
   private GroupJooqMapper() {}
 
-  public static GroupDbo toDbo(final Record r) {
+  public static GroupEntity toEntity(final Record r) {
     OffsetDateTime createdAt = r.get(Groups.GROUPS.CREATED_AT);
     OffsetDateTime updatedAt = r.get(Groups.GROUPS.UPDATED_AT);
 
-    return GroupDbo.builder()
+    return GroupEntity.builder()
         .id(GroupId.fromUuid(r.get(Groups.GROUPS.ID)))
         .name(GroupName.fromString(r.get(Groups.GROUPS.NAME)))
         .description(r.get(Groups.GROUPS.DESCRIPTION))

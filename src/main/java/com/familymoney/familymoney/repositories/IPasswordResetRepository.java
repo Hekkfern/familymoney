@@ -1,9 +1,9 @@
 package com.familymoney.familymoney.repositories;
 
-import com.familymoney.familymoney.repositories.dbos.PasswordResetDbo;
+import com.familymoney.familymoney.repositories.dtos.CreatePasswordResetDto;
+import com.familymoney.familymoney.repositories.entities.PasswordResetEntity;
 import com.familymoney.familymoney.types.PasswordResetToken;
 import com.familymoney.familymoney.types.UserId;
-import java.time.Instant;
 import java.util.Optional;
 
 public interface IPasswordResetRepository {
@@ -12,25 +12,21 @@ public interface IPasswordResetRepository {
    * Creates a new password reset record for a specific user with the provided token and expiration
    * time.
    *
-   * @param userId ID of the user for whom the password reset record is being created
-   * @param token the unique token associated with the password reset request, used for validation
-   *     and retrieval
-   * @param expiresAt the timestamp indicating when the password reset token expires, after which it
-   *     should no longer be valid
-   * @return an {@link Optional} containing the created PasswordResetDbo if the creation was successful, or
-   *     an empty {@link Optional} if the creation failed (e.g., due to invalid input or database
-   *     constraints)
+   * @param data values to store
+   * @return an {@link Optional} containing the created PasswordResetDbo if the creation was
+   *     successful, or an empty {@link Optional} if the creation failed (e.g., due to invalid input
+   *     or database constraints)
    */
-  Optional<PasswordResetDbo> create(UserId userId, PasswordResetToken token, Instant expiresAt);
+  Optional<PasswordResetEntity> create(CreatePasswordResetDto data);
 
   /**
    * Retrieves a password reset record based on the provided password reset token.
    *
    * @param token the unique token associated with the password reset request
-   * @return an {@link Optional} containing the found PasswordResetDbo if a matching record is found, or an
-   *     empty {@link Optional} if no matching record exists for the provided token
+   * @return an {@link Optional} containing the found PasswordResetDbo if a matching record is
+   *     found, or an empty {@link Optional} if no matching record exists for the provided token
    */
-  Optional<PasswordResetDbo> findByToken(PasswordResetToken token);
+  Optional<PasswordResetEntity> findByToken(PasswordResetToken token);
 
   /**
    * Deletes password reset records associated with the specified user ID. This method is typically

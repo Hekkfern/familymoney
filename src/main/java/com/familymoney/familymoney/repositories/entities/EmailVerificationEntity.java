@@ -1,4 +1,4 @@
-package com.familymoney.familymoney.repositories.dbos;
+package com.familymoney.familymoney.repositories.entities;
 
 import com.familymoney.familymoney.types.EmailVerificationToken;
 import com.familymoney.familymoney.types.UserId;
@@ -7,5 +7,5 @@ import java.util.UUID;
 import lombok.Builder;
 
 @Builder
-public record EmailVerificationDbo(
+public record EmailVerificationEntity(
     UUID id, UserId userId, EmailVerificationToken token, Instant createdAt, Instant expiresAt) {}

@@ -1,14 +1,13 @@
 package com.familymoney.familymoney.repositories;
 
-import com.familymoney.familymoney.repositories.dbos.GroupDbo;
-import com.familymoney.familymoney.repositories.dbos.UpdateGroupDbo;
-import com.familymoney.familymoney.repositories.dbos.UserGroupDbo;
+import com.familymoney.familymoney.repositories.dtos.CreateGroupDto;
+import com.familymoney.familymoney.repositories.dtos.UpdateGroupDto;
+import com.familymoney.familymoney.repositories.entities.GroupEntity;
+import com.familymoney.familymoney.repositories.entities.UserGroupEntity;
 import com.familymoney.familymoney.types.GroupId;
-import com.familymoney.familymoney.types.GroupName;
 import com.familymoney.familymoney.types.UserId;
 import java.util.List;
 import java.util.Optional;
-import javax.money.CurrencyUnit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -26,13 +25,11 @@ public interface IGroupRepository {
   /**
    * Create a new group for transactions.
    *
-   * @param name Name of the group. Must not be null.
-   * @param description Optional textual description for the group. May be empty.
-   * @param currency Default currency of the group. Must not be null.
+   * @param data values to store
    * @return Optional containing the created GroupDbo when creation succeeds; empty Optional when
    *     creation fails (for example because of a constraint violation).
    */
-  Optional<GroupDbo> create(GroupName name, String description, CurrencyUnit currency);
+  Optional<GroupEntity> create(CreateGroupDto data);
 
   /**
    * Update group data by its ID. Only non-null fields of {@code data} should be applied.
@@ -42,7 +39,7 @@ public interface IGroupRepository {
    * @return true if the group was updated (record existed and changes were applied), false
    *     otherwise.
    */
-  boolean updateById(GroupId id, UpdateGroupDbo data);
+  boolean updateById(GroupId id, UpdateGroupDto data);
 
   /**
    * Delete a group by its ID.
@@ -61,7 +58,7 @@ public interface IGroupRepository {
    * @return A page of GroupDbo objects representing groups the user is a member of. If the user has
    *     no groups the returned page will be empty.
    */
-  Page<GroupDbo> findByUserId(UserId userId, Pageable pageable);
+  Page<GroupEntity> findByUserId(UserId userId, Pageable pageable);
 
   /**
    * Find a group by its identifier.
@@ -69,7 +66,7 @@ public interface IGroupRepository {
    * @param id ID of the group to retrieve. Must not be null.
    * @return Optional containing the GroupDbo if found, otherwise empty.
    */
-  Optional<GroupDbo> findById(GroupId id);
+  Optional<GroupEntity> findById(GroupId id);
 
   /**
    * Check whether a group with the given id exists.
@@ -102,11 +99,11 @@ public interface IGroupRepository {
    *
    * @param userId ID of the user to add. Must not be null.
    * @param groupId ID of the group to which the user should be added. Must not be null.
-   * @return {@link Optional} containing the created {@link UserGroupDbo} when the user was added
+   * @return {@link Optional} containing the created {@link UserGroupEntity} when the user was added
    *     successfully, or empty {@link Optional} when the operation failed (for example if the user
    *     or group doesn't exist or the user is already a member).
    */
-  Optional<UserGroupDbo> addUser(UserId userId, GroupId groupId);
+  Optional<UserGroupEntity> addUser(UserId userId, GroupId groupId);
 
   /**
    * Remove a user from a group.

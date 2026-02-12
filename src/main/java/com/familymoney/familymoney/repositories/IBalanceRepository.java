@@ -1,13 +1,13 @@
 package com.familymoney.familymoney.repositories;
 
-import com.familymoney.familymoney.repositories.dbos.BalanceDbo;
-import com.familymoney.familymoney.repositories.dbos.UpdateBalanceDbo;
+import com.familymoney.familymoney.repositories.dtos.CreateBalanceDto;
+import com.familymoney.familymoney.repositories.dtos.UpdateBalanceDto;
+import com.familymoney.familymoney.repositories.entities.BalanceEntity;
 import com.familymoney.familymoney.types.BalanceId;
 import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.UserId;
 import java.util.List;
 import java.util.Optional;
-import javax.money.CurrencyUnit;
 
 /**
  * The IBalanceRepository interface defines the contract for managing balance entries within the
@@ -19,11 +19,7 @@ public interface IBalanceRepository {
   /**
    * Creates a new balance entry for a specific group and two users.
    *
-   * @param groupId the identifier of the group for which the balance is being created
-   * @param user1 the identifier of the first user involved in the balance
-   * @param user2 the identifier of the second user involved in the balance
-   * @param currency the currency unit for the balance amount (e.g., USD, EUR). This indicates the
-   *     currency in which the balance amount is denominated.
+   * @param data values to store
    * @return an Optional containing the created BalanceDbo if the creation was successful, or an
    *     empty Optional if the creation failed (e.g., due to invalid input or database constraints)
    * @implNote When a new balance is created, it is initialized with a default amount of zero,
@@ -33,7 +29,7 @@ public interface IBalanceRepository {
    * @apiNote user1 and user2 are interchangeable in the context of the balance, meaning that the
    *     balance between user1 and user2 is the same as the balance between user2 and user1.
    */
-  Optional<BalanceDbo> create(GroupId groupId, UserId user1, UserId user2, CurrencyUnit currency);
+  Optional<BalanceEntity> create(CreateBalanceDto data);
 
   /**
    * Retrieves a list of balance entries associated with a specific group.
@@ -42,7 +38,7 @@ public interface IBalanceRepository {
    * @return a list of BalanceDbo objects representing the balances associated with the specified
    *     group. If no balances are found for the group, an empty list is returned.
    */
-  List<BalanceDbo> findByGroup(GroupId groupId);
+  List<BalanceEntity> findByGroup(GroupId groupId);
 
   /**
    * Retrieves a list of balance entries for a specific user within a specific group.
@@ -52,7 +48,7 @@ public interface IBalanceRepository {
    * @return a list of BalanceDbo objects representing the balances associated with the specified
    *     user and group. If no balances are found for the user and group, an empty list is returned.
    */
-  List<BalanceDbo> findByUserAndGroup(UserId userId, GroupId groupId);
+  List<BalanceEntity> findByUserAndGroup(UserId userId, GroupId groupId);
 
   /**
    * Updates the balance entry identified by the given BalanceId with the provided data.
@@ -65,7 +61,7 @@ public interface IBalanceRepository {
    *     false if the balance entry was not found or the update failed for any reason (e.g., invalid
    *     input, database constraints).
    */
-  boolean updateById(final BalanceId id, UpdateBalanceDbo data);
+  boolean updateById(final BalanceId id, UpdateBalanceDto data);
 
   /**
    * Retrieves a balance entry by its unique identifier.
@@ -74,5 +70,5 @@ public interface IBalanceRepository {
    * @return an Optional containing the BalanceDbo if a balance entry with the specified identifier
    *     exists, or an empty Optional if no such balance entry is found
    */
-  Optional<BalanceDbo> findById(BalanceId id);
+  Optional<BalanceEntity> findById(BalanceId id);
 }

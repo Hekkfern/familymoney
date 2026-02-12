@@ -1,10 +1,9 @@
 package com.familymoney.familymoney.repositories;
 
-import com.familymoney.familymoney.repositories.dbos.EmailVerificationDbo;
+import com.familymoney.familymoney.repositories.dtos.CreateEmailVerificationDto;
+import com.familymoney.familymoney.repositories.entities.EmailVerificationEntity;
 import com.familymoney.familymoney.types.EmailVerificationToken;
 import com.familymoney.familymoney.types.UserId;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.Optional;
 
 public interface IEmailVerificationRepository {
@@ -12,14 +11,11 @@ public interface IEmailVerificationRepository {
   /**
    * Create a new email verification record
    *
-   * @param userId ID of the user
-   * @param token Email Verification token
-   * @param expiresAt Timestamp when the token expires
-   * @return Created {@link EmailVerificationDbo} wrapped in Optional, or empty Optional if creation
+   * @param data values to store
+   * @return Created {@link EmailVerificationEntity} wrapped in Optional, or empty Optional if creation
    *     failed
    */
-  Optional<EmailVerificationDbo> create(
-      UserId userId, EmailVerificationToken token, Instant expiresAt);
+  Optional<EmailVerificationEntity> create(CreateEmailVerificationDto data);
 
   /**
    * Find an Email Verification record by its token
@@ -27,7 +23,7 @@ public interface IEmailVerificationRepository {
    * @param token Email Verification token
    * @return Found EmailVerificationDbo wrapped in Optional, or empty Optional if not found
    */
-  Optional<EmailVerificationDbo> findByToken(EmailVerificationToken token);
+  Optional<EmailVerificationEntity> findByToken(EmailVerificationToken token);
 
   /**
    * Delete Email Verification records by User ID

@@ -1,4 +1,4 @@
-package com.familymoney.familymoney.repositories.dbos;
+package com.familymoney.familymoney.repositories.dtos;
 
 import java.time.Instant;
 import lombok.Builder;
@@ -8,7 +8,7 @@ import org.jspecify.annotations.Nullable;
 
 @Data
 @Builder
-public class UpdateRefreshTokenDbo {
+public class UpdateRefreshTokenDto {
   @Nullable @Default private Boolean isUsed = null;
   @Nullable @Default private Instant usedAt = null;
 

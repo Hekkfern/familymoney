@@ -5,7 +5,7 @@ import static org.mockito.Mockito.when;
 
 import com.familymoney.familymoney.repositories.IRoleRepository;
 import com.familymoney.familymoney.repositories.IUserRepository;
-import com.familymoney.familymoney.repositories.dbos.UserDbo;
+import com.familymoney.familymoney.repositories.entities.UserEntity;
 import com.familymoney.familymoney.security.UserPasswordEncoder;
 import com.familymoney.familymoney.services.impl.UserService;
 import com.familymoney.familymoney.services.mappers.UserDataMapper;
@@ -51,7 +51,7 @@ public class UserServiceTests {
     when(userRepository.findById(userId))
         .thenReturn(
             Optional.of(
-                UserDbo.builder()
+                UserEntity.builder()
                     .id(userId)
                     .username(username)
                     .email(email)

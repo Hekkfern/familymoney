@@ -2,12 +2,12 @@
 
 CREATE TABLE groups
 (
-    id              UUID PRIMARY KEY                  DEFAULT uuidv7(),
-    name            VARCHAR(64)              NOT NULL,
-    description     VARCHAR(255)             NOT NULL,
-    currency_code   VARCHAR(3)               NOT NULL CHECK (currency_code ~ '^[A-Z]{3}$'),
-    created_at      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+    id            UUID PRIMARY KEY,
+    name          VARCHAR(64)              NOT NULL,
+    description   VARCHAR(255)             NOT NULL,
+    currency_code VARCHAR(3)               NOT NULL CHECK (currency_code ~ '^[A-Z]{3}$'),
+    created_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 SELECT trigger_updated_at('groups');
@@ -24,7 +24,7 @@ CREATE TABLE user_groups
 
 CREATE TABLE balances
 (
-    id            UUID PRIMARY KEY        DEFAULT uuidv7(),
+    id            UUID PRIMARY KEY,
     group_id      UUID           NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
     amount        DECIMAL(19, 4) NOT NULL DEFAULT 0,
     currency_code VARCHAR(3)     NOT NULL CHECK (currency_code ~ '^[A-Z]{3}$'),
@@ -45,7 +45,7 @@ CREATE UNIQUE INDEX ux_balances_group_unordered_pair
 
 CREATE TABLE transactions
 (
-    id            UUID PRIMARY KEY                  DEFAULT uuidv7(),
+    id            UUID PRIMARY KEY,
     description   VARCHAR(255)             NOT NULL,
     group_id      UUID                     NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
     amount        DECIMAL(19, 4)           NOT NULL CHECK (amount > 0),
@@ -69,7 +69,7 @@ CREATE INDEX idx_transactions_to_user_id ON transactions (to_user_id);
 
 CREATE TABLE group_invitations
 (
-    id         UUID PRIMARY KEY                  DEFAULT uuidv7(),
+    id         UUID PRIMARY KEY,
     group_id   UUID                     NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
     token      VARCHAR(255) UNIQUE      NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),

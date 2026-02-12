@@ -2,7 +2,7 @@ package com.familymoney.familymoney.services.impl;
 
 import com.familymoney.familymoney.exceptions.*;
 import com.familymoney.familymoney.repositories.*;
-import com.familymoney.familymoney.repositories.dbos.BalanceDbo;
+import com.familymoney.familymoney.repositories.entities.BalanceEntity;
 import com.familymoney.familymoney.services.ITransactionGroupService;
 import com.familymoney.familymoney.services.data.GroupData;
 import com.familymoney.familymoney.services.data.TransactionData;
@@ -215,7 +215,7 @@ public class TransactionGroupService implements ITransactionGroupService {
         .collect(
             Collectors.toMap(
                 b -> b.user1().equals(userId) ? b.user2() : b.user1(),
-                BalanceDbo::amount,
+                BalanceEntity::amount,
                 (existing, replacement) -> existing));
   }
 

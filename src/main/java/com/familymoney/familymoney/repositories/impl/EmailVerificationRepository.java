@@ -2,12 +2,11 @@ package com.familymoney.familymoney.repositories.impl;
 
 import com.familymoney.familymoney.generated.tables.EmailVerificationTokens;
 import com.familymoney.familymoney.repositories.IEmailVerificationRepository;
-import com.familymoney.familymoney.repositories.dbos.EmailVerificationDbo;
+import com.familymoney.familymoney.repositories.dtos.CreateEmailVerificationDto;
+import com.familymoney.familymoney.repositories.entities.EmailVerificationEntity;
 import com.familymoney.familymoney.repositories.mappers.EmailVerificationJooqMapper;
 import com.familymoney.familymoney.types.EmailVerificationToken;
 import com.familymoney.familymoney.types.UserId;
-import java.time.Duration;
-import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Optional;
@@ -23,14 +22,18 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
   private final DSLContext db;
 
   @Override
-  public Optional<EmailVerificationDbo> create(
-      final UserId userId, final EmailVerificationToken token, final Instant expiresAt) {
+  public Optional<EmailVerificationEntity> create(final CreateEmailVerificationDto data) {
     return db.insertInto(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS)
         .columns(
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.ID,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.USER_ID,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.EXPIRES_AT)
-        .values(userId.value(), token.value(), OffsetDateTime.ofInstant(expiresAt, ZoneOffset.UTC))
+        .values(
+            data.id(),
+            data.userId().value(),
+            data.token().value(),
+            OffsetDateTime.ofInstant(data.expiresAt(), ZoneOffset.UTC))
         .returning(
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.ID,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.USER_ID,
@@ -38,11 +41,11 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.EXPIRES_AT,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.CREATED_AT)
         .fetchOptional()
-        .map(EmailVerificationJooqMapper::toDbo);
+        .map(EmailVerificationJooqMapper::toEntity);
   }
 
   @Override
-  public Optional<EmailVerificationDbo> findByToken(final EmailVerificationToken token) {
+  public Optional<EmailVerificationEntity> findByToken(final EmailVerificationToken token) {
     return db.select(
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.ID,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.USER_ID,
@@ -52,7 +55,7 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
         .from(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS)
         .where(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN.eq(token.value()))
         .fetchOptional()
-        .map(EmailVerificationJooqMapper::toDbo);
+        .map(EmailVerificationJooqMapper::toEntity);
   }
 
   @Override

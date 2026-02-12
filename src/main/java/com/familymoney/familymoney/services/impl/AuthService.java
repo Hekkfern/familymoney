@@ -12,9 +12,9 @@ import com.familymoney.familymoney.repositories.IPasswordResetRepository;
 import com.familymoney.familymoney.repositories.IRefreshTokenRepository;
 import com.familymoney.familymoney.repositories.IRoleRepository;
 import com.familymoney.familymoney.repositories.IUserRepository;
-import com.familymoney.familymoney.repositories.dbos.EmailVerificationDbo;
-import com.familymoney.familymoney.repositories.dbos.UpdateRefreshTokenDbo;
-import com.familymoney.familymoney.repositories.dbos.UpdateUserDbo;
+import com.familymoney.familymoney.repositories.entities.EmailVerificationEntity;
+import com.familymoney.familymoney.repositories.dtos.UpdateRefreshTokenDto;
+import com.familymoney.familymoney.repositories.dtos.UpdateUserDto;
 import com.familymoney.familymoney.security.JwtUtils;
 import com.familymoney.familymoney.security.UserPasswordEncoder;
 import com.familymoney.familymoney.services.IAuthService;
@@ -53,7 +53,7 @@ public class AuthService implements IAuthService {
    * @param userId Identifier of the user to generate the token for
    * @return The stored email verification token database object
    */
-  private EmailVerificationDbo generateAndStoreEmailVerificationToken(UserId userId) {
+  private EmailVerificationEntity generateAndStoreEmailVerificationToken(UserId userId) {
     final int MAX_NUM_ATTEMPTS = 3;
     final Duration VERIFICATION_TOKEN_EXPIRY = Duration.ofHours(24);
 
@@ -150,7 +150,7 @@ public class AuthService implements IAuthService {
       // Invalidate all refresh tokens for that user
       log.warn("REFRESH TOKEN REUSE DETECTED!");
       refreshTokenRepository.updateByFamily(
-          refreshTokenDb.family(), UpdateRefreshTokenDbo.builder().isUsed(true).build());
+          refreshTokenDb.family(), UpdateRefreshTokenDto.builder().isUsed(true).build());
       // Get user info for email
       val userDb =
           userRepository
@@ -164,7 +164,7 @@ public class AuthService implements IAuthService {
     // Mark the old token as used
     refreshTokenRepository.updateByToken(
         refreshTokenDb.token(),
-        UpdateRefreshTokenDbo.builder().isUsed(true).usedAt(Instant.now(clock)).build());
+        UpdateRefreshTokenDto.builder().isUsed(true).usedAt(Instant.now(clock)).build());
     // Generate new tokens
     val newAccessToken = jwtUtils.generateAccessToken(refreshTokenDb.userId());
     val newRefreshToken = RefreshToken.generate();
@@ -194,7 +194,7 @@ public class AuthService implements IAuthService {
     }
     // Verify the user's email
     userRepository.updateById(
-        verificationTokenDb.userId(), UpdateUserDbo.builder().isEmailVerified(true).build());
+        verificationTokenDb.userId(), UpdateUserDto.builder().isEmailVerified(true).build());
     // Delete all the verification tokens assigned to this user from the database
     emailVerificationRepository.deleteByUserId(verificationTokenDb.userId());
   }
@@ -240,6 +240,6 @@ public class AuthService implements IAuthService {
     }
     // Invalidate the family of refresh token from the database
     refreshTokenRepository.updateByFamily(
-        refreshTokenDb.family(), UpdateRefreshTokenDbo.builder().isUsed(true).build());
+        refreshTokenDb.family(), UpdateRefreshTokenDto.builder().isUsed(true).build());
   }
 }

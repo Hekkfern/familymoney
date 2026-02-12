@@ -3,18 +3,17 @@ package com.familymoney.familymoney.repositories.impl;
 import com.familymoney.familymoney.generated.tables.Groups;
 import com.familymoney.familymoney.generated.tables.UserGroups;
 import com.familymoney.familymoney.repositories.IGroupRepository;
-import com.familymoney.familymoney.repositories.dbos.GroupDbo;
-import com.familymoney.familymoney.repositories.dbos.UpdateGroupDbo;
-import com.familymoney.familymoney.repositories.dbos.UserGroupDbo;
+import com.familymoney.familymoney.repositories.dtos.CreateGroupDto;
+import com.familymoney.familymoney.repositories.dtos.UpdateGroupDto;
+import com.familymoney.familymoney.repositories.entities.GroupEntity;
+import com.familymoney.familymoney.repositories.entities.UserGroupEntity;
 import com.familymoney.familymoney.repositories.mappers.GroupJooqMapper;
 import com.familymoney.familymoney.repositories.mappers.UserGroupJooqMapper;
 import com.familymoney.familymoney.types.GroupId;
-import com.familymoney.familymoney.types.GroupName;
 import com.familymoney.familymoney.types.UserId;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import javax.money.CurrencyUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.jooq.DSLContext;
@@ -31,13 +30,18 @@ public class GroupRepository implements IGroupRepository {
   private final DSLContext db;
 
   @Override
-  public Optional<GroupDbo> create(
-      final GroupName name,
-      final String description,
-      final CurrencyUnit currency) {
+  public Optional<GroupEntity> create(final CreateGroupDto data) {
     return db.insertInto(Groups.GROUPS)
-        .columns(Groups.GROUPS.NAME, Groups.GROUPS.DESCRIPTION, Groups.GROUPS.CURRENCY_CODE)
-        .values(name.value(), description, currency.getCurrencyCode())
+        .columns(
+            Groups.GROUPS.ID,
+            Groups.GROUPS.NAME,
+            Groups.GROUPS.DESCRIPTION,
+            Groups.GROUPS.CURRENCY_CODE)
+        .values(
+            data.id().value(),
+            data.name().value(),
+            data.description(),
+            data.currency().getCurrencyCode())
         .returning(
             Groups.GROUPS.ID,
             Groups.GROUPS.NAME,
@@ -46,11 +50,11 @@ public class GroupRepository implements IGroupRepository {
             Groups.GROUPS.CREATED_AT,
             Groups.GROUPS.UPDATED_AT)
         .fetchOptional()
-        .map(GroupJooqMapper::toDbo);
+        .map(GroupJooqMapper::toEntity);
   }
 
   @Override
-  public boolean updateById(final GroupId id, final UpdateGroupDbo data) {
+  public boolean updateById(final GroupId id, final UpdateGroupDto data) {
     val rowsAffected =
         db.update(Groups.GROUPS)
             .set(
@@ -76,7 +80,7 @@ public class GroupRepository implements IGroupRepository {
   }
 
   @Override
-  public Page<GroupDbo> findByUserId(final UserId userId, final Pageable pageable) {
+  public Page<GroupEntity> findByUserId(final UserId userId, final Pageable pageable) {
     val total =
         db.selectCount()
             .from(UserGroups.USER_GROUPS)
@@ -99,13 +103,13 @@ public class GroupRepository implements IGroupRepository {
             .limit(pageable.getPageSize())
             .offset(pageable.getOffset())
             .fetch()
-            .map(GroupJooqMapper::toDbo);
+            .map(GroupJooqMapper::toEntity);
 
     return new PageImpl<>(data, pageable, safeTotal);
   }
 
   @Override
-  public Optional<GroupDbo> findById(final GroupId id) {
+  public Optional<GroupEntity> findById(final GroupId id) {
     return db.select(
             Groups.GROUPS.ID,
             Groups.GROUPS.NAME,
@@ -116,7 +120,7 @@ public class GroupRepository implements IGroupRepository {
         .from(Groups.GROUPS)
         .where(Groups.GROUPS.ID.eq(id.value()))
         .fetchOptional()
-        .map(GroupJooqMapper::toDbo);
+        .map(GroupJooqMapper::toEntity);
   }
 
   @Override
@@ -152,7 +156,7 @@ public class GroupRepository implements IGroupRepository {
   }
 
   @Override
-  public Optional<UserGroupDbo> addUser(UserId userId, GroupId groupId) {
+  public Optional<UserGroupEntity> addUser(UserId userId, GroupId groupId) {
     return db.insertInto(UserGroups.USER_GROUPS)
         .columns(UserGroups.USER_GROUPS.USER_ID, UserGroups.USER_GROUPS.GROUP_ID)
         .values(userId.value(), groupId.value())
@@ -161,7 +165,7 @@ public class GroupRepository implements IGroupRepository {
             UserGroups.USER_GROUPS.GROUP_ID,
             UserGroups.USER_GROUPS.JOINED_AT)
         .fetchOptional()
-        .map(UserGroupJooqMapper::toDbo);
+        .map(UserGroupJooqMapper::toEntity);
   }
 
   @Override
