@@ -119,12 +119,4 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
             .execute();
     return rowsAffected > 0;
   }
-
-  @Override
-  public void deleteOlderThan(final Duration cutoff) {
-    val threshold = OffsetDateTime.now(ZoneOffset.UTC).minusSeconds(cutoff.getSeconds());
-    db.deleteFrom(RefreshTokens.REFRESH_TOKENS)
-        .where(RefreshTokens.REFRESH_TOKENS.CREATED_AT.lt(threshold))
-        .execute();
-  }
 }

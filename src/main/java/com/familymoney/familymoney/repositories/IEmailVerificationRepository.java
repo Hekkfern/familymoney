@@ -36,11 +36,4 @@ public interface IEmailVerificationRepository {
    * @return true if deletion was successful, false otherwise
    */
   boolean deleteByUserId(UserId userId);
-
-  /**
-   * Delete Email Verification records older than the specified duration from the current time
-   *
-   * @param cutoff Duration to determine the age of records to delete
-   */
-  void deleteOlderThan(Duration cutoff);
 }

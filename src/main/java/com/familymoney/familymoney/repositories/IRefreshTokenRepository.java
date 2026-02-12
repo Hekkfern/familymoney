@@ -62,12 +62,4 @@ public interface IRefreshTokenRepository {
    * @return true if at least one row was updated; false otherwise.
    */
   boolean updateByUserId(UserId userId, UpdateRefreshTokenDbo data);
-
-  /**
-   * Delete refresh tokens older than the specified duration from the current time.
-   *
-   * @param cutoff the duration representing the token age threshold; tokens older than now - cutoff
-   *     should be deleted. Must not be null.
-   */
-  void deleteOlderThan(Duration cutoff);
 }

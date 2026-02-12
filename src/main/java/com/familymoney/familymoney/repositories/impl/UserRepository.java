@@ -148,15 +148,6 @@ public class UserRepository implements IUserRepository {
     return db.deleteFrom(Users.USERS).where(Users.USERS.ID.eq(id.value())).execute() > 0;
   }
 
-  @Override
-  public void deleteByIsUnverifiedAndOlderThan(final Duration cutoff) {
-    val threshold = OffsetDateTime.now(ZoneOffset.UTC).minusSeconds(cutoff.toSeconds());
-    db.deleteFrom(Users.USERS)
-        .where(Users.USERS.IS_EMAIL_VERIFIED.eq(false))
-        .and(Users.USERS.CREATED_AT.lt(threshold))
-        .execute();
-  }
-
   @Transactional
   @Override
   public Page<UserDbo> findAll(final Pageable pageable) {

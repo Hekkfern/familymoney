@@ -94,14 +94,6 @@ public interface IUserRepository {
   boolean deleteById(UserId id);
 
   /**
-   * Delete unverified user records older than the provided duration.
-   *
-   * @param cutoff users created after now() - cutoff and unverified should be removed. Must not be
-   *     null.
-   */
-  void deleteByIsUnverifiedAndOlderThan(Duration cutoff);
-
-  /**
    * Retrieve a paginated list of users.
    *
    * @param pageable paging information (page number, size, sort). Must not be null.

@@ -63,12 +63,4 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
             .execute();
     return rowsAffected > 0;
   }
-
-  @Override
-  public void deleteOlderThan(final Duration cutoff) {
-    val threshold = OffsetDateTime.now(ZoneOffset.UTC).minusSeconds(cutoff.getSeconds());
-    db.deleteFrom(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS)
-        .where(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.CREATED_AT.lt(threshold))
-        .execute();
-  }
 }
