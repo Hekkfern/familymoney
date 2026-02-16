@@ -13,6 +13,7 @@ import lombok.val;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -47,6 +48,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
           // set authorization
           val authorities = List.of(new SimpleGrantedAuthority(ROLE_PREFIX + role));
           val auth = new UsernamePasswordAuthenticationToken(userId, null, authorities);
+          auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
           SecurityContextHolder.getContext().setAuthentication(auth);
         }
       }
