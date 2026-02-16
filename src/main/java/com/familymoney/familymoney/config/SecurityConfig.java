@@ -48,7 +48,6 @@ public class SecurityConfig {
                     .anyRequest()
                     .denyAll())
         .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-
     return http.build();
   }
 }
