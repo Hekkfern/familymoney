@@ -10,7 +10,6 @@ import java.lang.annotation.*;
 @Constraint(validatedBy = {})
 @Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.RECORD_COMPONENT})
 @Retention(RetentionPolicy.RUNTIME)
-@NotBlank(message = "Invalid email format")
 @Email(message = "Invalid email format")
 public @interface ValidEmail {
   String message() default "";
