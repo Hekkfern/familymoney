@@ -1,15 +1,13 @@
-@access-token = "aaaaa"
-
 // Get user data endpoint
 
 # @name Get user data
-GET {{BaseUrl}}/api/v1/users/register
-Authorization: Bearer {{access-token}}
+GET {{BaseUrl}}/api/v1/users/me
+Authorization: Bearer {{accessToken}}
 
 ###
 
 # @name Get user data with wrong authentication
-GET {{BaseUrl}}/api/v1/users/register
+GET {{BaseUrl}}/api/v1/users/me
 Authorization: Bearer aaaaaa
 
 ###
@@ -18,7 +16,7 @@ Authorization: Bearer aaaaaa
 
 # @name Delete user
 DELETE {{BaseUrl}}/api/v1/users/me
-Authorization: Bearer {{access-token}}
+Authorization: Bearer {{accessToken}}
 
 ###
 
@@ -32,7 +30,7 @@ Authorization: Bearer aaaaaa
 
 # @name Update all user data
 PATCH {{BaseUrl}}/api/v1/users/me
-Authorization: Bearer {{access-token}}
+Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
 {
@@ -45,7 +43,7 @@ Content-Type: application/json
 
 # @name Update only one item of the user data
 PATCH {{BaseUrl}}/api/v1/users/me
-Authorization: Bearer {{access-token}}
+Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
 {
@@ -69,7 +67,7 @@ Content-Type: application/json
 
 # @name Update user data with wrong parameters
 PATCH {{BaseUrl}}/api/v1/users/me
-Authorization: Bearer {{access-token}}
+Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
 {

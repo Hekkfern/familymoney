@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserPasswordEncoder {
 
-  private final int STRENGTH = 12;
+  private static final int STRENGTH = 12;
 
   private final BCryptPasswordEncoder bcrypt = new BCryptPasswordEncoder(STRENGTH);
 

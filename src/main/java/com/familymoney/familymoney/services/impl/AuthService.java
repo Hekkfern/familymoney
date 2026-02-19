@@ -37,6 +37,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class AuthService implements IAuthService {
 
+  private static final Duration VERIFICATION_TOKEN_EXPIRY = Duration.ofHours(24);
+
   private final IUserRepository userRepository;
   private final UserPasswordEncoder passwordEncoder;
   private final JwtUtils jwtUtils;
@@ -55,7 +57,6 @@ public class AuthService implements IAuthService {
    */
   private EmailVerificationEntity generateAndStoreEmailVerificationToken(UserId userId) {
     final int MAX_NUM_ATTEMPTS = 3;
-    final Duration VERIFICATION_TOKEN_EXPIRY = Duration.ofHours(24);
 
     val expiresAt = Instant.now(clock).plus(VERIFICATION_TOKEN_EXPIRY);
     for (int attempt = 0; attempt < MAX_NUM_ATTEMPTS; attempt++) {
