@@ -1,0 +1,9 @@
+# @name Check all actuator endpoints available
+GET {{BaseUrl}}/actuator
+
+###
+
+# @name Check health
+GET {{BaseUrl}}/actuator/health
+
+

@@ -15,7 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
-public class CurrencyConversionServiceTests {
+class CurrencyConversionServiceTests {
 
   @InjectMocks private CurrencyConversionService currencyConversionService;
 

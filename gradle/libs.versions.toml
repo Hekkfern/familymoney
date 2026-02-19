@@ -4,7 +4,6 @@ springboot-dependencymanagement = "1.1.7"
 springdoc-openapi = "2.8.14"
 jjwt = "0.13.0"
 testcontainers = "2.0.2"
-mapstruct = "1.6.3"
 moneta = "1.4.5"
 assertj = "3.27.7"
 jooq-plugin = "8.0.11"
@@ -42,8 +41,6 @@ jjwt-jackson = { module = "io.jsonwebtoken:jjwt-jackson", version.ref = "jjwt" }
 testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
 testcontainers-junit = { module = "org.testcontainers:testcontainers-junit-jupiter", version.ref = "testcontainers" }
 testcontainers-postgresql = { module = "org.testcontainers:testcontainers-postgresql", version.ref = "testcontainers" }
-mapstruct = { module = "org.mapstruct:mapstruct", version.ref = "mapstruct" }
-mapstruct-processor = { module = "org.mapstruct:mapstruct-processor", version.ref = "mapstruct" }
 moneta = { module = "org.javamoney:moneta", version.ref = "moneta" }
 assertj = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 uuidcreator = { module = "com.github.f4b6a3:uuid-creator", version.ref = "uuid-creator" }

@@ -2,6 +2,9 @@ package com.familymoney.familymoney.services.impl;
 
 import com.familymoney.familymoney.exceptions.*;
 import com.familymoney.familymoney.repositories.*;
+import com.familymoney.familymoney.repositories.dtos.CreateGroupDto;
+import com.familymoney.familymoney.repositories.dtos.CreateGroupInvitationDto;
+import com.familymoney.familymoney.repositories.dtos.CreateTransactionDto;
 import com.familymoney.familymoney.repositories.entities.BalanceEntity;
 import com.familymoney.familymoney.services.ITransactionGroupService;
 import com.familymoney.familymoney.services.data.GroupData;
@@ -13,6 +16,7 @@ import com.familymoney.familymoney.services.mappers.TransactionDataMapper;
 import com.familymoney.familymoney.services.mappers.UpdateGroupDataMapper;
 import com.familymoney.familymoney.services.mappers.UpdateTransactionDataMapper;
 import com.familymoney.familymoney.types.*;
+import com.familymoney.familymoney.utils.UUIDGenerator;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -41,10 +45,6 @@ public class TransactionGroupService implements ITransactionGroupService {
   private final ITransactionRepository transactionRepository;
   private final IGroupInvitationRepository groupInvitationRepository;
   private final IUserRepository userRepository;
-  private final GroupDataMapper groupDataMapper;
-  private final UpdateGroupDataMapper updateGroupDataMapper;
-  private final TransactionDataMapper transactionDataMapper;
-  private final UpdateTransactionDataMapper updateTransactionDataMapper;
   private final Clock clock;
 
   @Override
@@ -52,16 +52,22 @@ public class TransactionGroupService implements ITransactionGroupService {
   public GroupId createGroup(
       GroupName name, String description, CurrencyUnit currency, UserId createdBy) {
     // Create group in the database
-    val group =
-        groupRepository
-            .create(name, description, currency)
-            .orElseThrow(() -> new DatabaseExecutionException("Unable to create group"));
+    val groupId = GroupId.generate();
+    groupRepository
+        .create(
+            CreateGroupDto.builder()
+                .id(groupId)
+                .name(name)
+                .description(description)
+                .currency(currency)
+                .build())
+        .orElseThrow(() -> new DatabaseExecutionException("Unable to create group"));
     // Add creator to the group
     groupRepository
-        .addUser(createdBy, group.id())
+        .addUser(createdBy, groupId)
         .orElseThrow(
             () -> new DatabaseExecutionException("Unable to assign owner to the new group"));
-    return group.id();
+    return groupId;
   }
 
   /**
@@ -115,7 +121,7 @@ public class TransactionGroupService implements ITransactionGroupService {
 
   @Override
   public Page<GroupData> getGroupsByUser(UserId userId, Pageable pageable) {
-    return groupRepository.findByUserId(userId, pageable).map(groupDataMapper::fromDbo);
+    return groupRepository.findByUserId(userId, pageable).map(GroupDataMapper::fromDbo);
   }
 
   @Override
@@ -127,7 +133,7 @@ public class TransactionGroupService implements ITransactionGroupService {
     // Get data
     return groupRepository
         .findById(groupId)
-        .map(groupDataMapper::fromDbo)
+        .map(GroupDataMapper::fromDbo)
         .orElseThrow(
             () ->
                 new TransactionGroupNotFoundException(
@@ -141,7 +147,7 @@ public class TransactionGroupService implements ITransactionGroupService {
     // Check if the user is a member of the group
     checkIfUserIsInGroup(userId, groupId);
     // Update data
-    groupRepository.updateById(groupId, updateGroupDataMapper.toDbo(data));
+    groupRepository.updateById(groupId, UpdateGroupDataMapper.toDbo(data));
   }
 
   @Override
@@ -152,13 +158,18 @@ public class TransactionGroupService implements ITransactionGroupService {
     checkIfUserIsInGroup(userId, groupId);
     // Generate token
     val token = GroupInvitationToken.generate();
-
     val expiresAt = Instant.now(clock).plus(INVITATION_TOKEN_EXPIRY);
-    val invitationDb =
-        groupInvitationRepository
-            .create(groupId, token, expiresAt)
-            .orElseThrow(() -> new DatabaseExecutionException("Unable to create invitation token"));
-    return invitationDb.token();
+    val invitationId = UUIDGenerator.generate();
+    groupInvitationRepository
+        .create(
+            CreateGroupInvitationDto.builder()
+                .id(invitationId)
+                .groupId(groupId)
+                .token(token)
+                .expiresAt(expiresAt)
+                .build())
+        .orElseThrow(() -> new DatabaseExecutionException("Unable to create invitation token"));
+    return token;
   }
 
   @Override
@@ -229,7 +240,7 @@ public class TransactionGroupService implements ITransactionGroupService {
     // Get transactions
     val transactionsDb = transactionRepository.findAllByGroupId(groupId, pageable);
     // Generate result
-    return transactionsDb.map(transactionDataMapper::fromDbo);
+    return transactionsDb.map(TransactionDataMapper::fromDbo);
   }
 
   @Override
@@ -246,7 +257,17 @@ public class TransactionGroupService implements ITransactionGroupService {
     // Check if the user is a member of the group
     checkIfUserIsInGroup(createdBy, groupId);
     // create transaction
-    transactionRepository.create(description, groupId, amount, from, to, doneAt);
+    val transactionId = TransactionId.generate();
+    transactionRepository.create(
+        CreateTransactionDto.builder()
+            .id(transactionId)
+            .description(description)
+            .groupId(groupId)
+            .amount(amount)
+            .lender(from)
+            .borrower(to)
+            .doneAt(doneAt)
+            .build());
   }
 
   @Override
@@ -260,7 +281,7 @@ public class TransactionGroupService implements ITransactionGroupService {
     // Check if the user is a member of the group
     checkIfUserIsInGroup(userId, transactionDb.groupId());
     // Update transaction
-    transactionRepository.updateById(transactionId, updateTransactionDataMapper.toDbo(data));
+    transactionRepository.updateById(transactionId, UpdateTransactionDataMapper.toDbo(data));
   }
 
   @Override

@@ -4,8 +4,10 @@ import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.TransactionId;
 import com.familymoney.familymoney.types.UserId;
 import java.time.Instant;
+import lombok.Builder;
 import org.javamoney.moneta.Money;
 
+@Builder
 public record TransactionData(
     TransactionId id,
     String description,

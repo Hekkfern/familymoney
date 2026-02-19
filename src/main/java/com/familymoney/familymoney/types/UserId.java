@@ -1,5 +1,6 @@
 package com.familymoney.familymoney.types;
 
+import com.familymoney.familymoney.utils.UUIDGenerator;
 import java.util.UUID;
 
 public record UserId(UUID value) {
@@ -10,6 +11,10 @@ public record UserId(UUID value) {
 
   public static UserId fromUuid(UUID value) {
     return new UserId(value);
+  }
+
+  public static UserId generate() {
+    return new UserId(UUIDGenerator.generate());
   }
 
   @Override

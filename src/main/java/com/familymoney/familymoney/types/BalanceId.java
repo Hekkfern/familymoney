@@ -1,5 +1,6 @@
 package com.familymoney.familymoney.types;
 
+import com.familymoney.familymoney.utils.UUIDGenerator;
 import java.util.UUID;
 
 public record BalanceId(UUID value) {
@@ -10,6 +11,10 @@ public record BalanceId(UUID value) {
 
   public static BalanceId fromUuid(UUID value) {
     return new BalanceId(value);
+  }
+
+  public static BalanceId generate() {
+    return new BalanceId(UUIDGenerator.generate());
   }
 
   @Override

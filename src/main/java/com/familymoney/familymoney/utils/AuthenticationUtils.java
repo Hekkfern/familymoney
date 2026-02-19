@@ -11,6 +11,10 @@ public class AuthenticationUtils {
 
   private static final String ROLE_PREFIX = "ROLE_";
 
+  private AuthenticationUtils() {
+    /* This utility class should not be instantiated */
+  }
+
   /**
    * Helper to safely extract UserId from SecurityContext and throw a consistent exception if
    * missing

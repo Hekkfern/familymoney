@@ -39,7 +39,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
-public class AuthServiceTests {
+class AuthServiceTests {
 
   private final Instant now = Instant.parse("2025-01-01T00:00:00Z");
 

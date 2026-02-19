@@ -2,11 +2,21 @@ package com.familymoney.familymoney.services.mappers;
 
 import com.familymoney.familymoney.repositories.entities.UserEntity;
 import com.familymoney.familymoney.services.data.UserData;
-import org.mapstruct.Mapper;
-import org.mapstruct.MappingConstants;
 
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
-public interface UserDataMapper {
+public class UserDataMapper {
 
-  UserData fromDbo(UserEntity userEntity);
+  private UserDataMapper() {
+    /* This utility class should not be instantiated */
+  }
+
+  public static UserData fromDbo(UserEntity entity) {
+    return UserData.builder()
+        .id(entity.id())
+        .username(entity.username())
+        .email(entity.email())
+        .createdAt(entity.createdAt())
+        .isEmailVerified(entity.isEmailVerified())
+        .isEnabled(entity.isEnabled())
+        .build();
+  }
 }

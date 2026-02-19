@@ -33,7 +33,6 @@ import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -44,7 +43,7 @@ import org.springframework.data.domain.Pageable;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
-public class TransactionGroupServiceTests {
+class TransactionGroupServiceTests {
 
   private final Instant now = Instant.parse("2025-01-01T00:00:00Z");
 
@@ -54,23 +53,9 @@ public class TransactionGroupServiceTests {
   @Mock private IGroupInvitationRepository groupInvitationRepository;
   @Spy private final Clock clock = Clock.fixed(now, ZoneOffset.UTC);
 
-  @Spy private GroupDataMapper groupDataMapper = Mappers.getMapper(GroupDataMapper.class);
-
-  @Spy
-  private UpdateGroupDataMapper updateGroupDataMapper =
-      Mappers.getMapper(UpdateGroupDataMapper.class);
-
-  @Spy
-  private TransactionDataMapper transactionDataMapper =
-      Mappers.getMapper(TransactionDataMapper.class);
-
-  @Spy
-  private UpdateTransactionDataMapper updateTransactionDataMapper =
-      Mappers.getMapper(UpdateTransactionDataMapper.class);
-
   @InjectMocks private TransactionGroupService transactionGroupService;
 
-  private CurrencyUnit usd = Monetary.getCurrency("USD");
+  private final CurrencyUnit usd = Monetary.getCurrency("USD");
 
   // Helpers to build DB objects
   private GroupEntity groupDbo(GroupId id) {
@@ -125,12 +110,15 @@ public class TransactionGroupServiceTests {
     val groupId = GroupId.fromUuid(UUID.randomUUID());
     val createdBy = UserId.fromUuid(UUID.randomUUID());
     val group = groupDbo(groupId);
-    when(groupRepository.create(any(), anyString(), any()))
-        .thenReturn(Optional.of(group));
+    when(groupRepository.create(any(), anyString(), any())).thenReturn(Optional.of(group));
     when(groupRepository.addUser(eq(createdBy), eq(groupId)))
         .thenReturn(
             Optional.of(
-                UserGroupEntity.builder().userId(createdBy).groupId(groupId).joinedAt(now).build()));
+                UserGroupEntity.builder()
+                    .userId(createdBy)
+                    .groupId(groupId)
+                    .joinedAt(now)
+                    .build()));
 
     val result =
         transactionGroupService.createGroup(GroupName.fromString("n"), "d", usd, createdBy);
@@ -156,8 +144,7 @@ public class TransactionGroupServiceTests {
     val groupId = GroupId.fromUuid(UUID.randomUUID());
     val createdBy = UserId.fromUuid(UUID.randomUUID());
     val group = groupDbo(groupId);
-    when(groupRepository.create(any(), anyString(), any()))
-        .thenReturn(Optional.of(group));
+    when(groupRepository.create(any(), anyString(), any())).thenReturn(Optional.of(group));
     when(groupRepository.addUser(eq(createdBy), eq(groupId))).thenReturn(Optional.empty());
 
     assertThatThrownBy(

@@ -63,8 +63,6 @@ dependencies {
     runtimeOnly(libs.jjwt.jackson)
     testImplementation(libs.spring.resttestclient)
     testImplementation(libs.spring.starter.webmvc.test)
-    implementation(libs.mapstruct)
-    annotationProcessor(libs.mapstruct.processor)
     implementation(libs.moneta)
     implementation("org.jooq:jooq:${JOOQ_VERSION}")
     testCompileOnly(libs.assertj)

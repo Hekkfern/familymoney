@@ -8,7 +8,6 @@ import com.familymoney.familymoney.repositories.IUserRepository;
 import com.familymoney.familymoney.repositories.entities.UserEntity;
 import com.familymoney.familymoney.security.UserPasswordEncoder;
 import com.familymoney.familymoney.services.impl.UserService;
-import com.familymoney.familymoney.services.mappers.UserDataMapper;
 import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.UserId;
 import com.familymoney.familymoney.types.UserName;
@@ -21,7 +20,6 @@ import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -29,14 +27,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
-public class UserServiceTests {
+class UserServiceTests {
 
   private final Instant now = Instant.parse("2025-01-01T00:00:00Z");
 
   @Mock private IUserRepository userRepository;
   @Mock private IRoleRepository roleRepository;
   @Spy private UserPasswordEncoder passwordEncoder;
-  @Spy private UserDataMapper userDataMapper = Mappers.getMapper(UserDataMapper.class);
 
   @InjectMocks private UserService userService;
 

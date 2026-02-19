@@ -2,11 +2,23 @@ package com.familymoney.familymoney.services.mappers;
 
 import com.familymoney.familymoney.repositories.entities.TransactionEntity;
 import com.familymoney.familymoney.services.data.TransactionData;
-import org.mapstruct.Mapper;
-import org.mapstruct.MappingConstants;
 
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
-public interface TransactionDataMapper {
+public class TransactionDataMapper {
 
-  TransactionData fromDbo(TransactionEntity transactionEntity);
+  private TransactionDataMapper() {
+    /* This utility class should not be instantiated */
+  }
+
+  public static TransactionData fromDbo(TransactionEntity entity) {
+    return TransactionData.builder()
+        .id(entity.id())
+        .description(entity.description())
+        .groupId(entity.groupId())
+        .amount(entity.amount())
+        .from(entity.from())
+        .to(entity.to())
+        .doneAt(entity.doneAt())
+        .createdAt(entity.createdAt())
+        .build();
+  }
 }

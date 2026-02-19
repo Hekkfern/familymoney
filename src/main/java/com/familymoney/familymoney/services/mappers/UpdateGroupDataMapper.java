@@ -2,11 +2,14 @@ package com.familymoney.familymoney.services.mappers;
 
 import com.familymoney.familymoney.repositories.dtos.UpdateGroupDto;
 import com.familymoney.familymoney.services.data.UpdateGroupData;
-import org.mapstruct.Mapper;
-import org.mapstruct.MappingConstants;
 
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
-public interface UpdateGroupDataMapper {
+public class UpdateGroupDataMapper {
 
-  UpdateGroupDto toDbo(UpdateGroupData data);
+  private UpdateGroupDataMapper() {
+    /* This utility class should not be instantiated */
+  }
+
+  public static UpdateGroupDto toDbo(UpdateGroupData data) {
+    return UpdateGroupDto.builder().name(data.getName()).description(data.getDescription()).build();
+  }
 }

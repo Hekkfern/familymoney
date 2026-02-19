@@ -12,15 +12,15 @@ import com.familymoney.familymoney.repositories.IPasswordResetRepository;
 import com.familymoney.familymoney.repositories.IRefreshTokenRepository;
 import com.familymoney.familymoney.repositories.IRoleRepository;
 import com.familymoney.familymoney.repositories.IUserRepository;
+import com.familymoney.familymoney.repositories.dtos.*;
 import com.familymoney.familymoney.repositories.entities.EmailVerificationEntity;
-import com.familymoney.familymoney.repositories.dtos.UpdateRefreshTokenDto;
-import com.familymoney.familymoney.repositories.dtos.UpdateUserDto;
 import com.familymoney.familymoney.security.JwtUtils;
 import com.familymoney.familymoney.security.UserPasswordEncoder;
 import com.familymoney.familymoney.services.IAuthService;
 import com.familymoney.familymoney.services.IEmailSenderService;
 import com.familymoney.familymoney.services.data.TokenPair;
 import com.familymoney.familymoney.types.*;
+import com.familymoney.familymoney.utils.UUIDGenerator;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -60,7 +60,15 @@ public class AuthService implements IAuthService {
     val expiresAt = Instant.now(clock).plus(VERIFICATION_TOKEN_EXPIRY);
     for (int attempt = 0; attempt < MAX_NUM_ATTEMPTS; attempt++) {
       val token = EmailVerificationToken.generate();
-      val storedOpt = emailVerificationRepository.create(userId, token, expiresAt);
+      val id = UUIDGenerator.generate();
+      val storedOpt =
+          emailVerificationRepository.create(
+              CreateEmailVerificationDto.builder()
+                  .id(id)
+                  .userId(userId)
+                  .token(token)
+                  .expiresAt(expiresAt)
+                  .build());
       if (storedOpt.isPresent()) {
         return storedOpt.get();
       }
@@ -81,16 +89,21 @@ public class AuthService implements IAuthService {
       throw new UserAlreadyExistsException("A user with that email already exists.");
     }
     // Create user
-    val userDb =
-        userRepository
-            .create(username, email, passwordEncoder.encode(password.value()))
-            .orElseThrow(
-                () -> new DatabaseExecutionException("Could not create user in the database"));
+    val userId = UserId.generate();
+    userRepository
+        .create(
+            CreateUserDto.builder()
+                .id(userId)
+                .username(username)
+                .email(email)
+                .passwordHash(passwordEncoder.encode(password.value()))
+                .build())
+        .orElseThrow(() -> new DatabaseExecutionException("Could not create user in the database"));
     // Assign user permissions (default role)
-    roleRepository.setRoleForUserId(userDb.id(), Role.USER);
+    roleRepository.setRoleForUserId(userId, Role.USER);
     // Generate and save verification token to database
     // NOTE: Retry several times in case of token collision
-    val emailVerificationTokenDb = generateAndStoreEmailVerificationToken(userDb.id());
+    val emailVerificationTokenDb = generateAndStoreEmailVerificationToken(userId);
     // Send verification email
     emailSenderService.sendEmailVerificationEmail(
         email, username, emailVerificationTokenDb.token());
@@ -122,8 +135,15 @@ public class AuthService implements IAuthService {
     // Generate refresh token
     val refreshToken = RefreshToken.generate();
     // Save refresh token in database
+    val refreshTokenId = UUIDGenerator.generate();
     refreshTokenRepository
-        .create(userDb.id(), refreshToken, UUID.randomUUID())
+        .create(
+            CreateRefreshTokenDto.builder()
+                .id(refreshTokenId)
+                .userId(userDb.id())
+                .token(refreshToken)
+                .family(UUID.randomUUID())
+                .build())
         .orElseThrow(
             () -> new DatabaseExecutionException("Could not create refresh token in the database"));
     // Build response with both tokens
@@ -169,8 +189,15 @@ public class AuthService implements IAuthService {
     val newAccessToken = jwtUtils.generateAccessToken(refreshTokenDb.userId());
     val newRefreshToken = RefreshToken.generate();
     // Save new refresh token in database
+    val refreshTokenId = UUIDGenerator.generate();
     refreshTokenRepository
-        .create(refreshTokenDb.userId(), newRefreshToken, refreshTokenDb.family())
+        .create(
+            CreateRefreshTokenDto.builder()
+                .id(refreshTokenId)
+                .userId(refreshTokenDb.userId())
+                .token(newRefreshToken)
+                .family(refreshTokenDb.family())
+                .build())
         .orElseThrow(
             () ->
                 new DatabaseExecutionException(

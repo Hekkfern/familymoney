@@ -2,11 +2,20 @@ package com.familymoney.familymoney.services.mappers;
 
 import com.familymoney.familymoney.repositories.entities.GroupEntity;
 import com.familymoney.familymoney.services.data.GroupData;
-import org.mapstruct.Mapper;
-import org.mapstruct.MappingConstants;
 
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
-public interface GroupDataMapper {
+public class GroupDataMapper {
 
-  GroupData fromDbo(GroupEntity userDbo);
+  private GroupDataMapper() {
+    /* This utility class should not be instantiated */
+  }
+
+  public static GroupData fromDbo(final GroupEntity entity) {
+    return GroupData.builder()
+        .id(entity.id())
+        .name(entity.name())
+        .description(entity.description())
+        .currency(entity.currency())
+        .createdAt(entity.createdAt())
+        .build();
+  }
 }

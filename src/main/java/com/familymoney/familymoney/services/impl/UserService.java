@@ -2,11 +2,12 @@ package com.familymoney.familymoney.services.impl;
 
 import com.familymoney.familymoney.repositories.IRoleRepository;
 import com.familymoney.familymoney.repositories.IUserRepository;
+import com.familymoney.familymoney.repositories.dtos.CreateUserDto;
 import com.familymoney.familymoney.repositories.dtos.UpdateUserDto;
 import com.familymoney.familymoney.security.UserPasswordEncoder;
 import com.familymoney.familymoney.services.IUserService;
-import com.familymoney.familymoney.services.data.UserData;
 import com.familymoney.familymoney.services.data.UpdateUserData;
+import com.familymoney.familymoney.services.data.UserData;
 import com.familymoney.familymoney.services.mappers.UserDataMapper;
 import com.familymoney.familymoney.types.*;
 import java.util.Optional;
@@ -26,12 +27,11 @@ public class UserService implements IUserService {
   private final IUserRepository userRepository;
   private final IRoleRepository roleRepository;
   private final UserPasswordEncoder passwordEncoder;
-  private final UserDataMapper userDataMapper;
 
   @Override
   public Optional<UserData> getUserData(UserId userId) {
     val userOpt = userRepository.findById(userId);
-    return userOpt.map(userDataMapper::fromDbo);
+    return userOpt.map(UserDataMapper::fromDbo);
   }
 
   @Override
@@ -58,7 +58,7 @@ public class UserService implements IUserService {
 
   @Override
   public Page<UserData> getUsers(Pageable pageable) {
-    return userRepository.findAll(pageable).map(userDataMapper::fromDbo);
+    return userRepository.findAll(pageable).map(UserDataMapper::fromDbo);
   }
 
   @Override
@@ -84,17 +84,23 @@ public class UserService implements IUserService {
       return;
     }
     // Create user
+    val userId = UserId.generate();
     val userDbOpt =
-        userRepository.create(username, email, passwordEncoder.encode(password.value()));
+        userRepository.create(
+            CreateUserDto.builder()
+                .id(userId)
+                .username(username)
+                .email(email)
+                .passwordHash(passwordEncoder.encode(password.value()))
+                .build());
     if (userDbOpt.isEmpty()) {
       log.error("Could not create user in the database");
       return;
     }
-    val userDb = userDbOpt.get();
-    // Assign user permissions (default role)
-    roleRepository.setRoleForUserId(userDb.id(), Role.ADMIN);
+    // Assign admin permissions
+    roleRepository.setRoleForUserId(userId, Role.ADMIN);
     // verify email
-    userRepository.updateById(userDb.id(), UpdateUserDto.builder().isEmailVerified(true).build());
+    userRepository.updateById(userId, UpdateUserDto.builder().isEmailVerified(true).build());
     log.info("Admin user created successfully");
   }
 }

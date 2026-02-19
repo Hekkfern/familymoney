@@ -8,6 +8,10 @@ public class RandomUtil {
   private static final String ALPHANUMERIC =
       "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
+  private RandomUtil() {
+    /* This utility class should not be instantiated */
+  }
+
   public static String generateRandomString(final int length) {
     StringBuilder sb = new StringBuilder(length);
     for (int i = 0; i < length; i++) {
