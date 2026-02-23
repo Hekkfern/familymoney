@@ -1,16 +1,52 @@
-@access-token = "aaaaa"
-
 // Create group endpoint
 
 # @name Create group
 POST {{BaseUrl}}/api/v1/groups
-Authorization: Bearer {{access-token}}
+Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
 {
   "name": "my group with friends",
   "description": "my description",
   "currencyCode": "EUR"
+}
+
+###
+
+# @name Create group with wrong authentication
+POST {{BaseUrl}}/api/v1/groups
+Authorization: Bearer aaa
+Content-Type: application/json
+
+{
+  "name": "my group with friends",
+  "description": "my description",
+  "currencyCode": "EUR"
+}
+
+###
+
+# @name Create group with no name
+POST {{BaseUrl}}/api/v1/groups
+Authorization: Bearer aaa
+Content-Type: application/json
+
+{
+  "description": "my description",
+  "currencyCode": "aaaaa"
+}
+
+###
+
+# @name Create group with wrong currency code
+POST {{BaseUrl}}/api/v1/groups
+Authorization: Bearer aaa
+Content-Type: application/json
+
+{
+  "name": "my group with friends",
+  "description": "my description",
+  "currencyCode": "aaaaa"
 }
 
 ###
