@@ -143,7 +143,7 @@ or
 http://localhost:8080/swagger-ui.html
 ```
 
-Also, [./api_examples](./api_examples) folder in this repo contains example requests for the API endpoints, which can be
+Also, [./http_examples](http_examples) folder in this repo contains example requests for the API endpoints, which can be
 used for testing and reference.
 
 ## Security

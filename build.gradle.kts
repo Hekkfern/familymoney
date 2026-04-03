@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.jooq)
     alias(libs.plugins.lombok)
     alias(libs.plugins.integrationtest)
+    alias(libs.plugins.versions)
 }
 
 group = "com.familymoney"
