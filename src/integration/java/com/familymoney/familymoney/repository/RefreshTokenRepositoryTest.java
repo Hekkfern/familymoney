@@ -31,7 +31,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @JooqTest
 @Testcontainers
-class RefreshTokenRepositoryTests {
+class RefreshTokenRepositoryTest {
 
   @Container @ServiceConnection
   private static final PostgreSQLContainer postgresContainer =

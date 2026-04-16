@@ -33,7 +33,7 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 
 @WebMvcTest(controllers = AuthController.class)
 @Import({JwtUtils.class, LoginResponseMapper.class, RefreshResponseMapper.class})
-class AuthControllerTests {
+class AuthControllerTest {
 
   private final Instant now = Instant.parse("2025-01-01T00:00:00Z");
 

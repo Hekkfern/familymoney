@@ -30,7 +30,7 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
-class EmailSenderServiceTests {
+class EmailSenderServiceTest {
 
   @Mock private JavaMailSender javaMailSender;
 

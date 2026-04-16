@@ -59,7 +59,7 @@ The project is divided in three main layers:
 The project is built using the following technologies:
 
 - **Java 25**: The primary programming language used for the backend development.
-- **Spring Boot**: A framework that simplifies the development of Java applications by providing a wide
+- **Spring Boot 4**: A framework that simplifies the development of Java applications by providing a wide
 - **JOOQ**: A library for building type-safe SQL queries and managing database interactions.
 - **Testcontainers**: A Java library that provides lightweight, throwaway instances of common databases
 - **Flyway**: A database migration tool that helps manage and version control database schema changes.

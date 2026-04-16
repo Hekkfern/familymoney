@@ -34,7 +34,7 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 
 @WebMvcTest(controllers = UserController.class)
 @AutoConfigureMockMvc(addFilters = false)
-class UserControllerTests {
+class UserControllerTest {
 
   private final Instant now = Instant.parse("2025-01-01T00:00:00Z");
   private static final String USER_ID = "019d52d0-d1b8-7d2d-ba2d-39007c0dda4f";

@@ -1,13 +1,11 @@
 package com.familymoney.familymoney.security;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.familymoney.familymoney.properties.AppProperties;
 import com.familymoney.familymoney.properties.JwtProperties;
-import com.familymoney.familymoney.security.JwtUtils;
 import com.familymoney.familymoney.types.JwtToken;
 import com.familymoney.familymoney.types.UserId;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,7 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
-public class JwtUtilsTests {
+public class JwtUtilsTest {
 
   private final Instant now = Instant.parse("2025-01-01T00:00:00Z");
 

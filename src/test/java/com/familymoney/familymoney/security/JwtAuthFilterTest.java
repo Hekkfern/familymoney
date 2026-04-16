@@ -5,8 +5,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-import com.familymoney.familymoney.security.JwtAuthFilter;
-import com.familymoney.familymoney.security.JwtUtils;
 import com.familymoney.familymoney.services.IUserService;
 import com.familymoney.familymoney.types.JwtToken;
 import com.familymoney.familymoney.types.Role;
@@ -30,7 +28,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 @ExtendWith(MockitoExtension.class)
-public class JwtAuthFilterTests {
+public class JwtAuthFilterTest {
 
   @Mock private JwtUtils jwtUtils;
   @Mock private IUserService userService;

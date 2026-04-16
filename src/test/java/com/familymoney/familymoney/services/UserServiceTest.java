@@ -27,7 +27,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
-class UserServiceTests {
+class UserServiceTest {
 
   private final Instant now = Instant.parse("2025-01-01T00:00:00Z");
 

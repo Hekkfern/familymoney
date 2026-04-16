@@ -19,7 +19,6 @@ import com.familymoney.familymoney.repositories.entities.*;
 import com.familymoney.familymoney.services.data.UpdateGroupData;
 import com.familymoney.familymoney.services.data.UpdateTransactionData;
 import com.familymoney.familymoney.services.impl.TransactionGroupService;
-import com.familymoney.familymoney.services.mappers.*;
 import com.familymoney.familymoney.types.*;
 import java.time.Clock;
 import java.time.Instant;
@@ -45,7 +44,7 @@ import org.springframework.data.domain.Pageable;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
-class TransactionGroupServiceTests {
+class TransactionGroupServiceTest {
 
   private final Instant now = Instant.parse("2025-01-01T00:00:00Z");
 

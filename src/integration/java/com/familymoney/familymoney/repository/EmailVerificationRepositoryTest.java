@@ -13,10 +13,10 @@ import com.familymoney.familymoney.repositories.entities.EmailVerificationEntity
 import com.familymoney.familymoney.types.EmailVerificationToken;
 import com.familymoney.familymoney.types.UserId;
 import com.familymoney.familymoney.utils.FakeGenerator;
-import java.time.Duration;
+
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+
 import lombok.val;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +31,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @JooqTest
 @Testcontainers
-public class EmailVerificationRepositoryTests {
+public class EmailVerificationRepositoryTest {
 
   @Container @ServiceConnection
   private static final PostgreSQLContainer postgresContainer =

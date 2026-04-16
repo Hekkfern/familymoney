@@ -36,7 +36,7 @@ import org.springframework.test.web.servlet.client.RestTestClient;
   UpdateUserRequestMapper.class
 })
 @EnableConfigurationProperties({AppProperties.class, JwtProperties.class})
-class TransactionGroupControllerTests {
+class TransactionGroupControllerTest {
 
   private final Instant now = Instant.parse("2025-01-01T00:00:00Z");
 
