@@ -7,6 +7,7 @@ import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -31,12 +32,17 @@ class SecurityConfigIntegrationTest {
 
   @LocalServerPort private int port;
 
-  @RestController
-  @RequestMapping("/api/v1/admin")
-  static class AdminTestController {
-    @GetMapping("/ping")
-    public String ping() {
-      return "pong";
+  @TestConfiguration
+  public static class TestConfig {
+
+    @RestController
+    @RequestMapping("admin")
+    static class AdminTestController {
+
+      @GetMapping("/ping")
+      public String ping() {
+        return "pong";
+      }
     }
   }
 
@@ -46,15 +52,19 @@ class SecurityConfigIntegrationTest {
   }
 
   @Test
-  @WithMockUser(roles = "ADMIN")
+  @WithMockUser(username = "123e1450-39dd-11f1-9992-5dbb91c933de", roles = "ADMIN")
   void adminEndpoint_allowsAdminRole() {
     client.get().uri("/api/v1/admin/ping").exchange().expectStatus().isOk();
   }
 
   @Test
-  @WithMockUser(roles = "USER")
-  void adminEndpoint_forbidsUserRole() {}
+  @WithMockUser(username = "123e1450-39dd-11f1-9992-5dbb91c933de", roles = "USER")
+  void adminEndpoint_forbidsUserRole() {
+      client.get().uri("/api/v1/admin/ping").exchange().expectStatus().isUnauthorized();
+  }
 
   @Test
-  void adminEndpoint_returnsUnauthorizedWhenUnauthenticated() {}
+  void adminEndpoint_returnsUnauthorizedWhenUnauthenticated() {
+      client.get().uri("/api/v1/admin/ping").exchange().expectStatus().isUnauthorized();
+  }
 }
