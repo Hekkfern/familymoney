@@ -15,6 +15,9 @@ import com.familymoney.familymoney.repositories.IEmailVerificationRepository;
 import com.familymoney.familymoney.repositories.IRefreshTokenRepository;
 import com.familymoney.familymoney.repositories.IRoleRepository;
 import com.familymoney.familymoney.repositories.IUserRepository;
+import com.familymoney.familymoney.repositories.dtos.CreateEmailVerificationDto;
+import com.familymoney.familymoney.repositories.dtos.CreateRefreshTokenDto;
+import com.familymoney.familymoney.repositories.dtos.CreateUserDto;
 import com.familymoney.familymoney.repositories.entities.EmailVerificationEntity;
 import com.familymoney.familymoney.repositories.entities.RefreshTokenEntity;
 import com.familymoney.familymoney.repositories.entities.UserEntity;
@@ -63,8 +66,8 @@ class AuthServiceTests {
     val password = Password.fromString(FakeGenerator.password());
     val userId = UserId.fromUuid(UUID.randomUUID());
 
-    when(userRepository.existsByEmailOrUsername(eq(email), eq(username))).thenReturn(false);
-    when(userRepository.create(eq(username), eq(email), any()))
+    when(userRepository.existsByEmailOrUsername(email, username)).thenReturn(false);
+    when(userRepository.create(new CreateUserDto(any(), username, email, any())))
         .thenReturn(
             Optional.of(
                 UserEntity.builder()
@@ -77,7 +80,8 @@ class AuthServiceTests {
                     .isEmailVerified(false)
                     .isEnabled(true)
                     .build()));
-    when(emailVerificationRepository.create(eq(userId), any(), any()))
+    when(emailVerificationRepository.create(
+            new CreateEmailVerificationDto(any(), userId, any(), any())))
         .thenReturn(
             Optional.of(
                 EmailVerificationEntity.builder()
@@ -91,8 +95,9 @@ class AuthServiceTests {
 
     assertDoesNotThrow(() -> authService.registerUser(username, email, password));
 
-    verify(userRepository, times(1)).create(eq(username), eq(email), any());
-    verify(emailVerificationRepository, times(1)).create(eq(userId), any(), any());
+    verify(userRepository, times(1)).create(new CreateUserDto(any(), username, email, any()));
+    verify(emailVerificationRepository, times(1))
+        .create(new CreateEmailVerificationDto(any(), userId, any(), any()));
     verify(permissionsRepository, times(1)).setRoleForUserId(eq(userId), any());
   }
 
@@ -102,7 +107,7 @@ class AuthServiceTests {
     val email = Email.fromString(FakeGenerator.email());
     val password = Password.fromString(FakeGenerator.password());
 
-    when(userRepository.existsByEmailOrUsername(eq(email), eq(username))).thenReturn(true);
+    when(userRepository.existsByEmailOrUsername(email, username)).thenReturn(true);
 
     assertThrows(
         UserAlreadyExistsException.class,
@@ -115,8 +120,9 @@ class AuthServiceTests {
     val email = Email.fromString(FakeGenerator.email());
     val password = Password.fromString(FakeGenerator.password());
 
-    when(userRepository.existsByEmailOrUsername(eq(email), eq(username))).thenReturn(false);
-    when(userRepository.create(eq(username), eq(email), any())).thenReturn(Optional.empty());
+    when(userRepository.existsByEmailOrUsername(email, username)).thenReturn(false);
+    when(userRepository.create(new CreateUserDto(any(), username, email, any())))
+        .thenReturn(Optional.empty());
 
     assertThrows(
         DatabaseExecutionException.class,
@@ -131,7 +137,7 @@ class AuthServiceTests {
     val userId = UserId.fromUuid(UUID.randomUUID());
 
     when(userRepository.existsByEmailOrUsername(eq(email), eq(username))).thenReturn(false);
-    when(userRepository.create(eq(username), eq(email), any()))
+    when(userRepository.create(new CreateUserDto(any(), username, email, any())))
         .thenReturn(
             Optional.of(
                 UserEntity.builder()
@@ -144,7 +150,9 @@ class AuthServiceTests {
                     .isEmailVerified(false)
                     .isEnabled(true)
                     .build()));
-    when(emailVerificationRepository.create(eq(userId), any(), any())).thenReturn(Optional.empty());
+    when(emailVerificationRepository.create(
+            new CreateEmailVerificationDto(any(), userId, any(), any())))
+        .thenReturn(Optional.empty());
 
     assertThrows(
         DatabaseExecutionException.class,
@@ -175,9 +183,9 @@ class AuthServiceTests {
                     .isEnabled(true)
                     .build()));
     when(passwordEncoder.verify(eq(password.value()), anyString())).thenReturn(true);
-    when(jwtUtils.generateAccessToken(eq(userId)))
+    when(jwtUtils.generateAccessToken(userId))
         .thenReturn(JwtToken.fromString(FakeGenerator.accessToken()));
-    when(refreshTokenRepository.create(eq(userId), any(), any()))
+    when(refreshTokenRepository.create(new CreateRefreshTokenDto(any(), userId, any(), any())))
         .thenReturn(
             Optional.of(
                 RefreshTokenEntity.builder()
@@ -199,7 +207,7 @@ class AuthServiceTests {
           assertNotNull(tokens.refreshToken());
         });
 
-    verify(refreshTokenRepository, times(1)).create(any(), any(), any());
+    verify(refreshTokenRepository, times(1)).create(any());
   }
 
   @Test
@@ -207,7 +215,7 @@ class AuthServiceTests {
     val email = Email.fromString(FakeGenerator.email());
     val password = Password.fromString(FakeGenerator.password());
 
-    when(userRepository.findByEmail(eq(email)))
+    when(userRepository.findByEmail(email))
         .thenReturn(
             Optional.of(
                 UserEntity.builder()
@@ -230,7 +238,7 @@ class AuthServiceTests {
     val email = Email.fromString(FakeGenerator.email());
     val password = Password.fromString(FakeGenerator.password());
 
-    when(userRepository.findByEmail(eq(email))).thenReturn(Optional.empty());
+    when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
 
     assertThrows(BadCredentialsException.class, () -> authService.loginUser(email, password));
   }
@@ -241,7 +249,7 @@ class AuthServiceTests {
     val password = Password.fromString(FakeGenerator.password());
     val userId = UserId.fromUuid(UUID.randomUUID());
 
-    when(userRepository.findByEmail(eq(email)))
+    when(userRepository.findByEmail(email))
         .thenReturn(
             Optional.of(
                 UserEntity.builder()
@@ -255,9 +263,10 @@ class AuthServiceTests {
                     .isEnabled(true)
                     .build()));
     when(passwordEncoder.verify(eq(password.value()), anyString())).thenReturn(true);
-    when(jwtUtils.generateAccessToken(eq(userId)))
+    when(jwtUtils.generateAccessToken(userId))
         .thenReturn(JwtToken.fromString(FakeGenerator.accessToken()));
-    when(refreshTokenRepository.create(eq(userId), any(), any())).thenReturn(Optional.empty());
+    when(refreshTokenRepository.create(new CreateRefreshTokenDto(any(), userId, any(), any())))
+        .thenReturn(Optional.empty());
 
     assertThrows(DatabaseExecutionException.class, () -> authService.loginUser(email, password));
   }
@@ -310,7 +319,7 @@ class AuthServiceTests {
     when(refreshTokenRepository.updateByToken(any(), any())).thenReturn(true);
     when(jwtUtils.generateAccessToken(any()))
         .thenReturn(JwtToken.fromString(FakeGenerator.accessToken()));
-    when(refreshTokenRepository.create(any(), any(), any()))
+    when(refreshTokenRepository.create(any()))
         .thenReturn(
             Optional.of(
                 RefreshTokenEntity.builder()
@@ -330,7 +339,7 @@ class AuthServiceTests {
     assertNotNull(tokens.refreshToken());
 
     verify(refreshTokenRepository, times(1)).updateByToken(any(), any());
-    verify(refreshTokenRepository, times(1)).create(any(), any(), any());
+    verify(refreshTokenRepository, times(1)).create(any());
   }
 
   @Test
@@ -404,7 +413,7 @@ class AuthServiceTests {
     when(refreshTokenRepository.updateByToken(any(), any())).thenReturn(true);
     when(jwtUtils.generateAccessToken(any()))
         .thenReturn(JwtToken.fromString(FakeGenerator.accessToken()));
-    when(refreshTokenRepository.create(any(), any(), any())).thenReturn(Optional.empty());
+    when(refreshTokenRepository.create(any())).thenReturn(Optional.empty());
 
     assertThrows(DatabaseExecutionException.class, () -> authService.refreshTokens(token));
   }
@@ -586,7 +595,8 @@ class AuthServiceTests {
                     .isEmailVerified(false)
                     .isEnabled(true)
                     .build()));
-    when(emailVerificationRepository.create(eq(userId), any(), any()))
+    when(emailVerificationRepository.create(
+            new CreateEmailVerificationDto(any(), userId, any(), any())))
         .thenReturn(
             Optional.of(
                 EmailVerificationEntity.builder()
@@ -600,7 +610,8 @@ class AuthServiceTests {
 
     assertDoesNotThrow(() -> authService.resendVerificationEmail(email));
 
-    verify(emailVerificationRepository, times(1)).create(eq(userId), any(), any());
+    verify(emailVerificationRepository, times(1))
+        .create(new CreateEmailVerificationDto(any(), userId, any(), any()));
   }
 
   @Test
@@ -623,7 +634,8 @@ class AuthServiceTests {
                     .isEmailVerified(true)
                     .isEnabled(true)
                     .build()));
-    when(emailVerificationRepository.create(eq(userId), any(), any()))
+    when(emailVerificationRepository.create(
+            new CreateEmailVerificationDto(any(), userId, any(), any())))
         .thenReturn(
             Optional.of(
                 EmailVerificationEntity.builder()
@@ -637,7 +649,8 @@ class AuthServiceTests {
 
     assertDoesNotThrow(() -> authService.resendVerificationEmail(email));
 
-    verify(emailVerificationRepository, times(1)).create(eq(userId), any(), any());
+    verify(emailVerificationRepository, times(1))
+        .create(new CreateEmailVerificationDto(any(), userId, any(), any()));
   }
 
   @Test

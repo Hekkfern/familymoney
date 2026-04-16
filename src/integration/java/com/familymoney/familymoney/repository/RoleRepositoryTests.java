@@ -23,7 +23,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @JooqTest
 @Testcontainers
-public class RoleRepositoryTests {
+class RoleRepositoryTests {
 
   @Container @ServiceConnection
   private static final PostgreSQLContainer postgresContainer =

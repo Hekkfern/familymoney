@@ -3,12 +3,14 @@ package com.familymoney.familymoney.repository;
 import static com.familymoney.familymoney.utils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 
 import com.familymoney.familymoney.generated.tables.Groups;
 import com.familymoney.familymoney.generated.tables.Users;
-import com.familymoney.familymoney.repositories.impl.BalanceRepository;
-import com.familymoney.familymoney.repositories.entities.BalanceEntity;
+import com.familymoney.familymoney.repositories.dtos.CreateBalanceDto;
 import com.familymoney.familymoney.repositories.dtos.UpdateBalanceDto;
+import com.familymoney.familymoney.repositories.entities.BalanceEntity;
+import com.familymoney.familymoney.repositories.impl.BalanceRepository;
 import com.familymoney.familymoney.types.BalanceId;
 import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.UserId;
@@ -31,7 +33,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @JooqTest
 @Testcontainers
-public class BalanceRepositoryTests {
+class BalanceRepositoryTests {
 
   @Container @ServiceConnection
   private static final PostgreSQLContainer postgresContainer =
@@ -58,19 +60,21 @@ public class BalanceRepositoryTests {
   }
 
   private GroupId insertGroup(final String name, final String description, final String currency) {
-    val record =
+    val r =
         dslContext
             .insertInto(Groups.GROUPS)
             .columns(Groups.GROUPS.NAME, Groups.GROUPS.DESCRIPTION, Groups.GROUPS.CURRENCY_CODE)
             .values(name, description, currency)
             .returning(Groups.GROUPS.ID)
             .fetchOne();
-    return GroupId.fromUuid(record.getId());
+    return GroupId.fromUuid(r.getId());
   }
 
   private BalanceEntity createBalance(
       final GroupId groupId, final UserId user1, final UserId user2, final CurrencyUnit currency) {
-    return balanceRepository.create(groupId, user1, user2, currency).orElseThrow();
+    return balanceRepository
+        .create(new CreateBalanceDto(any(), groupId, user1, user2, currency))
+        .orElseThrow();
   }
 
   @Test
@@ -80,7 +84,8 @@ public class BalanceRepositoryTests {
     val user1 = insertUser(FakeGenerator.username(), FakeGenerator.email());
     val user2 = insertUser(FakeGenerator.username(), FakeGenerator.email());
 
-    val created = balanceRepository.create(groupId, user1, user2, currency);
+    val created =
+        balanceRepository.create(new CreateBalanceDto(any(), groupId, user1, user2, currency));
 
     assertThat(created).isPresent();
     val dbo = created.get();
@@ -99,7 +104,9 @@ public class BalanceRepositoryTests {
     val missingUser2 = UserId.fromUuid(UUID.randomUUID());
 
     assertThatThrownBy(
-            () -> balanceRepository.create(groupId, missingUser1, missingUser2, currency))
+            () ->
+                balanceRepository.create(
+                    new CreateBalanceDto(any(), groupId, missingUser1, missingUser2, currency)))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 
@@ -110,9 +117,12 @@ public class BalanceRepositoryTests {
     val user1 = insertUser(FakeGenerator.username(), FakeGenerator.email());
     val user2 = insertUser(FakeGenerator.username(), FakeGenerator.email());
 
-    balanceRepository.create(groupId, user1, user2, currency);
+    balanceRepository.create(new CreateBalanceDto(any(), groupId, user1, user2, currency));
 
-    assertThatThrownBy(() -> balanceRepository.create(groupId, user2, user1, currency))
+    assertThatThrownBy(
+            () ->
+                balanceRepository.create(
+                    new CreateBalanceDto(any(), groupId, user2, user1, currency)))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 
@@ -122,7 +132,10 @@ public class BalanceRepositoryTests {
     val groupId = insertGroup("group-" + FakeGenerator.username(), "desc", "USD");
     val user1 = insertUser(FakeGenerator.username(), FakeGenerator.email());
 
-    assertThatThrownBy(() -> balanceRepository.create(groupId, user1, user1, currency))
+    assertThatThrownBy(
+            () ->
+                balanceRepository.create(
+                    new CreateBalanceDto(any(), groupId, user1, user1, currency)))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 

@@ -3,11 +3,13 @@ package com.familymoney.familymoney.repository;
 import static com.familymoney.familymoney.utils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 
 import com.familymoney.familymoney.generated.tables.Users;
+import com.familymoney.familymoney.repositories.dtos.CreateGroupDto;
 import com.familymoney.familymoney.repositories.dtos.UpdateGroupDto;
-import com.familymoney.familymoney.repositories.impl.GroupRepository;
 import com.familymoney.familymoney.repositories.entities.GroupEntity;
+import com.familymoney.familymoney.repositories.impl.GroupRepository;
 import com.familymoney.familymoney.types.GroupId;
 import com.familymoney.familymoney.types.GroupName;
 import com.familymoney.familymoney.types.UserId;
@@ -29,7 +31,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @JooqTest
 @Testcontainers
-public class GroupRepositoryTests {
+class GroupRepositoryTests {
 
   @Container @ServiceConnection
   private static final PostgreSQLContainer postgresContainer =
@@ -45,19 +47,21 @@ public class GroupRepositoryTests {
   }
 
   private UserId insertUser(final String username, final String email) {
-    val record =
+    val r =
         dslContext
             .insertInto(Users.USERS)
             .columns(Users.USERS.USERNAME, Users.USERS.EMAIL, Users.USERS.HASHED_PASSWORD)
             .values(username, email, "hashed-password")
             .returning(Users.USERS.ID)
             .fetchOne();
-    return UserId.fromUuid(record.getId());
+    return UserId.fromUuid(r.getId());
   }
 
   private GroupEntity createGroup(final String name, final String description, final UserId owner) {
     return groupRepository
-        .create(GroupName.fromString(name), description, Monetary.getCurrency("USD"))
+        .create(
+            new CreateGroupDto(
+                any(), GroupName.fromString(name), description, Monetary.getCurrency("USD")))
         .orElseThrow();
   }
 
@@ -66,7 +70,9 @@ public class GroupRepositoryTests {
     val currency = Monetary.getCurrency("USD");
     val name = "group-" + FakeGenerator.username();
 
-    val created = groupRepository.create(GroupName.fromString(name), "desc", currency);
+    val created =
+        groupRepository.create(
+            new CreateGroupDto(any(), GroupName.fromString(name), "desc", currency));
 
     assertThat(created).isPresent();
     val dbo = created.get();

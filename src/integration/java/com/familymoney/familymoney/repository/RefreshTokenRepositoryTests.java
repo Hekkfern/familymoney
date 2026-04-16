@@ -3,18 +3,18 @@ package com.familymoney.familymoney.repository;
 import static com.familymoney.familymoney.utils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 
 import com.familymoney.familymoney.generated.tables.RefreshTokens;
 import com.familymoney.familymoney.generated.tables.Users;
-import com.familymoney.familymoney.repositories.impl.RefreshTokenRepository;
+import com.familymoney.familymoney.repositories.dtos.CreateRefreshTokenDto;
 import com.familymoney.familymoney.repositories.dtos.UpdateRefreshTokenDto;
+import com.familymoney.familymoney.repositories.impl.RefreshTokenRepository;
 import com.familymoney.familymoney.types.RefreshToken;
 import com.familymoney.familymoney.types.UserId;
 import com.familymoney.familymoney.utils.FakeGenerator;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.UUID;
 import lombok.val;
 import org.jooq.DSLContext;
@@ -31,7 +31,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @JooqTest
 @Testcontainers
-public class RefreshTokenRepositoryTests {
+class RefreshTokenRepositoryTests {
 
   @Container @ServiceConnection
   private static final PostgreSQLContainer postgresContainer =
@@ -64,34 +64,28 @@ public class RefreshTokenRepositoryTests {
       final OffsetDateTime createdAt,
       final boolean isUsed,
       @Nullable final OffsetDateTime usedAt) {
-        dslContext
-            .insertInto(RefreshTokens.REFRESH_TOKENS)
-            .columns(
-                RefreshTokens.REFRESH_TOKENS.USER_ID,
-                RefreshTokens.REFRESH_TOKENS.TOKEN,
-                RefreshTokens.REFRESH_TOKENS.CREATED_AT,
-                RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,
-                RefreshTokens.REFRESH_TOKENS.IS_USED,
-                RefreshTokens.REFRESH_TOKENS.USED_AT,
-                RefreshTokens.REFRESH_TOKENS.FAMILY)
-            .values(
-                userId.value(),
-                token.value(),
-                createdAt,
-                createdAt.plusDays(7),
-                isUsed,
-                usedAt,
-                family)
-            .returning(
-                RefreshTokens.REFRESH_TOKENS.ID,
-                RefreshTokens.REFRESH_TOKENS.USER_ID,
-                RefreshTokens.REFRESH_TOKENS.TOKEN,
-                RefreshTokens.REFRESH_TOKENS.CREATED_AT,
-                RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,
-                RefreshTokens.REFRESH_TOKENS.IS_USED,
-                RefreshTokens.REFRESH_TOKENS.USED_AT,
-                RefreshTokens.REFRESH_TOKENS.FAMILY)
-            .execute();
+    dslContext
+        .insertInto(RefreshTokens.REFRESH_TOKENS)
+        .columns(
+            RefreshTokens.REFRESH_TOKENS.USER_ID,
+            RefreshTokens.REFRESH_TOKENS.TOKEN,
+            RefreshTokens.REFRESH_TOKENS.CREATED_AT,
+            RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,
+            RefreshTokens.REFRESH_TOKENS.IS_USED,
+            RefreshTokens.REFRESH_TOKENS.USED_AT,
+            RefreshTokens.REFRESH_TOKENS.FAMILY)
+        .values(
+            userId.value(), token.value(), createdAt, createdAt.plusDays(7), isUsed, usedAt, family)
+        .returning(
+            RefreshTokens.REFRESH_TOKENS.ID,
+            RefreshTokens.REFRESH_TOKENS.USER_ID,
+            RefreshTokens.REFRESH_TOKENS.TOKEN,
+            RefreshTokens.REFRESH_TOKENS.CREATED_AT,
+            RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,
+            RefreshTokens.REFRESH_TOKENS.IS_USED,
+            RefreshTokens.REFRESH_TOKENS.USED_AT,
+            RefreshTokens.REFRESH_TOKENS.FAMILY)
+        .execute();
   }
 
   @Test
@@ -100,7 +94,8 @@ public class RefreshTokenRepositoryTests {
     val token = RefreshToken.generate();
     val family = UUID.randomUUID();
 
-    val created = refreshTokenRepository.create(userId, token, family);
+    val created =
+        refreshTokenRepository.create(new CreateRefreshTokenDto(any(), userId, token, family));
 
     assertThat(created).isPresent();
     val dbo = created.get();
@@ -119,7 +114,8 @@ public class RefreshTokenRepositoryTests {
     assertThatThrownBy(
             () ->
                 refreshTokenRepository.create(
-                    missingUserId, RefreshToken.generate(), UUID.randomUUID()))
+                    new CreateRefreshTokenDto(
+                        any(), missingUserId, RefreshToken.generate(), UUID.randomUUID())))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 
@@ -129,9 +125,12 @@ public class RefreshTokenRepositoryTests {
     val token = RefreshToken.generate();
     val family = UUID.randomUUID();
 
-    refreshTokenRepository.create(userId, token, family);
+    refreshTokenRepository.create(new CreateRefreshTokenDto(any(), userId, token, family));
 
-    assertThatThrownBy(() -> refreshTokenRepository.create(userId, token, UUID.randomUUID()))
+    assertThatThrownBy(
+            () ->
+                refreshTokenRepository.create(
+                    new CreateRefreshTokenDto(any(), userId, token, UUID.randomUUID())))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 
@@ -140,7 +139,7 @@ public class RefreshTokenRepositoryTests {
     val userId = insertUser(FakeGenerator.username(), FakeGenerator.email());
     val token = RefreshToken.generate();
     val family = UUID.randomUUID();
-    refreshTokenRepository.create(userId, token, family);
+    refreshTokenRepository.create(new CreateRefreshTokenDto(any(), userId, token, family));
 
     val found = refreshTokenRepository.findByToken(token);
 
@@ -162,7 +161,7 @@ public class RefreshTokenRepositoryTests {
     val userId = insertUser(FakeGenerator.username(), FakeGenerator.email());
     val token = RefreshToken.generate();
     val family = UUID.randomUUID();
-    refreshTokenRepository.create(userId, token, family);
+    refreshTokenRepository.create(new CreateRefreshTokenDto(any(), userId, token, family));
     val update = UpdateRefreshTokenDto.builder().isUsed(true).usedAt(Instant.now()).build();
 
     val updated = refreshTokenRepository.updateByToken(token, update);
@@ -188,8 +187,8 @@ public class RefreshTokenRepositoryTests {
     val family = UUID.randomUUID();
     val tokenA = RefreshToken.generate();
     val tokenB = RefreshToken.generate();
-    refreshTokenRepository.create(userId, tokenA, family);
-    refreshTokenRepository.create(userId, tokenB, family);
+    refreshTokenRepository.create(new CreateRefreshTokenDto(any(), userId, tokenA, family));
+    refreshTokenRepository.create(new CreateRefreshTokenDto(any(), userId, tokenB, family));
     val update = UpdateRefreshTokenDto.builder().isUsed(true).usedAt(Instant.now()).build();
 
     val updated = refreshTokenRepository.updateByFamily(family, update);
@@ -214,7 +213,7 @@ public class RefreshTokenRepositoryTests {
     val userId = insertUser(FakeGenerator.username(), FakeGenerator.email());
     val family = UUID.randomUUID();
     val token = RefreshToken.generate();
-    refreshTokenRepository.create(userId, token, family);
+    refreshTokenRepository.create(new CreateRefreshTokenDto(any(), userId, token, family));
     val update = UpdateRefreshTokenDto.builder().isUsed(true).usedAt(Instant.now()).build();
 
     val updated = refreshTokenRepository.updateByUserId(userId, update);
@@ -230,22 +229,5 @@ public class RefreshTokenRepositoryTests {
     val updated = refreshTokenRepository.updateByUserId(UserId.fromUuid(UUID.randomUUID()), update);
 
     assertThat(updated).isFalse();
-  }
-
-  @Test
-  void deleteOlderThan_removes_only_old_tokens() {
-    val userId = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val family = UUID.randomUUID();
-    val now = OffsetDateTime.now(ZoneOffset.UTC);
-    val oldToken = RefreshToken.generate();
-    val recentToken = RefreshToken.generate();
-
-    insertToken(userId, oldToken, family, now.minusDays(2), false, null);
-    insertToken(userId, recentToken, family, now.minusMinutes(30), false, null);
-
-    refreshTokenRepository.deleteOlderThan(Duration.ofDays(1));
-
-    assertThat(refreshTokenRepository.findByToken(oldToken)).isEmpty();
-    assertThat(refreshTokenRepository.findByToken(recentToken)).isPresent();
   }
 }

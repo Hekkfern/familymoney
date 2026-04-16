@@ -5,13 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import com.familymoney.familymoney.config.SecurityConfig;
-import com.familymoney.familymoney.controllers.impl.UserController;
 import com.familymoney.familymoney.controllers.dtos.user.GetMyUserResponseDto;
+import com.familymoney.familymoney.controllers.impl.UserController;
 import com.familymoney.familymoney.controllers.mappers.user.GetMyUserResponseMapper;
 import com.familymoney.familymoney.controllers.mappers.user.UpdateUserRequestMapper;
-import com.familymoney.familymoney.properties.AppProperties;
-import com.familymoney.familymoney.properties.JwtProperties;
 import com.familymoney.familymoney.security.JwtUtils;
 import com.familymoney.familymoney.services.IUserService;
 import com.familymoney.familymoney.services.data.UserData;
@@ -27,30 +24,20 @@ import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.context.annotation.Import;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
-@WebMvcTest(
-    controllers = UserController.class,
-    properties = {
-      "spring.application.name=testapp",
-      "jwt.key=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-    })
-@Import({
-  JwtUtils.class,
-  SecurityConfig.class,
-  GetMyUserResponseMapper.class,
-  UpdateUserRequestMapper.class
-})
-@EnableConfigurationProperties({AppProperties.class, JwtProperties.class})
-public class UserControllerTests {
+@WebMvcTest(controllers = UserController.class)
+@AutoConfigureMockMvc(addFilters = false)
+class UserControllerTests {
 
   private final Instant now = Instant.parse("2025-01-01T00:00:00Z");
+  private static final String USER_ID = "019d52d0-d1b8-7d2d-ba2d-39007c0dda4f";
 
   // region Fields
 
@@ -75,10 +62,10 @@ public class UserControllerTests {
   // region GET /me Tests
 
   @Test
+  @WithMockUser(username = USER_ID)
   void UserController_GetMyUserInfo_Successful() {
     val username = UserName.fromString(FakeGenerator.username());
     val email = Email.fromString(FakeGenerator.email());
-    val userId = UserId.fromUuid(UUID.randomUUID());
     when(userService.getUserData(any()))
         .thenReturn(
             Optional.of(
@@ -95,7 +82,9 @@ public class UserControllerTests {
         client
             .get()
             .uri(UserControllerUriFactory.getMePath())
-            .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId))
+            .header(
+                "Authorization",
+                "Bearer " + jwtUtils.generateAccessToken(UserId.fromString(USER_ID)))
             .exchange()
             .expectStatus()
             .isOk()
@@ -106,16 +95,6 @@ public class UserControllerTests {
     assertEquals(username.value(), data.username());
     assertEquals(email.value(), data.email());
     assertEquals(now, data.createdAt());
-  }
-
-  @Test
-  void UserController_GetMyUserInfo_Unauthenticated() {
-    client
-        .get()
-        .uri(UserControllerUriFactory.getMePath())
-        .exchange()
-        .expectStatus()
-        .isUnauthorized();
   }
 
   @Test

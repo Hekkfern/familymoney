@@ -3,9 +3,11 @@ package com.familymoney.familymoney.repository;
 import static com.familymoney.familymoney.utils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 
 import com.familymoney.familymoney.generated.tables.EmailVerificationTokens;
 import com.familymoney.familymoney.generated.tables.Users;
+import com.familymoney.familymoney.repositories.dtos.CreateEmailVerificationDto;
 import com.familymoney.familymoney.repositories.impl.EmailVerificationRepository;
 import com.familymoney.familymoney.repositories.entities.EmailVerificationEntity;
 import com.familymoney.familymoney.types.EmailVerificationToken;
@@ -88,7 +90,9 @@ public class EmailVerificationRepositoryTests {
     val token = EmailVerificationToken.generate();
     val expiresAt = Instant.now().plusSeconds(3600);
 
-    val created = emailVerificationRepository.create(userId, token, expiresAt);
+    val created =
+        emailVerificationRepository.create(
+            new CreateEmailVerificationDto(any(), userId, token, expiresAt));
 
     assertThat(created).isPresent();
     val dbo = created.get();
@@ -106,9 +110,11 @@ public class EmailVerificationRepositoryTests {
     assertThatThrownBy(
             () ->
                 emailVerificationRepository.create(
-                    missingUserId,
-                    EmailVerificationToken.generate(),
-                    Instant.now().plusSeconds(300)))
+                    new CreateEmailVerificationDto(
+                        any(),
+                        missingUserId,
+                        EmailVerificationToken.generate(),
+                        Instant.now().plusSeconds(300))))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 
@@ -117,10 +123,14 @@ public class EmailVerificationRepositoryTests {
     val userId = insertUser(FakeGenerator.username(), FakeGenerator.email());
     val token = EmailVerificationToken.generate();
 
-    emailVerificationRepository.create(userId, token, Instant.now().plusSeconds(300));
+    emailVerificationRepository.create(
+        new CreateEmailVerificationDto(any(), userId, token, Instant.now().plusSeconds(300)));
 
     assertThatThrownBy(
-            () -> emailVerificationRepository.create(userId, token, Instant.now().plusSeconds(600)))
+            () ->
+                emailVerificationRepository.create(
+                    new CreateEmailVerificationDto(
+                        any(), userId, token, Instant.now().plusSeconds(600))))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 
@@ -128,7 +138,8 @@ public class EmailVerificationRepositoryTests {
   void findByToken_returns_token_when_exists() {
     val userId = insertUser(FakeGenerator.username(), FakeGenerator.email());
     val token = EmailVerificationToken.generate();
-    emailVerificationRepository.create(userId, token, Instant.now().plusSeconds(300));
+    emailVerificationRepository.create(
+        new CreateEmailVerificationDto(any(), userId, token, Instant.now().plusSeconds(300)));
 
     val found = emailVerificationRepository.findByToken(token);
 
@@ -148,7 +159,7 @@ public class EmailVerificationRepositoryTests {
   void deleteByUserId_removes_tokens() {
     val userId = insertUser(FakeGenerator.username(), FakeGenerator.email());
     val token = EmailVerificationToken.generate();
-    emailVerificationRepository.create(userId, token, Instant.now().plusSeconds(300));
+    emailVerificationRepository.create(new CreateEmailVerificationDto(any(), userId, token, Instant.now().plusSeconds(300)));
 
     val deleted = emailVerificationRepository.deleteByUserId(userId);
 
@@ -163,21 +174,5 @@ public class EmailVerificationRepositoryTests {
     val deleted = emailVerificationRepository.deleteByUserId(missingUserId);
 
     assertThat(deleted).isFalse();
-  }
-
-  @Test
-  void deleteOlderThan_removes_only_old_tokens() {
-    val userId = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val now = OffsetDateTime.now(ZoneOffset.UTC);
-    val oldToken = EmailVerificationToken.generate();
-    val recentToken = EmailVerificationToken.generate();
-
-    insertToken(userId, oldToken, now.minusDays(2));
-    insertToken(userId, recentToken, now.minusMinutes(30));
-
-    emailVerificationRepository.deleteOlderThan(Duration.ofDays(1));
-
-    assertThat(emailVerificationRepository.findByToken(oldToken)).isEmpty();
-    assertThat(emailVerificationRepository.findByToken(recentToken)).isPresent();
   }
 }

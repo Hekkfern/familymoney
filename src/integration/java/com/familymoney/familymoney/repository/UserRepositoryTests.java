@@ -3,16 +3,17 @@ package com.familymoney.familymoney.repository;
 import static com.familymoney.familymoney.utils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 
 import com.familymoney.familymoney.generated.tables.Users;
-import com.familymoney.familymoney.repositories.impl.UserRepository;
+import com.familymoney.familymoney.repositories.dtos.CreateUserDto;
 import com.familymoney.familymoney.repositories.dtos.UpdateUserDto;
 import com.familymoney.familymoney.repositories.entities.UserEntity;
+import com.familymoney.familymoney.repositories.impl.UserRepository;
 import com.familymoney.familymoney.types.Email;
 import com.familymoney.familymoney.types.UserId;
 import com.familymoney.familymoney.types.UserName;
 import com.familymoney.familymoney.utils.FakeGenerator;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -31,7 +32,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @JooqTest
 @Testcontainers
-public class UserRepositoryTests {
+class UserRepositoryTests {
 
   @Container @ServiceConnection
   private static final PostgreSQLContainer postgresContainer =
@@ -48,7 +49,9 @@ public class UserRepositoryTests {
 
   private UserEntity createUser(final String username, final String email) {
     return userRepository
-        .create(UserName.fromString(username), Email.fromString(email), "hashed-password")
+        .create(
+            new CreateUserDto(
+                any(), UserName.fromString(username), Email.fromString(email), "hashed-password"))
         .orElseThrow();
   }
 
@@ -90,7 +93,8 @@ public class UserRepositoryTests {
 
     val now = Instant.now();
 
-    val userCreated = userRepository.create(username, email, passwordHash);
+    val userCreated =
+        userRepository.create(new CreateUserDto(any(), username, email, passwordHash));
 
     assertThat(userCreated).isPresent();
     val user = userCreated.get();
@@ -110,12 +114,13 @@ public class UserRepositoryTests {
     val email = Email.fromString(FakeGenerator.email());
     val passwordHash = "hashed-password";
 
-    userRepository.create(username, email, passwordHash);
+    userRepository.create(new CreateUserDto(any(), username, email, passwordHash));
 
     assertThatThrownBy(
             () ->
                 userRepository.create(
-                    UserName.fromString(FakeGenerator.username()), email, passwordHash))
+                    new CreateUserDto(
+                        any(), UserName.fromString(FakeGenerator.username()), email, passwordHash)))
         .isInstanceOf(DuplicateKeyException.class);
   }
 
@@ -125,11 +130,13 @@ public class UserRepositoryTests {
     val email = Email.fromString(FakeGenerator.email());
     val passwordHash = "hashed-password";
 
-    userRepository.create(username, email, passwordHash);
+    userRepository.create(new CreateUserDto(any(), username, email, passwordHash));
 
     assertThatThrownBy(
             () ->
-                userRepository.create(username, Email.fromString(FakeGenerator.email()), passwordHash))
+                userRepository.create(
+                    new CreateUserDto(
+                        any(), username, Email.fromString(FakeGenerator.email()), passwordHash)))
         .isInstanceOf(DuplicateKeyException.class);
   }
 
@@ -261,26 +268,6 @@ public class UserRepositoryTests {
     val deleted = userRepository.deleteById(UserId.fromUuid(java.util.UUID.randomUUID()));
 
     assertThat(deleted).isFalse();
-  }
-
-  @Test
-  void deleteByIsUnverifiedAndOlderThan_deletes_only_old_unverified() {
-    val now = OffsetDateTime.now(ZoneOffset.UTC);
-    val oldUnverified =
-        insertUserWithFields(
-            FakeGenerator.username(), FakeGenerator.email(), now.minusDays(3), false, true);
-    val recentUnverified =
-        insertUserWithFields(
-            FakeGenerator.username(), FakeGenerator.email(), now.minusHours(12), false, true);
-    val oldVerified =
-        insertUserWithFields(
-            FakeGenerator.username(), FakeGenerator.email(), now.minusDays(4), true, true);
-
-    userRepository.deleteByIsUnverifiedAndOlderThan(Duration.ofDays(2));
-
-    assertThat(userRepository.findById(oldUnverified).isEmpty()).isTrue();
-    assertThat(userRepository.findById(recentUnverified).isPresent()).isTrue();
-    assertThat(userRepository.findById(oldVerified).isPresent()).isTrue();
   }
 
   @Test

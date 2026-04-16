@@ -13,6 +13,8 @@ import com.familymoney.familymoney.exceptions.GroupInvitationInvalidException;
 import com.familymoney.familymoney.exceptions.TransactionNotFoundException;
 import com.familymoney.familymoney.exceptions.UserIsNotMemberOfGroupException;
 import com.familymoney.familymoney.repositories.*;
+import com.familymoney.familymoney.repositories.dtos.CreateGroupInvitationDto;
+import com.familymoney.familymoney.repositories.dtos.CreateTransactionDto;
 import com.familymoney.familymoney.repositories.entities.*;
 import com.familymoney.familymoney.services.data.UpdateGroupData;
 import com.familymoney.familymoney.services.data.UpdateTransactionData;
@@ -110,8 +112,8 @@ class TransactionGroupServiceTests {
     val groupId = GroupId.fromUuid(UUID.randomUUID());
     val createdBy = UserId.fromUuid(UUID.randomUUID());
     val group = groupDbo(groupId);
-    when(groupRepository.create(any(), anyString(), any())).thenReturn(Optional.of(group));
-    when(groupRepository.addUser(eq(createdBy), eq(groupId)))
+    when(groupRepository.create(any())).thenReturn(Optional.of(group));
+    when(groupRepository.addUser(createdBy, groupId))
         .thenReturn(
             Optional.of(
                 UserGroupEntity.builder()
@@ -124,12 +126,12 @@ class TransactionGroupServiceTests {
         transactionGroupService.createGroup(GroupName.fromString("n"), "d", usd, createdBy);
 
     assertThat(result).isEqualTo(groupId);
-    verify(groupRepository).addUser(eq(createdBy), eq(groupId));
+    verify(groupRepository).addUser(createdBy, groupId);
   }
 
   @Test
   void createGroup_throws_when_repository_returns_empty() {
-    when(groupRepository.create(any(), anyString(), any())).thenReturn(Optional.empty());
+    when(groupRepository.create(any())).thenReturn(Optional.empty());
 
     assertThatThrownBy(
             () ->
@@ -144,8 +146,8 @@ class TransactionGroupServiceTests {
     val groupId = GroupId.fromUuid(UUID.randomUUID());
     val createdBy = UserId.fromUuid(UUID.randomUUID());
     val group = groupDbo(groupId);
-    when(groupRepository.create(any(), anyString(), any())).thenReturn(Optional.of(group));
-    when(groupRepository.addUser(eq(createdBy), eq(groupId))).thenReturn(Optional.empty());
+    when(groupRepository.create(any())).thenReturn(Optional.of(group));
+    when(groupRepository.addUser(createdBy, groupId)).thenReturn(Optional.empty());
 
     assertThatThrownBy(
             () ->
@@ -264,7 +266,7 @@ class TransactionGroupServiceTests {
     when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
     val token = GroupInvitationToken.fromString("token-123");
     val invitation = invitationDbo(gid, token, now.plusSeconds(3600));
-    when(groupInvitationRepository.create(eq(gid), any(), any()))
+    when(groupInvitationRepository.create(new CreateGroupInvitationDto(any(), gid, any(), any())))
         .thenReturn(Optional.of(invitation));
 
     val result = transactionGroupService.getInvitationToken(gid, user);
@@ -287,7 +289,8 @@ class TransactionGroupServiceTests {
     val gid = GroupId.fromUuid(UUID.randomUUID());
     val user = UserId.fromUuid(UUID.randomUUID());
     when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
-    when(groupInvitationRepository.create(eq(gid), any(), any())).thenReturn(Optional.empty());
+    when(groupInvitationRepository.create(new CreateGroupInvitationDto(any(), gid, any(), any())))
+        .thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> transactionGroupService.getInvitationToken(gid, user))
         .isInstanceOf(DatabaseExecutionException.class)
@@ -456,7 +459,8 @@ class TransactionGroupServiceTests {
         now,
         creator);
 
-    verify(transactionRepository).create(anyString(), eq(gid), any(), any(), any(), any());
+    verify(transactionRepository)
+        .create(new CreateTransactionDto(any(), anyString(), gid, any(), any(), any(), any()));
   }
 
   @Test
