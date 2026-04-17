@@ -48,19 +48,19 @@ class GroupInvitationRepositoryTest {
   }
 
   private GroupId insertGroup(final String name, final String description, final String currency) {
-    val record =
+    val r =
         dslContext
             .insertInto(Groups.GROUPS)
             .columns(Groups.GROUPS.NAME, Groups.GROUPS.DESCRIPTION, Groups.GROUPS.CURRENCY_CODE)
             .values(name, description, currency)
             .returning(Groups.GROUPS.ID)
             .fetchOne();
-    return GroupId.fromUuid(record.getId());
+    return GroupId.fromUuid(r.getId());
   }
 
   private GroupInvitationEntity insertInvitation(
       final GroupId groupId, final GroupInvitationToken token, final OffsetDateTime createdAt) {
-    val record =
+    val r =
         dslContext
             .insertInto(GroupInvitations.GROUP_INVITATIONS)
             .columns(
@@ -77,11 +77,11 @@ class GroupInvitationRepositoryTest {
                 GroupInvitations.GROUP_INVITATIONS.EXPIRES_AT)
             .fetchOne();
     return GroupInvitationEntity.builder()
-        .id(record.getId())
-        .groupId(GroupId.fromUuid(record.getGroupId()))
-        .token(GroupInvitationToken.fromString(record.getToken()))
-        .createdAt(record.getCreatedAt().toInstant())
-        .expiresAt(record.getExpiresAt().toInstant())
+        .id(r.getId())
+        .groupId(GroupId.fromUuid(r.getGroupId()))
+        .token(GroupInvitationToken.fromString(r.getToken()))
+        .createdAt(r.getCreatedAt().toInstant())
+        .expiresAt(r.getExpiresAt().toInstant())
         .build();
   }
 

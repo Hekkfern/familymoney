@@ -31,7 +31,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @JooqTest
 @Testcontainers
-public class EmailVerificationRepositoryTest {
+class EmailVerificationRepositoryTest {
 
   @Container @ServiceConnection
   private static final PostgreSQLContainer postgresContainer =
@@ -47,19 +47,19 @@ public class EmailVerificationRepositoryTest {
   }
 
   private UserId insertUser(String username, String email) {
-    val record =
+    val r =
         dslContext
             .insertInto(Users.USERS)
             .columns(Users.USERS.USERNAME, Users.USERS.EMAIL, Users.USERS.HASHED_PASSWORD)
             .values(username, email, "hashed-password")
             .returning(Users.USERS.ID)
             .fetchOne();
-    return UserId.fromUuid(record.getId());
+    return UserId.fromUuid(r.getId());
   }
 
   private EmailVerificationEntity insertToken(
       UserId userId, EmailVerificationToken token, OffsetDateTime createdAt) {
-    val record =
+    val r =
         dslContext
             .insertInto(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS)
             .columns(
@@ -76,11 +76,11 @@ public class EmailVerificationRepositoryTest {
                 EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.CREATED_AT)
             .fetchOne();
     return EmailVerificationEntity.builder()
-        .id(record.getId())
-        .userId(UserId.fromUuid(record.getUserId()))
-        .token(EmailVerificationToken.fromString(record.getToken()))
-        .expiresAt(record.getExpiresAt().toInstant())
-        .createdAt(record.getCreatedAt().toInstant())
+        .id(r.getId())
+        .userId(UserId.fromUuid(r.getUserId()))
+        .token(EmailVerificationToken.fromString(r.getToken()))
+        .expiresAt(r.getExpiresAt().toInstant())
+        .createdAt(r.getCreatedAt().toInstant())
         .build();
   }
 

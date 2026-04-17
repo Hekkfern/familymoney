@@ -61,7 +61,7 @@ class UserRepositoryTest {
       final OffsetDateTime createdAt,
       final boolean isEmailVerified,
       final boolean isEnabled) {
-    val record =
+    val r =
         dslContext
             .insertInto(Users.USERS)
             .columns(
@@ -82,7 +82,7 @@ class UserRepositoryTest {
                 isEnabled)
             .returning(Users.USERS.ID)
             .fetchOne();
-    return UserId.fromUuid(record.getId());
+    return UserId.fromUuid(r.getId());
   }
 
   @Test

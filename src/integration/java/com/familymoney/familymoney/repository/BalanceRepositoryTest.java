@@ -49,14 +49,14 @@ class BalanceRepositoryTest {
   }
 
   private UserId insertUser(final String username, final String email) {
-    val record =
+    val r =
         dslContext
             .insertInto(Users.USERS)
             .columns(Users.USERS.USERNAME, Users.USERS.EMAIL, Users.USERS.HASHED_PASSWORD)
             .values(username, email, "hashed-password")
             .returning(Users.USERS.ID)
             .fetchOne();
-    return UserId.fromUuid(record.getId());
+    return UserId.fromUuid(r.getId());
   }
 
   private GroupId insertGroup(final String name, final String description, final String currency) {
