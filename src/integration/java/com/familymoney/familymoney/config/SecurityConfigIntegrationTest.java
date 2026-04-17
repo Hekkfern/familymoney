@@ -50,7 +50,7 @@ class SecurityConfigIntegrationTest {
     @RequestMapping("admin")
     static class AdminTestController {
 
-      @GetMapping("/ping")
+      @GetMapping(path = "ping", version = "1")
       public String ping() {
         return "pong";
       }
