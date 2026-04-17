@@ -27,6 +27,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -47,15 +48,14 @@ import org.springframework.test.web.servlet.client.RestTestClient;
   UpdateUserRequestMapper.class
 })
 @EnableConfigurationProperties({AppProperties.class, JwtProperties.class})
+@AutoConfigureRestTestClient
 class UserAdminControllerTest {
 
   private final Instant now = Instant.parse("2025-01-01T00:00:00Z");
 
   // region Fields
 
-  private RestTestClient client;
-
-  @Autowired private MockMvc mockMvc;
+  @Autowired private RestTestClient client;
 
   @MockitoSpyBean private JwtUtils jwtUtils;
   @MockitoBean private IUserService userService;
@@ -66,8 +66,7 @@ class UserAdminControllerTest {
   // endregion
 
   @BeforeEach
-  public void setup() {
-    client = RestTestClient.bindTo(mockMvc).build();
+  void setup() {
     when(jwtClock.now()).thenReturn(Date.from(now));
   }
 

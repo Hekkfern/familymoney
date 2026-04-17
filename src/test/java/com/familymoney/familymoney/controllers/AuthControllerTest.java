@@ -24,24 +24,23 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.FieldSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 @WebMvcTest(controllers = AuthController.class)
 @Import({JwtUtils.class, LoginResponseMapper.class, RefreshResponseMapper.class})
+@AutoConfigureRestTestClient
 class AuthControllerTest {
 
   private final Instant now = Instant.parse("2025-01-01T00:00:00Z");
 
   // region Fields
 
-  private RestTestClient client;
-
-  @Autowired private MockMvc mockMvc;
+  @Autowired private RestTestClient client;
 
   @MockitoBean private IAuthService authService;
   @MockitoBean private io.jsonwebtoken.Clock jwtClock;
@@ -53,8 +52,7 @@ class AuthControllerTest {
   // endregion
 
   @BeforeEach
-  public void setup() {
-    client = RestTestClient.bindTo(mockMvc).build();
+  void setup() {
     when(jwtClock.now()).thenReturn(java.util.Date.from(now));
   }
 
