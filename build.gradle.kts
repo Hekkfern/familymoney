@@ -98,7 +98,7 @@ tasks {
             }
         }
         schemas.set(listOf("public"))
-        basePackageName.set("com.familymoney.familymoney.generated")
+        basePackageName.set("com.familymoney.generated")
         migrationLocations.setFromFilesystem(
             project.files("$projectDir/src/main/resources/db/migration"),
         )
