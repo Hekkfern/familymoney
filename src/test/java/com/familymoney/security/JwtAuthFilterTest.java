@@ -5,10 +5,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-import com.familymoney.services.IUserService;
-import com.familymoney.types.JwtToken;
-import com.familymoney.types.Role;
-import com.familymoney.types.UserId;
+import com.familymoney.domains.user.services.IUserService;
+import com.familymoney.domains.auth.types.AccessToken;
+import com.familymoney.domains.user.types.Role;
+import com.familymoney.domains.user.types.UserId;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
@@ -83,8 +83,8 @@ public class JwtAuthFilterTest {
 
     // use a syntactically valid-looking token so JwtToken constructor doesn't throw
     when(jwtUtils.extractTokenFromHeader(any(HttpServletRequest.class)))
-        .thenReturn(Optional.of(JwtToken.fromString("aaa.bbb.ccc")));
-    when(jwtUtils.parseAccessToken(any(JwtToken.class))).thenReturn(Optional.empty());
+        .thenReturn(Optional.of(AccessToken.fromString("aaa.bbb.ccc")));
+    when(jwtUtils.parseAccessToken(any(AccessToken.class))).thenReturn(Optional.empty());
 
     filter.doFilter(request, response, chain);
 
@@ -101,8 +101,8 @@ public class JwtAuthFilterTest {
     val claims = mock(Claims.class);
 
     when(jwtUtils.extractTokenFromHeader(any(HttpServletRequest.class)))
-        .thenReturn(Optional.of(JwtToken.fromString("aaa.bbb.ccc")));
-    when(jwtUtils.parseAccessToken(any(JwtToken.class))).thenReturn(Optional.of(userId));
+        .thenReturn(Optional.of(AccessToken.fromString("aaa.bbb.ccc")));
+    when(jwtUtils.parseAccessToken(any(AccessToken.class))).thenReturn(Optional.of(userId));
     when(userService.getUserRole(eq(userId))).thenReturn(Optional.empty());
 
     filter.doFilter(request, response, chain);
@@ -120,8 +120,8 @@ public class JwtAuthFilterTest {
     val claims = mock(Claims.class);
 
     when(jwtUtils.extractTokenFromHeader(any(HttpServletRequest.class)))
-        .thenReturn(Optional.of(JwtToken.fromString("aaa.bbb.ccc")));
-    when(jwtUtils.parseAccessToken(any(JwtToken.class))).thenReturn(Optional.of(userId));
+        .thenReturn(Optional.of(AccessToken.fromString("aaa.bbb.ccc")));
+    when(jwtUtils.parseAccessToken(any(AccessToken.class))).thenReturn(Optional.of(userId));
 
     when(userService.getUserRole(eq(userId))).thenReturn(Optional.of(Role.ADMIN));
 

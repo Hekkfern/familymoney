@@ -4,15 +4,15 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
-import com.familymoney.controllers.impl.AuthController;
-import com.familymoney.controllers.mappers.auth.LoginResponseMapper;
-import com.familymoney.controllers.mappers.auth.RefreshResponseMapper;
+import com.familymoney.domains.auth.controllers.AuthController;
+import com.familymoney.domains.auth.controllers.mappers.LoginResponseMapper;
+import com.familymoney.domains.auth.controllers.mappers.RefreshResponseMapper;
 import com.familymoney.security.JwtUtils;
-import com.familymoney.services.IAuthService;
-import com.familymoney.services.IUserService;
-import com.familymoney.services.data.TokenPair;
-import com.familymoney.types.RefreshToken;
-import com.familymoney.types.JwtToken;
+import com.familymoney.domains.auth.services.IAuthService;
+import com.familymoney.domains.user.services.IUserService;
+import com.familymoney.domains.auth.services.data.TokenPair;
+import com.familymoney.domains.auth.types.RefreshToken;
+import com.familymoney.domains.auth.types.AccessToken;
 import com.familymoney.utils.AuthControllerUriFactory;
 import com.familymoney.utils.FakeGenerator;
 import java.time.Instant;
@@ -201,7 +201,7 @@ class AuthControllerTest {
     when(authService.loginUser(any(), any()))
         .thenReturn(
             new TokenPair(
-                JwtToken.fromString(FakeGenerator.accessToken()),
+                AccessToken.fromString(FakeGenerator.accessToken()),
                 RefreshToken.fromString(FakeGenerator.refreshToken())));
     client
         .post()
@@ -302,7 +302,7 @@ class AuthControllerTest {
     when(authService.refreshTokens(any()))
         .thenReturn(
             new TokenPair(
-                JwtToken.fromString(FakeGenerator.accessToken()),
+                AccessToken.fromString(FakeGenerator.accessToken()),
                 RefreshToken.fromString(FakeGenerator.refreshToken())));
     client
         .post()

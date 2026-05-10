@@ -1,6 +1,8 @@
 package com.familymoney.properties;
 
-import com.familymoney.types.UserName;
+import com.familymoney.domains.user.types.Email;
+import com.familymoney.domains.user.types.Password;
+import com.familymoney.domains.user.types.UserName;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
@@ -12,9 +14,9 @@ import org.springframework.validation.annotation.Validated;
  * users exist. The properties include the username, email, and password for the admin user. All
  * fields are required and validated to ensure that a valid admin user can be created.
  */
-@ConfigurationProperties(prefix = "admin")
+@ConfigurationProperties(prefix = "familymoney.admin")
 @Validated
 public record AdminProperties(
     @NotNull UserName username,
-    @NotNull com.familymoney.types.Email email,
-    @NotNull com.familymoney.types.Password password) {}
+    @NotNull Email email,
+    @NotNull Password password) {}

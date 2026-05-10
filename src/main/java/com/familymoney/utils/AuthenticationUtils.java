@@ -1,7 +1,7 @@
 package com.familymoney.utils;
 
-import com.familymoney.types.Role;
-import com.familymoney.types.UserId;
+import com.familymoney.domains.user.types.Role;
+import com.familymoney.domains.user.types.UserId;
 import lombok.val;
 import org.apache.commons.lang3.Strings;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;

@@ -2,7 +2,7 @@ package com.familymoney.config;
 
 import com.familymoney.security.JwtAuthFilter;
 import com.familymoney.security.JwtAuthenticationEntryPoint;
-import com.familymoney.types.Role;
+import com.familymoney.domains.user.types.Role;
 import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

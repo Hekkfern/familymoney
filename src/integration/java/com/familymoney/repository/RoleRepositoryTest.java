@@ -5,9 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.familymoney.generated.tables.Users;
-import com.familymoney.repositories.impl.RoleRepository;
-import com.familymoney.types.Role;
-import com.familymoney.types.UserId;
+import com.familymoney.domains.user.repositories.RoleRepository;
+import com.familymoney.domains.user.types.Role;
+import com.familymoney.domains.user.types.UserId;
 import com.familymoney.utils.FakeGenerator;
 import lombok.val;
 import org.jooq.DSLContext;

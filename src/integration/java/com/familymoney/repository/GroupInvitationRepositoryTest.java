@@ -7,11 +7,11 @@ import static org.mockito.ArgumentMatchers.any;
 
 import com.familymoney.generated.tables.GroupInvitations;
 import com.familymoney.generated.tables.Groups;
-import com.familymoney.repositories.dtos.CreateGroupInvitationDto;
-import com.familymoney.repositories.entities.GroupInvitationEntity;
-import com.familymoney.repositories.impl.GroupInvitationRepository;
-import com.familymoney.types.GroupId;
-import com.familymoney.types.GroupInvitationToken;
+import com.familymoney.domains.transactions.repositories.dtos.CreateGroupInvitationDto;
+import com.familymoney.domains.transactions.repositories.entitites.GroupInvitationEntity;
+import com.familymoney.domains.transactions.repositories.GroupInvitationRepository;
+import com.familymoney.domains.transactions.types.GroupId;
+import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import com.familymoney.utils.FakeGenerator;
 import java.time.Duration;
 import java.time.Instant;

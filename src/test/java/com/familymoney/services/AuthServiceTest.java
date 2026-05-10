@@ -4,33 +4,34 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import com.familymoney.domains.auth.services.IEmailSenderService;
 import com.familymoney.exceptions.DatabaseExecutionException;
-import com.familymoney.exceptions.EmailNotFoundException;
-import com.familymoney.exceptions.RefreshTokenInvalidException;
-import com.familymoney.exceptions.RefreshTokenNotFoundException;
-import com.familymoney.exceptions.UserAlreadyExistsException;
-import com.familymoney.exceptions.VerificationTokenExpiredException;
-import com.familymoney.exceptions.VerificationTokenNotFoundException;
-import com.familymoney.repositories.IEmailVerificationRepository;
-import com.familymoney.repositories.IRefreshTokenRepository;
-import com.familymoney.repositories.IRoleRepository;
-import com.familymoney.repositories.IUserRepository;
-import com.familymoney.repositories.dtos.CreateEmailVerificationDto;
-import com.familymoney.repositories.dtos.CreateRefreshTokenDto;
-import com.familymoney.repositories.dtos.CreateUserDto;
-import com.familymoney.repositories.entities.EmailVerificationEntity;
-import com.familymoney.repositories.entities.RefreshTokenEntity;
-import com.familymoney.repositories.entities.UserEntity;
+import com.familymoney.domains.auth.exceptions.EmailNotFoundException;
+import com.familymoney.domains.auth.exceptions.RefreshTokenInvalidException;
+import com.familymoney.domains.auth.exceptions.RefreshTokenNotFoundException;
+import com.familymoney.domains.auth.exceptions.UserAlreadyExistsException;
+import com.familymoney.domains.auth.exceptions.VerificationTokenExpiredException;
+import com.familymoney.domains.auth.exceptions.VerificationTokenNotFoundException;
+import com.familymoney.domains.auth.repositories.IEmailVerificationRepository;
+import com.familymoney.domains.auth.repositories.IRefreshTokenRepository;
+import com.familymoney.domains.user.repositories.IRoleRepository;
+import com.familymoney.domains.user.repositories.IUserRepository;
+import com.familymoney.domains.auth.repositories.dtos.CreateEmailVerificationDto;
+import com.familymoney.domains.auth.repositories.dtos.CreateRefreshTokenDto;
+import com.familymoney.domains.user.repositories.dtos.CreateUserDto;
+import com.familymoney.domains.auth.repositories.entitites.EmailVerificationEntity;
+import com.familymoney.domains.auth.repositories.entitites.RefreshTokenEntity;
+import com.familymoney.domains.user.repositories.entitites.UserEntity;
 import com.familymoney.security.JwtUtils;
 import com.familymoney.security.UserPasswordEncoder;
-import com.familymoney.services.impl.AuthService;
-import com.familymoney.types.Email;
-import com.familymoney.types.EmailVerificationToken;
-import com.familymoney.types.Password;
-import com.familymoney.types.RefreshToken;
-import com.familymoney.types.UserId;
-import com.familymoney.types.JwtToken;
-import com.familymoney.types.UserName;
+import com.familymoney.domains.auth.services.AuthService;
+import com.familymoney.domains.user.types.Email;
+import com.familymoney.domains.auth.types.EmailVerificationToken;
+import com.familymoney.domains.user.types.Password;
+import com.familymoney.domains.auth.types.RefreshToken;
+import com.familymoney.domains.user.types.UserId;
+import com.familymoney.domains.auth.types.AccessToken;
+import com.familymoney.domains.user.types.UserName;
 import com.familymoney.utils.FakeGenerator;
 import java.time.Clock;
 import java.time.Instant;
@@ -190,7 +191,7 @@ class AuthServiceTest {
                     .build()));
     when(passwordEncoder.verify(eq(password.value()), anyString())).thenReturn(true);
     when(jwtUtils.generateAccessToken(userId))
-        .thenReturn(JwtToken.fromString(FakeGenerator.accessToken()));
+        .thenReturn(AccessToken.fromString(FakeGenerator.accessToken()));
     when(refreshTokenRepository.create(new CreateRefreshTokenDto(any(), userId, any(), any())))
         .thenReturn(
             Optional.of(
@@ -270,7 +271,7 @@ class AuthServiceTest {
                     .build()));
     when(passwordEncoder.verify(eq(password.value()), anyString())).thenReturn(true);
     when(jwtUtils.generateAccessToken(userId))
-        .thenReturn(JwtToken.fromString(FakeGenerator.accessToken()));
+        .thenReturn(AccessToken.fromString(FakeGenerator.accessToken()));
     when(refreshTokenRepository.create(new CreateRefreshTokenDto(any(), userId, any(), any())))
         .thenReturn(Optional.empty());
 
@@ -324,7 +325,7 @@ class AuthServiceTest {
                     .build()));
     when(refreshTokenRepository.updateByToken(any(), any())).thenReturn(true);
     when(jwtUtils.generateAccessToken(any()))
-        .thenReturn(JwtToken.fromString(FakeGenerator.accessToken()));
+        .thenReturn(AccessToken.fromString(FakeGenerator.accessToken()));
     when(refreshTokenRepository.create(any()))
         .thenReturn(
             Optional.of(
@@ -418,7 +419,7 @@ class AuthServiceTest {
                     .build()));
     when(refreshTokenRepository.updateByToken(any(), any())).thenReturn(true);
     when(jwtUtils.generateAccessToken(any()))
-        .thenReturn(JwtToken.fromString(FakeGenerator.accessToken()));
+        .thenReturn(AccessToken.fromString(FakeGenerator.accessToken()));
     when(refreshTokenRepository.create(any())).thenReturn(Optional.empty());
 
     assertThrows(DatabaseExecutionException.class, () -> authService.refreshTokens(token));

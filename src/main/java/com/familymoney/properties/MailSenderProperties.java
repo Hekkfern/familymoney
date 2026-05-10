@@ -6,7 +6,7 @@ import lombok.Builder;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
-@ConfigurationProperties(prefix = "mail.sender")
+@ConfigurationProperties(prefix = "familymoney.mail.sender")
 @Validated
 @Builder
 public record MailSenderProperties(@NotBlank String name, @Email String email) {}

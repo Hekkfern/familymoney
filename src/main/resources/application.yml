@@ -1,3 +1,4 @@
+# Spring Boot application properties
 spring:
   application:
     name: familymoney
@@ -44,15 +45,18 @@ springdoc:
   show-actuator: true
   cache:
     disabled: true
-jwt:
-  key: ${JWT_KEY}
-mail:
-  sender:
-    email: ${MAIL_SENDER_FROM_EMAIL}
-    name: ${MAIL_SENDER_FROM_NAME}
-admin:
-  username: ${ADMIN_USERNAME}
-  email: ${ADMIN_EMAIL}
-  password: ${ADMIN_PASSWORD}
-docker:
-  image: ${POSTGRES_DOCKER_IMAGE}
+
+# Custom application properties
+familymoney:
+  jwt:
+    key: ${JWT_KEY}
+    access-token-duration: 5m
+    refresh-token-duration: 7d
+  mail:
+    sender:
+      email: ${MAIL_SENDER_FROM_EMAIL}
+      name: ${MAIL_SENDER_FROM_NAME}
+  admin:
+    username: ${ADMIN_USERNAME}
+    email: ${ADMIN_EMAIL}
+    password: ${ADMIN_PASSWORD}

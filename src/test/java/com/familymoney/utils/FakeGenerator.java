@@ -1,6 +1,6 @@
 package com.familymoney.utils;
 
-import com.familymoney.types.EmailVerificationToken;
+import com.familymoney.domains.auth.types.EmailVerificationToken;
 import org.apache.commons.lang3.RandomStringUtils;
 
 /**

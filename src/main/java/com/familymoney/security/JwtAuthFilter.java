@@ -1,6 +1,6 @@
 package com.familymoney.security;
 
-import com.familymoney.services.IUserService;
+import com.familymoney.domains.user.services.IUserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

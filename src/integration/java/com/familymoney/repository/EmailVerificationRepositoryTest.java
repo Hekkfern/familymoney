@@ -7,11 +7,11 @@ import static org.mockito.ArgumentMatchers.any;
 
 import com.familymoney.generated.tables.EmailVerificationTokens;
 import com.familymoney.generated.tables.Users;
-import com.familymoney.repositories.dtos.CreateEmailVerificationDto;
-import com.familymoney.repositories.impl.EmailVerificationRepository;
-import com.familymoney.repositories.entities.EmailVerificationEntity;
-import com.familymoney.types.EmailVerificationToken;
-import com.familymoney.types.UserId;
+import com.familymoney.domains.auth.repositories.dtos.CreateEmailVerificationDto;
+import com.familymoney.domains.auth.repositories.EmailVerificationRepository;
+import com.familymoney.domains.auth.repositories.entitites.EmailVerificationEntity;
+import com.familymoney.domains.auth.types.EmailVerificationToken;
+import com.familymoney.domains.user.types.UserId;
 import com.familymoney.utils.FakeGenerator;
 
 import java.time.Instant;

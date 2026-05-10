@@ -2,7 +2,7 @@ package com.familymoney.services;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.familymoney.services.impl.CurrencyConversionService;
+import com.familymoney.domains.transactions.services.CurrencyConversionService;
 import javax.money.Monetary;
 import lombok.val;
 import org.javamoney.moneta.Money;

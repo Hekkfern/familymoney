@@ -2,7 +2,7 @@ package com.familymoney.controllers.dtos;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.familymoney.controllers.dtos.auth.LoginRequestDto;
+import com.familymoney.domains.auth.controllers.dtos.LoginRequestDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 

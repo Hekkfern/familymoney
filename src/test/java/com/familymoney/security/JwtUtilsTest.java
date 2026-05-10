@@ -6,8 +6,8 @@ import static org.mockito.Mockito.when;
 
 import com.familymoney.properties.AppProperties;
 import com.familymoney.properties.JwtProperties;
-import com.familymoney.types.JwtToken;
-import com.familymoney.types.UserId;
+import com.familymoney.domains.auth.types.AccessToken;
+import com.familymoney.domains.user.types.UserId;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -42,7 +42,7 @@ public class JwtUtilsTest {
 
   @Test
   void parse_invalid_token_fails() {
-    val token = JwtToken.fromString("aaa.bbbb.ccc");
+    val token = AccessToken.fromString("aaa.bbbb.ccc");
     val userIdOpt = jwtUtils.parseAccessToken(token);
     assertThat(userIdOpt).isEmpty();
   }
@@ -96,7 +96,7 @@ public class JwtUtilsTest {
     when(request.getHeader("Authorization")).thenReturn("Bearer aaaa.bbbb.cccc");
 
     val tokenOpt = jwtUtils.extractTokenFromHeader(request);
-    assertThat(tokenOpt).isNotEmpty().contains(JwtToken.fromString("aaaa.bbbb.cccc"));
+    assertThat(tokenOpt).isNotEmpty().contains(AccessToken.fromString("aaaa.bbbb.cccc"));
   }
 
   // endregion

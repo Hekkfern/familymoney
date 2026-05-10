@@ -4,7 +4,14 @@ import static com.familymoney.utils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 
-import com.familymoney.services.IEmailSenderService;
+import com.familymoney.domains.auth.controllers.dtos.LoginRequestDto;
+import com.familymoney.domains.auth.controllers.dtos.LoginResponseDto;
+import com.familymoney.domains.auth.controllers.dtos.LogoutRequestDto;
+import com.familymoney.domains.auth.controllers.dtos.RefreshResponseDto;
+import com.familymoney.domains.auth.controllers.dtos.RefreshTokenRequestDto;
+import com.familymoney.domains.auth.controllers.dtos.RegisterRequestDto;
+import com.familymoney.domains.auth.services.IEmailSenderService;
+import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.utils.AuthControllerUriFactory;
 import com.familymoney.utils.FakeGenerator;
 import lombok.val;

@@ -7,11 +7,11 @@ import static org.mockito.ArgumentMatchers.any;
 
 import com.familymoney.generated.tables.RefreshTokens;
 import com.familymoney.generated.tables.Users;
-import com.familymoney.repositories.dtos.CreateRefreshTokenDto;
-import com.familymoney.repositories.dtos.UpdateRefreshTokenDto;
-import com.familymoney.repositories.impl.RefreshTokenRepository;
-import com.familymoney.types.RefreshToken;
-import com.familymoney.types.UserId;
+import com.familymoney.domains.auth.repositories.dtos.CreateRefreshTokenDto;
+import com.familymoney.domains.auth.repositories.dtos.UpdateRefreshTokenDto;
+import com.familymoney.domains.auth.repositories.RefreshTokenRepository;
+import com.familymoney.domains.auth.types.RefreshToken;
+import com.familymoney.domains.user.types.UserId;
 import com.familymoney.utils.FakeGenerator;
 import java.time.Instant;
 import java.time.OffsetDateTime;

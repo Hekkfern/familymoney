@@ -6,10 +6,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 
 import com.familymoney.generated.tables.Users;
-import com.familymoney.repositories.dtos.CreatePasswordResetDto;
-import com.familymoney.repositories.impl.PasswordResetRepository;
-import com.familymoney.types.PasswordResetToken;
-import com.familymoney.types.UserId;
+import com.familymoney.domains.auth.repositories.dtos.CreatePasswordResetDto;
+import com.familymoney.domains.auth.repositories.PasswordResetRepository;
+import com.familymoney.domains.auth.types.PasswordResetToken;
+import com.familymoney.domains.user.types.UserId;
 import com.familymoney.utils.FakeGenerator;
 import java.time.Instant;
 import java.util.UUID;

@@ -1,6 +1,6 @@
 package com.familymoney.utils;
 
-import com.familymoney.types.UserId;
+import com.familymoney.domains.user.types.UserId;
 
 public class AdminControllerUriFactory {
 

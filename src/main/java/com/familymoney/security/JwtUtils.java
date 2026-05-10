@@ -2,13 +2,13 @@ package com.familymoney.security;
 
 import com.familymoney.properties.AppProperties;
 import com.familymoney.properties.JwtProperties;
-import com.familymoney.types.JwtToken;
-import com.familymoney.types.UserId;
+import com.familymoney.domains.auth.types.AccessToken;
+import com.familymoney.domains.auth.types.TokenFamily;
+import com.familymoney.domains.user.types.UserId;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.Date;
 import java.util.Optional;
 import javax.crypto.SecretKey;
@@ -23,7 +23,6 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class JwtUtils {
 
-  private final Duration ACCESS_TOKEN_VALIDITY = Duration.ofMinutes(15);
   private static final String AUTHORIZATION_HEADER = "Authorization";
   private static final String BEARER_PREFIX = "Bearer ";
 
@@ -35,9 +34,9 @@ public class JwtUtils {
     return Keys.hmacShaKeyFor(jwtProperties.key().getBytes(StandardCharsets.UTF_8));
   }
 
-  public JwtToken generateAccessToken(UserId userId) {
+  public AccessToken generateAccessToken(final UserId userId, final TokenFamily tokenFamily) {
     val now = jwtClock.now();
-    val expiryDate = Date.from(now.toInstant().plus(ACCESS_TOKEN_VALIDITY));
+    val expiryDate = Date.from(now.toInstant().plus(jwtProperties.accessTokenDuration()));
     val token =
         Jwts.builder()
             .subject(userId.value().toString())
@@ -47,12 +46,13 @@ public class JwtUtils {
             .audience()
             .add(appProperties.name())
             .and()
+            .claim("family", tokenFamily.toString())
             .signWith(getSigningKey())
             .compact();
-    return new JwtToken(token);
+    return new AccessToken(token);
   }
 
-  public Optional<UserId> parseAccessToken(JwtToken token) {
+  public Optional<UserId> parseAccessToken(final AccessToken token) {
     try {
       val claims =
           Jwts.parser()
@@ -67,18 +67,18 @@ public class JwtUtils {
       return (audienceMatches && issuerMatches)
           ? Optional.of(UserId.fromString(claims.getSubject()))
           : Optional.empty();
-    } catch (Exception e) {
+    } catch (Exception _) {
       return Optional.empty();
     }
   }
 
-  public Optional<JwtToken> extractTokenFromHeader(HttpServletRequest request) {
+  public Optional<AccessToken> extractTokenFromHeader(final HttpServletRequest request) {
     val bearerToken = request.getHeader(AUTHORIZATION_HEADER);
     log.debug("Authorization Header: {}", bearerToken);
     if (bearerToken != null && bearerToken.startsWith(BEARER_PREFIX)) {
       val rawToken = Strings.CI.removeStart(bearerToken, BEARER_PREFIX);
       log.debug("Access Token: {}", rawToken);
-      return Optional.of(JwtToken.fromString(rawToken));
+      return Optional.of(AccessToken.fromString(rawToken));
     }
     return Optional.empty();
   }
