@@ -39,7 +39,6 @@ import com.familymoney.utils.UUIDGenerator;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.NoSuchElementException;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;

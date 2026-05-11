@@ -8,8 +8,4 @@ import lombok.Builder;
 
 @Builder
 public record GroupData(
-    GroupId id,
-    GroupName name,
-    String description,
-    CurrencyUnit currency,
-    Instant createdAt) {}
+    GroupId id, GroupName name, String description, CurrencyUnit currency, Instant createdAt) {}

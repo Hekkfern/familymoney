@@ -6,7 +6,6 @@ import com.familymoney.domains.auth.repositories.entitites.RefreshTokenEntity;
 import com.familymoney.domains.auth.types.RefreshToken;
 import com.familymoney.domains.user.types.UserId;
 import java.util.Optional;
-import java.util.UUID;
 
 /** Repository contract for managing refresh tokens used for session renewal. */
 public interface IRefreshTokenRepository {

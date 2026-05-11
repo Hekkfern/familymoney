@@ -62,7 +62,7 @@ public class TransactionGroupService implements ITransactionGroupService {
   @Override
   @Transactional
   public GroupId createGroup(
-          GroupName name, String description, CurrencyUnit currency, UserId createdBy) {
+      GroupName name, String description, CurrencyUnit currency, UserId createdBy) {
     // Create group in the database
     val groupId = GroupId.generate();
     groupRepository

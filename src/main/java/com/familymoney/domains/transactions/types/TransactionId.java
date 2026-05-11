@@ -1,6 +1,5 @@
 package com.familymoney.domains.transactions.types;
 
-
 import com.familymoney.utils.UUIDGenerator;
 import java.util.UUID;
 

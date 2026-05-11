@@ -130,7 +130,8 @@ public class GroupController implements IGroupController {
     // Get user ID from security context (validated)
     val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Get balances
-    val balances = transactionGroupService.getAllGroupBalances(GroupId.fromUuid(groupId), user.id());
+    val balances =
+        transactionGroupService.getAllGroupBalances(GroupId.fromUuid(groupId), user.id());
     // Generate response
     return getGroupBalancesResponseMapper.toDto(balances);
   }

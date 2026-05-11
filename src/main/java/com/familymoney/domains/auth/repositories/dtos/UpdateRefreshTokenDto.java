@@ -1,8 +1,7 @@
 package com.familymoney.domains.auth.repositories.dtos;
 
-import java.time.Instant;
-
 import com.familymoney.domains.auth.types.RefreshToken;
+import java.time.Instant;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;

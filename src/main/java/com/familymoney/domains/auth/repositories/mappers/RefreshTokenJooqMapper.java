@@ -16,8 +16,8 @@ public final class RefreshTokenJooqMapper {
   public static RefreshTokenEntity toEntity(final Record r) {
     OffsetDateTime createdAt =
         Objects.requireNonNull(r.get(RefreshTokens.REFRESH_TOKENS.CREATED_AT));
-      OffsetDateTime updatedAt =
-              Objects.requireNonNull(r.get(RefreshTokens.REFRESH_TOKENS.UPDATED_AT));
+    OffsetDateTime updatedAt =
+        Objects.requireNonNull(r.get(RefreshTokens.REFRESH_TOKENS.UPDATED_AT));
     OffsetDateTime expiresAt =
         Objects.requireNonNull(r.get(RefreshTokens.REFRESH_TOKENS.EXPIRES_AT));
     final TokenFamily family =
