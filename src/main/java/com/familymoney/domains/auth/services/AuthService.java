@@ -38,6 +38,8 @@ import com.familymoney.security.UserPasswordEncoder;
 import com.familymoney.utils.UUIDGenerator;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.NoSuchElementException;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -154,7 +156,7 @@ public class AuthService implements IAuthService {
     val refreshTokenDb =
         refreshTokenRepository
             .findByToken(refreshToken)
-            .orElseThrow(() -> new RefreshTokenNotFoundException("Refresh token not found"));
+            .orElseThrow(() -> new NoSuchElementException("Refresh token not found"));
     // Check if the refresh token is expired
     if (Instant.now(clock).isAfter(refreshTokenDb.expiresAt())) {
       val msg = "Invalid refresh token";

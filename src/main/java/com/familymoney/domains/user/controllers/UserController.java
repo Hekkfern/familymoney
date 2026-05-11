@@ -6,6 +6,7 @@ import com.familymoney.domains.user.controllers.mappers.GetMyUserResponseMapper;
 import com.familymoney.domains.user.controllers.mappers.UpdateUserRequestMapper;
 import com.familymoney.domains.user.services.IUserService;
 import com.familymoney.utils.AuthenticationUtils;
+import java.util.NoSuchElementException;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,7 +28,7 @@ public class UserController implements IUserController {
         userService
             .getUserData(user.id())
             .orElseThrow(
-                () -> new java.util.NoSuchElementException("User not found for id: " + user.id()));
+                () -> new NoSuchElementException("User not found for id: %s".formatted(user.id())));
     // Return response
     return getUserResponseMapper.toDto(userData);
   }

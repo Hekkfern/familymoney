@@ -32,19 +32,19 @@ public class UserService implements IUserService {
   private final UserPasswordEncoder passwordEncoder;
 
   @Override
-  public Optional<UserData> getUserData(UserId userId) {
+  public Optional<UserData> getUserData(final UserId userId) {
     val userOpt = userRepository.findById(userId);
     return userOpt.map(UserDataMapper::fromDbo);
   }
 
   @Override
-  public void deleteUser(UserId userId) {
+  public void deleteUser(final UserId userId) {
     userRepository.deleteById(userId);
   }
 
   @Transactional
   @Override
-  public void updateUserInfo(UserId userId, UpdateUserData data) {
+  public void updateUserInfo(final UserId userId, UpdateUserData data) {
     if (!data.isEmpty()) {
       userRepository.updateById(
           userId,
@@ -60,27 +60,27 @@ public class UserService implements IUserService {
   }
 
   @Override
-  public Page<UserData> getUsers(Pageable pageable) {
+  public Page<UserData> getUsers(final Pageable pageable) {
     return userRepository.findAll(pageable).map(UserDataMapper::fromDbo);
   }
 
   @Override
-  public void enableUser(UserId userId, boolean enabled) {
+  public void enableUser(final UserId userId, final boolean enabled) {
     userRepository.updateById(userId, UpdateUserDto.builder().isEnabled(enabled).build());
   }
 
   @Override
-  public void setUserRole(UserId userId, Role role) {
+  public void setUserRole(final UserId userId, final Role role) {
     roleRepository.setRoleForUserId(userId, role);
   }
 
   @Override
-  public Optional<Role> getUserRole(UserId userId) {
+  public Optional<Role> getUserRole(final UserId userId) {
     return roleRepository.getRoleByUserId(userId);
   }
 
   @Override
-  public void createAdminUser(UserName username, Email email, Password password) {
+  public void createAdminUser(final UserName username, final Email email, final Password password) {
     // Check if user already exists
     if (userRepository.existsByEmailOrUsername(email, username)) {
       log.info("Admin user already exists, skipping creation");
