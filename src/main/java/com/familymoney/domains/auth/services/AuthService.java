@@ -11,6 +11,7 @@ import com.familymoney.domains.auth.exceptions.VerificationTokenNotFoundExceptio
 import com.familymoney.domains.auth.repositories.IEmailVerificationRepository;
 import com.familymoney.domains.auth.repositories.IPasswordResetRepository;
 import com.familymoney.domains.auth.repositories.IRefreshTokenRepository;
+import com.familymoney.domains.auth.repositories.TokenFamilyBlacklistRepository;
 import com.familymoney.domains.auth.repositories.dtos.CreateEmailVerificationDto;
 import com.familymoney.domains.auth.repositories.dtos.CreateRefreshTokenDto;
 import com.familymoney.domains.auth.repositories.dtos.UpdateEmailVerificationTokenDto;
@@ -60,6 +61,7 @@ public class AuthService implements IAuthService {
   private final Clock clock;
   private final JwtProperties jwtProperties;
   private final EmailVerificationProperties emailVerificationProperties;
+  private final TokenFamilyBlacklistRepository tokenFamilyBlacklistRepository;
 
   @Transactional
   @Override
@@ -225,8 +227,7 @@ public class AuthService implements IAuthService {
                         "Could not find current email verification token in the database"));
     // If the current instant is before the createdAt plus the configured wait time,
     // the user is requesting a new verification email too soon.
-    if (clock
-        .instant()
+    if (Instant.now(clock)
         .isBefore(
             oldEmailVerificationTokenDb.createdAt().plus(emailVerificationProperties.waitTime()))) {
       throw new NewEmailVerificationTooSoonException();
@@ -267,14 +268,15 @@ public class AuthService implements IAuthService {
             .findByToken(refreshToken)
             .orElseThrow(
                 () -> new RefreshTokenNotFoundException("Refresh token not found in the database"));
-    // Check if the refresh token is valid
-    if (Instant.now(clock).isAfter(refreshTokenDb.expiresAt()) || refreshTokenDb.isUsed()) {
-      val msg = "Invalid refresh token";
+    // Check if the refresh token is expired
+    if (Instant.now(clock).isAfter(refreshTokenDb.expiresAt())) {
+      val msg = "Expired refresh token";
       log.trace(msg);
       throw new RefreshTokenInvalidException(msg);
     }
-    // Invalidate the family of refresh token from the database
-    refreshTokenRepository.updateByFamily(
-        refreshTokenDb.family(), UpdateRefreshTokenDto.builder().isUsed(true).build());
+    // Invalidate refresh token from the database
+    refreshTokenRepository.deleteByToken(refreshToken);
+    // Invalidate any existing access token
+    tokenFamilyBlacklistRepository.deleteByFamily(refreshTokenDb.family());
   }
 }

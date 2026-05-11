@@ -24,20 +24,18 @@ public class PasswordResetRepository implements IPasswordResetRepository {
   public Optional<PasswordResetEntity> create(final CreatePasswordResetDto data) {
     return db.insertInto(PasswordResetTokens.PASSWORD_RESET_TOKENS)
         .columns(
-            PasswordResetTokens.PASSWORD_RESET_TOKENS.ID,
             PasswordResetTokens.PASSWORD_RESET_TOKENS.USER_ID,
             PasswordResetTokens.PASSWORD_RESET_TOKENS.TOKEN,
             PasswordResetTokens.PASSWORD_RESET_TOKENS.EXPIRES_AT)
         .values(
-            data.id(),
             data.userId().value(),
             data.token().value(),
             OffsetDateTime.ofInstant(data.expiresAt(), ZoneOffset.UTC))
         .returning(
-            PasswordResetTokens.PASSWORD_RESET_TOKENS.ID,
             PasswordResetTokens.PASSWORD_RESET_TOKENS.USER_ID,
             PasswordResetTokens.PASSWORD_RESET_TOKENS.TOKEN,
             PasswordResetTokens.PASSWORD_RESET_TOKENS.CREATED_AT,
+            PasswordResetTokens.PASSWORD_RESET_TOKENS.UPDATED_AT,
             PasswordResetTokens.PASSWORD_RESET_TOKENS.EXPIRES_AT)
         .fetchOptional()
         .map(PasswordResetJooqMapper::toEntity);
@@ -46,10 +44,10 @@ public class PasswordResetRepository implements IPasswordResetRepository {
   @Override
   public Optional<PasswordResetEntity> findByToken(final PasswordResetToken token) {
     return db.select(
-            PasswordResetTokens.PASSWORD_RESET_TOKENS.ID,
             PasswordResetTokens.PASSWORD_RESET_TOKENS.USER_ID,
             PasswordResetTokens.PASSWORD_RESET_TOKENS.TOKEN,
             PasswordResetTokens.PASSWORD_RESET_TOKENS.CREATED_AT,
+            PasswordResetTokens.PASSWORD_RESET_TOKENS.UPDATED_AT,
             PasswordResetTokens.PASSWORD_RESET_TOKENS.EXPIRES_AT)
         .from(PasswordResetTokens.PASSWORD_RESET_TOKENS)
         .where(PasswordResetTokens.PASSWORD_RESET_TOKENS.TOKEN.eq(token.value()))

@@ -13,5 +13,6 @@ public record RefreshTokenEntity(
     UserId userId,
     RefreshToken token,
     Instant createdAt,
+    Instant updatedAt,
     Instant expiresAt,
     TokenFamily family) {}

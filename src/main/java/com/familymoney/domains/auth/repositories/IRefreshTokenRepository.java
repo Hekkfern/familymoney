@@ -49,4 +49,12 @@ public interface IRefreshTokenRepository {
    * @return true if at least one row was updated; false otherwise.
    */
   boolean updateByUserId(UserId userId, UpdateRefreshTokenDto data);
+
+  /**
+   * Delete refresh token records by their token value.
+   *
+   * @param token the token to delete. Must not be null.
+   * @return true if at least one record was deleted; false if no matching token exists.
+   */
+  boolean deleteByToken(RefreshToken token);
 }

@@ -118,7 +118,7 @@ SELECT trigger_updated_at('refresh_tokens');
 CREATE UNLOGGED TABLE tokenfamily_blacklist
 (
     family     UUID PRIMARY KEY         NOT NULL,
-    expires_at TIMESTAMP WITH TIME ZONE NOT NULL
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 -- ******************* GROUPS *******************

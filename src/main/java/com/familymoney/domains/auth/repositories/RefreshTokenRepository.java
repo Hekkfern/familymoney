@@ -42,6 +42,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
             RefreshTokens.REFRESH_TOKENS.USER_ID,
             RefreshTokens.REFRESH_TOKENS.TOKEN,
             RefreshTokens.REFRESH_TOKENS.CREATED_AT,
+            RefreshTokens.REFRESH_TOKENS.UPDATED_AT,
             RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,
             RefreshTokens.REFRESH_TOKENS.FAMILY)
         .fetchOptional()
@@ -55,6 +56,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
             RefreshTokens.REFRESH_TOKENS.USER_ID,
             RefreshTokens.REFRESH_TOKENS.TOKEN,
             RefreshTokens.REFRESH_TOKENS.CREATED_AT,
+            RefreshTokens.REFRESH_TOKENS.UPDATED_AT,
             RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,
             RefreshTokens.REFRESH_TOKENS.FAMILY)
         .from(RefreshTokens.REFRESH_TOKENS)
@@ -73,7 +75,9 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
         db.update(RefreshTokens.REFRESH_TOKENS)
             .set(
                 RefreshTokens.REFRESH_TOKENS.TOKEN,
-                DSL.coalesce(DSL.val(data.getToken()), RefreshTokens.REFRESH_TOKENS.TOKEN))
+                DSL.coalesce(
+                    DSL.val(data.getToken() != null ? data.getToken().value() : null),
+                    RefreshTokens.REFRESH_TOKENS.TOKEN))
             .set(
                 RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,
                 DSL.coalesce(DSL.val(expiresAtVal), RefreshTokens.REFRESH_TOKENS.EXPIRES_AT))
@@ -92,12 +96,23 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
         db.update(RefreshTokens.REFRESH_TOKENS)
             .set(
                 RefreshTokens.REFRESH_TOKENS.TOKEN,
-                DSL.coalesce(DSL.val(data.getToken()), RefreshTokens.REFRESH_TOKENS.TOKEN))
+                DSL.coalesce(
+                    DSL.val(data.getToken() != null ? data.getToken().value() : null),
+                    RefreshTokens.REFRESH_TOKENS.TOKEN))
             .set(
                 RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,
                 DSL.coalesce(DSL.val(expiresAtVal), RefreshTokens.REFRESH_TOKENS.EXPIRES_AT))
             .where(RefreshTokens.REFRESH_TOKENS.USER_ID.eq(userId.value()))
             .execute();
     return rowsAffected > 0;
+  }
+
+  @Override
+  public boolean deleteByToken(RefreshToken token) {
+    val rows =
+        db.delete(RefreshTokens.REFRESH_TOKENS)
+            .where(RefreshTokens.REFRESH_TOKENS.TOKEN.eq(token.value()))
+            .execute();
+    return rows > 0;
   }
 }
