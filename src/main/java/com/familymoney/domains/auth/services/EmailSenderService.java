@@ -55,27 +55,4 @@ public class EmailSenderService implements IEmailSenderService {
       Email toEmail, UserName username, EmailVerificationToken resetToken) {
     // TODO("Not yet implemented")
   }
-
-  @Override
-  public void sendSecurityAlertEmail(Email toEmail, UserName username) {
-    val mimeMessage = mailSender.createMimeMessage();
-    val mimeMessageHelper = new MimeMessageHelper(mimeMessage, "UTF-8");
-
-    try {
-      mimeMessageHelper.setFrom("${mailSenderProperties.name} <${mailSenderProperties.email}>");
-      mimeMessageHelper.setTo(toEmail.value());
-      mimeMessageHelper.setSubject("Security Alert");
-
-      val context = new Context();
-      context.setVariable("userName", username.value());
-      context.setVariable("appName", appProperties.name());
-      val SECURITY_ALERT_EMAIL_TEMPLATE_NAME = "email-securityalert";
-      val processedString = htmlTemplateEngine.process(SECURITY_ALERT_EMAIL_TEMPLATE_NAME, context);
-      mimeMessageHelper.setText(processedString, true);
-
-      mailSender.send(mimeMessage);
-    } catch (Exception e) {
-      throw new RuntimeException("Failed to send security alert email");
-    }
-  }
 }

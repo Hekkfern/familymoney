@@ -67,7 +67,7 @@ VALUES ('ADMIN', 'Administrator with full access'),
 CREATE TABLE email_verification_tokens
 (
     user_id    UUID PRIMARY KEY         NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    token      VARCHAR(255) UNIQUE      NOT NULL,
+    token      VARCHAR(255) UNIQUE      NOT NULL CHECK (CHAR_LENGTH(BTRIM(token)) > 0),
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
@@ -82,7 +82,7 @@ SELECT trigger_updated_at('email_verification_tokens');
 CREATE TABLE password_reset_tokens
 (
     user_id    UUID PRIMARY KEY         NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    token      VARCHAR(255) UNIQUE      NOT NULL,
+    token      VARCHAR(255) UNIQUE      NOT NULL CHECK (CHAR_LENGTH(BTRIM(token)) > 0),
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
@@ -98,11 +98,12 @@ CREATE TABLE refresh_tokens
 (
     id         UUID PRIMARY KEY,
     user_id    UUID                     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    token      VARCHAR(255) UNIQUE      NOT NULL,
+    token      VARCHAR(255) UNIQUE      NOT NULL CHECK (CHAR_LENGTH(BTRIM(token)) > 0),
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    family     UUID                     NOT NULL
+    family     UUID                     NOT NULL,
+    UNIQUE (user_id, family)
 );
 
 CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens (user_id);

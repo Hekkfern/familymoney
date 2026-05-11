@@ -52,6 +52,9 @@ familymoney:
     key: ${JWT_KEY}
     access-token-duration: 5m
     refresh-token-duration: 7d
+  email-verification:
+    token-duration: 24h
+    wait-time: 2m
   mail:
     sender:
       email: ${MAIL_SENDER_FROM_EMAIL}

@@ -41,17 +41,6 @@ public interface IRefreshTokenRepository {
   boolean updateByToken(RefreshToken token, UpdateRefreshTokenDto data);
 
   /**
-   * Update refresh tokens that belong to a given family UUID.
-   *
-   * @param family the family UUID whose tokens should be updated. Must not be null.
-   * @param data the update payload containing fields to change. Must not be null. Only non-null
-   *     fields in {@code data} will be modified.
-   * @return true if at least one row was updated; false if no tokens matched the provided family or
-   *     no change occurred.
-   */
-  boolean updateByFamily(UUID family, UpdateRefreshTokenDto data);
-
-  /**
    * Update refresh tokens associated with a specific user id.
    *
    * @param userId the id of the user whose tokens should be updated. Must not be null.

@@ -10,7 +10,6 @@ import com.familymoney.generated.tables.RefreshTokens;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Optional;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.jooq.DSLContext;
@@ -30,16 +29,20 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
             RefreshTokens.REFRESH_TOKENS.ID,
             RefreshTokens.REFRESH_TOKENS.USER_ID,
             RefreshTokens.REFRESH_TOKENS.TOKEN,
-            RefreshTokens.REFRESH_TOKENS.FAMILY)
-        .values(data.id(), data.userId().value(), data.token().value(), data.family())
+            RefreshTokens.REFRESH_TOKENS.FAMILY,
+            RefreshTokens.REFRESH_TOKENS.EXPIRES_AT)
+        .values(
+            data.id(),
+            data.userId().value(),
+            data.token().value(),
+            data.family().value(),
+            OffsetDateTime.ofInstant(data.expiresAt(), ZoneOffset.UTC))
         .returning(
             RefreshTokens.REFRESH_TOKENS.ID,
             RefreshTokens.REFRESH_TOKENS.USER_ID,
             RefreshTokens.REFRESH_TOKENS.TOKEN,
             RefreshTokens.REFRESH_TOKENS.CREATED_AT,
             RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,
-            RefreshTokens.REFRESH_TOKENS.IS_USED,
-            RefreshTokens.REFRESH_TOKENS.USED_AT,
             RefreshTokens.REFRESH_TOKENS.FAMILY)
         .fetchOptional()
         .map(RefreshTokenJooqMapper::toEntity);
@@ -53,8 +56,6 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
             RefreshTokens.REFRESH_TOKENS.TOKEN,
             RefreshTokens.REFRESH_TOKENS.CREATED_AT,
             RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,
-            RefreshTokens.REFRESH_TOKENS.IS_USED,
-            RefreshTokens.REFRESH_TOKENS.USED_AT,
             RefreshTokens.REFRESH_TOKENS.FAMILY)
         .from(RefreshTokens.REFRESH_TOKENS)
         .where(RefreshTokens.REFRESH_TOKENS.TOKEN.eq(token.value()))
@@ -64,56 +65,37 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
 
   @Override
   public boolean updateByToken(final RefreshToken token, final UpdateRefreshTokenDto data) {
-    val usedAtVal =
-        data.getUsedAt() != null
-            ? OffsetDateTime.ofInstant(data.getUsedAt(), ZoneOffset.UTC)
+    val expiresAtVal =
+        data.getExpiresAt() != null
+            ? OffsetDateTime.ofInstant(data.getExpiresAt(), ZoneOffset.UTC)
             : null;
     val rowsAffected =
         db.update(RefreshTokens.REFRESH_TOKENS)
             .set(
-                RefreshTokens.REFRESH_TOKENS.IS_USED,
-                DSL.coalesce(DSL.val(data.getIsUsed()), RefreshTokens.REFRESH_TOKENS.IS_USED))
+                RefreshTokens.REFRESH_TOKENS.TOKEN,
+                DSL.coalesce(DSL.val(data.getToken()), RefreshTokens.REFRESH_TOKENS.TOKEN))
             .set(
-                RefreshTokens.REFRESH_TOKENS.USED_AT,
-                DSL.coalesce(DSL.val(usedAtVal), RefreshTokens.REFRESH_TOKENS.USED_AT))
+                RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,
+                DSL.coalesce(DSL.val(expiresAtVal), RefreshTokens.REFRESH_TOKENS.EXPIRES_AT))
             .where(RefreshTokens.REFRESH_TOKENS.TOKEN.eq(token.value()))
             .execute();
     return rowsAffected > 0;
   }
 
   @Override
-  public boolean updateByFamily(final UUID family, final UpdateRefreshTokenDto data) {
-    val usedAtVal =
-        data.getUsedAt() != null
-            ? OffsetDateTime.ofInstant(data.getUsedAt(), ZoneOffset.UTC)
-            : null;
-    val rowsAffected =
-        db.update(RefreshTokens.REFRESH_TOKENS)
-            .set(
-                RefreshTokens.REFRESH_TOKENS.IS_USED,
-                DSL.coalesce(DSL.val(data.getIsUsed()), RefreshTokens.REFRESH_TOKENS.IS_USED))
-            .set(
-                RefreshTokens.REFRESH_TOKENS.USED_AT,
-                DSL.coalesce(DSL.val(usedAtVal), RefreshTokens.REFRESH_TOKENS.USED_AT))
-            .where(RefreshTokens.REFRESH_TOKENS.FAMILY.eq(family))
-            .execute();
-    return rowsAffected > 0;
-  }
-
-  @Override
   public boolean updateByUserId(final UserId userId, final UpdateRefreshTokenDto data) {
-    val usedAtVal =
-        data.getUsedAt() != null
-            ? OffsetDateTime.ofInstant(data.getUsedAt(), ZoneOffset.UTC)
+    val expiresAtVal =
+        data.getExpiresAt() != null
+            ? OffsetDateTime.ofInstant(data.getExpiresAt(), ZoneOffset.UTC)
             : null;
     val rowsAffected =
         db.update(RefreshTokens.REFRESH_TOKENS)
             .set(
-                RefreshTokens.REFRESH_TOKENS.IS_USED,
-                DSL.coalesce(DSL.val(data.getIsUsed()), RefreshTokens.REFRESH_TOKENS.IS_USED))
+                RefreshTokens.REFRESH_TOKENS.TOKEN,
+                DSL.coalesce(DSL.val(data.getToken()), RefreshTokens.REFRESH_TOKENS.TOKEN))
             .set(
-                RefreshTokens.REFRESH_TOKENS.USED_AT,
-                DSL.coalesce(DSL.val(usedAtVal), RefreshTokens.REFRESH_TOKENS.USED_AT))
+                RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,
+                DSL.coalesce(DSL.val(expiresAtVal), RefreshTokens.REFRESH_TOKENS.EXPIRES_AT))
             .where(RefreshTokens.REFRESH_TOKENS.USER_ID.eq(userId.value()))
             .execute();
     return rowsAffected > 0;

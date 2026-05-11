@@ -1,5 +1,13 @@
 package com.familymoney.domains.auth.services;
 
+import com.familymoney.domains.auth.exceptions.EmailAlreadyVerifiedException;
+import com.familymoney.domains.auth.exceptions.EmailNotFoundException;
+import com.familymoney.domains.auth.exceptions.NewEmailVerificationTooSoonException;
+import com.familymoney.domains.auth.exceptions.RefreshTokenInvalidException;
+import com.familymoney.domains.auth.exceptions.RefreshTokenNotFoundException;
+import com.familymoney.domains.auth.exceptions.UserAlreadyExistsException;
+import com.familymoney.domains.auth.exceptions.VerificationTokenExpiredException;
+import com.familymoney.domains.auth.exceptions.VerificationTokenNotFoundException;
 import com.familymoney.domains.auth.repositories.IEmailVerificationRepository;
 import com.familymoney.domains.auth.repositories.IPasswordResetRepository;
 import com.familymoney.domains.auth.repositories.IRefreshTokenRepository;
@@ -22,18 +30,12 @@ import com.familymoney.domains.user.types.Role;
 import com.familymoney.domains.user.types.UserId;
 import com.familymoney.domains.user.types.UserName;
 import com.familymoney.exceptions.DatabaseExecutionException;
-import com.familymoney.domains.auth.exceptions.EmailAlreadyVerifiedException;
-import com.familymoney.domains.auth.exceptions.EmailNotFoundException;
-import com.familymoney.domains.auth.exceptions.RefreshTokenInvalidException;
-import com.familymoney.domains.auth.exceptions.RefreshTokenNotFoundException;
-import com.familymoney.domains.auth.exceptions.UserAlreadyExistsException;
-import com.familymoney.domains.auth.exceptions.VerificationTokenExpiredException;
-import com.familymoney.domains.auth.exceptions.VerificationTokenNotFoundException;
+import com.familymoney.properties.EmailVerificationProperties;
+import com.familymoney.properties.JwtProperties;
 import com.familymoney.security.JwtUtils;
 import com.familymoney.security.UserPasswordEncoder;
 import com.familymoney.utils.UUIDGenerator;
 import java.time.Clock;
-import java.time.Duration;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,8 +49,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class AuthService implements IAuthService {
 
-  private static final Duration VERIFICATION_TOKEN_EXPIRY = Duration.ofHours(24);
-
   private final IUserRepository userRepository;
   private final UserPasswordEncoder passwordEncoder;
   private final JwtUtils jwtUtils;
@@ -58,6 +58,8 @@ public class AuthService implements IAuthService {
   private final IPasswordResetRepository passwordResetRepository;
   private final IRoleRepository roleRepository;
   private final Clock clock;
+  private final JwtProperties jwtProperties;
+  private final EmailVerificationProperties emailVerificationProperties;
 
   @Transactional
   @Override
@@ -88,7 +90,7 @@ public class AuthService implements IAuthService {
                     .id(UUIDGenerator.generate())
                     .userId(userId)
                     .token(EmailVerificationToken.generate())
-                    .expiresAt(Instant.now(clock).plus(VERIFICATION_TOKEN_EXPIRY))
+                    .expiresAt(Instant.now(clock).plus(emailVerificationProperties.tokenDuration()))
                     .build())
             .orElseThrow(
                 () ->
@@ -134,6 +136,7 @@ public class AuthService implements IAuthService {
                 .userId(userDb.id())
                 .token(refreshToken)
                 .family(family)
+                .expiresAt(Instant.now(clock).plus(jwtProperties.refreshTokenDuration()))
                 .build())
         .orElseThrow(
             () -> new DatabaseExecutionException("Could not create refresh token in the database"));
@@ -156,43 +159,21 @@ public class AuthService implements IAuthService {
       log.info(msg);
       throw new RefreshTokenInvalidException(msg);
     }
-    // Check if the token was already used
-    if (refreshTokenDb.isUsed()) {
-      // Invalidate all refresh tokens for that user
-      log.warn("REFRESH TOKEN REUSE DETECTED!");
-      refreshTokenRepository.updateByFamily(
-          refreshTokenDb.family(), UpdateRefreshTokenDto.builder().isUsed(true).build());
-      // Get user info for email
-      val userDb =
-          userRepository
-              .findById(refreshTokenDb.userId())
-              .orElseThrow(() -> new DatabaseExecutionException("User not found in the database"));
-      // Send security alert email
-      emailSenderService.sendSecurityAlertEmail(userDb.email(), userDb.username());
-      // Throw exception
-      throw new RefreshTokenInvalidException("Refresh token not found in the database");
-    }
-    // Mark the old token as used
-    refreshTokenRepository.updateByToken(
-        refreshTokenDb.token(),
-        UpdateRefreshTokenDto.builder().isUsed(true).usedAt(Instant.now(clock)).build());
     // Generate new tokens
-    val newAccessToken = jwtUtils.generateAccessToken(refreshTokenDb.userId());
+    val newAccessToken =
+        jwtUtils.generateAccessToken(refreshTokenDb.userId(), refreshTokenDb.family());
     val newRefreshToken = RefreshToken.generate();
     // Save new refresh token in database
-    val refreshTokenId = UUIDGenerator.generate();
-    refreshTokenRepository
-        .create(
-            CreateRefreshTokenDto.builder()
-                .id(refreshTokenId)
-                .userId(refreshTokenDb.userId())
+    val refreshTokenUpdated =
+        refreshTokenRepository.updateByToken(
+            refreshToken,
+            UpdateRefreshTokenDto.builder()
                 .token(newRefreshToken)
-                .family(refreshTokenDb.family())
-                .build())
-        .orElseThrow(
-            () ->
-                new DatabaseExecutionException(
-                    "Could not create new refresh token in the database"));
+                .expiresAt(Instant.now(clock).plus(jwtProperties.refreshTokenDuration()))
+                .build());
+    if (!refreshTokenUpdated) {
+      throw new DatabaseExecutionException("Could not create new refresh token in the database");
+    }
     // Build response with both tokens
     log.trace("refreshTokens() finished");
     return new TokenPair(newAccessToken, newRefreshToken);
@@ -211,8 +192,14 @@ public class AuthService implements IAuthService {
       throw new VerificationTokenExpiredException("Email verification token has expired");
     }
     // Verify the user's email
-    userRepository.updateById(
-        emailVerificationTokenDb.userId(), UpdateUserDto.builder().isEmailVerified(true).build());
+    val userUpdated =
+        userRepository.updateById(
+            emailVerificationTokenDb.userId(),
+            UpdateUserDto.builder().isEmailVerified(true).build());
+    if (!userUpdated) {
+      throw new DatabaseExecutionException(
+          "Could not set the is_email_verified column of the user in the database");
+    }
     // Delete all the verification tokens assigned to this user from the database
     emailVerificationRepository.deleteByUserId(emailVerificationTokenDb.userId());
   }
@@ -226,25 +213,40 @@ public class AuthService implements IAuthService {
             .orElseThrow(() -> new EmailNotFoundException("User with that email not found"));
     // Check if user is already verified. If so, skip
     if (userDb.isEmailVerified()) {
-        throw new EmailAlreadyVerifiedException("Email is already verified");
+      throw new EmailAlreadyVerifiedException("Email is already verified");
     }
-
-
+    // check minimum wait time between requests
+    val oldEmailVerificationTokenDb =
+        emailVerificationRepository
+            .findByUserId(userDb.id())
+            .orElseThrow(
+                () ->
+                    new DatabaseExecutionException(
+                        "Could not find current email verification token in the database"));
+    // If the current instant is before the createdAt plus the configured wait time,
+    // the user is requesting a new verification email too soon.
+    if (clock
+        .instant()
+        .isBefore(
+            oldEmailVerificationTokenDb.createdAt().plus(emailVerificationProperties.waitTime()))) {
+      throw new NewEmailVerificationTooSoonException();
+    }
     // Generate and save verification token to database
     val newEmailVerificationToken = EmailVerificationToken.generate();
-    emailVerificationRepository
-        .updateById(
+    val emailVerificationTokenUpdated =
+        emailVerificationRepository.updateByUserId(
+            userDb.id(),
             UpdateEmailVerificationTokenDto.builder()
-                .token(EmailVerificationToken.generate())
-                .expiresAt(Instant.now(clock).plus(VERIFICATION_TOKEN_EXPIRY))
-                .build())
-        .orElseThrow(
-            () ->
-                new DatabaseExecutionException(
-                    "Could not create email verification token in the database"));
+                .token(newEmailVerificationToken)
+                .expiresAt(Instant.now(clock).plus(emailVerificationProperties.tokenDuration()))
+                .build());
+    if (!emailVerificationTokenUpdated) {
+      throw new DatabaseExecutionException(
+          "Could not create email verification token in the database");
+    }
     // Send verification email
     emailSenderService.sendEmailVerificationEmail(
-        email, userDb.username(), emailVerificationTokenDb.token());
+        email, userDb.username(), newEmailVerificationToken);
   }
 
   @Override
