@@ -6,4 +6,4 @@ import lombok.Builder;
 
 @Builder
 public record GetUserResponseDto(
-    UUID id, String username, String email, Instant createdAt, boolean isEnabled) {}
+    UUID id, String username, String email, Instant createdAt, boolean isEmailVerified, boolean isEnabled) {}

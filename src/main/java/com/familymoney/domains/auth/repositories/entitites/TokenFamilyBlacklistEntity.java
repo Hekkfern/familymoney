@@ -5,4 +5,4 @@ import java.time.Instant;
 import lombok.Builder;
 
 @Builder
-public record TokenFamilyBlacklistEntity(TokenFamily family, Instant expiresAt) {}
+public record TokenFamilyBlacklistEntity(TokenFamily family, Instant createdAt) {}

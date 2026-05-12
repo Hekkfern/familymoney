@@ -280,4 +280,9 @@ public class AuthService implements IAuthService {
     // Invalidate any existing access token
     tokenFamilyBlacklistRepository.deleteByFamily(refreshTokenDb.family());
   }
+
+  @Override
+  public boolean isFamilyBlacklisted(TokenFamily family) {
+    return tokenFamilyBlacklistRepository.exists(family);
+  }
 }

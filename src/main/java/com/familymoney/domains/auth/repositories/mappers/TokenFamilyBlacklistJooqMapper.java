@@ -13,13 +13,13 @@ public final class TokenFamilyBlacklistJooqMapper {
 
   public static TokenFamilyBlacklistEntity toEntity(final Record r) {
     final OffsetDateTime expiresAt =
-        Objects.requireNonNull(r.get(TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST.EXPIRES_AT));
+        Objects.requireNonNull(r.get(TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST.CREATED_AT));
     final TokenFamily family =
         TokenFamily.fromUuid(
             Objects.requireNonNull(r.get(TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST.FAMILY)));
     return TokenFamilyBlacklistEntity.builder()
         .family(family)
-        .expiresAt(expiresAt.toInstant())
+        .createdAt(expiresAt.toInstant())
         .build();
   }
 }

@@ -1,6 +1,6 @@
 package com.familymoney.domains.transactions.controllers.mappers;
 
-import com.familymoney.controllers.dtos.grouptransaction.GetInvitationTokenResponseDto;
+import com.familymoney.domains.transactions.controllers.dtos.GetInvitationTokenResponseDto;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import org.springframework.stereotype.Component;
 

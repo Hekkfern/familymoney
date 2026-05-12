@@ -1,6 +1,6 @@
 package com.familymoney.domains.transactions.controllers.mappers;
 
-import com.familymoney.controllers.dtos.grouptransaction.CreateGroupResponseDto;
+import com.familymoney.domains.transactions.controllers.dtos.CreateGroupResponseDto;
 import com.familymoney.domains.transactions.types.GroupId;
 import org.springframework.stereotype.Component;
 

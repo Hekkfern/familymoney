@@ -1,6 +1,6 @@
 package com.familymoney.domains.transactions.validations;
 
-import com.familymoney.controllers.dtos.grouptransaction.CreateTransactionRequestDto;
+import com.familymoney.domains.transactions.controllers.dtos.CreateTransactionRequestDto;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import java.util.Objects;

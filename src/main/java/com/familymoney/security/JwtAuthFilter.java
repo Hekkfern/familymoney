@@ -1,5 +1,6 @@
 package com.familymoney.security;
 
+import com.familymoney.domains.auth.services.IAuthService;
 import com.familymoney.domains.user.services.IUserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -26,6 +27,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
   private final JwtUtils jwtUtils;
   private final IUserService userService;
+  private final IAuthService authService;
 
   @Override
   protected void doFilterInternal(
@@ -36,20 +38,25 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     val token = jwtUtils.extractTokenFromHeader(request);
     if (token.isPresent()) {
       // parse the JWT token
-      val userIdOpt = jwtUtils.parseAccessToken(token.get());
-      if (userIdOpt.isPresent()) {
-        val userId = userIdOpt.get();
-        log.debug("Authenticated user: {}", userId.value());
-        // get roles from DB
-        val roleOpt = userService.getUserRole(userId);
-        if (roleOpt.isPresent()) {
-          val role = roleOpt.get();
-          log.debug("Role for user {}: {}", userId.value(), role);
-          // set authorization
-          val authorities = List.of(new SimpleGrantedAuthority(ROLE_PREFIX + role));
-          val auth = new UsernamePasswordAuthenticationToken(userId, null, authorities);
-          auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-          SecurityContextHolder.getContext().setAuthentication(auth);
+      val tokenContentOpt = jwtUtils.parseAccessToken(token.get());
+      if (tokenContentOpt.isPresent()) {
+        val tokenContent = tokenContentOpt.get();
+        // check if the family is blacklisted
+        if (!authService.isFamilyBlacklisted(tokenContent.family())) {
+          // get user id
+          val userId = tokenContent.userId();
+          log.debug("Authenticated user: {}", userId.value());
+          // get roles from DB
+          val roleOpt = userService.getUserRole(userId);
+          if (roleOpt.isPresent()) {
+            val role = roleOpt.get();
+            log.debug("Role for user {}: {}", userId.value(), role);
+            // set authorization
+            val authorities = List.of(new SimpleGrantedAuthority(ROLE_PREFIX + role));
+            val auth = new UsernamePasswordAuthenticationToken(userId, null, authorities);
+            auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(auth);
+          }
         }
       }
     }

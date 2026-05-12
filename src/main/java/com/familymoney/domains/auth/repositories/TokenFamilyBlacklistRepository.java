@@ -24,11 +24,11 @@ public class TokenFamilyBlacklistRepository implements ITokenFamilyBlacklistRepo
     return db.insertInto(TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST)
         .columns(
             TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST.FAMILY,
-            TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST.EXPIRES_AT)
+            TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST.CREATED_AT)
         .values(data.family().value(), OffsetDateTime.ofInstant(data.createdAt(), ZoneOffset.UTC))
         .returning(
             TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST.FAMILY,
-            TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST.EXPIRES_AT)
+            TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST.CREATED_AT)
         .fetchOptional()
         .map(TokenFamilyBlacklistJooqMapper::toEntity);
   }

@@ -1,6 +1,6 @@
 package com.familymoney.domains.transactions.controllers.mappers;
 
-import com.familymoney.controllers.dtos.grouptransaction.GetTransactionsResponseDto;
+import com.familymoney.domains.transactions.controllers.dtos.GetTransactionsResponseDto;
 import com.familymoney.domains.transactions.services.data.TransactionData;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

@@ -132,7 +132,7 @@ public class TransactionGroupService implements ITransactionGroupService {
   }
 
   @Override
-  public Page<GroupData> getGroupsByUser(UserId userId, Pageable pageable) {
+  public Page<GroupData> getGroupsByUser(final UserId userId, final Pageable pageable) {
     return groupRepository.findByUserId(userId, pageable).map(GroupDataMapper::fromDbo);
   }
 

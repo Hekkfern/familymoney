@@ -1,6 +1,6 @@
 package com.familymoney.domains.transactions.controllers.mappers;
 
-import com.familymoney.controllers.dtos.grouptransaction.GetGroupBalancesResponseDto;
+import com.familymoney.domains.transactions.controllers.dtos.GetGroupBalancesResponseDto;
 import com.familymoney.domains.user.types.UserId;
 import java.util.Map;
 import java.util.stream.Collectors;

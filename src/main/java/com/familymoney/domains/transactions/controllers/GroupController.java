@@ -1,5 +1,13 @@
 package com.familymoney.domains.transactions.controllers;
 
+import com.familymoney.domains.transactions.controllers.dtos.CreateGroupRequestDto;
+import com.familymoney.domains.transactions.controllers.dtos.CreateGroupResponseDto;
+import com.familymoney.domains.transactions.controllers.dtos.EnterGroupRequestDto;
+import com.familymoney.domains.transactions.controllers.dtos.GetGroupBalancesResponseDto;
+import com.familymoney.domains.transactions.controllers.dtos.GetGroupResponseDto;
+import com.familymoney.domains.transactions.controllers.dtos.GetGroupsResponseDto;
+import com.familymoney.domains.transactions.controllers.dtos.GetInvitationTokenResponseDto;
+import com.familymoney.domains.transactions.controllers.dtos.GetUsersInGroupResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.RemoveUserRequestDto;
 import com.familymoney.domains.transactions.controllers.dtos.UpdateGroupRequestDto;
 import com.familymoney.domains.transactions.controllers.mappers.CreateGroupResponseMapper;
@@ -34,7 +42,7 @@ public class GroupController implements IGroupController {
   private final GetGroupBalancesResponseMapper getGroupBalancesResponseMapper;
 
   @Override
-  public CreateGroupResponseDto createGroup(CreateGroupRequestDto request) {
+  public CreateGroupResponseDto createGroup(final CreateGroupRequestDto request) {
     // Get user ID from security context (validated)
     val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Create group
@@ -49,7 +57,7 @@ public class GroupController implements IGroupController {
   }
 
   @Override
-  public GetGroupsResponseDto getGroupsOfUser(Pageable pageable) {
+  public GetGroupsResponseDto getGroupsOfUser(final Pageable pageable) {
     // Get user ID from security context (validated)
     val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Get groups of user
