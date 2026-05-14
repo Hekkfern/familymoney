@@ -5,17 +5,18 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import com.familymoney.domains.user.controllers.dtos.GetMyUserResponseDto;
+import com.familymoney.domains.auth.types.TokenFamily;
 import com.familymoney.domains.user.controllers.UserController;
+import com.familymoney.domains.user.controllers.dtos.GetMyUserResponseDto;
 import com.familymoney.domains.user.controllers.mappers.GetMyUserResponseMapper;
 import com.familymoney.domains.user.controllers.mappers.UpdateUserRequestMapper;
-import com.familymoney.security.JwtUtils;
 import com.familymoney.domains.user.services.IUserService;
 import com.familymoney.domains.user.services.data.UserData;
 import com.familymoney.domains.user.types.Email;
-import com.familymoney.domains.user.types.UserId;
 import com.familymoney.domains.user.types.Role;
+import com.familymoney.domains.user.types.UserId;
 import com.familymoney.domains.user.types.UserName;
+import com.familymoney.security.JwtUtils;
 import com.familymoney.utils.FakeGenerator;
 import com.familymoney.utils.UserControllerUriFactory;
 import java.time.Instant;
@@ -65,6 +66,8 @@ class UserControllerTest {
   @Test
   @WithMockUser(username = USER_ID)
   void UserController_GetMyUserInfo_Successful() {
+    val userId = UserId.fromString(USER_ID);
+    var family = TokenFamily.generate();
     val username = UserName.fromString(FakeGenerator.username());
     val email = Email.fromString(FakeGenerator.email());
     when(userService.getUserData(any()))
@@ -83,9 +86,7 @@ class UserControllerTest {
         client
             .get()
             .uri(UserControllerUriFactory.getMePath())
-            .header(
-                "Authorization",
-                "Bearer " + jwtUtils.generateAccessToken(UserId.fromString(USER_ID)))
+            .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId, family))
             .exchange()
             .expectStatus()
             .isOk()
@@ -100,14 +101,15 @@ class UserControllerTest {
 
   @Test
   void UserController_GetMyUserInfo_InvalidUserId() {
-    val userId = UserId.fromUuid(UUID.randomUUID());
+    val userId = UserId.generate();
+    val family = TokenFamily.generate();
     when(userService.getUserData(any())).thenReturn(Optional.empty());
 
     // Request
     client
         .get()
         .uri(UserControllerUriFactory.getMePath())
-        .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId))
+        .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId, family))
         .exchange()
         .expectStatus()
         .isUnauthorized();
@@ -117,7 +119,8 @@ class UserControllerTest {
   void UserController_GetMyUserInfo_InvalidRole() {
     val username = UserName.fromString(FakeGenerator.username());
     val email = Email.fromString(FakeGenerator.email());
-    val userId = UserId.fromUuid(UUID.randomUUID());
+    val userId = UserId.generate();
+    val family = TokenFamily.generate();
     when(userService.getUserData(any()))
         .thenReturn(
             Optional.of(
@@ -135,7 +138,7 @@ class UserControllerTest {
     client
         .get()
         .uri(UserControllerUriFactory.getMePath())
-        .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId))
+        .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId, family))
         .exchange()
         .expectStatus()
         .isUnauthorized();
@@ -149,7 +152,8 @@ class UserControllerTest {
   void UserController_DeleteMyUser_Successful() {
     val username = UserName.fromString(FakeGenerator.username());
     val email = Email.fromString(FakeGenerator.email());
-    val userId = UserId.fromUuid(UUID.randomUUID());
+    val userId = UserId.generate();
+    val family = TokenFamily.generate();
     when(userService.getUserData(any()))
         .thenReturn(
             Optional.of(
@@ -166,7 +170,7 @@ class UserControllerTest {
     client
         .delete()
         .uri(UserControllerUriFactory.getMePath())
-        .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId))
+        .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId, family))
         .exchange()
         .expectStatus()
         .isOk();
@@ -190,7 +194,8 @@ class UserControllerTest {
   void UserController_UpdateMyUserInfo_Successful() {
     val username = UserName.fromString(FakeGenerator.username());
     val email = Email.fromString(FakeGenerator.email());
-    val userId = UserId.fromUuid(UUID.randomUUID());
+    val userId = UserId.generate();
+    val family = TokenFamily.generate();
     when(userService.getUserData(any()))
         .thenReturn(
             Optional.of(
@@ -210,7 +215,7 @@ class UserControllerTest {
     client
         .patch()
         .uri(UserControllerUriFactory.getMePath())
-        .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId))
+        .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId, family))
         .body(Map.of("username", newUsername, "email", newEmail, "password", newPassword))
         .exchange()
         .expectStatus()
@@ -221,7 +226,8 @@ class UserControllerTest {
   void UserController_UpdateMyUserInfo_Successful_OnlyUsername() {
     val username = UserName.fromString(FakeGenerator.username());
     val email = Email.fromString(FakeGenerator.email());
-    val userId = UserId.fromUuid(UUID.randomUUID());
+    val userId = UserId.generate();
+    val family = TokenFamily.generate();
     when(userService.getUserData(any()))
         .thenReturn(
             Optional.of(
@@ -239,7 +245,7 @@ class UserControllerTest {
     client
         .patch()
         .uri(UserControllerUriFactory.getMePath())
-        .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId))
+        .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId, family))
         .body(Map.of("username", newUsername))
         .exchange()
         .expectStatus()
@@ -250,7 +256,8 @@ class UserControllerTest {
   void UserController_UpdateMyUserInfo_Successful_OnlyEmail() {
     val username = UserName.fromString(FakeGenerator.username());
     val email = Email.fromString(FakeGenerator.email());
-    val userId = UserId.fromUuid(UUID.randomUUID());
+    val userId = UserId.generate();
+    val family = TokenFamily.generate();
     when(userService.getUserData(any()))
         .thenReturn(
             Optional.of(
@@ -268,7 +275,7 @@ class UserControllerTest {
     client
         .patch()
         .uri(UserControllerUriFactory.getMePath())
-        .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId))
+        .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId, family))
         .body(Map.of("email", newEmail))
         .exchange()
         .expectStatus()
@@ -279,7 +286,8 @@ class UserControllerTest {
   void UserController_UpdateMyUserInfo_Successful_OnlyPassword() {
     val username = UserName.fromString(FakeGenerator.username());
     val email = Email.fromString(FakeGenerator.email());
-    val userId = UserId.fromUuid(UUID.randomUUID());
+    val userId = UserId.generate();
+    val family = TokenFamily.generate();
     when(userService.getUserData(any()))
         .thenReturn(
             Optional.of(
@@ -297,7 +305,7 @@ class UserControllerTest {
     client
         .patch()
         .uri(UserControllerUriFactory.getMePath())
-        .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId))
+        .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId, family))
         .body(Map.of("password", newPassword))
         .exchange()
         .expectStatus()

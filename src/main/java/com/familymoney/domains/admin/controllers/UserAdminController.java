@@ -2,7 +2,6 @@ package com.familymoney.domains.admin.controllers;
 
 import com.familymoney.domains.user.controllers.dtos.GetUserResponseDto;
 import com.familymoney.domains.user.controllers.dtos.GetUserRoleResponseDto;
-import com.familymoney.domains.user.controllers.dtos.GetUsersResponseDto;
 import com.familymoney.domains.user.controllers.dtos.UpdateUserRequestDto;
 import com.familymoney.domains.user.controllers.mappers.GetUserResponseMapper;
 import com.familymoney.domains.user.controllers.mappers.UpdateUserRequestMapper;
@@ -10,10 +9,13 @@ import com.familymoney.domains.user.exceptions.UserNotFoundException;
 import com.familymoney.domains.user.services.IUserService;
 import com.familymoney.domains.user.types.Role;
 import com.familymoney.domains.user.types.UserId;
+import com.familymoney.utils.PageResponse;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -36,11 +38,13 @@ public class UserAdminController implements IUserAdminController {
   }
 
   @Override
-  public GetUsersResponseDto getUsersInfo(Pageable pageable) {
+  public PageResponse<GetUserResponseDto> getUsersInfo(
+      final int page, final int size, final SortField sort, final Sort.Direction direction) {
+    final Sort stableSort =
+        Sort.by(direction, sort.toString().toLowerCase()).and(Sort.by(Sort.Direction.ASC, "id"));
+    final Pageable pageable = PageRequest.of(page, size, stableSort);
     val userDataPages = userService.getUsers(pageable);
-    return GetUsersResponseDto.builder()
-        .users(userDataPages.getContent().stream().map(getUserResponseMapper::toDto).toList())
-        .build();
+    return PageResponse.from(userDataPages.map(getUserResponseMapper::toDto));
   }
 
   @Override

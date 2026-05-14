@@ -5,14 +5,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 
-import com.familymoney.generated.tables.Users;
+import com.familymoney.domains.user.repositories.UserRepository;
 import com.familymoney.domains.user.repositories.dtos.CreateUserDto;
 import com.familymoney.domains.user.repositories.dtos.UpdateUserDto;
-import com.familymoney.domains.user.repositories.entitites.UserEntity;
-import com.familymoney.domains.user.repositories.UserRepository;
 import com.familymoney.domains.user.types.Email;
 import com.familymoney.domains.user.types.UserId;
 import com.familymoney.domains.user.types.UserName;
+import com.familymoney.generated.tables.Users;
 import com.familymoney.utils.FakeGenerator;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -47,43 +46,39 @@ class UserRepositoryTest {
     this.userRepository = new UserRepository(dslContext);
   }
 
-  private UserEntity createUser(final String username, final String email) {
-    return userRepository
-        .create(
-            new CreateUserDto(
-                any(), UserName.fromString(username), Email.fromString(email), "hashed-password"))
-        .orElseThrow();
-  }
-
-  private UserId insertUserWithFields(
-      final String username,
-      final String email,
-      final OffsetDateTime createdAt,
+  private void insertUserWithFields(
+      final UserId userId,
+      final UserName username,
+      final Email email,
+      final String hashedPassword,
+      final Instant createdAt,
       final boolean isEmailVerified,
       final boolean isEnabled) {
-    val r =
-        dslContext
-            .insertInto(Users.USERS)
-            .columns(
-                Users.USERS.USERNAME,
-                Users.USERS.EMAIL,
-                Users.USERS.HASHED_PASSWORD,
-                Users.USERS.CREATED_AT,
-                Users.USERS.UPDATED_AT,
-                Users.USERS.IS_EMAIL_VERIFIED,
-                Users.USERS.IS_ENABLED)
-            .values(
-                username,
-                email,
-                "hashed-password",
-                createdAt,
-                createdAt,
-                isEmailVerified,
-                isEnabled)
-            .returning(Users.USERS.ID)
-            .fetchOne();
-    return UserId.fromUuid(r.getId());
+    val createdAtDateTime = OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC);
+    dslContext
+        .insertInto(Users.USERS)
+        .columns(
+            Users.USERS.ID,
+            Users.USERS.USERNAME,
+            Users.USERS.EMAIL,
+            Users.USERS.HASHED_PASSWORD,
+            Users.USERS.CREATED_AT,
+            Users.USERS.UPDATED_AT,
+            Users.USERS.IS_EMAIL_VERIFIED,
+            Users.USERS.IS_ENABLED)
+        .values(
+            userId.value(),
+            username.value(),
+            email.value(),
+            hashedPassword,
+            createdAtDateTime,
+            createdAtDateTime,
+            isEmailVerified,
+            isEnabled)
+        .execute();
   }
+
+  // region IUserRepository.create()
 
   @Test
   void create_persists_user_record() {
@@ -94,7 +89,7 @@ class UserRepositoryTest {
     val now = Instant.now();
 
     val userCreated =
-        userRepository.create(new CreateUserDto(any(), username, email, passwordHash));
+        userRepository.create(new CreateUserDto(any(), username, email, passwordHash, true, false));
 
     assertThat(userCreated).isPresent();
     val user = userCreated.get();
@@ -110,184 +105,356 @@ class UserRepositoryTest {
 
   @Test
   void create_throws_when_email_is_duplicate() {
-    val username = UserName.fromString(FakeGenerator.username());
+    val userId1 = UserId.generate();
+    val userId2 = UserId.generate();
+    val username1 = UserName.fromString(FakeGenerator.username());
+    val username2 = UserName.fromString(FakeGenerator.username());
     val email = Email.fromString(FakeGenerator.email());
     val passwordHash = "hashed-password";
 
-    userRepository.create(new CreateUserDto(any(), username, email, passwordHash));
+    val dto1 = new CreateUserDto(userId1, username1, email, passwordHash, true, false);
+    userRepository.create(dto1);
 
-    assertThatThrownBy(
-            () ->
-                userRepository.create(
-                    new CreateUserDto(
-                        any(), UserName.fromString(FakeGenerator.username()), email, passwordHash)))
-        .isInstanceOf(DuplicateKeyException.class);
+    val dto2 = new CreateUserDto(userId2, username2, email, passwordHash, true, false);
+    assertThatThrownBy(() -> userRepository.create(dto2)).isInstanceOf(DuplicateKeyException.class);
   }
 
   @Test
   void create_throws_when_username_is_duplicate() {
+    val userId1 = UserId.generate();
+    val userId2 = UserId.generate();
     val username = UserName.fromString(FakeGenerator.username());
-    val email = Email.fromString(FakeGenerator.email());
+    val email1 = Email.fromString(FakeGenerator.email());
+    val email2 = Email.fromString(FakeGenerator.email());
     val passwordHash = "hashed-password";
 
-    userRepository.create(new CreateUserDto(any(), username, email, passwordHash));
+    val dto1 = new CreateUserDto(userId1, username, email1, passwordHash, true, false);
+    userRepository.create(dto1);
 
-    assertThatThrownBy(
-            () ->
-                userRepository.create(
-                    new CreateUserDto(
-                        any(), username, Email.fromString(FakeGenerator.email()), passwordHash)))
-        .isInstanceOf(DuplicateKeyException.class);
+    val dto2 = new CreateUserDto(userId2, username, email2, passwordHash, true, false);
+    assertThatThrownBy(() -> userRepository.create(dto2)).isInstanceOf(DuplicateKeyException.class);
   }
+
+  // endregion
+
+  // region IUserRepository.findById()
 
   @Test
   void findById_returns_user_when_exists() {
-    val created = createUser(FakeGenerator.username(), FakeGenerator.email());
+    val userId = UserId.generate();
+    val username = UserName.fromString(FakeGenerator.username());
+    val email = Email.fromString(FakeGenerator.email());
+    val now = Instant.now();
+    insertUserWithFields(userId, username, email, "hashed_password", now, false, true);
 
-    val found = userRepository.findById(created.id());
+    val found = userRepository.findById(userId);
 
     assertThat(found).isPresent();
-    assertThat(found.get().id()).isEqualTo(created.id());
+    val userFound = found.get();
+    assertThat(userFound.id()).isEqualTo(userId);
+    assertThat(userFound.username()).isEqualTo(username);
+    assertThat(userFound.email()).isEqualTo(email);
+    assertThat(userFound.hashedPassword()).isEqualTo("updated-hash");
+    assertThat(userFound.createdAt())
+        .isNotNull()
+        .isBetween(now.minusSeconds(1), now.plusSeconds(1));
+    assertThat(userFound.updatedAt())
+        .isNotNull()
+        .isBetween(now.minusSeconds(1), now.plusSeconds(1));
+    assertThat(userFound.isEnabled()).isTrue();
+    assertThat(userFound.isEmailVerified()).isFalse();
   }
 
   @Test
   void findById_returns_empty_when_missing() {
-    val missing = UserId.fromUuid(java.util.UUID.randomUUID());
+    val userId = UserId.generate();
 
-    val found = userRepository.findById(missing);
+    val found = userRepository.findById(userId);
 
     assertThat(found).isEmpty();
   }
 
+  // endregion
+
+  // region IUserRepository.findByEmail()
+
   @Test
   void findByEmail_returns_user_when_exists() {
-    val email = FakeGenerator.email();
-    val created = createUser(FakeGenerator.username(), email);
+    val userId = UserId.generate();
+    val username = UserName.fromString(FakeGenerator.username());
+    val email = Email.fromString(FakeGenerator.email());
+    val now = Instant.now();
+    insertUserWithFields(userId, username, email, "hashed_password", now, false, true);
 
-    val found = userRepository.findByEmail(Email.fromString(email));
+    val found = userRepository.findByEmail(email);
 
     assertThat(found).isPresent();
-    assertThat(found.get().id()).isEqualTo(created.id());
+    val userFound = found.get();
+    assertThat(userFound.id()).isEqualTo(userId);
+    assertThat(userFound.username()).isEqualTo(username);
+    assertThat(userFound.email()).isEqualTo(email);
+    assertThat(userFound.hashedPassword()).isEqualTo("updated-hash");
+    assertThat(userFound.createdAt())
+        .isNotNull()
+        .isBetween(now.minusSeconds(1), now.plusSeconds(1));
+    assertThat(userFound.updatedAt())
+        .isNotNull()
+        .isBetween(now.minusSeconds(1), now.plusSeconds(1));
+    assertThat(userFound.isEnabled()).isTrue();
+    assertThat(userFound.isEmailVerified()).isFalse();
   }
 
   @Test
   void findByEmail_returns_empty_when_missing() {
-    val found = userRepository.findByEmail(Email.fromString(FakeGenerator.email()));
+    val email = Email.fromString(FakeGenerator.email());
+
+    val found = userRepository.findByEmail(email);
 
     assertThat(found).isEmpty();
   }
 
+  // endregion
+
+  // region IUserRepository.findByUsername()
+
   @Test
   void findByUsername_returns_user_when_exists() {
-    val username = FakeGenerator.username();
-    val created = createUser(username, FakeGenerator.email());
+    val userId = UserId.generate();
+    val username = UserName.fromString(FakeGenerator.username());
+    val email = Email.fromString(FakeGenerator.email());
+    val now = Instant.now();
+    insertUserWithFields(userId, username, email, "hashed_password", now, false, true);
 
-    val found = userRepository.findByUsername(UserName.fromString(username));
+    val found = userRepository.findByUsername(username);
 
     assertThat(found).isPresent();
-    assertThat(found.get().id()).isEqualTo(created.id());
+    val userFound = found.get();
+    assertThat(userFound.id()).isEqualTo(userId);
+    assertThat(userFound.username()).isEqualTo(username);
+    assertThat(userFound.email()).isEqualTo(email);
+    assertThat(userFound.hashedPassword()).isEqualTo("updated-hash");
+    assertThat(userFound.createdAt())
+        .isNotNull()
+        .isBetween(now.minusSeconds(1), now.plusSeconds(1));
+    assertThat(userFound.updatedAt())
+        .isNotNull()
+        .isBetween(now.minusSeconds(1), now.plusSeconds(1));
+    assertThat(userFound.isEnabled()).isTrue();
+    assertThat(userFound.isEmailVerified()).isFalse();
   }
 
   @Test
   void findByUsername_returns_empty_when_missing() {
-    val found = userRepository.findByUsername(UserName.fromString(FakeGenerator.username()));
+    val username = UserName.fromString(FakeGenerator.username());
+
+    val found = userRepository.findByUsername(username);
 
     assertThat(found).isEmpty();
   }
 
+  // endregion
+
+  // region IUserRepository.existsByEmailOrUsername()
+
   @Test
   void existsByEmailOrUsername_returns_true_when_either_matches() {
-    val username = FakeGenerator.username();
-    val email = FakeGenerator.email();
-    createUser(username, email);
+    val userId = UserId.generate();
+    val username = UserName.fromString(FakeGenerator.username());
+    val email = Email.fromString(FakeGenerator.email());
+    val now = Instant.now();
+    insertUserWithFields(userId, username, email, "hashed_password", now, false, true);
 
     assertThat(
             userRepository.existsByEmailOrUsername(
-                Email.fromString(email), UserName.fromString(FakeGenerator.username())))
+                email, UserName.fromString(FakeGenerator.username())))
         .isTrue();
     assertThat(
             userRepository.existsByEmailOrUsername(
-                Email.fromString(FakeGenerator.email()), UserName.fromString(username)))
+                Email.fromString(FakeGenerator.email()), username))
         .isTrue();
+  }
+
+  @Test
+  void existsByEmailOrUsername_returns_true_when_both_match() {
+    val userId = UserId.generate();
+    val username = UserName.fromString(FakeGenerator.username());
+    val email = Email.fromString(FakeGenerator.email());
+    val now = Instant.now();
+    insertUserWithFields(userId, username, email, "hashed_password", now, false, true);
+
+    assertThat(userRepository.existsByEmailOrUsername(email, username)).isTrue();
   }
 
   @Test
   void existsByEmailOrUsername_returns_false_when_none_match() {
-    val exists =
-        userRepository.existsByEmailOrUsername(
-            Email.fromString(FakeGenerator.email()), UserName.fromString(FakeGenerator.username()));
+    assertThat(
+            userRepository.existsByEmailOrUsername(
+                Email.fromString(FakeGenerator.email()),
+                UserName.fromString(FakeGenerator.username())))
+        .isFalse();
+  }
 
-    assertThat(exists).isFalse();
+  // endregion
+
+  // region IUserRepository.existsById()
+
+  @Test
+  void existsById_returns_true_when_it_exists() {
+    val userId = UserId.generate();
+    val username = UserName.fromString(FakeGenerator.username());
+    val email = Email.fromString(FakeGenerator.email());
+    val now = Instant.now();
+    insertUserWithFields(userId, username, email, "hashed_password", now, false, true);
+
+    assertThat(userRepository.existsById(userId)).isTrue();
   }
 
   @Test
-  void updateById_updates_fields_and_returns_true() {
-    val created = createUser(FakeGenerator.username(), FakeGenerator.email());
-    val updateData =
+  void existsById_returns_false_when_it_doesnt_exist() {
+    val otherUserId = UserId.generate();
+    assertThat(userRepository.existsById(otherUserId)).isFalse();
+  }
+
+  // endregion
+
+  // region IUserRepository.updateById()
+
+  @Test
+  void updateById_updates_all_fields_and_returns_true_when_updates_all_fields() {
+    val userId = UserId.generate();
+    val username1 = UserName.fromString(FakeGenerator.username());
+    val username2 = UserName.fromString(FakeGenerator.username());
+    val email1 = Email.fromString(FakeGenerator.email());
+    val email2 = Email.fromString(FakeGenerator.email());
+    val now = Instant.now();
+    insertUserWithFields(userId, username1, email1, "hashed_password", now, false, true);
+
+    val dataToUpdate =
         UpdateUserDto.builder()
-            .username(UserName.fromString(FakeGenerator.username()))
-            .email(Email.fromString(FakeGenerator.email()))
+            .username(username2)
+            .email(email2)
             .hashedPassword("updated-hash")
             .isEmailVerified(true)
             .isEnabled(false)
             .build();
 
-    val updated = userRepository.updateById(created.id(), updateData);
+    val updated = userRepository.updateById(userId, dataToUpdate);
 
     assertThat(updated).isTrue();
-    val found = userRepository.findById(created.id()).orElseThrow();
-    assertThat(found.username()).isEqualTo(updateData.getUsername());
-    assertThat(found.email()).isEqualTo(updateData.getEmail());
-    assertThat(found.hashedPassword()).isEqualTo(updateData.getHashedPassword());
-    assertThat(found.isEmailVerified()).isTrue();
-    assertThat(found.isEnabled()).isFalse();
+    val found = userRepository.findById(userId);
+    assertThat(found).isPresent();
+    val userFound = found.get();
+    assertThat(userFound.id()).isEqualTo(userId);
+    assertThat(userFound.username()).isEqualTo(username2);
+    assertThat(userFound.email()).isEqualTo(email2);
+    assertThat(userFound.hashedPassword()).isEqualTo("updated-hash");
+    assertThat(userFound.createdAt())
+        .isNotNull()
+        .isBetween(now.minusSeconds(1), now.plusSeconds(1));
+    assertThat(userFound.updatedAt())
+        .isNotNull()
+        .isBetween(now.minusSeconds(1), now.plusSeconds(1));
+    assertThat(userFound.isEnabled()).isFalse();
+    assertThat(userFound.isEmailVerified()).isTrue();
   }
 
   @Test
-  void updateById_returns_false_when_missing() {
+  void updateById_updates_some_fields_and_returns_true_when_updates_some_fields() {
+    val userId = UserId.generate();
+    val username1 = UserName.fromString(FakeGenerator.username());
+    val username2 = UserName.fromString(FakeGenerator.username());
+    val email = Email.fromString(FakeGenerator.email());
+    val now = Instant.now();
+    insertUserWithFields(userId, username1, email, "hashed_password", now, false, true);
+
+    val dataToUpdate = UpdateUserDto.builder().username(username2).build();
+
+    val updated = userRepository.updateById(userId, dataToUpdate);
+
+    assertThat(updated).isTrue();
+    val found = userRepository.findById(userId);
+    assertThat(found).isPresent();
+    val userFound = found.get();
+    assertThat(userFound.id()).isEqualTo(userId);
+    assertThat(userFound.username()).isEqualTo(username2);
+    assertThat(userFound.email()).isEqualTo(email);
+    assertThat(userFound.hashedPassword()).isEqualTo("hashed_password");
+    assertThat(userFound.createdAt())
+        .isNotNull()
+        .isBetween(now.minusSeconds(1), now.plusSeconds(1));
+    assertThat(userFound.updatedAt())
+        .isNotNull()
+        .isBetween(now.minusSeconds(1), now.plusSeconds(1));
+    assertThat(userFound.isEnabled()).isTrue();
+    assertThat(userFound.isEmailVerified()).isFalse();
+  }
+
+  @Test
+  void updateById_returns_false_when_userid_not_found() {
+    val userId = UserId.generate();
+
     val updateData = UpdateUserDto.builder().email(Email.fromString(FakeGenerator.email())).build();
 
-    val updated =
-        userRepository.updateById(UserId.fromUuid(java.util.UUID.randomUUID()), updateData);
+    val updated = userRepository.updateById(userId, updateData);
 
     assertThat(updated).isFalse();
   }
 
-  @Test
-  void deleteById_deletes_user() {
-    val created = createUser(FakeGenerator.username(), FakeGenerator.email());
+  // endregion
 
-    val deleted = userRepository.deleteById(created.id());
+  // region IUserRepository.deleteById()
+
+  @Test
+  void deleteById_returns_true_when_user_exists() {
+    val userId = UserId.generate();
+    val username = UserName.fromString(FakeGenerator.username());
+    val email = Email.fromString(FakeGenerator.email());
+    val now = Instant.now();
+    insertUserWithFields(userId, username, email, "hashed_password", now, false, true);
+    assertThat(userRepository.findById(userId)).isPresent();
+
+    val deleted = userRepository.deleteById(userId);
 
     assertThat(deleted).isTrue();
-    assertThat(userRepository.findById(created.id()).isEmpty()).isTrue();
+    assertThat(userRepository.findById(userId)).isEmpty();
   }
 
   @Test
-  void deleteById_returns_false_when_missing() {
-    val deleted = userRepository.deleteById(UserId.fromUuid(java.util.UUID.randomUUID()));
+  void deleteById_returns_false_when_user_doesnt_exist() {
+    val userId = UserId.generate();
+
+    val deleted = userRepository.deleteById(userId);
 
     assertThat(deleted).isFalse();
   }
 
-  @Test
-  void findAll_returns_page_sorted_by_created_at_desc() {
-    val now = OffsetDateTime.now(ZoneOffset.UTC);
-    val oldest =
-        insertUserWithFields(
-            FakeGenerator.username(), FakeGenerator.email(), now.minusDays(3), true, true);
-    val middle =
-        insertUserWithFields(
-            FakeGenerator.username(), FakeGenerator.email(), now.minusDays(2), true, true);
-    val newest =
-        insertUserWithFields(
-            FakeGenerator.username(), FakeGenerator.email(), now.minusDays(1), true, true);
+  // endregion
 
-    val page = userRepository.findAll(PageRequest.of(0, 2));
+  // region IUserRepository.getAll()
+
+  @Test
+  void getAll_returns_page_when_requests_first_page_and_default_sort() {
+    val userId1 = UserId.generate();
+    val userId2 = UserId.generate();
+    val userId3 = UserId.generate();
+    val username1 = UserName.fromString(FakeGenerator.username());
+    val username2 = UserName.fromString(FakeGenerator.username());
+    val username3 = UserName.fromString(FakeGenerator.username());
+    val email1 = Email.fromString(FakeGenerator.email());
+    val email2 = Email.fromString(FakeGenerator.email());
+    val email3 = Email.fromString(FakeGenerator.email());
+    val now = Instant.ofEpochSecond(1778755330);
+    insertUserWithFields(userId1, username1, email1, "pass1", now, true, true);
+    insertUserWithFields(userId2, username2, email2, "pass2", now.plusSeconds(1000), true, true);
+    insertUserWithFields(userId3, username3, email3, "pass3", now.plusSeconds(2000), true, true);
+
+    val page = userRepository.getAll(PageRequest.of(0, 2));
 
     assertThat(page.getTotalElements()).isGreaterThanOrEqualTo(3);
-    assertThat(page.getContent().get(0).id()).isEqualTo(newest);
-    assertThat(page.getContent().get(1).id()).isEqualTo(middle);
-    assertThat(page.getContent()).noneMatch(user -> user.id().equals(oldest));
+    assertThat(page.getContent().get(0).id()).isEqualTo(userId3);
+    assertThat(page.getContent().get(1).id()).isEqualTo(userId2);
+    assertThat(page.getContent()).noneMatch(user -> user.id().equals(userId1));
   }
+
+  // endregion
 }

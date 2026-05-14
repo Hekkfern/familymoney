@@ -61,7 +61,7 @@ public class UserService implements IUserService {
 
   @Override
   public Page<UserData> getUsers(final Pageable pageable) {
-    return userRepository.findAll(pageable).map(UserDataMapper::fromDbo);
+    return userRepository.getAll(pageable).map(UserDataMapper::fromDbo);
   }
 
   @Override

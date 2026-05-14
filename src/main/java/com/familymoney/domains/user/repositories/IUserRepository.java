@@ -98,5 +98,5 @@ public interface IUserRepository {
    * @return a {@link Page} of {@link UserEntity} containing the users for the requested page. If no
    *     users exist, the page will be empty.
    */
-  Page<UserEntity> findAll(Pageable pageable);
+  Page<UserEntity> getAll(Pageable pageable);
 }

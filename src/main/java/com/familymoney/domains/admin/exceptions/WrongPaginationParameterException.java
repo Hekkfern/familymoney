@@ -1,6 +1,6 @@
-package com.familymoney.domains.user.exceptions;
+package com.familymoney.domains.admin.exceptions;
 
 import lombok.experimental.StandardException;
 
 @StandardException
-public final class UserNotFoundException extends RuntimeException {}
+public final class WrongPaginationParameterException extends RuntimeException {}

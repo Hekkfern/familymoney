@@ -8,16 +8,18 @@ import com.familymoney.domains.user.types.Email;
 import com.familymoney.domains.user.types.UserId;
 import com.familymoney.domains.user.types.UserName;
 import com.familymoney.generated.tables.Users;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.jooq.DSLContext;
+import org.jooq.Field;
 import org.jooq.impl.DSL;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 @RequiredArgsConstructor
@@ -30,9 +32,19 @@ public class UserRepository implements IUserRepository {
 
     return db.insertInto(Users.USERS)
         .columns(
-            Users.USERS.ID, Users.USERS.USERNAME, Users.USERS.EMAIL, Users.USERS.HASHED_PASSWORD)
+            Users.USERS.ID,
+            Users.USERS.USERNAME,
+            Users.USERS.EMAIL,
+            Users.USERS.HASHED_PASSWORD,
+            Users.USERS.IS_EMAIL_VERIFIED,
+            Users.USERS.IS_ENABLED)
         .values(
-            data.id().value(), data.username().value(), data.email().value(), data.passwordHash())
+            data.id().value(),
+            data.username().value(),
+            data.email().value(),
+            data.passwordHash(),
+            data.isEmailVerified(),
+            data.isEnabled())
         .returning(
             Users.USERS.ID,
             Users.USERS.USERNAME,
@@ -143,15 +155,33 @@ public class UserRepository implements IUserRepository {
 
   @Override
   public boolean deleteById(final UserId id) {
-    return db.deleteFrom(Users.USERS).where(Users.USERS.ID.eq(id.value())).execute() > 0;
+    val rowsAffected = db.deleteFrom(Users.USERS).where(Users.USERS.ID.eq(id.value())).execute();
+    return rowsAffected > 0;
   }
 
-  @Transactional
   @Override
-  public Page<UserEntity> findAll(final Pageable pageable) {
-    val total = db.selectCount().from(Users.USERS).fetchOne(0, Long.class);
-    val safeTotal = total != null ? total : 0L;
-    val data =
+  public Page<UserEntity> getAll(final Pageable pageable) {
+    val totalField = DSL.count().over().as("total_count");
+
+    val orderFields =
+        pageable.getSort().stream()
+            .map(
+                order -> {
+                  Field<?> field = Users.USERS.field(order.getProperty());
+                  if (field == null) {
+                    throw new IllegalArgumentException(
+                        "Unknown sort field: " + order.getProperty());
+                  }
+                  return order.isAscending() ? field.asc() : field.desc();
+                })
+            .toList();
+
+    val effectiveOrder =
+        orderFields.isEmpty()
+            ? List.of(Users.USERS.CREATED_AT.desc(), Users.USERS.USERNAME.asc())
+            : Stream.concat(orderFields.stream(), Stream.of(Users.USERS.USERNAME.asc())).toList();
+
+    val records =
         db.select(
                 Users.USERS.ID,
                 Users.USERS.USERNAME,
@@ -160,13 +190,17 @@ public class UserRepository implements IUserRepository {
                 Users.USERS.CREATED_AT,
                 Users.USERS.UPDATED_AT,
                 Users.USERS.IS_EMAIL_VERIFIED,
-                Users.USERS.IS_ENABLED)
+                Users.USERS.IS_ENABLED,
+                totalField)
             .from(Users.USERS)
-            .orderBy(Users.USERS.CREATED_AT.desc())
+            .orderBy(effectiveOrder)
             .limit(pageable.getPageSize())
             .offset(pageable.getOffset())
-            .fetch()
-            .map(UserJooqMapper::toEntity);
-    return new PageImpl<>(data, pageable, safeTotal);
+            .fetch();
+
+    val total = records.isEmpty() ? 0L : records.getFirst().get("total_count", Long.class);
+    val data = records.map(UserJooqMapper::toEntity);
+
+    return new PageImpl<>(data, pageable, total);
   }
 }

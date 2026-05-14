@@ -7,18 +7,19 @@ import static org.mockito.Mockito.when;
 
 import com.familymoney.config.SecurityConfig;
 import com.familymoney.domains.admin.controllers.UserAdminController;
+import com.familymoney.domains.auth.types.TokenFamily;
 import com.familymoney.domains.user.controllers.dtos.GetUserResponseDto;
 import com.familymoney.domains.user.controllers.mappers.GetUserResponseMapper;
 import com.familymoney.domains.user.controllers.mappers.UpdateUserRequestMapper;
-import com.familymoney.properties.AppProperties;
-import com.familymoney.properties.JwtProperties;
-import com.familymoney.security.JwtUtils;
 import com.familymoney.domains.user.services.IUserService;
 import com.familymoney.domains.user.services.data.UserData;
 import com.familymoney.domains.user.types.Email;
-import com.familymoney.domains.user.types.UserId;
 import com.familymoney.domains.user.types.Role;
+import com.familymoney.domains.user.types.UserId;
 import com.familymoney.domains.user.types.UserName;
+import com.familymoney.properties.AppProperties;
+import com.familymoney.properties.JwtProperties;
+import com.familymoney.security.JwtUtils;
 import com.familymoney.utils.AdminControllerUriFactory;
 import com.familymoney.utils.FakeGenerator;
 import java.time.Instant;
@@ -76,6 +77,7 @@ class UserAdminControllerTest {
 
   @Test
   void UserAdminController_GetUserInfo_Successful() {
+    val family = TokenFamily.generate();
     val username = UserName.fromString(FakeGenerator.username());
     val email = Email.fromString(FakeGenerator.email());
     val userId = UserId.fromUuid(UUID.randomUUID());
@@ -96,7 +98,7 @@ class UserAdminControllerTest {
         client
             .get()
             .uri(AdminControllerUriFactory.getUserPath(userId))
-            .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId))
+            .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId, family))
             .exchange()
             .expectStatus()
             .isOk()
@@ -111,6 +113,7 @@ class UserAdminControllerTest {
 
   @Test
   void UserAdminController_GetUserInfo_NonAdmin() {
+    val family = TokenFamily.generate();
     val username = UserName.fromString(FakeGenerator.username());
     val email = Email.fromString(FakeGenerator.email());
     val userId = UserId.fromUuid(UUID.randomUUID());
@@ -130,7 +133,7 @@ class UserAdminControllerTest {
     client
         .get()
         .uri(AdminControllerUriFactory.getUserPath(userId))
-        .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId))
+        .header("Authorization", "Bearer " + jwtUtils.generateAccessToken(userId, family))
         .exchange()
         .expectStatus()
         .isForbidden();

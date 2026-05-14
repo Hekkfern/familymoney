@@ -14,7 +14,13 @@ import lombok.Builder;
  * @param passwordHash the hashed password to store for the user. Cannot be empty.
  */
 @Builder
-public record CreateUserDto(UserId id, UserName username, Email email, String passwordHash) {
+public record CreateUserDto(
+    UserId id,
+    UserName username,
+    Email email,
+    String passwordHash,
+    boolean isEnabled,
+    boolean isEmailVerified) {
   public CreateUserDto {
     assert !passwordHash.isEmpty() : "Password hash cannot be empty";
   }

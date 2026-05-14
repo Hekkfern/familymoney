@@ -35,8 +35,8 @@ CREATE TABLE users
     hashed_password   VARCHAR(255)             NOT NULL,
     created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    is_email_verified BOOLEAN                  NOT NULL DEFAULT FALSE,
-    is_enabled        BOOLEAN                  NOT NULL DEFAULT TRUE
+    is_email_verified BOOLEAN                  NOT NULL,
+    is_enabled        BOOLEAN                  NOT NULL
 );
 
 SELECT trigger_updated_at('users');

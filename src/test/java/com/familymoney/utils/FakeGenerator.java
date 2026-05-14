@@ -1,6 +1,7 @@
 package com.familymoney.utils;
 
 import com.familymoney.domains.auth.types.EmailVerificationToken;
+import com.familymoney.domains.auth.types.RefreshToken;
 import org.apache.commons.lang3.RandomStringUtils;
 
 /**
@@ -34,9 +35,7 @@ public final class FakeGenerator {
   }
 
   public static String refreshToken() {
-    return random.next(12, UPPER_CHARACTERS)
-        + random.next(10, LOWER_CHARACTERS)
-        + random.next(10, NUMBER_CHARACTERS);
+    return RefreshToken.generate().toString();
   }
 
   public static String emailVerificationToken() {
