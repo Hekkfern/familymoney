@@ -1,9 +1,9 @@
 package com.familymoney.utils;
 
 import java.util.List;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Slice;
 
-public record PageResponse<T>(
+public record SliceResponse<T>(
     List<T> content,
     int page,
     int size,
@@ -12,8 +12,8 @@ public record PageResponse<T>(
     boolean first,
     boolean last) {
 
-  public static <T> PageResponse<T> from(Page<T> page) {
-    return new PageResponse<>(
+  public static <T> SliceResponse<T> from(Slice<T> page) {
+    return new SliceResponse<>(
         page.getContent(),
         page.getNumber(),
         page.getSize(),
