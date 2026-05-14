@@ -223,19 +223,16 @@ public class AuthService implements IAuthService {
     if (userDb.isEmailVerified()) {
       throw new EmailAlreadyVerifiedException("Email is already verified");
     }
-    // check minimum wait time between requests
-    val oldEmailVerificationTokenDb =
-        emailVerificationRepository
-            .findByUserId(userDb.id())
-            .orElseThrow(
-                () ->
-                    new DatabaseExecutionException(
-                        "Could not find current email verification token in the database"));
-    // If the current instant is before the createdAt plus the configured wait time,
-    // the user is requesting a new verification email too soon.
-    if (Instant.now(clock)
-        .isBefore(
-            oldEmailVerificationTokenDb.createdAt().plus(emailVerificationProperties.waitTime()))) {
+    // check minimum wait time between requests. If the current instant is before the createdAt
+    // plus the configured wait time, the user is requesting a new verification email too soon.
+    val oldEmailVerificationTokenDb = emailVerificationRepository.findByUserId(userDb.id());
+    if (oldEmailVerificationTokenDb.isPresent()
+        && Instant.now(clock)
+            .isBefore(
+                oldEmailVerificationTokenDb
+                    .get()
+                    .createdAt()
+                    .plus(emailVerificationProperties.waitTime()))) {
       throw new NewEmailVerificationTooSoonException();
     }
     // Generate and save verification token to database
@@ -281,9 +278,17 @@ public class AuthService implements IAuthService {
       throw new RefreshTokenInvalidException(msg);
     }
     // Invalidate refresh token from the database
-    refreshTokenRepository.deleteByToken(refreshToken);
+    val refreshTokenDeleted = refreshTokenRepository.deleteByToken(refreshToken);
+    if (!refreshTokenDeleted) {
+      throw new DatabaseExecutionException("Could not delete the refresh token in the database");
+    }
     // Invalidate any existing access token
-    tokenFamilyBlacklistRepository.deleteByFamily(refreshTokenDb.family());
+    val accessTokenBlacklisted =
+        tokenFamilyBlacklistRepository.deleteByFamily(refreshTokenDb.family());
+    if (!accessTokenBlacklisted) {
+      throw new DatabaseExecutionException(
+          "Could not blacklist the family of tokens in the database");
+    }
   }
 
   @Override

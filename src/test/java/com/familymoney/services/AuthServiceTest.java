@@ -4,7 +4,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import com.familymoney.domains.auth.exceptions.EmailAlreadyVerifiedException;
 import com.familymoney.domains.auth.exceptions.EmailNotFoundException;
+import com.familymoney.domains.auth.exceptions.NewEmailVerificationTooSoonException;
 import com.familymoney.domains.auth.exceptions.RefreshTokenInvalidException;
 import com.familymoney.domains.auth.exceptions.RefreshTokenNotFoundException;
 import com.familymoney.domains.auth.exceptions.UserAlreadyExistsException;
@@ -12,8 +14,10 @@ import com.familymoney.domains.auth.exceptions.VerificationTokenExpiredException
 import com.familymoney.domains.auth.exceptions.VerificationTokenNotFoundException;
 import com.familymoney.domains.auth.repositories.IEmailVerificationRepository;
 import com.familymoney.domains.auth.repositories.IRefreshTokenRepository;
+import com.familymoney.domains.auth.repositories.ITokenFamilyBlacklistRepository;
 import com.familymoney.domains.auth.repositories.dtos.CreateEmailVerificationDto;
 import com.familymoney.domains.auth.repositories.dtos.CreateRefreshTokenDto;
+import com.familymoney.domains.auth.repositories.dtos.UpdateEmailVerificationTokenDto;
 import com.familymoney.domains.auth.repositories.entitites.EmailVerificationEntity;
 import com.familymoney.domains.auth.repositories.entitites.RefreshTokenEntity;
 import com.familymoney.domains.auth.services.AuthService;
@@ -62,6 +66,7 @@ class AuthServiceTest {
   @Spy private UserPasswordEncoder passwordEncoder;
   @Spy private final Clock clock = Clock.fixed(now, ZoneOffset.UTC);
   @Mock private IEmailVerificationRepository emailVerificationRepository;
+  @Mock private ITokenFamilyBlacklistRepository tokenFamilyBlacklistRepository;
   @Mock private JwtUtils jwtUtils;
   @Mock private IRefreshTokenRepository refreshTokenRepository;
 
@@ -156,6 +161,7 @@ class AuthServiceTest {
                       .userId(UserId.generate())
                       .token(refreshToken)
                       .createdAt(now)
+                      .updatedAt(now)
                       .expiresAt(now.plusSeconds(3600))
                       .family(TokenFamily.generate())
                       .build());
@@ -490,87 +496,90 @@ class AuthServiceTest {
   // region AuthService.resendVerificationEmail()
 
   @Test
-  void resend_verification_email_succeeds() {
+  void resendVerificationEmail_sends_when_last_attempt_was_long_time_ago() {
     val email = Email.fromString(FakeGenerator.email());
-    val userId = UserId.generate();
 
-    when(userRepository.findByEmail(eq(email)))
-        .thenReturn(
-            Optional.of(
-                UserEntity.builder()
-                    .id(userId)
-                    .username(UserName.fromString(FakeGenerator.username()))
-                    .email(email)
-                    .hashedPassword("hashed-password")
-                    .createdAt(now)
-                    .updatedAt(now)
-                    .isEmailVerified(false)
-                    .isEnabled(true)
-                    .build()));
-    when(emailVerificationRepository.create(
-            new CreateEmailVerificationDto(any(), userId, any(), any())))
+    mockUserRepositoryFindByEmail(true, false);
+    when(emailVerificationRepository.findByUserId(any(UserId.class)))
         .thenReturn(
             Optional.of(
                 EmailVerificationEntity.builder()
-                    .id(UUID.randomUUID())
-                    .userId(userId)
+                    .userId(UserId.generate())
                     .token(
                         EmailVerificationToken.fromString(FakeGenerator.emailVerificationToken()))
-                    .createdAt(now)
-                    .expiresAt(now.plusSeconds(3600))
+                    .createdAt(now.minusSeconds(3600))
+                    .updatedAt(now.minusSeconds(3600))
+                    .expiresAt(now.plusSeconds(100))
                     .build()));
+    mockEmailVerificationRepositoryCreate();
 
     assertDoesNotThrow(() -> authService.resendVerificationEmail(email));
 
-    verify(emailVerificationRepository)
-        .create(new CreateEmailVerificationDto(any(), userId, any(), any()));
+    verify(emailVerificationRepository).create(any(CreateEmailVerificationDto.class));
+    verify(emailSenderService)
+        .sendEmailVerificationEmail(
+            any(Email.class), any(UserName.class), any(EmailVerificationToken.class));
   }
 
   @Test
-  void resend_verification_email_for_verified_email_fails() {
+  void resendVerificationEmail_throws_when_last_attempt_was_recently() {
     val email = Email.fromString(FakeGenerator.email());
-    val userId = UserId.generate();
 
-    // NOTE: current AuthService implementation does NOT check isEmailVerified,
-    // so this should not fail and should resend a token.
-    when(userRepository.findByEmail(eq(email)))
-        .thenReturn(
-            Optional.of(
-                UserEntity.builder()
-                    .id(userId)
-                    .username(UserName.fromString(FakeGenerator.username()))
-                    .email(email)
-                    .hashedPassword("hashed-password")
-                    .createdAt(now)
-                    .updatedAt(now)
-                    .isEmailVerified(true)
-                    .isEnabled(true)
-                    .build()));
-    when(emailVerificationRepository.create(
-            new CreateEmailVerificationDto(any(), userId, any(), any())))
-        .thenReturn(
-            Optional.of(
-                EmailVerificationEntity.builder()
-                    .id(UUID.randomUUID())
-                    .userId(userId)
-                    .token(
-                        EmailVerificationToken.fromString(FakeGenerator.emailVerificationToken()))
-                    .createdAt(now)
-                    .expiresAt(now.plusSeconds(3600))
-                    .build()));
+    mockUserRepositoryFindByEmail(true, false);
+    mockEmailVerificationRepositoryCreate();
+    mockEmailVerificationRepositoryCreate();
+    when(emailVerificationRepository.updateByUserId(
+            any(UserId.class), any(UpdateEmailVerificationTokenDto.class)))
+        .thenReturn(true);
 
-    assertDoesNotThrow(() -> authService.resendVerificationEmail(email));
+    assertThrows(
+        NewEmailVerificationTooSoonException.class,
+        () -> authService.resendVerificationEmail(email));
 
-    verify(emailVerificationRepository)
-        .create(new CreateEmailVerificationDto(any(), userId, any(), any()));
+    verify(emailVerificationRepository, never())
+        .updateByUserId(any(UserId.class), any(UpdateEmailVerificationTokenDto.class));
+    verify(emailVerificationRepository, never()).create(any(CreateEmailVerificationDto.class));
+    verify(emailSenderService, never())
+        .sendEmailVerificationEmail(
+            any(Email.class), any(UserName.class), any(EmailVerificationToken.class));
   }
 
   @Test
-  void resend_verification_email_for_non_existing_email_fails() {
+  void resendVerificationEmail_throws_when_updating_email_verification_token_fails() {
     val email = Email.fromString(FakeGenerator.email());
-    when(userRepository.findByEmail(eq(email))).thenReturn(Optional.empty());
+
+    mockUserRepositoryFindByEmail(true, false);
+    mockEmailVerificationRepositoryCreate();
+    mockEmailVerificationRepositoryCreate();
+    when(emailVerificationRepository.updateByUserId(
+            any(UserId.class), any(UpdateEmailVerificationTokenDto.class)))
+        .thenReturn(false);
+
+    assertThrows(
+        NewEmailVerificationTooSoonException.class,
+        () -> authService.resendVerificationEmail(email));
+
+    verify(emailVerificationRepository, never()).create(any(CreateEmailVerificationDto.class));
+    verify(emailSenderService, never())
+        .sendEmailVerificationEmail(
+            any(Email.class), any(UserName.class), any(EmailVerificationToken.class));
+  }
+
+  @Test
+  void resendVerificationEmail_throws_when_no_user_with_that_email_exists() {
+    val email = Email.fromString(FakeGenerator.email());
+    when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
 
     assertThrows(EmailNotFoundException.class, () -> authService.resendVerificationEmail(email));
+  }
+
+  @Test
+  void resendVerificationEmail_throws_when_user_email_is_already_verified() {
+    val email = Email.fromString(FakeGenerator.email());
+    mockUserRepositoryFindByEmail(true, true);
+
+    assertThrows(
+        EmailAlreadyVerifiedException.class, () -> authService.resendVerificationEmail(email));
   }
 
   // endregion
@@ -590,112 +599,82 @@ class AuthServiceTest {
   // region AuthService.logoutUser()
 
   @Test
-  void logout_user_succeeds() {
-    val refreshToken = RefreshToken.fromString(FakeGenerator.refreshToken());
-    val userId = UserId.generate();
-    val family = UUID.randomUUID();
+  void logoutUser_succeeds_when_token_is_valid() {
+    val refreshToken = RefreshToken.generate();
 
-    when(refreshTokenRepository.findByToken(refreshToken))
-        .thenReturn(
-            Optional.of(
-                RefreshTokenEntity.builder()
-                    .id(UUID.randomUUID())
-                    .userId(userId)
-                    .token(refreshToken)
-                    .createdAt(now)
-                    .expiresAt(now.plusSeconds(3600))
-                    .isUsed(false)
-                    .usedAt(Optional.empty())
-                    .family(family)
-                    .build()));
-    when(refreshTokenRepository.updateByFamily(eq(family), any())).thenReturn(true);
+    mockRefreshTokenFindByToken();
+    when(refreshTokenRepository.deleteByToken(any(RefreshToken.class))).thenReturn(true);
+    when(tokenFamilyBlacklistRepository.deleteByFamily(any(TokenFamily.class))).thenReturn(true);
 
     assertDoesNotThrow(() -> authService.logoutUser(refreshToken));
 
-    verify(refreshTokenRepository).updateByFamily(eq(family), any());
+    verify(refreshTokenRepository).deleteByToken(any(RefreshToken.class));
+    verify(tokenFamilyBlacklistRepository).deleteByFamily(any(TokenFamily.class));
   }
 
   @Test
-  void logout_user_with_non_existing_refresh_token_fails() {
+  void logoutUser_throws_when_refresh_token_doesnt_exist() {
     val refreshToken = RefreshToken.fromString(FakeGenerator.refreshToken());
 
     when(refreshTokenRepository.findByToken(refreshToken)).thenReturn(Optional.empty());
 
     assertThrows(RefreshTokenNotFoundException.class, () -> authService.logoutUser(refreshToken));
+
+    verify(refreshTokenRepository, never()).deleteByToken(any(RefreshToken.class));
+    verify(tokenFamilyBlacklistRepository, never()).deleteByFamily(any(TokenFamily.class));
   }
 
   @Test
-  void logout_user_with_already_used_refresh_token_fails() {
+  void logoutUser_throws_when_refresh_token_is_expired() {
     val refreshToken = RefreshToken.fromString(FakeGenerator.refreshToken());
-    val family = UUID.randomUUID();
 
-    when(refreshTokenRepository.findByToken(eq(refreshToken)))
-        .thenReturn(
-            Optional.of(
-                RefreshTokenEntity.builder()
-                    .id(UUID.randomUUID())
-                    .userId(UserId.generate())
-                    .token(refreshToken)
-                    .createdAt(now)
-                    .expiresAt(now.plusSeconds(3600))
-                    .isUsed(true)
-                    .usedAt(Optional.of(now.minusSeconds(10)))
-                    .family(family)
-                    .build()));
+    when(refreshTokenRepository.findByToken(any(RefreshToken.class)))
+        .thenAnswer(
+            invocation -> {
+              RefreshToken rt = invocation.getArgument(0, RefreshToken.class);
+              return Optional.of(
+                  RefreshTokenEntity.builder()
+                      .id(UUID.randomUUID())
+                      .userId(UserId.generate())
+                      .token(rt)
+                      .createdAt(now.minusSeconds(7200))
+                      .updatedAt(now.minusSeconds(7200))
+                      .expiresAt(now.minusSeconds(1))
+                      .family(TokenFamily.generate())
+                      .build());
+            });
 
     assertThrows(RefreshTokenInvalidException.class, () -> authService.logoutUser(refreshToken));
 
-    verify(refreshTokenRepository, never()).updateByFamily(eq(family), any());
+    verify(refreshTokenRepository, never()).deleteByToken(any(RefreshToken.class));
+    verify(tokenFamilyBlacklistRepository, never()).deleteByFamily(any(TokenFamily.class));
   }
 
   @Test
-  void logout_user_with_expired_refresh_token_fails() {
+  void logoutUser_throws_when_deleting_refresh_token_fails() {
     val refreshToken = RefreshToken.fromString(FakeGenerator.refreshToken());
-    val family = UUID.randomUUID();
 
-    when(refreshTokenRepository.findByToken(refreshToken))
-        .thenReturn(
-            Optional.of(
-                RefreshTokenEntity.builder()
-                    .id(UUID.randomUUID())
-                    .userId(UserId.generate())
-                    .token(refreshToken)
-                    .createdAt(now.minusSeconds(7200))
-                    .expiresAt(now.minusSeconds(1))
-                    .isUsed(false)
-                    .usedAt(Optional.empty())
-                    .family(family)
-                    .build()));
+    mockRefreshTokenFindByToken();
+    when(refreshTokenRepository.deleteByToken(any(RefreshToken.class))).thenReturn(false);
 
-    assertThrows(RefreshTokenInvalidException.class, () -> authService.logoutUser(refreshToken));
+    assertThrows(DatabaseExecutionException.class, () -> authService.logoutUser(refreshToken));
 
-    verify(refreshTokenRepository, never()).updateByFamily(eq(family), any());
+    verify(refreshTokenRepository, never()).deleteByToken(any(RefreshToken.class));
+    verify(tokenFamilyBlacklistRepository, never()).deleteByFamily(any(TokenFamily.class));
   }
 
   @Test
-  void logout_user_but_refresh_token_repository_fails() {
+  void logoutUser_throws_when_blacklisting_family_token_fails() {
     val refreshToken = RefreshToken.fromString(FakeGenerator.refreshToken());
-    val family = UUID.randomUUID();
 
-    when(refreshTokenRepository.findByToken(refreshToken))
-        .thenReturn(
-            Optional.of(
-                RefreshTokenEntity.builder()
-                    .id(UUID.randomUUID())
-                    .userId(UserId.generate())
-                    .token(refreshToken)
-                    .createdAt(now)
-                    .expiresAt(now.plusSeconds(3600))
-                    .isUsed(false)
-                    .usedAt(Optional.empty())
-                    .family(family)
-                    .build()));
-    when(refreshTokenRepository.updateByFamily(eq(family), any())).thenReturn(false);
+    mockRefreshTokenFindByToken();
+    when(refreshTokenRepository.deleteByToken(any(RefreshToken.class))).thenReturn(true);
+    when(tokenFamilyBlacklistRepository.deleteByFamily(any(TokenFamily.class))).thenReturn(false);
 
-    // AuthService doesn't check the boolean result, so the call should not throw.
-    assertDoesNotThrow(() -> authService.logoutUser(refreshToken));
+    assertThrows(DatabaseExecutionException.class, () -> authService.logoutUser(refreshToken));
 
-    verify(refreshTokenRepository).updateByFamily(eq(family), any());
+    verify(refreshTokenRepository, never()).deleteByToken(any(RefreshToken.class));
+    verify(tokenFamilyBlacklistRepository, never()).deleteByFamily(any(TokenFamily.class));
   }
 
   // endregion
