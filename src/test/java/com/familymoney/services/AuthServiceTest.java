@@ -41,7 +41,7 @@ import com.familymoney.properties.EmailVerificationProperties;
 import com.familymoney.properties.JwtProperties;
 import com.familymoney.security.JwtUtils;
 import com.familymoney.security.UserPasswordEncoder;
-import com.familymoney.utils.FakeGenerator;
+import com.familymoney.testutils.FakeGenerator;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;

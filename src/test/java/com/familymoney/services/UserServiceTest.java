@@ -11,7 +11,7 @@ import com.familymoney.domains.user.services.UserService;
 import com.familymoney.domains.user.types.Email;
 import com.familymoney.domains.user.types.UserId;
 import com.familymoney.domains.user.types.UserName;
-import com.familymoney.utils.FakeGenerator;
+import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;

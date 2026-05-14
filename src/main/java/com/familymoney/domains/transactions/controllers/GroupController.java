@@ -21,7 +21,7 @@ import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import com.familymoney.domains.transactions.types.GroupName;
 import com.familymoney.domains.user.types.UserId;
-import com.familymoney.utils.AuthenticationUtils;
+import com.familymoney.testutils.AuthenticationUtils;
 import java.util.UUID;
 import javax.money.Monetary;
 import lombok.RequiredArgsConstructor;

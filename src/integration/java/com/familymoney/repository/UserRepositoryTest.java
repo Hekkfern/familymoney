@@ -1,6 +1,6 @@
 package com.familymoney.repository;
 
-import static com.familymoney.utils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
+import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -11,11 +11,9 @@ import com.familymoney.domains.user.repositories.dtos.UpdateUserDto;
 import com.familymoney.domains.user.types.Email;
 import com.familymoney.domains.user.types.UserId;
 import com.familymoney.domains.user.types.UserName;
-import com.familymoney.generated.tables.Users;
-import com.familymoney.utils.FakeGenerator;
+import com.familymoney.testutils.DatabaseCrud;
+import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import lombok.val;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,42 +44,11 @@ class UserRepositoryTest {
     this.userRepository = new UserRepository(dslContext);
   }
 
-  private void insertUserWithFields(
-      final UserId userId,
-      final UserName username,
-      final Email email,
-      final String hashedPassword,
-      final Instant createdAt,
-      final boolean isEmailVerified,
-      final boolean isEnabled) {
-    val createdAtDateTime = OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC);
-    dslContext
-        .insertInto(Users.USERS)
-        .columns(
-            Users.USERS.ID,
-            Users.USERS.USERNAME,
-            Users.USERS.EMAIL,
-            Users.USERS.HASHED_PASSWORD,
-            Users.USERS.CREATED_AT,
-            Users.USERS.UPDATED_AT,
-            Users.USERS.IS_EMAIL_VERIFIED,
-            Users.USERS.IS_ENABLED)
-        .values(
-            userId.value(),
-            username.value(),
-            email.value(),
-            hashedPassword,
-            createdAtDateTime,
-            createdAtDateTime,
-            isEmailVerified,
-            isEnabled)
-        .execute();
-  }
-
   // region IUserRepository.create()
 
   @Test
   void create_persists_user_record() {
+    val userId = UserId.generate();
     val username = UserName.fromString(FakeGenerator.username());
     val email = Email.fromString(FakeGenerator.email());
     val passwordHash = "hashed-password";
@@ -89,11 +56,12 @@ class UserRepositoryTest {
     val now = Instant.now();
 
     val userCreated =
-        userRepository.create(new CreateUserDto(any(), username, email, passwordHash, true, false));
+        userRepository.create(
+            new CreateUserDto(userId, username, email, passwordHash, true, false));
 
     assertThat(userCreated).isPresent();
     val user = userCreated.get();
-    assertThat(user.id()).isNotNull();
+    assertThat(user.id()).isEqualTo(userId);
     assertThat(user.username()).isEqualTo(username);
     assertThat(user.email()).isEqualTo(email);
     assertThat(user.hashedPassword()).isEqualTo(passwordHash);
@@ -145,7 +113,8 @@ class UserRepositoryTest {
     val username = UserName.fromString(FakeGenerator.username());
     val email = Email.fromString(FakeGenerator.email());
     val now = Instant.now();
-    insertUserWithFields(userId, username, email, "hashed_password", now, false, true);
+    DatabaseCrud.insertUser(
+        dslContext, userId, username, email, "hashed_password", now, false, true);
 
     val found = userRepository.findById(userId);
 
@@ -154,7 +123,7 @@ class UserRepositoryTest {
     assertThat(userFound.id()).isEqualTo(userId);
     assertThat(userFound.username()).isEqualTo(username);
     assertThat(userFound.email()).isEqualTo(email);
-    assertThat(userFound.hashedPassword()).isEqualTo("updated-hash");
+    assertThat(userFound.hashedPassword()).isEqualTo("hashed_password");
     assertThat(userFound.createdAt())
         .isNotNull()
         .isBetween(now.minusSeconds(1), now.plusSeconds(1));
@@ -184,7 +153,8 @@ class UserRepositoryTest {
     val username = UserName.fromString(FakeGenerator.username());
     val email = Email.fromString(FakeGenerator.email());
     val now = Instant.now();
-    insertUserWithFields(userId, username, email, "hashed_password", now, false, true);
+    DatabaseCrud.insertUser(
+        dslContext, userId, username, email, "hashed_password", now, false, true);
 
     val found = userRepository.findByEmail(email);
 
@@ -193,7 +163,7 @@ class UserRepositoryTest {
     assertThat(userFound.id()).isEqualTo(userId);
     assertThat(userFound.username()).isEqualTo(username);
     assertThat(userFound.email()).isEqualTo(email);
-    assertThat(userFound.hashedPassword()).isEqualTo("updated-hash");
+    assertThat(userFound.hashedPassword()).isEqualTo("hashed_password");
     assertThat(userFound.createdAt())
         .isNotNull()
         .isBetween(now.minusSeconds(1), now.plusSeconds(1));
@@ -223,7 +193,8 @@ class UserRepositoryTest {
     val username = UserName.fromString(FakeGenerator.username());
     val email = Email.fromString(FakeGenerator.email());
     val now = Instant.now();
-    insertUserWithFields(userId, username, email, "hashed_password", now, false, true);
+    DatabaseCrud.insertUser(
+        dslContext, userId, username, email, "hashed_password", now, false, true);
 
     val found = userRepository.findByUsername(username);
 
@@ -232,7 +203,7 @@ class UserRepositoryTest {
     assertThat(userFound.id()).isEqualTo(userId);
     assertThat(userFound.username()).isEqualTo(username);
     assertThat(userFound.email()).isEqualTo(email);
-    assertThat(userFound.hashedPassword()).isEqualTo("updated-hash");
+    assertThat(userFound.hashedPassword()).isEqualTo("hashed_password");
     assertThat(userFound.createdAt())
         .isNotNull()
         .isBetween(now.minusSeconds(1), now.plusSeconds(1));
@@ -262,7 +233,8 @@ class UserRepositoryTest {
     val username = UserName.fromString(FakeGenerator.username());
     val email = Email.fromString(FakeGenerator.email());
     val now = Instant.now();
-    insertUserWithFields(userId, username, email, "hashed_password", now, false, true);
+    DatabaseCrud.insertUser(
+        dslContext, userId, username, email, "hashed_password", now, false, true);
 
     assertThat(
             userRepository.existsByEmailOrUsername(
@@ -280,7 +252,8 @@ class UserRepositoryTest {
     val username = UserName.fromString(FakeGenerator.username());
     val email = Email.fromString(FakeGenerator.email());
     val now = Instant.now();
-    insertUserWithFields(userId, username, email, "hashed_password", now, false, true);
+    DatabaseCrud.insertUser(
+        dslContext, userId, username, email, "hashed_password", now, false, true);
 
     assertThat(userRepository.existsByEmailOrUsername(email, username)).isTrue();
   }
@@ -304,7 +277,8 @@ class UserRepositoryTest {
     val username = UserName.fromString(FakeGenerator.username());
     val email = Email.fromString(FakeGenerator.email());
     val now = Instant.now();
-    insertUserWithFields(userId, username, email, "hashed_password", now, false, true);
+    DatabaseCrud.insertUser(
+        dslContext, userId, username, email, "hashed_password", now, false, true);
 
     assertThat(userRepository.existsById(userId)).isTrue();
   }
@@ -327,7 +301,8 @@ class UserRepositoryTest {
     val email1 = Email.fromString(FakeGenerator.email());
     val email2 = Email.fromString(FakeGenerator.email());
     val now = Instant.now();
-    insertUserWithFields(userId, username1, email1, "hashed_password", now, false, true);
+    DatabaseCrud.insertUser(
+        dslContext, userId, username1, email1, "hashed_password", now, false, true);
 
     val dataToUpdate =
         UpdateUserDto.builder()
@@ -365,7 +340,8 @@ class UserRepositoryTest {
     val username2 = UserName.fromString(FakeGenerator.username());
     val email = Email.fromString(FakeGenerator.email());
     val now = Instant.now();
-    insertUserWithFields(userId, username1, email, "hashed_password", now, false, true);
+    DatabaseCrud.insertUser(
+        dslContext, userId, username1, email, "hashed_password", now, false, true);
 
     val dataToUpdate = UpdateUserDto.builder().username(username2).build();
 
@@ -410,7 +386,8 @@ class UserRepositoryTest {
     val username = UserName.fromString(FakeGenerator.username());
     val email = Email.fromString(FakeGenerator.email());
     val now = Instant.now();
-    insertUserWithFields(userId, username, email, "hashed_password", now, false, true);
+    DatabaseCrud.insertUser(
+        dslContext, userId, username, email, "hashed_password", now, false, true);
     assertThat(userRepository.findById(userId)).isPresent();
 
     val deleted = userRepository.deleteById(userId);
@@ -444,9 +421,11 @@ class UserRepositoryTest {
     val email2 = Email.fromString(FakeGenerator.email());
     val email3 = Email.fromString(FakeGenerator.email());
     val now = Instant.ofEpochSecond(1778755330);
-    insertUserWithFields(userId1, username1, email1, "pass1", now, true, true);
-    insertUserWithFields(userId2, username2, email2, "pass2", now.plusSeconds(1000), true, true);
-    insertUserWithFields(userId3, username3, email3, "pass3", now.plusSeconds(2000), true, true);
+    DatabaseCrud.insertUser(dslContext, userId1, username1, email1, "pass1", now, true, true);
+    DatabaseCrud.insertUser(
+        dslContext, userId2, username2, email2, "pass2", now.plusSeconds(1000), true, true);
+    DatabaseCrud.insertUser(
+        dslContext, userId3, username3, email3, "pass3", now.plusSeconds(2000), true, true);
 
     val page = userRepository.getAll(PageRequest.of(0, 2));
 

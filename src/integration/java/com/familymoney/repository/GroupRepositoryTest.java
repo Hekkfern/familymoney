@@ -1,6 +1,6 @@
 package com.familymoney.repository;
 
-import static com.familymoney.utils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
+import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -13,7 +13,7 @@ import com.familymoney.domains.transactions.repositories.GroupRepository;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupName;
 import com.familymoney.domains.user.types.UserId;
-import com.familymoney.utils.FakeGenerator;
+import com.familymoney.testutils.FakeGenerator;
 import java.util.UUID;
 import javax.money.Monetary;
 import lombok.val;

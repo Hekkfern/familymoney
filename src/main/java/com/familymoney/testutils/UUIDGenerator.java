@@ -1,4 +1,4 @@
-package com.familymoney.utils;
+package com.familymoney.testutils;
 
 import com.github.f4b6a3.uuid.alt.GUID;
 import java.util.UUID;

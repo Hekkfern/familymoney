@@ -9,7 +9,7 @@ import com.familymoney.domains.user.exceptions.UserNotFoundException;
 import com.familymoney.domains.user.services.IUserService;
 import com.familymoney.domains.user.types.Role;
 import com.familymoney.domains.user.types.UserId;
-import com.familymoney.utils.PageResponse;
+import com.familymoney.testutils.PageResponse;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.val;

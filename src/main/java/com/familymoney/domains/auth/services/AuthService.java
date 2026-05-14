@@ -35,7 +35,7 @@ import com.familymoney.properties.EmailVerificationProperties;
 import com.familymoney.properties.JwtProperties;
 import com.familymoney.security.JwtUtils;
 import com.familymoney.security.UserPasswordEncoder;
-import com.familymoney.utils.UUIDGenerator;
+import com.familymoney.testutils.UUIDGenerator;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.NoSuchElementException;

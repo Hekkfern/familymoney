@@ -1,0 +1,117 @@
+package com.familymoney.testutils;
+
+import com.familymoney.domains.auth.types.EmailVerificationToken;
+import com.familymoney.domains.transactions.types.GroupId;
+import com.familymoney.domains.transactions.types.GroupInvitationToken;
+import com.familymoney.domains.user.types.Email;
+import com.familymoney.domains.user.types.UserId;
+import com.familymoney.domains.user.types.UserName;
+import com.familymoney.generated.tables.EmailVerificationTokens;
+import com.familymoney.generated.tables.GroupInvitations;
+import com.familymoney.generated.tables.Groups;
+import com.familymoney.generated.tables.Users;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.UUID;
+import lombok.val;
+import org.jooq.DSLContext;
+
+public class DatabaseCrud {
+
+  public static void insertUser(
+      DSLContext dslContext,
+      final UserId userId,
+      final UserName username,
+      final Email email,
+      final String hashedPassword,
+      final Instant createdAt,
+      final boolean isEmailVerified,
+      final boolean isEnabled) {
+    val createdAtDateTime = OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC);
+    dslContext
+        .insertInto(Users.USERS)
+        .columns(
+            Users.USERS.ID,
+            Users.USERS.USERNAME,
+            Users.USERS.EMAIL,
+            Users.USERS.HASHED_PASSWORD,
+            Users.USERS.CREATED_AT,
+            Users.USERS.UPDATED_AT,
+            Users.USERS.IS_EMAIL_VERIFIED,
+            Users.USERS.IS_ENABLED)
+        .values(
+            userId.value(),
+            username.value(),
+            email.value(),
+            hashedPassword,
+            createdAtDateTime,
+            createdAtDateTime,
+            isEmailVerified,
+            isEnabled)
+        .execute();
+  }
+
+  public static void insertEmailVerificationToken(
+      DSLContext dslContext,
+      UserId userId,
+      EmailVerificationToken token,
+      Instant createdAt,
+      Instant expiresAt) {
+    val createdAtDateTime = OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC);
+    val expiresAtDateTime = OffsetDateTime.ofInstant(expiresAt, ZoneOffset.UTC);
+    dslContext
+        .insertInto(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS)
+        .columns(
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.USER_ID,
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN,
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.EXPIRES_AT,
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.CREATED_AT,
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.UPDATED_AT)
+        .values(
+            userId.value(), token.value(), expiresAtDateTime, createdAtDateTime, createdAtDateTime)
+        .execute();
+  }
+
+  public static void insertGroup(
+      DSLContext dslContext,
+      final UUID id,
+      final String name,
+      final String description,
+      final String currencyCode,
+      final Instant createdAt) {
+    val createdAtDateTime = OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC);
+    dslContext
+        .insertInto(Groups.GROUPS)
+        .columns(
+            Groups.GROUPS.ID,
+            Groups.GROUPS.NAME,
+            Groups.GROUPS.DESCRIPTION,
+            Groups.GROUPS.CURRENCY_CODE,
+            Groups.GROUPS.CREATED_AT,
+            Groups.GROUPS.UPDATED_AT)
+        .values(id, name, description, currencyCode, createdAtDateTime, createdAtDateTime)
+        .execute();
+  }
+
+  public static void insertGroupInvitation(
+      DSLContext dslContext,
+      final UUID id,
+      final GroupId groupId,
+      final GroupInvitationToken token,
+      final Instant createdAt,
+      final Instant expiresAt) {
+    val createdAtDateTime = OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC);
+    val expiresAtDateTime = OffsetDateTime.ofInstant(expiresAt, ZoneOffset.UTC);
+    dslContext
+        .insertInto(GroupInvitations.GROUP_INVITATIONS)
+        .columns(
+            GroupInvitations.GROUP_INVITATIONS.ID,
+            GroupInvitations.GROUP_INVITATIONS.GROUP_ID,
+            GroupInvitations.GROUP_INVITATIONS.TOKEN,
+            GroupInvitations.GROUP_INVITATIONS.CREATED_AT,
+            GroupInvitations.GROUP_INVITATIONS.EXPIRES_AT)
+        .values(id, groupId.value(), token.value(), createdAtDateTime, expiresAtDateTime)
+        .execute();
+  }
+}

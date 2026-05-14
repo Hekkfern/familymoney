@@ -1,6 +1,6 @@
 package com.familymoney.domains.user.types;
 
-import com.familymoney.utils.UUIDGenerator;
+import com.familymoney.testutils.UUIDGenerator;
 import java.util.UUID;
 
 public record UserId(UUID value) {

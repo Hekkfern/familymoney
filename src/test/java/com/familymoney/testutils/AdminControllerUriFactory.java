@@ -1,4 +1,4 @@
-package com.familymoney.utils;
+package com.familymoney.testutils;
 
 import com.familymoney.domains.user.types.UserId;
 

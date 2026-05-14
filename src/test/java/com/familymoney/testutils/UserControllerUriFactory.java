@@ -1,4 +1,4 @@
-package com.familymoney.utils;
+package com.familymoney.testutils;
 
 public class UserControllerUriFactory {
 

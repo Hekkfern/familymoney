@@ -1,6 +1,6 @@
 package com.familymoney.domains.transactions.types;
 
-import com.familymoney.utils.UUIDGenerator;
+import com.familymoney.testutils.UUIDGenerator;
 import java.util.UUID;
 
 public record GroupId(UUID value) {

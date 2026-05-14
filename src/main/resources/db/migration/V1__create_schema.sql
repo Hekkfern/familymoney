@@ -188,7 +188,7 @@ CREATE INDEX idx_transactions_group_id ON transactions (group_id);
 CREATE INDEX idx_transactions_from_user_id ON transactions (from_user_id);
 CREATE INDEX idx_transactions_to_user_id ON transactions (to_user_id);
 
--- ******************* INVITATIONS *******************
+-- ******************* GROUP INVITATIONS *******************
 
 CREATE TABLE group_invitations
 (

@@ -11,7 +11,7 @@ import com.familymoney.domains.auth.services.EmailSenderService;
 import com.familymoney.domains.user.types.Email;
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.user.types.UserName;
-import com.familymoney.utils.FakeGenerator;
+import com.familymoney.testutils.FakeGenerator;
 import jakarta.mail.Message;
 import jakarta.mail.internet.MimeMessage;
 import lombok.val;

@@ -1,6 +1,6 @@
 package com.familymoney.domains.transactions.types;
 
-import com.familymoney.utils.RandomUtil;
+import com.familymoney.testutils.RandomUtil;
 
 public record GroupInvitationToken(String value) {
 

@@ -1,4 +1,4 @@
 @NullMarked
-package com.familymoney.utils;
+package com.familymoney.testutils;
 
 import org.jspecify.annotations.NullMarked;

@@ -1,6 +1,6 @@
 package com.familymoney.repository;
 
-import static com.familymoney.utils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
+import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -8,7 +8,7 @@ import com.familymoney.generated.tables.Users;
 import com.familymoney.domains.user.repositories.RoleRepository;
 import com.familymoney.domains.user.types.Role;
 import com.familymoney.domains.user.types.UserId;
-import com.familymoney.utils.FakeGenerator;
+import com.familymoney.testutils.FakeGenerator;
 import lombok.val;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;

@@ -9,7 +9,7 @@ import com.familymoney.domains.transactions.services.ITransactionGroupService;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.TransactionId;
 import com.familymoney.domains.user.types.UserId;
-import com.familymoney.utils.AuthenticationUtils;
+import com.familymoney.testutils.AuthenticationUtils;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.val;

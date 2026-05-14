@@ -1,6 +1,6 @@
 package com.familymoney.domains.auth.types;
 
-import com.familymoney.utils.RandomUtil;
+import com.familymoney.testutils.RandomUtil;
 
 public record RefreshToken(String value) {
 

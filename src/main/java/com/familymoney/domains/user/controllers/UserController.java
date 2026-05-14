@@ -5,7 +5,7 @@ import com.familymoney.domains.user.controllers.dtos.UpdateUserRequestDto;
 import com.familymoney.domains.user.controllers.mappers.GetMyUserResponseMapper;
 import com.familymoney.domains.user.controllers.mappers.UpdateUserRequestMapper;
 import com.familymoney.domains.user.services.IUserService;
-import com.familymoney.utils.AuthenticationUtils;
+import com.familymoney.testutils.AuthenticationUtils;
 import java.util.NoSuchElementException;
 import lombok.RequiredArgsConstructor;
 import lombok.val;

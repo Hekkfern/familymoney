@@ -1,16 +1,15 @@
 package com.familymoney.repository;
 
-import static com.familymoney.utils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
+import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 
-import com.familymoney.generated.tables.Users;
-import com.familymoney.domains.auth.repositories.dtos.CreatePasswordResetDto;
 import com.familymoney.domains.auth.repositories.PasswordResetRepository;
+import com.familymoney.domains.auth.repositories.dtos.CreatePasswordResetDto;
 import com.familymoney.domains.auth.types.PasswordResetToken;
 import com.familymoney.domains.user.types.UserId;
-import com.familymoney.utils.FakeGenerator;
+import com.familymoney.generated.tables.Users;
+import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.val;
@@ -60,11 +59,10 @@ class PasswordResetRepositoryTest {
     val expiresAt = Instant.now().plusSeconds(3600);
 
     val created =
-        passwordResetRepository.create(new CreatePasswordResetDto(any(), userId, token, expiresAt));
+        passwordResetRepository.create(new CreatePasswordResetDto(userId, token, expiresAt));
 
     assertThat(created).isPresent();
     val dbo = created.get();
-    assertThat(dbo.id()).isNotNull();
     assertThat(dbo.userId()).isEqualTo(userId);
     assertThat(dbo.token()).isEqualTo(token);
     assertThat(dbo.expiresAt()).isEqualTo(expiresAt);
@@ -78,7 +76,6 @@ class PasswordResetRepositoryTest {
             () ->
                 passwordResetRepository.create(
                     new CreatePasswordResetDto(
-                        any(),
                         missingUserId,
                         PasswordResetToken.generate(),
                         Instant.now().plusSeconds(300))))
@@ -91,13 +88,12 @@ class PasswordResetRepositoryTest {
     val token = PasswordResetToken.generate();
 
     passwordResetRepository.create(
-        new CreatePasswordResetDto(any(), userId, token, Instant.now().plusSeconds(300)));
+        new CreatePasswordResetDto(userId, token, Instant.now().plusSeconds(300)));
 
     assertThatThrownBy(
             () ->
                 passwordResetRepository.create(
-                    new CreatePasswordResetDto(
-                        any(), userId, token, Instant.now().plusSeconds(600))))
+                    new CreatePasswordResetDto(userId, token, Instant.now().plusSeconds(600))))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 
@@ -106,7 +102,7 @@ class PasswordResetRepositoryTest {
     val userId = insertUser(FakeGenerator.username(), FakeGenerator.email());
     val token = PasswordResetToken.generate();
     passwordResetRepository.create(
-        new CreatePasswordResetDto(any(), userId, token, Instant.now().plusSeconds(300)));
+        new CreatePasswordResetDto(userId, token, Instant.now().plusSeconds(300)));
 
     val found = passwordResetRepository.findByToken(token);
 
@@ -127,7 +123,7 @@ class PasswordResetRepositoryTest {
     val userId = insertUser(FakeGenerator.username(), FakeGenerator.email());
     val token = PasswordResetToken.generate();
     passwordResetRepository.create(
-        new CreatePasswordResetDto(any(), userId, token, Instant.now().plusSeconds(300)));
+        new CreatePasswordResetDto(userId, token, Instant.now().plusSeconds(300)));
 
     val deleted = passwordResetRepository.deleteByUserId(userId);
 
