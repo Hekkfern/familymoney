@@ -23,12 +23,14 @@ import org.springframework.boot.jooq.test.autoconfigure.JooqTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @JooqTest
 @Testcontainers
+@ActiveProfiles("test")
 class UserRepositoryTest {
 
   @Container @ServiceConnection
@@ -491,10 +493,10 @@ class UserRepositoryTest {
   }
 
   @Test
-  void getAll_throws_when_requests_page_100_with_size_2_and_default_sort() {
+  void getAll_returns_empty_page_when_offset_exceeds_total() {
     val page = userRepository.getAll(PageRequest.of(100, 2));
 
-    assertThat(page.getNumberOfElements()).isEqualTo(0);
+    assertThat(page.getNumberOfElements()).isZero();
     assertThat(page.getTotalElements()).isZero();
   }
 
