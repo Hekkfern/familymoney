@@ -204,7 +204,12 @@ public class AuthService implements IAuthService {
           "Could not set the is_email_verified column of the user in the database");
     }
     // Delete all the verification tokens assigned to this user from the database
-    emailVerificationRepository.deleteByUserId(emailVerificationTokenDb.userId());
+    val tokenDeleted =
+        emailVerificationRepository.deleteByUserId(emailVerificationTokenDb.userId());
+    if (!tokenDeleted) {
+      throw new DatabaseExecutionException(
+          "Could not delete the email verification token in the database");
+    }
   }
 
   @Override
