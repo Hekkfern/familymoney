@@ -11,7 +11,7 @@ import com.familymoney.domains.auth.exceptions.VerificationTokenNotFoundExceptio
 import com.familymoney.domains.auth.repositories.IEmailVerificationRepository;
 import com.familymoney.domains.auth.repositories.IPasswordResetRepository;
 import com.familymoney.domains.auth.repositories.IRefreshTokenRepository;
-import com.familymoney.domains.auth.repositories.TokenFamilyBlacklistRepository;
+import com.familymoney.domains.auth.repositories.ITokenFamilyBlacklistRepository;
 import com.familymoney.domains.auth.repositories.dtos.CreateEmailVerificationDto;
 import com.familymoney.domains.auth.repositories.dtos.CreateRefreshTokenDto;
 import com.familymoney.domains.auth.repositories.dtos.UpdateEmailVerificationTokenDto;
@@ -62,7 +62,7 @@ public class AuthService implements IAuthService {
   private final Clock clock;
   private final JwtProperties jwtProperties;
   private final EmailVerificationProperties emailVerificationProperties;
-  private final TokenFamilyBlacklistRepository tokenFamilyBlacklistRepository;
+  private final ITokenFamilyBlacklistRepository tokenFamilyBlacklistRepository;
 
   @Transactional
   @Override
@@ -106,7 +106,7 @@ public class AuthService implements IAuthService {
   }
 
   @Override
-  public TokenPair loginUser(Email email, Password password) {
+  public TokenPair loginUser(final Email email, final Password password) {
     log.trace("loginUser() started");
     // Find user by email
     val userDb =
@@ -149,7 +149,7 @@ public class AuthService implements IAuthService {
   }
 
   @Override
-  public TokenPair refreshTokens(RefreshToken refreshToken) {
+  public TokenPair refreshTokens(final RefreshToken refreshToken) {
     log.trace("refreshTokens() started");
     // Find the refresh token in the database
     val refreshTokenDb =
@@ -254,17 +254,17 @@ public class AuthService implements IAuthService {
   }
 
   @Override
-  public void forgotPassword(Email email) {
+  public void forgotPassword(final Email email) {
     // TODO
   }
 
   @Override
-  public void resetPassword(PasswordResetToken token, Password newPassword) {
+  public void resetPassword(final PasswordResetToken token, final Password newPassword) {
     // TODO
   }
 
   @Override
-  public void logoutUser(RefreshToken refreshToken) {
+  public void logoutUser(final RefreshToken refreshToken) {
     // Find the refresh token in the database
     val refreshTokenDb =
         refreshTokenRepository
@@ -292,7 +292,7 @@ public class AuthService implements IAuthService {
   }
 
   @Override
-  public boolean isFamilyBlacklisted(TokenFamily family) {
+  public boolean isFamilyBlacklisted(final TokenFamily family) {
     return tokenFamilyBlacklistRepository.exists(family);
   }
 }
