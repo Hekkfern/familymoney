@@ -3,11 +3,11 @@ package com.familymoney.repository;
 import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 
 import com.familymoney.domains.user.repositories.UserRepository;
 import com.familymoney.domains.user.repositories.dtos.CreateUserDto;
 import com.familymoney.domains.user.repositories.dtos.UpdateUserDto;
+import com.familymoney.domains.user.repositories.entitites.UserEntity;
 import com.familymoney.domains.user.types.Email;
 import com.familymoney.domains.user.types.UserId;
 import com.familymoney.domains.user.types.UserName;
@@ -410,7 +410,7 @@ class UserRepositoryTest {
   // region IUserRepository.getAll()
 
   @Test
-  void getAll_returns_page_when_requests_first_page_and_default_sort() {
+  void getAll_returns_page_with_2_items_when_requests_page_0_with_size_2_and_default_sort() {
     val userId1 = UserId.generate();
     val userId2 = UserId.generate();
     val userId3 = UserId.generate();
@@ -429,10 +429,73 @@ class UserRepositoryTest {
 
     val page = userRepository.getAll(PageRequest.of(0, 2));
 
-    assertThat(page.getTotalElements()).isGreaterThanOrEqualTo(3);
-    assertThat(page.getContent().get(0).id()).isEqualTo(userId3);
-    assertThat(page.getContent().get(1).id()).isEqualTo(userId2);
-    assertThat(page.getContent()).noneMatch(user -> user.id().equals(userId1));
+    assertThat(page.getTotalElements()).isEqualTo(3);
+    assertThat(page.getNumberOfElements()).isEqualTo(2);
+    val ids = page.getContent().stream().map(UserEntity::id).toList();
+    assertThat(ids.get(0)).isEqualTo(userId3);
+    assertThat(ids.get(1)).isEqualTo(userId2);
+  }
+
+  @Test
+  void getAll_returns_page_with_3_items_when_requests_page_0_with_size_4_and_default_sort() {
+    val userId1 = UserId.generate();
+    val userId2 = UserId.generate();
+    val userId3 = UserId.generate();
+    val username1 = UserName.fromString(FakeGenerator.username());
+    val username2 = UserName.fromString(FakeGenerator.username());
+    val username3 = UserName.fromString(FakeGenerator.username());
+    val email1 = Email.fromString(FakeGenerator.email());
+    val email2 = Email.fromString(FakeGenerator.email());
+    val email3 = Email.fromString(FakeGenerator.email());
+    val now = Instant.ofEpochSecond(1778755330);
+    DatabaseCrud.insertUser(dslContext, userId1, username1, email1, "pass1", now, true, true);
+    DatabaseCrud.insertUser(
+        dslContext, userId2, username2, email2, "pass2", now.plusSeconds(1000), true, true);
+    DatabaseCrud.insertUser(
+        dslContext, userId3, username3, email3, "pass3", now.plusSeconds(2000), true, true);
+
+    val page = userRepository.getAll(PageRequest.of(0, 4));
+
+    assertThat(page.getTotalElements()).isEqualTo(3);
+    assertThat(page.getNumberOfElements()).isEqualTo(3);
+    val ids = page.getContent().stream().map(UserEntity::id).toList();
+    assertThat(ids.get(0)).isEqualTo(userId3);
+    assertThat(ids.get(1)).isEqualTo(userId2);
+    assertThat(ids.get(2)).isEqualTo(userId1);
+  }
+
+  @Test
+  void getAll_returns_page_with_1_item_when_requests_page_1_with_size_2_and_default_sort() {
+    val userId1 = UserId.generate();
+    val userId2 = UserId.generate();
+    val userId3 = UserId.generate();
+    val username1 = UserName.fromString(FakeGenerator.username());
+    val username2 = UserName.fromString(FakeGenerator.username());
+    val username3 = UserName.fromString(FakeGenerator.username());
+    val email1 = Email.fromString(FakeGenerator.email());
+    val email2 = Email.fromString(FakeGenerator.email());
+    val email3 = Email.fromString(FakeGenerator.email());
+    val now = Instant.ofEpochSecond(1778755330);
+    DatabaseCrud.insertUser(dslContext, userId1, username1, email1, "pass1", now, true, true);
+    DatabaseCrud.insertUser(
+        dslContext, userId2, username2, email2, "pass2", now.plusSeconds(1000), true, true);
+    DatabaseCrud.insertUser(
+        dslContext, userId3, username3, email3, "pass3", now.plusSeconds(2000), true, true);
+
+    val page = userRepository.getAll(PageRequest.of(1, 2));
+
+    assertThat(page.getTotalElements()).isEqualTo(3);
+    assertThat(page.getNumberOfElements()).isEqualTo(1);
+    val ids = page.getContent().stream().map(UserEntity::id).toList();
+    assertThat(ids.getFirst()).isEqualTo(userId1);
+  }
+
+  @Test
+  void getAll_throws_when_requests_page_100_with_size_2_and_default_sort() {
+    val page = userRepository.getAll(PageRequest.of(100, 2));
+
+    assertThat(page.getNumberOfElements()).isEqualTo(0);
+    assertThat(page.getTotalElements()).isZero();
   }
 
   // endregion
