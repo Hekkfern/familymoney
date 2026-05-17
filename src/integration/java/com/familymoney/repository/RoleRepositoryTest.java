@@ -4,11 +4,14 @@ import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.familymoney.generated.tables.Users;
 import com.familymoney.domains.user.repositories.RoleRepository;
+import com.familymoney.domains.user.types.Email;
 import com.familymoney.domains.user.types.Role;
 import com.familymoney.domains.user.types.UserId;
+import com.familymoney.domains.user.types.UserName;
+import com.familymoney.testutils.DatabaseCrud;
 import com.familymoney.testutils.FakeGenerator;
+import java.time.Instant;
 import lombok.val;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,20 +41,26 @@ class RoleRepositoryTest {
     this.roleRepository = new RoleRepository(dslContext);
   }
 
-  private UserId insertUser(final String username, final String email) {
-    val r =
-        dslContext
-            .insertInto(Users.USERS)
-            .columns(Users.USERS.USERNAME, Users.USERS.EMAIL, Users.USERS.HASHED_PASSWORD)
-            .values(username, email, "hashed-password")
-            .returning(Users.USERS.ID)
-            .fetchOne();
-    return UserId.fromUuid(r.getId());
+  private UserId insertRandomUser() {
+    val userId = UserId.generate();
+    val now = Instant.ofEpochSecond(1778755330);
+    DatabaseCrud.insertUser(
+        dslContext,
+        userId,
+        UserName.fromString(FakeGenerator.username()),
+        Email.fromString(FakeGenerator.email()),
+        "hashed_password",
+        now,
+        true,
+        true);
+    return userId;
   }
 
+  // region IRoleRepository.getRoleByUserId()
+
   @Test
-  void getRoleByUserId_returns_empty_when_not_assigned() {
-    val userId = insertUser(FakeGenerator.username(), FakeGenerator.email());
+  void getRoleByUserId_returns_empty_when_not_role_assigned() {
+    val userId = insertRandomUser();
 
     val role = roleRepository.getRoleByUserId(userId);
 
@@ -59,18 +68,32 @@ class RoleRepositoryTest {
   }
 
   @Test
-  void setRoleForUserId_inserts_role_and_getRole_returns_it() {
-    val userId = insertUser(FakeGenerator.username(), FakeGenerator.email());
+  void getRoleByUserId_returns_empty_when_user_missing() {
+    val missingUserId = UserId.generate();
 
-    val updated = roleRepository.setRoleForUserId(userId, Role.USER);
+    val role = roleRepository.getRoleByUserId(missingUserId);
 
-    assertThat(updated).isTrue();
-    assertThat(roleRepository.getRoleByUserId(userId)).contains(Role.USER);
+    assertThat(role).isEmpty();
   }
 
   @Test
+  void getRoleForUserId_returns_role_when_role_assigned() {
+    val userId = insertRandomUser();
+    val updated = roleRepository.setRoleForUserId(userId, Role.USER);
+    assertThat(updated).isTrue();
+
+    val role = roleRepository.getRoleByUserId(userId);
+
+    assertThat(role).contains(Role.USER);
+  }
+
+  // endregion
+
+  // region IRoleRepository.getRoleByUserId()
+
+  @Test
   void setRoleForUserId_updates_existing_role() {
-    val userId = insertUser(FakeGenerator.username(), FakeGenerator.email());
+    val userId = insertRandomUser();
     roleRepository.setRoleForUserId(userId, Role.USER);
 
     val updated = roleRepository.setRoleForUserId(userId, Role.ADMIN);
@@ -81,18 +104,12 @@ class RoleRepositoryTest {
 
   @Test
   void setRoleForUserId_throws_when_user_missing() {
-    val missingUserId = UserId.fromUuid(java.util.UUID.randomUUID());
+    val missingUserId = UserId.generate();
 
     assertThatThrownBy(() -> roleRepository.setRoleForUserId(missingUserId, Role.USER))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 
-  @Test
-  void getRoleByUserId_returns_empty_when_user_missing() {
-    val missingUserId = UserId.fromUuid(java.util.UUID.randomUUID());
+  // endregion
 
-    val role = roleRepository.getRoleByUserId(missingUserId);
-
-    assertThat(role).isEmpty();
-  }
 }
