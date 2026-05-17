@@ -10,7 +10,6 @@ import com.familymoney.domains.user.types.UserName;
 import com.familymoney.generated.tables.Users;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.jooq.DSLContext;
@@ -177,9 +176,7 @@ public class UserRepository implements IUserRepository {
             .toList();
 
     val effectiveOrder =
-        orderFields.isEmpty()
-            ? List.of(Users.USERS.CREATED_AT.desc(), Users.USERS.USERNAME.asc())
-            : Stream.concat(orderFields.stream(), Stream.of(Users.USERS.USERNAME.asc())).toList();
+        orderFields.isEmpty() ? List.of(Users.USERS.CREATED_AT.desc()) : orderFields;
 
     val records =
         db.select(
