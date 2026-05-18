@@ -90,7 +90,6 @@ public class AuthService implements IAuthService {
         emailVerificationRepository
             .create(
                 CreateEmailVerificationDto.builder()
-                    .id(UUIDGenerator.generate())
                     .userId(userId)
                     .token(EmailVerificationToken.generate())
                     .expiresAt(Instant.now(clock).plus(emailVerificationProperties.tokenDuration()))

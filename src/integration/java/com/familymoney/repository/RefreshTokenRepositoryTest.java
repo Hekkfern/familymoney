@@ -318,7 +318,28 @@ class RefreshTokenRepositoryTest {
 
   // region IRefreshTokenRepository.deleteByToken()
 
-  // TODO
+  @Test
+  void deleteByToken_removes_row_and_returns_true_when_token_exists() {
+    val userId = insertRandomUser();
+    val token = RefreshToken.generate();
+    val family = TokenFamily.generate();
+    val id = UUID.randomUUID();
+    val now = Instant.now();
+    val expiration = now.plusSeconds(3600);
+    DatabaseCrud.insertRefreshToken(dslContext, id, userId, token, now, expiration, family);
+
+    val deleted = refreshTokenRepository.deleteByToken(token);
+
+    assertThat(deleted).isTrue();
+    assertThat(refreshTokenRepository.findByToken(token)).isEmpty();
+  }
+
+  @Test
+  void deleteByToken_does_nothing_and_returns_false_when_token_does_not_exist() {
+    val deleted = refreshTokenRepository.deleteByToken(RefreshToken.generate());
+
+    assertThat(deleted).isFalse();
+  }
 
   // endregion
 }
