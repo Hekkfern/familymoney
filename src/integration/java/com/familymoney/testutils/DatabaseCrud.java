@@ -1,6 +1,8 @@
 package com.familymoney.testutils;
 
 import com.familymoney.domains.auth.types.EmailVerificationToken;
+import com.familymoney.domains.auth.types.RefreshToken;
+import com.familymoney.domains.auth.types.TokenFamily;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import com.familymoney.domains.user.types.Email;
@@ -9,6 +11,7 @@ import com.familymoney.domains.user.types.UserName;
 import com.familymoney.generated.tables.EmailVerificationTokens;
 import com.familymoney.generated.tables.GroupInvitations;
 import com.familymoney.generated.tables.Groups;
+import com.familymoney.generated.tables.RefreshTokens;
 import com.familymoney.generated.tables.Users;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -52,12 +55,43 @@ public class DatabaseCrud {
         .execute();
   }
 
+  public static void insertRefreshToken(
+      DSLContext dslContext,
+      final UUID id,
+      final UserId userId,
+      final RefreshToken token,
+      final Instant createdAt,
+      final Instant expiresAt,
+      final TokenFamily family) {
+    val createdAtDateTime = OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC);
+    val expiresAtDateTime = OffsetDateTime.ofInstant(expiresAt, ZoneOffset.UTC);
+    dslContext
+        .insertInto(RefreshTokens.REFRESH_TOKENS)
+        .columns(
+            RefreshTokens.REFRESH_TOKENS.ID,
+            RefreshTokens.REFRESH_TOKENS.USER_ID,
+            RefreshTokens.REFRESH_TOKENS.TOKEN,
+            RefreshTokens.REFRESH_TOKENS.CREATED_AT,
+            RefreshTokens.REFRESH_TOKENS.UPDATED_AT,
+            RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,
+            RefreshTokens.REFRESH_TOKENS.FAMILY)
+        .values(
+            id,
+            userId.value(),
+            token.value(),
+            createdAtDateTime,
+            createdAtDateTime,
+            expiresAtDateTime,
+            family.value())
+        .execute();
+  }
+
   public static void insertEmailVerificationToken(
       DSLContext dslContext,
-      UserId userId,
-      EmailVerificationToken token,
-      Instant createdAt,
-      Instant expiresAt) {
+      final UserId userId,
+      final EmailVerificationToken token,
+      final Instant createdAt,
+      final Instant expiresAt) {
     val createdAtDateTime = OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC);
     val expiresAtDateTime = OffsetDateTime.ofInstant(expiresAt, ZoneOffset.UTC);
     dslContext

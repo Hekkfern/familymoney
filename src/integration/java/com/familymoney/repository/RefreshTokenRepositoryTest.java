@@ -3,16 +3,17 @@ package com.familymoney.repository;
 import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatNoException;
 
 import com.familymoney.domains.auth.repositories.RefreshTokenRepository;
 import com.familymoney.domains.auth.repositories.dtos.CreateRefreshTokenDto;
 import com.familymoney.domains.auth.repositories.dtos.UpdateRefreshTokenDto;
 import com.familymoney.domains.auth.types.RefreshToken;
 import com.familymoney.domains.auth.types.TokenFamily;
+import com.familymoney.domains.user.types.Email;
 import com.familymoney.domains.user.types.UserId;
-import com.familymoney.generated.tables.RefreshTokens;
-import com.familymoney.generated.tables.Users;
+import com.familymoney.domains.user.types.UserName;
+import com.familymoney.testutils.DatabaseCrud;
 import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;
 import java.util.UUID;
@@ -24,10 +25,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jooq.test.autoconfigure.JooqTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
-/*
+
 @JooqTest
 @Testcontainers
 class RefreshTokenRepositoryTest {
@@ -45,192 +47,278 @@ class RefreshTokenRepositoryTest {
     this.refreshTokenRepository = new RefreshTokenRepository(dslContext);
   }
 
-  private void insertUser(final String username, final String email) {
-        dslContext
-            .insertInto(Users.USERS)
-            .columns(Users.USERS.USERNAME, Users.USERS.EMAIL, Users.USERS.HASHED_PASSWORD)
-            .values(username, email, "hashed-password")
-            .returning(Users.USERS.ID)
-            .fetchOne();
+  private UserId insertRandomUser() {
+    val userId = UserId.generate();
+    val now = Instant.ofEpochSecond(1778755330);
+    DatabaseCrud.insertUser(
+        dslContext,
+        userId,
+        UserName.fromString(FakeGenerator.username()),
+        Email.fromString(FakeGenerator.email()),
+        "hashed_password",
+        now,
+        true,
+        true);
+    return userId;
   }
 
-  private void insertToken(
-      final UUID id,
-      final UserId userId,
-      final RefreshToken token,
-      final TokenFamily family,
-      final Instant createdAt,
-      final Instant expiresAt) {
-    dslContext
-        .insertInto(RefreshTokens.REFRESH_TOKENS)
-        .columns(
-            RefreshTokens.REFRESH_TOKENS.ID,
-            RefreshTokens.REFRESH_TOKENS.USER_ID,
-            RefreshTokens.REFRESH_TOKENS.TOKEN,
-            RefreshTokens.REFRESH_TOKENS.CREATED_AT,
-            RefreshTokens.REFRESH_TOKENS.UPDATED_AT,
-            RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,
-            RefreshTokens.REFRESH_TOKENS.FAMILY)
-        .values(
-            id,
-            userId.value(),
-            token.value(),
-            createdAt,
-            createdAt.plusDays(7),
-            isUsed,
-            usedAt,
-            family)
-        .returning(
-            RefreshTokens.REFRESH_TOKENS.ID,
-            RefreshTokens.REFRESH_TOKENS.USER_ID,
-            RefreshTokens.REFRESH_TOKENS.TOKEN,
-            RefreshTokens.REFRESH_TOKENS.CREATED_AT,
-            RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,
-            RefreshTokens.REFRESH_TOKENS.FAMILY)
-        .execute();
-  }
+  // region IRefreshTokenRepository.create()
 
   @Test
-  void create_persists_refresh_token() {
-    val userId = insertUser(FakeGenerator.username(), FakeGenerator.email());
+  void create_persists_refresh_token_record() {
+    val userId = insertRandomUser();
     val token = RefreshToken.generate();
-    val family = UUID.randomUUID();
+    val family = TokenFamily.generate();
 
-    val created =
-        refreshTokenRepository.create(new CreateRefreshTokenDto(any(), userId, token, family));
+    val now = Instant.now();
+    val expiration = now.plusSeconds(3600);
 
-    assertThat(created).isPresent();
-    val dbo = created.get();
-    assertThat(dbo.id()).isNotNull();
-    assertThat(dbo.userId()).isEqualTo(userId);
-    assertThat(dbo.token()).isEqualTo(token);
-    assertThat(dbo.family()).isEqualTo(family);
-    assertThat(dbo.isUsed()).isFalse();
-    assertThat(dbo.usedAt()).isEmpty();
+    val refreshTokenCreated =
+        refreshTokenRepository.create(
+            new CreateRefreshTokenDto(UUID.randomUUID(), userId, token, family, expiration));
+
+    assertThat(refreshTokenCreated).isPresent();
+    val refreshToken = refreshTokenCreated.get();
+    assertThat(refreshToken.id()).isNotNull();
+    assertThat(refreshToken.userId()).isEqualTo(userId);
+    assertThat(refreshToken.token()).isEqualTo(token);
+    assertThat(refreshToken.createdAt())
+        .isNotNull()
+        .isBetween(now.minusSeconds(1), now.plusSeconds(1));
+    assertThat(refreshToken.updatedAt())
+        .isNotNull()
+        .isBetween(now.minusSeconds(1), now.plusSeconds(1));
+    assertThat(refreshToken.expiresAt())
+        .isNotNull()
+        .isBetween(expiration.minusSeconds(1), expiration.plusSeconds(1));
+    assertThat(refreshToken.family()).isEqualTo(family);
   }
 
   @Test
-  void create_throws_when_user_missing() {
-    val missingUserId = UserId.fromUuid(UUID.randomUUID());
+  void create_throws_when_user_is_missing() {
+    val missingUserId = UserId.generate();
+
+    val now = Instant.now();
 
     assertThatThrownBy(
             () ->
                 refreshTokenRepository.create(
                     new CreateRefreshTokenDto(
-                        any(), missingUserId, RefreshToken.generate(), UUID.randomUUID())))
+                        UUID.randomUUID(),
+                        missingUserId,
+                        RefreshToken.generate(),
+                        TokenFamily.generate(),
+                        now)))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 
   @Test
   void create_throws_when_token_is_duplicate() {
-    val userId = insertUser(FakeGenerator.username(), FakeGenerator.email());
+    val userId = insertRandomUser();
     val token = RefreshToken.generate();
-    val family = UUID.randomUUID();
 
-    refreshTokenRepository.create(new CreateRefreshTokenDto(any(), userId, token, family));
+    val now = Instant.now();
+    val expiration = now.plusSeconds(3600);
+
+    assertThatNoException()
+        .isThrownBy(
+            () ->
+                refreshTokenRepository.create(
+                    new CreateRefreshTokenDto(
+                        UUID.randomUUID(), userId, token, TokenFamily.generate(), expiration)));
 
     assertThatThrownBy(
             () ->
                 refreshTokenRepository.create(
-                    new CreateRefreshTokenDto(any(), userId, token, UUID.randomUUID())))
+                    new CreateRefreshTokenDto(
+                        UUID.randomUUID(), userId, token, TokenFamily.generate(), expiration)))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 
   @Test
+  void create_throws_when_user_id_and_family_are_duplicate() {
+    val userId = insertRandomUser();
+    val family = TokenFamily.generate();
+
+    val now = Instant.now();
+    val expiration = now.plusSeconds(3600);
+
+    assertThatNoException()
+        .isThrownBy(
+            () ->
+                refreshTokenRepository.create(
+                    new CreateRefreshTokenDto(
+                        UUID.randomUUID(), userId, RefreshToken.generate(), family, expiration)));
+
+    assertThatThrownBy(
+            () ->
+                refreshTokenRepository.create(
+                    new CreateRefreshTokenDto(
+                        UUID.randomUUID(), userId, RefreshToken.generate(), family, expiration)))
+        .isInstanceOf(DuplicateKeyException.class);
+  }
+
+  // endregion
+
+  // region IRefreshTokenRepository.findByToken()
+
+  @Test
   void findByToken_returns_token_when_exists() {
-    val userId = insertUser(FakeGenerator.username(), FakeGenerator.email());
+    val userId = insertRandomUser();
     val token = RefreshToken.generate();
-    val family = UUID.randomUUID();
-    refreshTokenRepository.create(new CreateRefreshTokenDto(any(), userId, token, family));
+    val family = TokenFamily.generate();
+    val id = UUID.randomUUID();
+    val now = Instant.now();
+    val expiration = now.plusSeconds(3600);
+    DatabaseCrud.insertRefreshToken(dslContext, id, userId, token, now, expiration, family);
 
-    val found = refreshTokenRepository.findByToken(token);
+    val tokenFoundOpt = refreshTokenRepository.findByToken(token);
 
-    assertThat(found).isPresent();
-    val tokenDb = found.get();
-    assertThat(tokenDb.userId()).isEqualTo(userId);
-    assertThat(tokenDb.token()).isEqualTo(token);
+    assertThat(tokenFoundOpt).isPresent();
+    val tokenFound = tokenFoundOpt.get();
+    assertThat(tokenFound.id()).isEqualTo(id);
+    assertThat(tokenFound.userId()).isEqualTo(userId);
+    assertThat(tokenFound.createdAt()).isEqualTo(now);
+    assertThat(tokenFound.expiresAt()).isEqualTo(expiration);
+    assertThat(tokenFound.family()).isEqualTo(family);
   }
 
   @Test
   void findByToken_returns_empty_when_missing() {
-    val found = refreshTokenRepository.findByToken(RefreshToken.generate());
+    val tokenFoundOpt = refreshTokenRepository.findByToken(RefreshToken.generate());
 
-    assertThat(found).isEmpty();
+    assertThat(tokenFoundOpt).isEmpty();
   }
 
-  @Test
-  void updateByToken_updates_row_and_returns_true() {
-    val userId = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val token = RefreshToken.generate();
-    val family = UUID.randomUUID();
-    refreshTokenRepository.create(new CreateRefreshTokenDto(any(), userId, token, family));
-    val update = UpdateRefreshTokenDto.builder().isUsed(true).usedAt(Instant.now()).build();
+  // endregion
 
-    val updated = refreshTokenRepository.updateByToken(token, update);
+  // region IRefreshTokenRepository.updateByToken()
+
+  @Test
+  void updateByToken_updates_row_and_returns_true_when_it_succeeds() {
+    val userId = insertRandomUser();
+    val token = RefreshToken.generate();
+    val family = TokenFamily.generate();
+    val id = UUID.randomUUID();
+    val now = Instant.now();
+    val expiration = now.plusSeconds(3600);
+    DatabaseCrud.insertRefreshToken(dslContext, id, userId, token, now, expiration, family);
+
+    val newToken = RefreshToken.generate();
+    val dto = UpdateRefreshTokenDto.builder().token(newToken).build();
+
+    val updated = refreshTokenRepository.updateByToken(token, dto);
 
     assertThat(updated).isTrue();
-    val found = refreshTokenRepository.findByToken(token).orElseThrow();
-    assertThat(found.isUsed()).isTrue();
-    assertThat(found.usedAt()).isPresent();
+    val tokenFound = refreshTokenRepository.findByToken(newToken).orElseThrow();
+    assertThat(tokenFound.id()).isEqualTo(id);
+    assertThat(tokenFound.userId()).isEqualTo(userId);
+    assertThat(tokenFound.token()).isEqualTo(newToken);
+    assertThat(tokenFound.createdAt()).isEqualTo(now);
+    assertThat(tokenFound.expiresAt()).isEqualTo(expiration);
+    assertThat(tokenFound.family()).isEqualTo(family);
   }
 
   @Test
-  void updateByToken_returns_false_when_missing() {
-    val update = UpdateRefreshTokenDto.builder().isUsed(true).build();
+  void updateByToken_does_nothing_and_returns_false_when_dto_is_all_null() {
+    val userId = insertRandomUser();
+    val token = RefreshToken.generate();
+    val family = TokenFamily.generate();
+    val id = UUID.randomUUID();
+    val now = Instant.now();
+    val expiration = now.plusSeconds(3600);
+    DatabaseCrud.insertRefreshToken(dslContext, id, userId, token, now, expiration, family);
+
+    val nullDto = UpdateRefreshTokenDto.builder().build();
+
+    val updated = refreshTokenRepository.updateByToken(token, nullDto);
+
+    assertThat(updated).isTrue();
+    val tokenFound = refreshTokenRepository.findByToken(token).orElseThrow();
+    assertThat(tokenFound.id()).isEqualTo(id);
+    assertThat(tokenFound.userId()).isEqualTo(userId);
+    assertThat(tokenFound.token()).isEqualTo(token);
+    assertThat(tokenFound.createdAt()).isEqualTo(now);
+    assertThat(tokenFound.expiresAt()).isEqualTo(expiration);
+    assertThat(tokenFound.family()).isEqualTo(family);
+  }
+
+  @Test
+  void updateByToken_does_nothing_and_returns_false_when_token_does_not_exist() {
+    val update = UpdateRefreshTokenDto.builder().expiresAt(Instant.now().plusSeconds(2000)).build();
 
     val updated = refreshTokenRepository.updateByToken(RefreshToken.generate(), update);
 
     assertThat(updated).isFalse();
   }
 
-  @Test
-  void updateByFamily_updates_rows_and_returns_true() {
-    val userId = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val family = UUID.randomUUID();
-    val tokenA = RefreshToken.generate();
-    val tokenB = RefreshToken.generate();
-    refreshTokenRepository.create(new CreateRefreshTokenDto(any(), userId, tokenA, family));
-    refreshTokenRepository.create(new CreateRefreshTokenDto(any(), userId, tokenB, family));
-    val update = UpdateRefreshTokenDto.builder().isUsed(true).usedAt(Instant.now()).build();
+  // endregion
 
-    val updated = refreshTokenRepository.updateByFamily(family, update);
-
-    assertThat(updated).isTrue();
-    assertThat(refreshTokenRepository.findByToken(tokenA)).isPresent();
-    assertThat(refreshTokenRepository.findByToken(tokenA).orElseThrow().isUsed()).isTrue();
-    assertThat(refreshTokenRepository.findByToken(tokenB).orElseThrow().isUsed()).isTrue();
-  }
+  // region IRefreshTokenRepository.updateByUserId()
 
   @Test
-  void updateByFamily_returns_false_when_missing() {
-    val update = UpdateRefreshTokenDto.builder().isUsed(true).build();
-
-    val updated = refreshTokenRepository.updateByFamily(UUID.randomUUID(), update);
-
-    assertThat(updated).isFalse();
-  }
-
-  @Test
-  void updateByUserId_updates_rows_and_returns_true() {
-    val userId = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val family = UUID.randomUUID();
+  void updateByUserId_updates_row_and_returns_true_when_it_succeeds() {
+    val userId = insertRandomUser();
     val token = RefreshToken.generate();
-    refreshTokenRepository.create(new CreateRefreshTokenDto(any(), userId, token, family));
-    val update = UpdateRefreshTokenDto.builder().isUsed(true).usedAt(Instant.now()).build();
+    val family = TokenFamily.generate();
+    val id = UUID.randomUUID();
+    val now = Instant.now();
+    val expiration = now.plusSeconds(3600);
+    DatabaseCrud.insertRefreshToken(dslContext, id, userId, token, now, expiration, family);
 
-    val updated = refreshTokenRepository.updateByUserId(userId, update);
+    val newToken = RefreshToken.generate();
+    val dto = UpdateRefreshTokenDto.builder().token(newToken).build();
+
+    val updated = refreshTokenRepository.updateByUserId(userId, dto);
 
     assertThat(updated).isTrue();
-    assertThat(refreshTokenRepository.findByToken(token).orElseThrow().isUsed()).isTrue();
+    val tokenFound = refreshTokenRepository.findByToken(newToken).orElseThrow();
+    assertThat(tokenFound.id()).isEqualTo(id);
+    assertThat(tokenFound.userId()).isEqualTo(userId);
+    assertThat(tokenFound.token()).isEqualTo(newToken);
+    assertThat(tokenFound.createdAt()).isEqualTo(now);
+    assertThat(tokenFound.expiresAt()).isEqualTo(expiration);
+    assertThat(tokenFound.family()).isEqualTo(family);
   }
 
   @Test
-  void updateByUserId_returns_false_when_missing() {
-    val update = UpdateRefreshTokenDto.builder().isUsed(true).build();
+  void updateByUserId_does_nothing_and_returns_false_when_dto_is_all_null() {
+    val userId = insertRandomUser();
+    val token = RefreshToken.generate();
+    val family = TokenFamily.generate();
+    val id = UUID.randomUUID();
+    val now = Instant.now();
+    val expiration = now.plusSeconds(3600);
+    DatabaseCrud.insertRefreshToken(dslContext, id, userId, token, now, expiration, family);
 
-    val updated = refreshTokenRepository.updateByUserId(UserId.fromUuid(UUID.randomUUID()), update);
+    val nullDto = UpdateRefreshTokenDto.builder().build();
+
+    val updated = refreshTokenRepository.updateByUserId(userId, nullDto);
+
+    assertThat(updated).isTrue();
+    val tokenFound = refreshTokenRepository.findByToken(token).orElseThrow();
+    assertThat(tokenFound.id()).isEqualTo(id);
+    assertThat(tokenFound.userId()).isEqualTo(userId);
+    assertThat(tokenFound.token()).isEqualTo(token);
+    assertThat(tokenFound.createdAt()).isEqualTo(now);
+    assertThat(tokenFound.expiresAt()).isEqualTo(expiration);
+    assertThat(tokenFound.family()).isEqualTo(family);
+  }
+
+  @Test
+  void updateByUserId_does_nothing_and_returns_false_when_user_does_not_exist() {
+    val update = UpdateRefreshTokenDto.builder().expiresAt(Instant.now().plusSeconds(2000)).build();
+
+    val updated = refreshTokenRepository.updateByUserId(UserId.generate(), update);
 
     assertThat(updated).isFalse();
   }
+
+  // endregion
+
+  // region IRefreshTokenRepository.deleteByToken()
+
+  // TODO
+
+  // endregion
 }
-*/
