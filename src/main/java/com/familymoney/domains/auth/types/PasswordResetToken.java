@@ -6,6 +6,12 @@ public record PasswordResetToken(String value) {
 
   private static final int LENGTH = 64;
 
+  public PasswordResetToken {
+    if (value.length() != LENGTH) {
+      throw new IllegalArgumentException("Invalid refresh token length");
+    }
+  }
+
   public static PasswordResetToken fromString(String value) {
     return new PasswordResetToken(value);
   }

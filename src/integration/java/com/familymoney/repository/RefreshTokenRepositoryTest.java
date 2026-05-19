@@ -3,7 +3,6 @@ package com.familymoney.repository;
 import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatNoException;
 
 import com.familymoney.domains.auth.repositories.RefreshTokenRepository;
 import com.familymoney.domains.auth.repositories.dtos.CreateRefreshTokenDto;
@@ -94,21 +93,20 @@ class RefreshTokenRepositoryTest {
     assertThat(refreshToken.family()).isEqualTo(family);
   }
 
+  void create_persists_when_same_user_but_different_family() {
+    // TODO
+  }
+
   @Test
-  void create_throws_when_user_is_missing() {
+  void create_throws_when_user_does_not_exist() {
     val missingUserId = UserId.generate();
 
     val now = Instant.now();
 
-    assertThatThrownBy(
-            () ->
-                refreshTokenRepository.create(
-                    new CreateRefreshTokenDto(
-                        UUID.randomUUID(),
-                        missingUserId,
-                        RefreshToken.generate(),
-                        TokenFamily.generate(),
-                        now)))
+    val dto =
+        new CreateRefreshTokenDto(
+            UUID.randomUUID(), missingUserId, RefreshToken.generate(), TokenFamily.generate(), now);
+    assertThatThrownBy(() -> refreshTokenRepository.create(dto))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 
@@ -120,18 +118,13 @@ class RefreshTokenRepositoryTest {
     val now = Instant.now();
     val expiration = now.plusSeconds(3600);
 
-    assertThatNoException()
-        .isThrownBy(
-            () ->
-                refreshTokenRepository.create(
-                    new CreateRefreshTokenDto(
-                        UUID.randomUUID(), userId, token, TokenFamily.generate(), expiration)));
+    DatabaseCrud.insertRefreshToken(
+        dslContext, UUID.randomUUID(), userId, token, now, expiration, TokenFamily.generate());
 
-    assertThatThrownBy(
-            () ->
-                refreshTokenRepository.create(
-                    new CreateRefreshTokenDto(
-                        UUID.randomUUID(), userId, token, TokenFamily.generate(), expiration)))
+    val dto =
+        new CreateRefreshTokenDto(
+            UUID.randomUUID(), userId, token, TokenFamily.generate(), expiration);
+    assertThatThrownBy(() -> refreshTokenRepository.create(dto))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 
@@ -143,18 +136,13 @@ class RefreshTokenRepositoryTest {
     val now = Instant.now();
     val expiration = now.plusSeconds(3600);
 
-    assertThatNoException()
-        .isThrownBy(
-            () ->
-                refreshTokenRepository.create(
-                    new CreateRefreshTokenDto(
-                        UUID.randomUUID(), userId, RefreshToken.generate(), family, expiration)));
+    DatabaseCrud.insertRefreshToken(
+        dslContext, UUID.randomUUID(), userId, RefreshToken.generate(), now, expiration, family);
 
-    assertThatThrownBy(
-            () ->
-                refreshTokenRepository.create(
-                    new CreateRefreshTokenDto(
-                        UUID.randomUUID(), userId, RefreshToken.generate(), family, expiration)))
+    val dto =
+        new CreateRefreshTokenDto(
+            UUID.randomUUID(), userId, RefreshToken.generate(), family, expiration);
+    assertThatThrownBy(() -> refreshTokenRepository.create(dto))
         .isInstanceOf(DuplicateKeyException.class);
   }
 

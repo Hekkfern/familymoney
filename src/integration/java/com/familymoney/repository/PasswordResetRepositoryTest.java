@@ -7,8 +7,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.familymoney.domains.auth.repositories.PasswordResetRepository;
 import com.familymoney.domains.auth.repositories.dtos.CreatePasswordResetDto;
 import com.familymoney.domains.auth.types.PasswordResetToken;
+import com.familymoney.domains.user.types.Email;
 import com.familymoney.domains.user.types.UserId;
-import com.familymoney.generated.tables.Users;
+import com.familymoney.domains.user.types.UserName;
+import com.familymoney.testutils.DatabaseCrud;
 import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;
 import java.util.UUID;
@@ -20,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jooq.test.autoconfigure.JooqTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
@@ -41,89 +44,120 @@ class PasswordResetRepositoryTest {
     this.passwordResetRepository = new PasswordResetRepository(dslContext);
   }
 
-  private UserId insertUser(final String username, final String email) {
-    val r =
-        dslContext
-            .insertInto(Users.USERS)
-            .columns(Users.USERS.USERNAME, Users.USERS.EMAIL, Users.USERS.HASHED_PASSWORD)
-            .values(username, email, "hashed-password")
-            .returning(Users.USERS.ID)
-            .fetchOne();
-    return UserId.fromUuid(r.getId());
+  private UserId insertRandomUser() {
+    val userId = UserId.generate();
+    val now = Instant.ofEpochSecond(1778755330);
+    DatabaseCrud.insertUser(
+        dslContext,
+        userId,
+        UserName.fromString(FakeGenerator.username()),
+        Email.fromString(FakeGenerator.email()),
+        "hashed_password",
+        now,
+        true,
+        true);
+    return userId;
   }
 
-  @Test
-  void create_persists_password_reset_token() {
-    val userId = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val token = PasswordResetToken.generate();
-    val expiresAt = Instant.now().plusSeconds(3600);
+  // region IPasswordResetRepository.create()
 
-    val created =
-        passwordResetRepository.create(new CreatePasswordResetDto(userId, token, expiresAt));
+  @Test
+  void create_persists_password_reset_token_record() {
+    val userId = insertRandomUser();
+    val token = PasswordResetToken.generate();
+    val now = Instant.now();
+    val expiresAt = now.plusSeconds(3600);
+
+    val dto = new CreatePasswordResetDto(userId, token, expiresAt);
+    val created = passwordResetRepository.create(dto);
 
     assertThat(created).isPresent();
     val dbo = created.get();
     assertThat(dbo.userId()).isEqualTo(userId);
     assertThat(dbo.token()).isEqualTo(token);
     assertThat(dbo.expiresAt()).isEqualTo(expiresAt);
+    assertThat(dbo.createdAt()).isEqualTo(now);
+    assertThat(dbo.updatedAt()).isEqualTo(now);
   }
 
   @Test
-  void create_throws_when_user_missing() {
+  void create_throws_when_user_does_not_exist() {
     val missingUserId = UserId.fromUuid(UUID.randomUUID());
 
-    assertThatThrownBy(
-            () ->
-                passwordResetRepository.create(
-                    new CreatePasswordResetDto(
-                        missingUserId,
-                        PasswordResetToken.generate(),
-                        Instant.now().plusSeconds(300))))
+    val dto =
+        new CreatePasswordResetDto(
+            missingUserId, PasswordResetToken.generate(), Instant.now().plusSeconds(300));
+    assertThatThrownBy(() -> passwordResetRepository.create(dto))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 
   @Test
   void create_throws_when_token_is_duplicate() {
-    val userId = insertUser(FakeGenerator.username(), FakeGenerator.email());
+    val userId = insertRandomUser();
     val token = PasswordResetToken.generate();
+    val now = Instant.now();
 
-    passwordResetRepository.create(
-        new CreatePasswordResetDto(userId, token, Instant.now().plusSeconds(300)));
+    DatabaseCrud.insertPasswordResetToken(
+        dslContext, userId, token, now, Instant.now().plusSeconds(300));
 
-    assertThatThrownBy(
-            () ->
-                passwordResetRepository.create(
-                    new CreatePasswordResetDto(userId, token, Instant.now().plusSeconds(600))))
+    val dto2 = new CreatePasswordResetDto(userId, token, now.plusSeconds(600));
+    assertThatThrownBy(() -> passwordResetRepository.create(dto2))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 
   @Test
+  void create_throws_when_user_already_has_an_entry() {
+    val userId = insertRandomUser();
+    val now = Instant.now();
+    DatabaseCrud.insertPasswordResetToken(
+        dslContext, userId, PasswordResetToken.generate(), now, now.plusSeconds(3600));
+
+    val dto =
+        new CreatePasswordResetDto(userId, PasswordResetToken.generate(), now.plusSeconds(300));
+    assertThatThrownBy(() -> passwordResetRepository.create(dto))
+        .isInstanceOf(DuplicateKeyException.class);
+  }
+
+  // endregion
+
+  // region IPasswordResetRepository.findByToken()
+
+  @Test
   void findByToken_returns_token_when_exists() {
-    val userId = insertUser(FakeGenerator.username(), FakeGenerator.email());
+    val userId = insertRandomUser();
     val token = PasswordResetToken.generate();
-    passwordResetRepository.create(
-        new CreatePasswordResetDto(userId, token, Instant.now().plusSeconds(300)));
+    val now = Instant.now();
+    val expiration = now.plusSeconds(3600);
+    DatabaseCrud.insertPasswordResetToken(dslContext, userId, token, now, expiration);
 
-    val found = passwordResetRepository.findByToken(token);
+    val entryFoundOpt = passwordResetRepository.findByToken(token);
 
-    assertThat(found).isPresent();
-    assertThat(found.get().userId()).isEqualTo(userId);
-    assertThat(found.get().token()).isEqualTo(token);
+    assertThat(entryFoundOpt).isPresent();
+    val entryFound = entryFoundOpt.get();
+    assertThat(entryFound.userId()).isEqualTo(userId);
+    assertThat(entryFound.token()).isEqualTo(token);
+    assertThat(entryFound.expiresAt()).isEqualTo(expiration);
+    assertThat(entryFound.createdAt()).isEqualTo(now);
+    assertThat(entryFound.updatedAt()).isEqualTo(now);
   }
 
   @Test
-  void findByToken_returns_empty_when_missing() {
-    val found = passwordResetRepository.findByToken(PasswordResetToken.generate());
+  void findByToken_returns_empty_when_it_does_not_exist() {
+    val entryFoundOpt = passwordResetRepository.findByToken(PasswordResetToken.generate());
 
-    assertThat(found).isEmpty();
+    assertThat(entryFoundOpt).isEmpty();
   }
+
+  // region
+
+  // region IPasswordResetRepository.deleteByUserId()
 
   @Test
   void deleteByUserId_deletes_tokens() {
-    val userId = insertUser(FakeGenerator.username(), FakeGenerator.email());
+    val userId = insertRandomUser();
     val token = PasswordResetToken.generate();
-    passwordResetRepository.create(
-        new CreatePasswordResetDto(userId, token, Instant.now().plusSeconds(300)));
+    val now = Instant.now();
+    DatabaseCrud.insertPasswordResetToken(dslContext, userId, token, now, now.plusSeconds(3600));
 
     val deleted = passwordResetRepository.deleteByUserId(userId);
 
@@ -139,4 +173,6 @@ class PasswordResetRepositoryTest {
 
     assertThat(deleted).isFalse();
   }
+
+  // endregion
 }

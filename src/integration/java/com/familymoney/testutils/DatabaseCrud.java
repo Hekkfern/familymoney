@@ -1,6 +1,7 @@
 package com.familymoney.testutils;
 
 import com.familymoney.domains.auth.types.EmailVerificationToken;
+import com.familymoney.domains.auth.types.PasswordResetToken;
 import com.familymoney.domains.auth.types.RefreshToken;
 import com.familymoney.domains.auth.types.TokenFamily;
 import com.familymoney.domains.transactions.types.GroupId;
@@ -11,6 +12,7 @@ import com.familymoney.domains.user.types.UserName;
 import com.familymoney.generated.tables.EmailVerificationTokens;
 import com.familymoney.generated.tables.GroupInvitations;
 import com.familymoney.generated.tables.Groups;
+import com.familymoney.generated.tables.PasswordResetTokens;
 import com.familymoney.generated.tables.RefreshTokens;
 import com.familymoney.generated.tables.Users;
 import java.time.Instant;
@@ -107,9 +109,30 @@ public class DatabaseCrud {
         .execute();
   }
 
+  public static void insertPasswordResetToken(
+      DSLContext dslContext,
+      final UserId userId,
+      final PasswordResetToken token,
+      final Instant createdAt,
+      final Instant expiresAt) {
+    val createdAtDateTime = OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC);
+    val expiresAtDateTime = OffsetDateTime.ofInstant(expiresAt, ZoneOffset.UTC);
+    dslContext
+        .insertInto(PasswordResetTokens.PASSWORD_RESET_TOKENS)
+        .columns(
+            PasswordResetTokens.PASSWORD_RESET_TOKENS.USER_ID,
+            PasswordResetTokens.PASSWORD_RESET_TOKENS.TOKEN,
+            PasswordResetTokens.PASSWORD_RESET_TOKENS.CREATED_AT,
+            PasswordResetTokens.PASSWORD_RESET_TOKENS.UPDATED_AT,
+            PasswordResetTokens.PASSWORD_RESET_TOKENS.EXPIRES_AT)
+        .values(
+            userId.value(), token.value(), createdAtDateTime, createdAtDateTime, expiresAtDateTime)
+        .execute();
+  }
+
   public static void insertGroup(
       DSLContext dslContext,
-      final UUID id,
+      final GroupId id,
       final String name,
       final String description,
       final String currencyCode,
@@ -124,7 +147,7 @@ public class DatabaseCrud {
             Groups.GROUPS.CURRENCY_CODE,
             Groups.GROUPS.CREATED_AT,
             Groups.GROUPS.UPDATED_AT)
-        .values(id, name, description, currencyCode, createdAtDateTime, createdAtDateTime)
+        .values(id.value(), name, description, currencyCode, createdAtDateTime, createdAtDateTime)
         .execute();
   }
 
@@ -132,6 +155,7 @@ public class DatabaseCrud {
       DSLContext dslContext,
       final UUID id,
       final GroupId groupId,
+      final UserId userId,
       final GroupInvitationToken token,
       final Instant createdAt,
       final Instant expiresAt) {
@@ -142,10 +166,17 @@ public class DatabaseCrud {
         .columns(
             GroupInvitations.GROUP_INVITATIONS.ID,
             GroupInvitations.GROUP_INVITATIONS.GROUP_ID,
+            GroupInvitations.GROUP_INVITATIONS.USER_ID,
             GroupInvitations.GROUP_INVITATIONS.TOKEN,
             GroupInvitations.GROUP_INVITATIONS.CREATED_AT,
             GroupInvitations.GROUP_INVITATIONS.EXPIRES_AT)
-        .values(id, groupId.value(), token.value(), createdAtDateTime, expiresAtDateTime)
+        .values(
+            id,
+            groupId.value(),
+            userId.value(),
+            token.value(),
+            createdAtDateTime,
+            expiresAtDateTime)
         .execute();
   }
 }

@@ -3,9 +3,10 @@ package com.familymoney.domains.transactions.repositories;
 import com.familymoney.domains.transactions.repositories.dtos.CreateGroupInvitationDto;
 import com.familymoney.domains.transactions.repositories.entitites.GroupInvitationEntity;
 import com.familymoney.domains.transactions.repositories.mappers.GroupInvitationJooqMapper;
+import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
+import com.familymoney.domains.user.types.UserId;
 import com.familymoney.generated.tables.GroupInvitations;
-import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Optional;
@@ -26,16 +27,19 @@ public class GroupInvitationRepository implements IGroupInvitationRepository {
         .columns(
             GroupInvitations.GROUP_INVITATIONS.ID,
             GroupInvitations.GROUP_INVITATIONS.GROUP_ID,
+            GroupInvitations.GROUP_INVITATIONS.USER_ID,
             GroupInvitations.GROUP_INVITATIONS.TOKEN,
             GroupInvitations.GROUP_INVITATIONS.EXPIRES_AT)
         .values(
             data.id(),
             data.groupId().value(),
+            data.userId().value(),
             data.token().value(),
             OffsetDateTime.ofInstant(data.expiresAt(), ZoneOffset.UTC))
         .returning(
             GroupInvitations.GROUP_INVITATIONS.ID,
             GroupInvitations.GROUP_INVITATIONS.GROUP_ID,
+            GroupInvitations.GROUP_INVITATIONS.USER_ID,
             GroupInvitations.GROUP_INVITATIONS.TOKEN,
             GroupInvitations.GROUP_INVITATIONS.CREATED_AT,
             GroupInvitations.GROUP_INVITATIONS.EXPIRES_AT)
@@ -48,6 +52,7 @@ public class GroupInvitationRepository implements IGroupInvitationRepository {
     return db.select(
             GroupInvitations.GROUP_INVITATIONS.ID,
             GroupInvitations.GROUP_INVITATIONS.GROUP_ID,
+            GroupInvitations.GROUP_INVITATIONS.USER_ID,
             GroupInvitations.GROUP_INVITATIONS.TOKEN,
             GroupInvitations.GROUP_INVITATIONS.CREATED_AT,
             GroupInvitations.GROUP_INVITATIONS.EXPIRES_AT)
@@ -67,10 +72,12 @@ public class GroupInvitationRepository implements IGroupInvitationRepository {
   }
 
   @Override
-  public void deleteOlderThan(final Duration cutoff) {
-    val threshold = OffsetDateTime.now(ZoneOffset.UTC).minusSeconds(cutoff.getSeconds());
-    db.deleteFrom(GroupInvitations.GROUP_INVITATIONS)
-        .where(GroupInvitations.GROUP_INVITATIONS.CREATED_AT.lt(threshold))
-        .execute();
+  public long countByGroupIdAndUserId(final GroupId groupId, final UserId userId) {
+    return db.fetchCount(
+        GroupInvitations.GROUP_INVITATIONS,
+        GroupInvitations.GROUP_INVITATIONS
+            .GROUP_ID
+            .eq(groupId.value())
+            .and(GroupInvitations.GROUP_INVITATIONS.USER_ID.eq(userId.value())));
   }
 }

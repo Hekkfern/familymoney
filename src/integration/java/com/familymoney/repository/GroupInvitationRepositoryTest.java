@@ -3,20 +3,17 @@ package com.familymoney.repository;
 import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 
-import com.familymoney.generated.tables.GroupInvitations;
-import com.familymoney.generated.tables.Groups;
-import com.familymoney.domains.transactions.repositories.dtos.CreateGroupInvitationDto;
-import com.familymoney.domains.transactions.repositories.entitites.GroupInvitationEntity;
 import com.familymoney.domains.transactions.repositories.GroupInvitationRepository;
+import com.familymoney.domains.transactions.repositories.dtos.CreateGroupInvitationDto;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
+import com.familymoney.domains.user.types.Email;
+import com.familymoney.domains.user.types.UserId;
+import com.familymoney.domains.user.types.UserName;
+import com.familymoney.testutils.DatabaseCrud;
 import com.familymoney.testutils.FakeGenerator;
-import java.time.Duration;
 import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.UUID;
 import lombok.val;
 import org.jooq.DSLContext;
@@ -29,7 +26,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
-/*
+
 @JooqTest
 @Testcontainers
 class GroupInvitationRepositoryTest {
@@ -47,82 +44,136 @@ class GroupInvitationRepositoryTest {
     this.groupInvitationRepository = new GroupInvitationRepository(dslContext);
   }
 
+  private UserId insertRandomUser() {
+    val userId = UserId.generate();
+    val now = Instant.ofEpochSecond(1778755330);
+    DatabaseCrud.insertUser(
+        dslContext,
+        userId,
+        UserName.fromString(FakeGenerator.username()),
+        Email.fromString(FakeGenerator.email()),
+        "hashed_password",
+        now,
+        true,
+        true);
+    return userId;
+  }
+
+  private GroupId insertRandomGroup() {
+    val groupId = GroupId.generate();
+    val now = Instant.ofEpochSecond(1778454330);
+    DatabaseCrud.insertGroup(
+        dslContext, groupId, "group-" + FakeGenerator.username(), "desc", "USD", now);
+    return groupId;
+  }
+
+  // region IGroupInvitationRepository.create()
+
   @Test
-  void create_persists_invitation() {
-    val groupId = insertGroup("group-" + FakeGenerator.username(), "desc", "USD");
+  void create_persists_invitation_record() {
+    val userId = insertRandomUser();
+    val now = Instant.now();
+    val groupId = insertRandomGroup();
     val token = GroupInvitationToken.generate();
-    val expiresAt = Instant.now().plusSeconds(3600);
+    val expiration = Instant.now().plusSeconds(3600);
 
     val created =
         groupInvitationRepository.create(
-            new CreateGroupInvitationDto(any(), groupId, token, expiresAt));
+            new CreateGroupInvitationDto(UUID.randomUUID(), groupId, userId, token, expiration));
 
     assertThat(created).isPresent();
     val dbo = created.get();
     assertThat(dbo.id()).isNotNull();
     assertThat(dbo.groupId()).isEqualTo(groupId);
+    assertThat(dbo.userId()).isEqualTo(userId);
     assertThat(dbo.token()).isEqualTo(token);
-    assertThat(dbo.expiresAt()).isEqualTo(expiresAt);
+    assertThat(dbo.createdAt()).isEqualTo(now);
+    assertThat(dbo.expiresAt()).isEqualTo(expiration);
   }
 
   @Test
-  void create_throws_when_group_missing() {
-    val missingGroup = GroupId.fromUuid(UUID.randomUUID());
+  void create_throws_when_group_does_not_exist() {
+    val userId = insertRandomUser();
+    val groupId = GroupId.generate();
 
-    assertThatThrownBy(
-            () ->
-                groupInvitationRepository.create(
-                    new CreateGroupInvitationDto(
-                        any(),
-                        missingGroup,
-                        GroupInvitationToken.generate(),
-                        Instant.now().plusSeconds(300))))
+    val dto =
+        new CreateGroupInvitationDto(
+            UUID.randomUUID(),
+            groupId,
+            userId,
+            GroupInvitationToken.generate(),
+            Instant.now().plusSeconds(300));
+    assertThatThrownBy(() -> groupInvitationRepository.create(dto))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 
   @Test
   void create_throws_when_token_is_duplicate() {
-    val groupId = insertGroup("group-" + FakeGenerator.username(), "desc", "USD");
+    val userId = insertRandomUser();
+    val groupId = GroupId.generate();
+    val now = Instant.now();
+    DatabaseCrud.insertGroup(
+        dslContext, groupId, "group-" + FakeGenerator.username(), "desc", "USD", now);
     val token = GroupInvitationToken.generate();
+    DatabaseCrud.insertGroupInvitation(
+        dslContext, UUID.randomUUID(), groupId, userId, token, now, now.plusSeconds(300));
 
-    groupInvitationRepository.create(
-        new CreateGroupInvitationDto(any(), groupId, token, Instant.now().plusSeconds(300)));
-
-    assertThatThrownBy(
-            () ->
-                groupInvitationRepository.create(
-                    new CreateGroupInvitationDto(
-                        any(), groupId, token, Instant.now().plusSeconds(600))))
+    val dto =
+        new CreateGroupInvitationDto(
+            UUID.randomUUID(), groupId, userId, token, now.plusSeconds(600));
+    assertThatThrownBy(() -> groupInvitationRepository.create(dto))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 
+  // endregion
+
+  // region IGroupInvitationRepository.findByToken()
+
   @Test
   void findByToken_returns_invitation_when_exists() {
-    val groupId = insertGroup("group-" + FakeGenerator.username(), "desc", "USD");
+    val userId = insertRandomUser();
+    val groupId = GroupId.generate();
+    val now = Instant.now();
+    DatabaseCrud.insertGroup(
+        dslContext, groupId, "group-" + FakeGenerator.username(), "desc", "USD", now);
     val token = GroupInvitationToken.generate();
-    groupInvitationRepository.create(
-        new CreateGroupInvitationDto(any(), groupId, token, Instant.now().plusSeconds(300)));
+    val expiration = now.plusSeconds(300);
+    DatabaseCrud.insertGroupInvitation(
+        dslContext, UUID.randomUUID(), groupId, userId, token, now, expiration);
 
-    val found = groupInvitationRepository.findByToken(token);
+    val invitationFoundOpt = groupInvitationRepository.findByToken(token);
 
-    assertThat(found).isPresent();
-    assertThat(found.get().groupId()).isEqualTo(groupId);
-    assertThat(found.get().token()).isEqualTo(token);
+    assertThat(invitationFoundOpt).isPresent();
+    val invitationFound = invitationFoundOpt.get();
+    assertThat(invitationFound.id()).isNotNull();
+    assertThat(invitationFound.groupId()).isEqualTo(groupId);
+    assertThat(invitationFound.token()).isEqualTo(token);
+    assertThat(invitationFound.createdAt()).isEqualTo(now);
+    assertThat(invitationFound.expiresAt()).isEqualTo(expiration);
   }
 
   @Test
   void findByToken_returns_empty_when_missing() {
-    val found = groupInvitationRepository.findByToken(GroupInvitationToken.generate());
+    val invitationFoundOpt = groupInvitationRepository.findByToken(GroupInvitationToken.generate());
 
-    assertThat(found).isEmpty();
+    assertThat(invitationFoundOpt).isEmpty();
   }
+
+  // endregion
+
+  // region IGroupInvitationRepository.deleteByToken()
 
   @Test
   void deleteByToken_deletes_invitation() {
-    val groupId = insertGroup("group-" + FakeGenerator.username(), "desc", "USD");
+    val userId = insertRandomUser();
+    val groupId = GroupId.generate();
+    val now = Instant.now();
+    DatabaseCrud.insertGroup(
+        dslContext, groupId, "group-" + FakeGenerator.username(), "desc", "USD", now);
     val token = GroupInvitationToken.generate();
-    groupInvitationRepository.create(
-        new CreateGroupInvitationDto(any(), groupId, token, Instant.now().plusSeconds(300)));
+    val expiration = now.plusSeconds(300);
+    DatabaseCrud.insertGroupInvitation(
+        dslContext, UUID.randomUUID(), groupId, userId, token, now, expiration);
 
     val deleted = groupInvitationRepository.deleteByToken(token);
 
@@ -137,20 +188,87 @@ class GroupInvitationRepositoryTest {
     assertThat(deleted).isFalse();
   }
 
+  // endregion
+
+  // region IGroupInvitationRepository.countByGroupIdAndUserId()
+
   @Test
-  void deleteOlderThan_removes_only_old_invitations() {
-    val groupId = insertGroup("group-" + FakeGenerator.username(), "desc", "USD");
-    val now = OffsetDateTime.now(ZoneOffset.UTC);
-    val oldToken = GroupInvitationToken.generate();
-    val recentToken = GroupInvitationToken.generate();
+  void countByGroupIdAndUserId_returns_count_when_there_are_entries() {
+    val userId = insertRandomUser();
+    val anotherUserId = insertRandomUser();
+    val groupId = insertRandomGroup();
+    val anotherGroupId = insertRandomGroup();
+    val now = Instant.now();
+    val expiration = now.plusSeconds(300);
 
-    insertInvitation(groupId, oldToken, now.minusDays(2));
-    insertInvitation(groupId, recentToken, now.minusMinutes(30));
+    DatabaseCrud.insertGroupInvitation(
+        dslContext,
+        UUID.randomUUID(),
+        groupId,
+        userId,
+        GroupInvitationToken.generate(),
+        now,
+        expiration);
+    DatabaseCrud.insertGroupInvitation(
+        dslContext,
+        UUID.randomUUID(),
+        groupId,
+        userId,
+        GroupInvitationToken.generate(),
+        now.plusSeconds(1),
+        expiration.plusSeconds(1));
+    DatabaseCrud.insertGroupInvitation(
+        dslContext,
+        UUID.randomUUID(),
+        groupId,
+        anotherUserId,
+        GroupInvitationToken.generate(),
+        now,
+        expiration);
+    DatabaseCrud.insertGroupInvitation(
+        dslContext,
+        UUID.randomUUID(),
+        anotherGroupId,
+        userId,
+        GroupInvitationToken.generate(),
+        now,
+        expiration);
 
-    groupInvitationRepository.deleteOlderThan(Duration.ofDays(1));
+    val invitationCount = groupInvitationRepository.countByGroupIdAndUserId(groupId, userId);
 
-    assertThat(groupInvitationRepository.findByToken(oldToken)).isEmpty();
-    assertThat(groupInvitationRepository.findByToken(recentToken)).isPresent();
+    assertThat(invitationCount).isEqualTo(2L);
   }
+
+  @Test
+  void countByGroupIdAndUserId_returns_zero_when_there_are_no_entries() {
+    val userId = insertRandomUser();
+    val anotherUserId = insertRandomUser();
+    val groupId = insertRandomGroup();
+    val anotherGroupId = insertRandomGroup();
+    val now = Instant.now();
+    val expiration = now.plusSeconds(300);
+
+    DatabaseCrud.insertGroupInvitation(
+        dslContext,
+        UUID.randomUUID(),
+        groupId,
+        anotherUserId,
+        GroupInvitationToken.generate(),
+        now,
+        expiration);
+    DatabaseCrud.insertGroupInvitation(
+        dslContext,
+        UUID.randomUUID(),
+        anotherGroupId,
+        userId,
+        GroupInvitationToken.generate(),
+        now,
+        expiration);
+
+    val invitationCount = groupInvitationRepository.countByGroupIdAndUserId(groupId, userId);
+
+    assertThat(invitationCount).isZero();
+  }
+
+  // endregion
 }
-*/

@@ -121,31 +121,31 @@ class EmailVerificationRepositoryTest {
 
   // region IEmailVerificationRepository.findByUserId()
 
-    @Test
-    void findByUserId_returns_token_when_it_exists() {
-      val userId = insertRandomUser();
-      val token = EmailVerificationToken.generate();
-      val now = Instant.now();
-      val expiration = now.plusSeconds(3600);
-      DatabaseCrud.insertEmailVerificationToken(dslContext, userId, token, now, expiration);
+  @Test
+  void findByUserId_returns_token_when_it_exists() {
+    val userId = insertRandomUser();
+    val token = EmailVerificationToken.generate();
+    val now = Instant.now();
+    val expiration = now.plusSeconds(3600);
+    DatabaseCrud.insertEmailVerificationToken(dslContext, userId, token, now, expiration);
 
-      val tokenFoundOpt = emailVerificationRepository.findByUserId(userId);
+    val tokenFoundOpt = emailVerificationRepository.findByUserId(userId);
 
-      assertThat(tokenFoundOpt).isPresent();
-      val tokenFound = tokenFoundOpt.get();
-      assertThat(tokenFound.userId()).isEqualTo(userId);
-      assertThat(tokenFound.token()).isEqualTo(token);
-      assertThat(tokenFound.expiresAt()).isEqualTo(expiration);
-      assertThat(tokenFound.createdAt()).isEqualTo(now);
-      assertThat(tokenFound.updatedAt()).isEqualTo(now);
-    }
+    assertThat(tokenFoundOpt).isPresent();
+    val tokenFound = tokenFoundOpt.get();
+    assertThat(tokenFound.userId()).isEqualTo(userId);
+    assertThat(tokenFound.token()).isEqualTo(token);
+    assertThat(tokenFound.expiresAt()).isEqualTo(expiration);
+    assertThat(tokenFound.createdAt()).isEqualTo(now);
+    assertThat(tokenFound.updatedAt()).isEqualTo(now);
+  }
 
-    @Test
-    void findByUserId_returns_empty_when_it_does_not_exist() {
-      val found = emailVerificationRepository.findByUserId(UserId.generate());
+  @Test
+  void findByUserId_returns_empty_when_it_does_not_exist() {
+    val found = emailVerificationRepository.findByUserId(UserId.generate());
 
-      assertThat(found).isEmpty();
-    }
+    assertThat(found).isEmpty();
+  }
 
   // endregion
 
@@ -181,57 +181,56 @@ class EmailVerificationRepositoryTest {
 
   // region IEmailVerificationRepository.updateByUserId()
 
-    @Test
-    void updateByUserId_updates_row_and_returns_true_when_it_succeeds() {
-      val userId = insertRandomUser();
-      val token = EmailVerificationToken.generate();
-      val now = Instant.now();
-      val expiration = now.plusSeconds(3600);
-      DatabaseCrud.insertEmailVerificationToken(dslContext, userId, token, now, expiration);
+  @Test
+  void updateByUserId_updates_row_and_returns_true_when_it_succeeds() {
+    val userId = insertRandomUser();
+    val token = EmailVerificationToken.generate();
+    val now = Instant.now();
+    val expiration = now.plusSeconds(3600);
+    DatabaseCrud.insertEmailVerificationToken(dslContext, userId, token, now, expiration);
 
-      val newToken = EmailVerificationToken.generate();
-      val dto = UpdateEmailVerificationTokenDto.builder().token(newToken).build();
+    val newToken = EmailVerificationToken.generate();
+    val dto = UpdateEmailVerificationTokenDto.builder().token(newToken).build();
 
-      val updated = emailVerificationRepository.updateByUserId(userId, dto);
+    val updated = emailVerificationRepository.updateByUserId(userId, dto);
 
-      assertThat(updated).isTrue();
-      val tokenFound = emailVerificationRepository.findByUserId(userId).orElseThrow();
-      assertThat(tokenFound.userId()).isEqualTo(userId);
-      assertThat(tokenFound.token()).isEqualTo(newToken);
-      assertThat(tokenFound.expiresAt()).isEqualTo(expiration);
-      assertThat(tokenFound.createdAt()).isEqualTo(now);
-    }
+    assertThat(updated).isTrue();
+    val tokenFound = emailVerificationRepository.findByUserId(userId).orElseThrow();
+    assertThat(tokenFound.userId()).isEqualTo(userId);
+    assertThat(tokenFound.token()).isEqualTo(newToken);
+    assertThat(tokenFound.expiresAt()).isEqualTo(expiration);
+    assertThat(tokenFound.createdAt()).isEqualTo(now);
+  }
 
-    @Test
-    void updateByUserId_does_nothing_and_returns_false_when_dto_is_all_null() {
-      val userId = insertRandomUser();
-      val token = EmailVerificationToken.generate();
-      val now = Instant.now();
-      val expiration = now.plusSeconds(3600);
-      DatabaseCrud.insertEmailVerificationToken(dslContext, userId, token, now, expiration);
+  @Test
+  void updateByUserId_does_nothing_and_returns_false_when_dto_is_all_null() {
+    val userId = insertRandomUser();
+    val token = EmailVerificationToken.generate();
+    val now = Instant.now();
+    val expiration = now.plusSeconds(3600);
+    DatabaseCrud.insertEmailVerificationToken(dslContext, userId, token, now, expiration);
 
-      val nullDto = UpdateEmailVerificationTokenDto.builder().build();
+    val nullDto = UpdateEmailVerificationTokenDto.builder().build();
 
-      val updated = emailVerificationRepository.updateByUserId(userId, nullDto);
+    val updated = emailVerificationRepository.updateByUserId(userId, nullDto);
 
-      assertThat(updated).isTrue();
-      val tokenFound = emailVerificationRepository.findByUserId(userId).orElseThrow();
-      assertThat(tokenFound.userId()).isEqualTo(userId);
-      assertThat(tokenFound.token()).isEqualTo(token);
-      assertThat(tokenFound.expiresAt()).isEqualTo(expiration);
-      assertThat(tokenFound.createdAt()).isEqualTo(now);
-    }
+    assertThat(updated).isTrue();
+    val tokenFound = emailVerificationRepository.findByUserId(userId).orElseThrow();
+    assertThat(tokenFound.userId()).isEqualTo(userId);
+    assertThat(tokenFound.token()).isEqualTo(token);
+    assertThat(tokenFound.expiresAt()).isEqualTo(expiration);
+    assertThat(tokenFound.createdAt()).isEqualTo(now);
+  }
 
-    @Test
-    void updateByUserId_does_nothing_and_returns_false_when_user_does_not_exist() {
-      val update = UpdateEmailVerificationTokenDto.builder()
-          .token(EmailVerificationToken.generate())
-          .build();
+  @Test
+  void updateByUserId_does_nothing_and_returns_false_when_user_does_not_exist() {
+    val update =
+        UpdateEmailVerificationTokenDto.builder().token(EmailVerificationToken.generate()).build();
 
-      val updated = emailVerificationRepository.updateByUserId(UserId.generate(), update);
+    val updated = emailVerificationRepository.updateByUserId(UserId.generate(), update);
 
-      assertThat(updated).isFalse();
-    }
+    assertThat(updated).isFalse();
+  }
 
   // endregion
 

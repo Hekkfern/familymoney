@@ -194,10 +194,12 @@ CREATE TABLE group_invitations
 (
     id         UUID PRIMARY KEY,
     group_id   UUID                     NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
-    token      VARCHAR(255) UNIQUE      NOT NULL,
+    user_id    UUID                     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    token      VARCHAR(255) UNIQUE      NOT NULL CHECK (CHAR_LENGTH(BTRIM(token)) > 0),
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
 CREATE INDEX idx_group_invitations_group_id ON group_invitations (group_id);
+CREATE INDEX idx_group_invitations_user_id ON group_invitations (user_id);
 CREATE INDEX idx_group_invitations_token ON group_invitations (token);

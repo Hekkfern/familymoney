@@ -2,8 +2,9 @@ package com.familymoney.domains.transactions.repositories;
 
 import com.familymoney.domains.transactions.repositories.dtos.CreateGroupInvitationDto;
 import com.familymoney.domains.transactions.repositories.entitites.GroupInvitationEntity;
+import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
-import java.time.Duration;
+import com.familymoney.domains.user.types.UserId;
 import java.util.Optional;
 
 public interface IGroupInvitationRepository {
@@ -37,12 +38,5 @@ public interface IGroupInvitationRepository {
    */
   boolean deleteByToken(GroupInvitationToken token);
 
-  /**
-   * Deletes group invitation records that are older than the specified duration from the current
-   * time. This method is typically used to clean up expired invitations that are no longer valid.
-   *
-   * @param cutoff the duration used to determine which records to delete based on their age.
-   *     Records older than the current time minus this duration will be deleted.
-   */
-  void deleteOlderThan(Duration cutoff);
+  long countByGroupIdAndUserId(GroupId groupId, UserId userId);
 }

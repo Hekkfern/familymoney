@@ -6,6 +6,12 @@ public record EmailVerificationToken(String value) {
 
   private static final int LENGTH = 64;
 
+  public EmailVerificationToken {
+    if (value.length() != LENGTH) {
+      throw new IllegalArgumentException("Invalid refresh token length");
+    }
+  }
+
   public static EmailVerificationToken fromString(String value) {
     return new EmailVerificationToken(value);
   }
