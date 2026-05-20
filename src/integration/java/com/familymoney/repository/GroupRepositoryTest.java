@@ -66,7 +66,7 @@ class GroupRepositoryTest {
   }
 
   @Test
-  void create_persists_group() {
+  void create_persists_group_record() {
     val currency = Monetary.getCurrency("USD");
     val name = "group-" + FakeGenerator.username();
 

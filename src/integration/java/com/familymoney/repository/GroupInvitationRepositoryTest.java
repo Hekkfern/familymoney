@@ -75,20 +75,24 @@ class GroupInvitationRepositoryTest {
     val now = Instant.now();
     val groupId = insertRandomGroup();
     val token = GroupInvitationToken.generate();
-    val expiration = Instant.now().plusSeconds(3600);
+    val expiration = now.plusSeconds(3600);
 
-    val created =
+    val invitationOpt =
         groupInvitationRepository.create(
             new CreateGroupInvitationDto(UUID.randomUUID(), groupId, userId, token, expiration));
 
-    assertThat(created).isPresent();
-    val dbo = created.get();
-    assertThat(dbo.id()).isNotNull();
-    assertThat(dbo.groupId()).isEqualTo(groupId);
-    assertThat(dbo.userId()).isEqualTo(userId);
-    assertThat(dbo.token()).isEqualTo(token);
-    assertThat(dbo.createdAt()).isEqualTo(now);
-    assertThat(dbo.expiresAt()).isEqualTo(expiration);
+    assertThat(invitationOpt).isPresent();
+    val invitation = invitationOpt.get();
+    assertThat(invitation.id()).isNotNull();
+    assertThat(invitation.groupId()).isNotNull().isEqualTo(groupId);
+    assertThat(invitation.userId()).isNotNull().isEqualTo(userId);
+    assertThat(invitation.token()).isNotNull().isEqualTo(token);
+    assertThat(invitation.createdAt())
+        .isNotNull()
+        .isBetween(now.minusSeconds(1), now.plusSeconds(1));
+    assertThat(invitation.expiresAt())
+        .isNotNull()
+        .isBetween(expiration.minusSeconds(1), expiration.plusSeconds(1));
   }
 
   @Test

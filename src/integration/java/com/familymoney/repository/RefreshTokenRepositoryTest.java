@@ -79,8 +79,8 @@ class RefreshTokenRepositoryTest {
     assertThat(refreshTokenCreated).isPresent();
     val refreshToken = refreshTokenCreated.get();
     assertThat(refreshToken.id()).isNotNull();
-    assertThat(refreshToken.userId()).isEqualTo(userId);
-    assertThat(refreshToken.token()).isEqualTo(token);
+    assertThat(refreshToken.userId()).isNotNull().isEqualTo(userId);
+    assertThat(refreshToken.token()).isNotNull().isEqualTo(token);
     assertThat(refreshToken.createdAt())
         .isNotNull()
         .isBetween(now.minusSeconds(1), now.plusSeconds(1));
@@ -90,7 +90,7 @@ class RefreshTokenRepositoryTest {
     assertThat(refreshToken.expiresAt())
         .isNotNull()
         .isBetween(expiration.minusSeconds(1), expiration.plusSeconds(1));
-    assertThat(refreshToken.family()).isEqualTo(family);
+    assertThat(refreshToken.family()).isNotNull().isEqualTo(family);
   }
 
   void create_persists_when_same_user_but_different_family() {

@@ -10,7 +10,6 @@ import static org.mockito.Mockito.when;
 
 import com.familymoney.domains.transactions.exceptions.GroupInvitationInvalidException;
 import com.familymoney.domains.transactions.exceptions.TransactionNotFoundException;
-import com.familymoney.exceptions.DatabaseExecutionException;
 import com.familymoney.domains.transactions.exceptions.UserIsNotMemberOfGroupException;
 import com.familymoney.domains.transactions.repositories.IBalanceRepository;
 import com.familymoney.domains.transactions.repositories.IGroupInvitationRepository;
@@ -23,10 +22,16 @@ import com.familymoney.domains.transactions.repositories.entitites.GroupEntity;
 import com.familymoney.domains.transactions.repositories.entitites.GroupInvitationEntity;
 import com.familymoney.domains.transactions.repositories.entitites.TransactionEntity;
 import com.familymoney.domains.transactions.repositories.entitites.UserGroupEntity;
+import com.familymoney.domains.transactions.services.TransactionGroupService;
 import com.familymoney.domains.transactions.services.data.UpdateGroupData;
 import com.familymoney.domains.transactions.services.data.UpdateTransactionData;
-import com.familymoney.domains.transactions.services.TransactionGroupService;
-
+import com.familymoney.domains.transactions.types.BalanceId;
+import com.familymoney.domains.transactions.types.GroupId;
+import com.familymoney.domains.transactions.types.GroupInvitationToken;
+import com.familymoney.domains.transactions.types.GroupName;
+import com.familymoney.domains.transactions.types.TransactionId;
+import com.familymoney.domains.user.types.UserId;
+import com.familymoney.exceptions.DatabaseExecutionException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -35,13 +40,6 @@ import java.util.Optional;
 import java.util.UUID;
 import javax.money.CurrencyUnit;
 import javax.money.Monetary;
-
-import com.familymoney.domains.transactions.types.BalanceId;
-import com.familymoney.domains.transactions.types.GroupId;
-import com.familymoney.domains.transactions.types.GroupInvitationToken;
-import com.familymoney.domains.transactions.types.GroupName;
-import com.familymoney.domains.transactions.types.TransactionId;
-import com.familymoney.domains.user.types.UserId;
 import lombok.val;
 import org.javamoney.moneta.Money;
 import org.junit.jupiter.api.DisplayNameGeneration;
@@ -279,7 +277,7 @@ class TransactionGroupServiceTest {
     when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
     val token = GroupInvitationToken.fromString("token-123");
     val invitation = invitationDbo(gid, token, now.plusSeconds(3600));
-    when(groupInvitationRepository.create(new CreateGroupInvitationDto(any(), gid, any(), any())))
+    when(groupInvitationRepository.create(new CreateGroupInvitationDto(any(), gid,user, any(), any())))
         .thenReturn(Optional.of(invitation));
 
     val result = transactionGroupService.getInvitationToken(gid, user);
@@ -302,7 +300,7 @@ class TransactionGroupServiceTest {
     val gid = GroupId.fromUuid(UUID.randomUUID());
     val user = UserId.fromUuid(UUID.randomUUID());
     when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
-    when(groupInvitationRepository.create(new CreateGroupInvitationDto(any(), gid, any(), any())))
+    when(groupInvitationRepository.create(new CreateGroupInvitationDto(any(), gid,user, any(), any())))
         .thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> transactionGroupService.getInvitationToken(gid, user))

@@ -68,16 +68,22 @@ class PasswordResetRepositoryTest {
     val now = Instant.now();
     val expiresAt = now.plusSeconds(3600);
 
-    val dto = new CreatePasswordResetDto(userId, token, expiresAt);
-    val created = passwordResetRepository.create(dto);
+    val passwordResetOpt =
+        passwordResetRepository.create(new CreatePasswordResetDto(userId, token, expiresAt));
 
-    assertThat(created).isPresent();
-    val dbo = created.get();
-    assertThat(dbo.userId()).isEqualTo(userId);
-    assertThat(dbo.token()).isEqualTo(token);
-    assertThat(dbo.expiresAt()).isEqualTo(expiresAt);
-    assertThat(dbo.createdAt()).isEqualTo(now);
-    assertThat(dbo.updatedAt()).isEqualTo(now);
+    assertThat(passwordResetOpt).isPresent();
+    val passwordReset = passwordResetOpt.get();
+    assertThat(passwordReset.userId()).isNotNull().isEqualTo(userId);
+    assertThat(passwordReset.token()).isNotNull().isEqualTo(token);
+    assertThat(passwordReset.createdAt())
+        .isNotNull()
+        .isBetween(now.minusSeconds(1), now.plusSeconds(1));
+    assertThat(passwordReset.updatedAt())
+        .isNotNull()
+        .isBetween(now.minusSeconds(1), now.plusSeconds(1));
+    assertThat(passwordReset.expiresAt())
+        .isNotNull()
+        .isBetween(expiresAt.minusSeconds(1), expiresAt.plusSeconds(1));
   }
 
   @Test

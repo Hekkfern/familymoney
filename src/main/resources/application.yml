@@ -63,3 +63,6 @@ familymoney:
     username: ${ADMIN_USERNAME}
     email: ${ADMIN_EMAIL}
     password: ${ADMIN_PASSWORD}
+  groupInvitation:
+    invitation-duration: 1h
+    max-num-invitations: 5

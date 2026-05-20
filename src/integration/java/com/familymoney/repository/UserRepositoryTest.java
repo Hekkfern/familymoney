@@ -84,10 +84,10 @@ class UserRepositoryTest {
 
     assertThat(userCreated).isPresent();
     val user = userCreated.get();
-    assertThat(user.id()).isEqualTo(userId);
-    assertThat(user.username()).isEqualTo(username);
-    assertThat(user.email()).isEqualTo(email);
-    assertThat(user.hashedPassword()).isEqualTo(passwordHash);
+    assertThat(user.id()).isNotNull().isEqualTo(userId);
+    assertThat(user.username()).isNotNull().isEqualTo(username);
+    assertThat(user.email()).isNotNull().isEqualTo(email);
+    assertThat(user.hashedPassword()).isNotNull().isEqualTo(passwordHash);
     assertThat(user.createdAt()).isNotNull().isBetween(now.minusSeconds(1), now.plusSeconds(1));
     assertThat(user.updatedAt()).isNotNull().isBetween(now.minusSeconds(1), now.plusSeconds(1));
     assertThat(user.isEnabled()).isTrue();
