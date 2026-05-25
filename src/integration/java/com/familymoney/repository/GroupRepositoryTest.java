@@ -51,7 +51,7 @@ class GroupRepositoryTest {
 
   private UserId insertRandomUser() {
     val userId = UserId.generate();
-    val now = Instant.ofEpochSecond(1778755330);
+    val now = Instant.now();
     DatabaseCrud.insertUser(
         dslContext,
         userId,
@@ -66,7 +66,7 @@ class GroupRepositoryTest {
 
   private GroupId insertRandomGroup() {
     val groupId = GroupId.generate();
-    val now = Instant.ofEpochSecond(1778754330);
+    val now = Instant.now();
     DatabaseCrud.insertGroup(
         dslContext,
         groupId,
@@ -98,12 +98,17 @@ class GroupRepositoryTest {
     assertThat(group.updatedAt()).isNotNull().isBetween(now.minusSeconds(1), now.plusSeconds(1));
   }
 
+  @Test
+  void create_throws_when_group_id_already_exists() {
+    // TODO
+  }
+
   // endregion
 
   // region IGroupRepository.updateById()
 
   @Test
-  void updateById_updates_group_fields() {
+  void updateById_returns_true_when_everything_is_updated() {
     val groupId = insertRandomGroup();
     val now = Instant.now();
 
@@ -124,10 +129,26 @@ class GroupRepositoryTest {
   }
 
   @Test
-  void updateById_returns_false_when_missing() {
-    val update = UpdateGroupDto.builder().description("new-desc").build();
+  void updateById_returns_true_when_only_name_is_updated() {
+    // TODO
+  }
 
-    val updated = groupRepository.updateById(GroupId.fromUuid(UUID.randomUUID()), update);
+  @Test
+  void updateById_returns_true_when_only_description_is_updated() {
+    // TODO
+  }
+
+  @Test
+  void updateById_keeps_existing_values_when_all_fields_are_null() {
+    // TODO
+  }
+
+  @Test
+  void updateById_returns_false_when_group_does_not_exist() {
+    val groupId = GroupId.generate();
+    val dataToUpdate = UpdateGroupDto.builder().description("new-desc").build();
+
+    val updated = groupRepository.updateById(groupId, dataToUpdate);
 
     assertThat(updated).isFalse();
   }
@@ -137,7 +158,7 @@ class GroupRepositoryTest {
   // region IGroupRepository.deleteById()
 
   @Test
-  void deleteById_removes_group() {
+  void deleteById_returns_true_when_group_exists() {
     val groupId = insertRandomGroup();
 
     val deleted = groupRepository.deleteById(groupId);
@@ -147,7 +168,7 @@ class GroupRepositoryTest {
   }
 
   @Test
-  void deleteById_returns_false_when_missing() {
+  void deleteById_returns_false_when_group_does_not_exist() {
     val groupId = GroupId.generate();
 
     val deleted = groupRepository.deleteById(groupId);
@@ -159,14 +180,42 @@ class GroupRepositoryTest {
 
   // region IGroupRepository.findByUserId()
 
-  // TODO
+  @Test
+  void findByUserId_returns_groups_for_user_when_it_succeeds() {
+    val userId = insertRandomUser();
+    val groupIdA = insertRandomGroup();
+    val groupIdB = insertRandomGroup();
+    groupRepository.addUser(userId, groupIdA);
+    groupRepository.addUser(userId, groupIdB);
+
+    val page = groupRepository.findByUserId(userId, PageRequest.of(0, 10));
+
+    assertThat(page.getContent())
+        .extracting(GroupEntity::id)
+        .containsExactlyInAnyOrder(groupIdA, groupIdB);
+  }
+
+  @Test
+  void findByUserId_returns_empty_page_when_user_has_no_groups() {
+    // TODO
+  }
+
+  @Test
+  void findByUserId_returns_second_page_when_results_exceed_page_size() {
+    // TODO
+  }
+
+  @Test
+  void findByUserId_returns_empty_page_when_user_does_not_exist() {
+    // TODO
+  }
 
   // endregion
 
   // region IGroupRepository.findById()
 
   @Test
-  void findById_returns_group_when_exists() {
+  void findById_returns_group_when_it_exists() {
     val groupId = insertRandomGroup();
 
     val foundGroupOpt = groupRepository.findById(groupId);
@@ -177,7 +226,7 @@ class GroupRepositoryTest {
   }
 
   @Test
-  void findById_returns_empty_when_missing() {
+  void findById_returns_empty_when_it_does_not_exist() {
     val found = groupRepository.findById(GroupId.fromUuid(UUID.randomUUID()));
 
     assertThat(found).isEmpty();
@@ -187,14 +236,22 @@ class GroupRepositoryTest {
 
   // region IGroupRepository.existsById()
 
-  // TODO
+  @Test
+  void existsById_returns_true_when_group_exists() {
+    // TODO
+  }
+
+  @Test
+  void existsById_returns_false_when_group_does_not_exist() {
+    // TODO
+  }
 
   // endregion
 
   // region IGroupRepository.findUserIdsByGroupId()
 
   @Test
-  void findUserIdsByGroupId_returns_all_users() {
+  void findUserIdsByGroupId_returns_all_users_in_group() {
     val userId1 = insertRandomUser();
     val userId2 = insertRandomUser();
     insertRandomUser(); // noise user that should not be returned
@@ -205,6 +262,16 @@ class GroupRepositoryTest {
     val users = groupRepository.findUserIdsByGroupId(groupId);
 
     assertThat(users).containsExactlyInAnyOrder(userId1, userId2);
+  }
+
+  @Test
+  void findUserIdsByGroupId_returns_empty_list_when_group_has_no_members() {
+    // TODO
+  }
+
+  @Test
+  void findUserIdsByGroupId_returns_empty_list_when_group_does_not_exist() {
+    // TODO
   }
 
   // endregion
@@ -232,6 +299,11 @@ class GroupRepositoryTest {
     assertThat(result).isFalse();
   }
 
+  @Test
+  void isUserInGroup_returns_false_when_group_does_not_exist() {
+    // TODO
+  }
+
   // endregion
 
   // region IGroupRepository.addUser()
@@ -257,7 +329,12 @@ class GroupRepositoryTest {
   }
 
   @Test
-  void addUser_throws_when_duplicate() {
+  void addUser_returns_empty_when_user_does_not_exist() {
+    // TODO
+  }
+
+  @Test
+  void addUser_throws_when_user_is_already_in_group() {
     val userId = insertRandomUser();
     val groupId = insertRandomGroup();
     groupRepository.addUser(userId, groupId);
@@ -267,7 +344,7 @@ class GroupRepositoryTest {
   }
 
   @Test
-  void addUser_throws_when_group_missing() {
+  void addUser_throws_when_group_does_not_exist() {
     val userId = insertRandomUser();
     val groupId = GroupId.generate();
 
@@ -301,23 +378,9 @@ class GroupRepositoryTest {
     assertThat(deleted).isFalse();
   }
 
-  // endregion
-
-  // region IGroupRepository.findByUserId()
-
   @Test
-  void findByUserId_returns_groups_for_user() {
-    val userId = insertRandomUser();
-    val groupIdA = insertRandomGroup();
-    val groupIdB = insertRandomGroup();
-    groupRepository.addUser(userId, groupIdA);
-    groupRepository.addUser(userId, groupIdB);
-
-    val page = groupRepository.findByUserId(userId, PageRequest.of(0, 10));
-
-    assertThat(page.getContent())
-        .extracting(GroupEntity::id)
-        .containsExactlyInAnyOrder(groupIdA, groupIdB);
+  void deleteUser_returns_false_when_group_does_not_exist() {
+    // TODO
   }
 
   // endregion
