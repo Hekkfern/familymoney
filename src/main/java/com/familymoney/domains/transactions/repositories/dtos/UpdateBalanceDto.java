@@ -10,11 +10,11 @@ import org.jspecify.annotations.Nullable;
 @Data
 @Builder
 public class UpdateBalanceDto {
-  @Nullable @Default private Money amount = null;
+  @Nullable @Default private Money money = null;
   @Nullable @Default private UserId user1 = null;
   @Nullable @Default private UserId user2 = null;
 
   public boolean isEmpty() {
-    return amount == null && user1 == null && user2 == null;
+    return money == null && user1 == null && user2 == null;
   }
 }

@@ -238,7 +238,7 @@ public class TransactionGroupService implements ITransactionGroupService {
         .collect(
             Collectors.toMap(
                 b -> b.user1().equals(userId) ? b.user2() : b.user1(),
-                BalanceEntity::amount,
+                BalanceEntity::money,
                 (existing, replacement) -> existing));
   }
 

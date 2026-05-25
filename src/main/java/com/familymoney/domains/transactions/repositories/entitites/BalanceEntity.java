@@ -8,4 +8,4 @@ import org.javamoney.moneta.Money;
 
 @Builder
 public record BalanceEntity(
-    BalanceId id, GroupId groupId, Money amount, UserId user1, UserId user2) {}
+    BalanceId id, GroupId groupId, Money money, UserId user1, UserId user2) {}

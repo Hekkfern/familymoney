@@ -12,7 +12,7 @@ import java.util.Optional;
 /**
  * The IBalanceRepository interface defines the contract for managing balance entries within the
  * family money application. It provides methods for creating, retrieving, and updating balance
- * entries that represent the amount owed between users within the context of a specific group.
+ * entries that represent the money owed between users within the context of a specific group.
  */
 public interface IBalanceRepository {
 
@@ -22,7 +22,7 @@ public interface IBalanceRepository {
    * @param data values to store
    * @return an Optional containing the created BalanceDbo if the creation was successful, or an
    *     empty Optional if the creation failed (e.g., due to invalid input or database constraints)
-   * @implNote When a new balance is created, it is initialized with a default amount of zero,
+   * @implNote When a new balance is created, it is initialized with a default money of zero,
    *     indicating that there are no outstanding debts between the two users at the time of
    *     creation. This method ensures that a balance entry is established for the given group and
    *     user pair, allowing for future updates as transactions occur within the group.

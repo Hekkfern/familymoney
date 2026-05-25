@@ -29,13 +29,15 @@ public class BalanceRepository implements IBalanceRepository {
         .columns(
             Balances.BALANCES.ID,
             Balances.BALANCES.GROUP_ID,
+            Balances.BALANCES.AMOUNT,
             Balances.BALANCES.CURRENCY_CODE,
             Balances.BALANCES.USER_ID_1,
             Balances.BALANCES.USER_ID_2)
         .values(
             data.id().value(),
             data.groupId().value(),
-            data.currency().getCurrencyCode(),
+            data.amount().getNumber().numberValue(BigDecimal.class),
+            data.amount().getCurrency().getCurrencyCode(),
             data.user1().value(),
             data.user2().value())
         .returning(
@@ -90,11 +92,11 @@ public class BalanceRepository implements IBalanceRepository {
   @Override
   public boolean updateById(final BalanceId id, final UpdateBalanceDto data) {
     val amountValue =
-        data.getAmount() != null
-            ? data.getAmount().getNumber().numberValue(BigDecimal.class)
+        data.getMoney() != null
+            ? data.getMoney().getNumber().numberValue(BigDecimal.class)
             : null;
     val currencyValue =
-        data.getAmount() != null ? data.getAmount().getCurrency().getCurrencyCode() : null;
+        data.getMoney() != null ? data.getMoney().getCurrency().getCurrencyCode() : null;
     val user1Value = data.getUser1() != null ? data.getUser1().value() : null;
     val user2Value = data.getUser2() != null ? data.getUser2().value() : null;
 

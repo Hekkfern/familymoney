@@ -149,7 +149,7 @@ CREATE TABLE balances
 (
     id            UUID PRIMARY KEY,
     group_id      UUID           NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
-    amount        DECIMAL(19, 4) NOT NULL DEFAULT 0,
+    amount        DECIMAL(19, 4) NOT NULL,
     currency_code VARCHAR(3)     NOT NULL CHECK (currency_code ~ '^[A-Z]{3}$'),
     user_id_1     UUID           NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     user_id_2     UUID           NOT NULL REFERENCES users (id) ON DELETE CASCADE,

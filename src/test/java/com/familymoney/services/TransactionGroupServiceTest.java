@@ -100,7 +100,7 @@ class TransactionGroupServiceTest {
     return BalanceEntity.builder()
         .id(id)
         .groupId(groupId)
-        .amount(Money.of(5, usd))
+        .money(Money.of(5, usd))
         .user1(u1)
         .user2(u2)
         .build();
@@ -412,7 +412,7 @@ class TransactionGroupServiceTest {
     val map = transactionGroupService.getAllGroupBalances(gid, userA);
 
     assertThat(map).hasSize(1).containsKey(userB);
-    assertThat(map.get(userB)).isEqualTo(b.amount());
+    assertThat(map.get(userB)).isEqualTo(b.money());
   }
 
   @Test

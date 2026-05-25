@@ -4,24 +4,28 @@ import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.auth.types.PasswordResetToken;
 import com.familymoney.domains.auth.types.RefreshToken;
 import com.familymoney.domains.auth.types.TokenFamily;
+import com.familymoney.domains.transactions.types.BalanceId;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import com.familymoney.domains.transactions.types.GroupName;
 import com.familymoney.domains.user.types.Email;
 import com.familymoney.domains.user.types.UserId;
 import com.familymoney.domains.user.types.UserName;
+import com.familymoney.generated.tables.Balances;
 import com.familymoney.generated.tables.EmailVerificationTokens;
 import com.familymoney.generated.tables.GroupInvitations;
 import com.familymoney.generated.tables.Groups;
 import com.familymoney.generated.tables.PasswordResetTokens;
 import com.familymoney.generated.tables.RefreshTokens;
 import com.familymoney.generated.tables.Users;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
 import javax.money.CurrencyUnit;
 import lombok.val;
+import org.javamoney.moneta.Money;
 import org.jooq.DSLContext;
 
 public class DatabaseCrud {
@@ -149,7 +153,13 @@ public class DatabaseCrud {
             Groups.GROUPS.CURRENCY_CODE,
             Groups.GROUPS.CREATED_AT,
             Groups.GROUPS.UPDATED_AT)
-        .values(id.value(), name.value(), description, currency.getCurrencyCode(), createdAtDateTime, createdAtDateTime)
+        .values(
+            id.value(),
+            name.value(),
+            description,
+            currency.getCurrencyCode(),
+            createdAtDateTime,
+            createdAtDateTime)
         .execute();
   }
 
@@ -179,6 +189,32 @@ public class DatabaseCrud {
             token.value(),
             createdAtDateTime,
             expiresAtDateTime)
+        .execute();
+  }
+
+  public static void insertBalance(
+      DSLContext dslContext,
+      final BalanceId id,
+      final GroupId groupId,
+      final Money amount,
+      final UserId user1,
+      final UserId user2) {
+    dslContext
+        .insertInto(Balances.BALANCES)
+        .columns(
+            Balances.BALANCES.ID,
+            Balances.BALANCES.GROUP_ID,
+            Balances.BALANCES.AMOUNT,
+            Balances.BALANCES.CURRENCY_CODE,
+            Balances.BALANCES.USER_ID_1,
+            Balances.BALANCES.USER_ID_2)
+        .values(
+            id.value(),
+            groupId.value(),
+            amount.getNumber().numberValue(BigDecimal.class),
+            amount.getCurrency().getCurrencyCode(),
+            user1.value(),
+            user2.value())
         .execute();
   }
 }

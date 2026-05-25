@@ -12,7 +12,7 @@ import org.javamoney.moneta.Money;
  *
  * @param description Textual description for the transaction. May be empty.
  * @param groupId ID of the group to which the transaction belongs.
- * @param amount The monetary amount of the transaction. Must be positive.
+ * @param amount The monetary money of the transaction. Must be positive.
  * @param lender ID of the user who lent the money.
  * @param borrower ID of the user who borrowed the money. Must be different from lender.
  * @param doneAt The timestamp indicating when the transaction was completed.

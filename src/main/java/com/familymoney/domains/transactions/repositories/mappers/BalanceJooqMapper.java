@@ -17,7 +17,7 @@ public final class BalanceJooqMapper {
     return BalanceEntity.builder()
         .id(BalanceId.fromString(String.valueOf(r.get(Balances.BALANCES.ID))))
         .groupId(GroupId.fromString(String.valueOf(r.get(Balances.BALANCES.GROUP_ID))))
-        .amount(
+        .money(
             Money.of(
                 r.get(Balances.BALANCES.AMOUNT),
                 Monetary.getCurrency(r.get(Balances.BALANCES.CURRENCY_CODE))))

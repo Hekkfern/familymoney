@@ -10,33 +10,37 @@ import java.util.Optional;
 public interface IGroupInvitationRepository {
 
   /**
-   * Creates a new group invitation record with the specified group ID, invitation token, and
-   * expiration time.
+   * Creates a new group invitation record.
    *
-   * @param data values to store
-   * @return an {@link Optional} containing the created GroupInvitationDbo if the creation was
-   *     successful, or an empty {@link Optional} if the creation failed (e.g., due to invalid input
-   *     or database constraints)
+   * @param data values to persist for the invitation
+   * @return an {@link Optional} containing the created {@link GroupInvitationEntity} when the
+   *     insert succeeds; otherwise an empty {@link Optional}
    */
   Optional<GroupInvitationEntity> create(CreateGroupInvitationDto data);
 
   /**
-   * Retrieves a group invitation record based on the provided invitation token.
+   * Finds a group invitation by its token.
    *
-   * @param token the unique token associated with the group invitation
-   * @return an {@link Optional} containing the found GroupInvitationDbo if a matching record is
-   *     found, or an empty {@link Optional} if no matching record exists for the provided token
+   * @param token the unique invitation token
+   * @return an {@link Optional} containing the matching {@link GroupInvitationEntity} when found;
+   *     otherwise an empty {@link Optional}
    */
   Optional<GroupInvitationEntity> findByToken(GroupInvitationToken token);
 
   /**
-   * Deletes a group invitation record based on the provided invitation token.
+   * Deletes a group invitation by its token.
    *
-   * @param token the unique token associated with the group invitation to be deleted
-   * @return true if the deletion was successful (i.e., a record was found and deleted), or false if
-   *     no matching record exists for the provided token
+   * @param token the unique invitation token
+   * @return {@code true} if a matching invitation was deleted; otherwise {@code false}
    */
   boolean deleteByToken(GroupInvitationToken token);
 
+  /**
+   * Counts invitations for the given group and user pair.
+   *
+   * @param groupId the group identifier
+   * @param userId the user identifier
+   * @return the number of invitation records that match the provided group and user IDs
+   */
   long countByGroupIdAndUserId(GroupId groupId, UserId userId);
 }
