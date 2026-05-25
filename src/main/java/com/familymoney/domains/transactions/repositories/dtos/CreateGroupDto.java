@@ -15,8 +15,4 @@ import lombok.Builder;
  */
 @Builder
 public record CreateGroupDto(
-    GroupId id, GroupName name, String description, CurrencyUnit currency) {
-  public CreateGroupDto {
-    assert !name.value().isEmpty() : "Group name cannot be empty";
-  }
-}
+    GroupId id, GroupName name, String description, CurrencyUnit currency) {}

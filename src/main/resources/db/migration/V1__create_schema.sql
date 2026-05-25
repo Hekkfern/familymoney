@@ -126,7 +126,7 @@ CREATE UNLOGGED TABLE tokenfamily_blacklist
 CREATE TABLE groups
 (
     id            UUID PRIMARY KEY,
-    name          VARCHAR(64)              NOT NULL,
+    name          VARCHAR(64)              NOT NULL CHECK (CHAR_LENGTH(BTRIM(name)) > 0),
     description   VARCHAR(255)             NOT NULL,
     currency_code VARCHAR(3)               NOT NULL CHECK (currency_code ~ '^[A-Z]{3}$'),
     created_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),

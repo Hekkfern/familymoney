@@ -3,17 +3,19 @@ package com.familymoney.repository;
 import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 
-import com.familymoney.generated.tables.Users;
+import com.familymoney.domains.transactions.repositories.GroupRepository;
 import com.familymoney.domains.transactions.repositories.dtos.CreateGroupDto;
 import com.familymoney.domains.transactions.repositories.dtos.UpdateGroupDto;
 import com.familymoney.domains.transactions.repositories.entitites.GroupEntity;
-import com.familymoney.domains.transactions.repositories.GroupRepository;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupName;
+import com.familymoney.domains.user.types.Email;
 import com.familymoney.domains.user.types.UserId;
+import com.familymoney.domains.user.types.UserName;
+import com.familymoney.testutils.DatabaseCrud;
 import com.familymoney.testutils.FakeGenerator;
+import java.time.Instant;
 import java.util.UUID;
 import javax.money.Monetary;
 import lombok.val;
@@ -24,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jooq.test.autoconfigure.JooqTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.PageRequest;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -46,76 +49,78 @@ class GroupRepositoryTest {
     this.groupRepository = new GroupRepository(dslContext);
   }
 
-  private UserId insertUser(final String username, final String email) {
-    val r =
-        dslContext
-            .insertInto(Users.USERS)
-            .columns(Users.USERS.USERNAME, Users.USERS.EMAIL, Users.USERS.HASHED_PASSWORD)
-            .values(username, email, "hashed-password")
-            .returning(Users.USERS.ID)
-            .fetchOne();
-    return UserId.fromUuid(r.getId());
+  private UserId insertRandomUser() {
+    val userId = UserId.generate();
+    val now = Instant.ofEpochSecond(1778755330);
+    DatabaseCrud.insertUser(
+        dslContext,
+        userId,
+        UserName.fromString(FakeGenerator.username()),
+        Email.fromString(FakeGenerator.email()),
+        "hashed_password",
+        now,
+        true,
+        true);
+    return userId;
   }
 
-  private GroupEntity createGroup(final String name, final String description, final UserId owner) {
-    return groupRepository
-        .create(
-            new CreateGroupDto(
-                any(), GroupName.fromString(name), description, Monetary.getCurrency("USD")))
-        .orElseThrow();
+  private GroupId insertRandomGroup() {
+    val groupId = GroupId.generate();
+    val now = Instant.ofEpochSecond(1778754330);
+    DatabaseCrud.insertGroup(
+        dslContext,
+        groupId,
+        GroupName.fromString(FakeGenerator.groupName()),
+        "desc",
+        Monetary.getCurrency("USD"),
+        now);
+    return groupId;
   }
+
+  // region IGroupRepository.create()
 
   @Test
   void create_persists_group_record() {
     val currency = Monetary.getCurrency("USD");
-    val name = "group-" + FakeGenerator.username();
+    val groupName = GroupName.fromString(FakeGenerator.groupName());
+    val groupId = GroupId.generate();
+    val now = Instant.now();
 
-    val created =
-        groupRepository.create(
-            new CreateGroupDto(any(), GroupName.fromString(name), "desc", currency));
+    val groupOpt = groupRepository.create(new CreateGroupDto(groupId, groupName, "desc", currency));
 
-    assertThat(created).isPresent();
-    val dbo = created.get();
-    assertThat(dbo.id()).isNotNull();
-    assertThat(dbo.name()).isEqualTo(GroupName.fromString(name));
-    assertThat(dbo.description()).isEqualTo("desc");
-    assertThat(dbo.currency()).isEqualTo(currency);
+    assertThat(groupOpt).isPresent();
+    val group = groupOpt.get();
+    assertThat(group.id()).isNotNull();
+    assertThat(group.name()).isEqualTo(groupName);
+    assertThat(group.description()).isEqualTo("desc");
+    assertThat(group.currency()).isEqualTo(currency);
+    assertThat(group.createdAt()).isNotNull().isBetween(now.minusSeconds(1), now.plusSeconds(1));
+    assertThat(group.updatedAt()).isNotNull().isBetween(now.minusSeconds(1), now.plusSeconds(1));
   }
 
-  @Test
-  void findById_returns_group_when_exists() {
-    val owner = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val created = createGroup("group-" + FakeGenerator.username(), "desc", owner);
+  // endregion
 
-    val found = groupRepository.findById(created.id());
-
-    assertThat(found).isPresent();
-    assertThat(found.get().id()).isEqualTo(created.id());
-  }
-
-  @Test
-  void findById_returns_empty_when_missing() {
-    val found = groupRepository.findById(GroupId.fromUuid(UUID.randomUUID()));
-
-    assertThat(found).isEmpty();
-  }
+  // region IGroupRepository.updateById()
 
   @Test
   void updateById_updates_group_fields() {
-    val owner = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val created = createGroup("group-" + FakeGenerator.username(), "desc", owner);
-    val update =
-        UpdateGroupDto.builder()
-            .name(GroupName.fromString("updated-" + FakeGenerator.username()))
-            .description("new-desc")
-            .build();
+    val groupId = insertRandomGroup();
+    val now = Instant.now();
 
-    val updated = groupRepository.updateById(created.id(), update);
+    val newGroupName = GroupName.fromString(FakeGenerator.groupName());
+    val newDescription = "new description";
+    val dataToUpdate =
+        UpdateGroupDto.builder().name(newGroupName).description(newDescription).build();
+    val updated = groupRepository.updateById(groupId, dataToUpdate);
 
     assertThat(updated).isTrue();
-    val found = groupRepository.findById(created.id()).orElseThrow();
-    assertThat(found.name()).isEqualTo(update.getName());
-    assertThat(found.description()).isEqualTo(update.getDescription());
+    val found = groupRepository.findById(groupId).orElseThrow();
+    assertThat(found.id()).isEqualTo(groupId);
+    assertThat(found.name()).isEqualTo(newGroupName);
+    assertThat(found.description()).isEqualTo("new description");
+    assertThat(found.currency()).isEqualTo(Monetary.getCurrency("USD"));
+    assertThat(found.createdAt()).isNotNull().isBetween(now.minusSeconds(1), now.plusSeconds(1));
+    assertThat(found.updatedAt()).isNotNull().isBetween(now.minusSeconds(1), now.plusSeconds(1));
   }
 
   @Test
@@ -127,114 +132,193 @@ class GroupRepositoryTest {
     assertThat(updated).isFalse();
   }
 
+  // endregion
+
+  // region IGroupRepository.deleteById()
+
   @Test
   void deleteById_removes_group() {
-    val owner = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val created = createGroup("group-" + FakeGenerator.username(), "desc", owner);
+    val groupId = insertRandomGroup();
 
-    val deleted = groupRepository.deleteById(created.id());
+    val deleted = groupRepository.deleteById(groupId);
 
     assertThat(deleted).isTrue();
-    assertThat(groupRepository.findById(created.id())).isEmpty();
+    assertThat(groupRepository.findById(groupId)).isEmpty();
   }
 
   @Test
   void deleteById_returns_false_when_missing() {
-    val deleted = groupRepository.deleteById(GroupId.fromUuid(UUID.randomUUID()));
+    val groupId = GroupId.generate();
+
+    val deleted = groupRepository.deleteById(groupId);
 
     assertThat(deleted).isFalse();
   }
 
+  // endregion
+
+  // region IGroupRepository.findByUserId()
+
+  // TODO
+
+  // endregion
+
+  // region IGroupRepository.findById()
+
+  @Test
+  void findById_returns_group_when_exists() {
+    val groupId = insertRandomGroup();
+
+    val foundGroupOpt = groupRepository.findById(groupId);
+
+    assertThat(foundGroupOpt).isPresent();
+    val foundGroup = foundGroupOpt.get();
+    assertThat(foundGroup.id()).isEqualTo(groupId);
+  }
+
+  @Test
+  void findById_returns_empty_when_missing() {
+    val found = groupRepository.findById(GroupId.fromUuid(UUID.randomUUID()));
+
+    assertThat(found).isEmpty();
+  }
+
+  // endregion
+
+  // region IGroupRepository.existsById()
+
+  // TODO
+
+  // endregion
+
+  // region IGroupRepository.findUserIdsByGroupId()
+
+  @Test
+  void findUserIdsByGroupId_returns_all_users() {
+    val userId1 = insertRandomUser();
+    val userId2 = insertRandomUser();
+    insertRandomUser(); // noise user that should not be returned
+    val groupId = insertRandomGroup();
+    groupRepository.addUser(userId1, groupId);
+    groupRepository.addUser(userId2, groupId);
+
+    val users = groupRepository.findUserIdsByGroupId(groupId);
+
+    assertThat(users).containsExactlyInAnyOrder(userId1, userId2);
+  }
+
+  // endregion
+
+  // region IGroupRepository.isUserInGroup()
+
+  @Test
+  void isUserInGroup_returns_true_when_user_is_in_group() {
+    val userId = insertRandomUser();
+    val groupId = insertRandomGroup();
+    groupRepository.addUser(userId, groupId);
+
+    val result = groupRepository.isUserInGroup(userId, groupId);
+
+    assertThat(result).isTrue();
+  }
+
+  @Test
+  void isUserInGroup_returns_false_when_user_is_not_in_group() {
+    val user = insertRandomUser();
+    val groupId = insertRandomGroup();
+
+    val result = groupRepository.isUserInGroup(user, groupId);
+
+    assertThat(result).isFalse();
+  }
+
+  // endregion
+
+  // region IGroupRepository.addUser()
+
   @Test
   void addUser_adds_membership_and_queries_see_it() {
-    val owner = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val user = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val created = createGroup("group-" + FakeGenerator.username(), "desc", owner);
+    val userId = insertRandomUser();
+    val groupId = insertRandomGroup();
+    val now = Instant.now();
 
-    val added = groupRepository.addUser(user, created.id());
+    val addedOpt = groupRepository.addUser(userId, groupId);
 
-    assertThat(added).isPresent();
-    assertThat(groupRepository.isUserInGroup(user, created.id())).isTrue();
-    assertThat(groupRepository.findUserIdsByGroupId(created.id())).contains(user);
-    val page = groupRepository.findByUserId(user, PageRequest.of(0, 10));
-    assertThat(page.getContent()).extracting(GroupEntity::id).contains(created.id());
+    assertThat(addedOpt).isPresent();
+    val added = addedOpt.get();
+    assertThat(added.userId()).isEqualTo(userId);
+    assertThat(added.groupId()).isEqualTo(groupId);
+    assertThat(added.joinedAt()).isNotNull().isBetween(now.minusSeconds(1), now.plusSeconds(1));
+
+    assertThat(groupRepository.isUserInGroup(userId, groupId)).isTrue();
+    assertThat(groupRepository.findUserIdsByGroupId(groupId)).containsExactlyInAnyOrder(userId);
+    val page = groupRepository.findByUserId(userId, PageRequest.of(0, 10));
+    assertThat(page.getContent()).extracting(GroupEntity::id).contains(groupId);
   }
 
   @Test
   void addUser_throws_when_duplicate() {
-    val owner = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val user = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val created = createGroup("group-" + FakeGenerator.username(), "desc", owner);
-    groupRepository.addUser(user, created.id());
+    val userId = insertRandomUser();
+    val groupId = insertRandomGroup();
+    groupRepository.addUser(userId, groupId);
 
-    assertThatThrownBy(() -> groupRepository.addUser(user, created.id()))
-        .isInstanceOf(DataIntegrityViolationException.class);
-  }
-
-  @Test
-  void isUserInGroup_returns_false_when_missing() {
-    val owner = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val user = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val created = createGroup("group-" + FakeGenerator.username(), "desc", owner);
-
-    assertThat(groupRepository.isUserInGroup(user, created.id())).isFalse();
-  }
-
-  @Test
-  void deleteUser_removes_membership() {
-    val owner = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val user = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val created = createGroup("group-" + FakeGenerator.username(), "desc", owner);
-    groupRepository.addUser(user, created.id());
-
-    val deleted = groupRepository.deleteUser(user, created.id());
-
-    assertThat(deleted).isTrue();
-    assertThat(groupRepository.isUserInGroup(user, created.id())).isFalse();
-  }
-
-  @Test
-  void deleteUser_returns_false_when_missing() {
-    val deleted =
-        groupRepository.deleteUser(
-            UserId.fromUuid(UUID.randomUUID()), GroupId.fromUuid(UUID.randomUUID()));
-
-    assertThat(deleted).isFalse();
-  }
-
-  @Test
-  void findUserIdsByGroupId_returns_all_users() {
-    val owner = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val user1 = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val user2 = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val created = createGroup("group-" + FakeGenerator.username(), "desc", owner);
-    groupRepository.addUser(user1, created.id());
-    groupRepository.addUser(user2, created.id());
-
-    val users = groupRepository.findUserIdsByGroupId(created.id());
-
-    assertThat(users).contains(user1, user2);
-  }
-
-  @Test
-  void findByUserId_returns_groups_for_user() {
-    val owner = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val user = insertUser(FakeGenerator.username(), FakeGenerator.email());
-    val groupA = createGroup("group-" + FakeGenerator.username(), "desc", owner);
-    val groupB = createGroup("group-" + FakeGenerator.username(), "desc", owner);
-    groupRepository.addUser(user, groupA.id());
-    groupRepository.addUser(user, groupB.id());
-
-    val page = groupRepository.findByUserId(user, PageRequest.of(0, 10));
-
-    assertThat(page.getContent()).extracting(GroupEntity::id).contains(groupA.id(), groupB.id());
+    assertThatThrownBy(() -> groupRepository.addUser(userId, groupId))
+        .isInstanceOf(DuplicateKeyException.class);
   }
 
   @Test
   void addUser_throws_when_group_missing() {
-    val user = insertUser(FakeGenerator.username(), FakeGenerator.email());
+    val userId = insertRandomUser();
+    val groupId = GroupId.generate();
 
-    assertThatThrownBy(() -> groupRepository.addUser(user, GroupId.fromUuid(UUID.randomUUID())))
+    assertThatThrownBy(() -> groupRepository.addUser(userId, groupId))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
+
+  // endregion
+
+  // region IGroupRepository.deleteUser()
+
+  @Test
+  void deleteUser_removes_membership() {
+    val userId = insertRandomUser();
+    val groupId = insertRandomGroup();
+    groupRepository.addUser(userId, groupId);
+
+    val deleted = groupRepository.deleteUser(userId, groupId);
+
+    assertThat(deleted).isTrue();
+    assertThat(groupRepository.isUserInGroup(userId, groupId)).isFalse();
+  }
+
+  @Test
+  void deleteUser_returns_false_when_user_does_not_exist() {
+    val userId = UserId.generate();
+    val groupId = GroupId.generate();
+
+    val deleted = groupRepository.deleteUser(userId, groupId);
+
+    assertThat(deleted).isFalse();
+  }
+
+  // endregion
+
+  // region IGroupRepository.findByUserId()
+
+  @Test
+  void findByUserId_returns_groups_for_user() {
+    val userId = insertRandomUser();
+    val groupIdA = insertRandomGroup();
+    val groupIdB = insertRandomGroup();
+    groupRepository.addUser(userId, groupIdA);
+    groupRepository.addUser(userId, groupIdB);
+
+    val page = groupRepository.findByUserId(userId, PageRequest.of(0, 10));
+
+    assertThat(page.getContent())
+        .extracting(GroupEntity::id)
+        .containsExactlyInAnyOrder(groupIdA, groupIdB);
+  }
+
+  // endregion
 }

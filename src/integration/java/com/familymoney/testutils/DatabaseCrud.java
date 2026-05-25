@@ -6,6 +6,7 @@ import com.familymoney.domains.auth.types.RefreshToken;
 import com.familymoney.domains.auth.types.TokenFamily;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
+import com.familymoney.domains.transactions.types.GroupName;
 import com.familymoney.domains.user.types.Email;
 import com.familymoney.domains.user.types.UserId;
 import com.familymoney.domains.user.types.UserName;
@@ -19,6 +20,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
+import javax.money.CurrencyUnit;
 import lombok.val;
 import org.jooq.DSLContext;
 
@@ -133,9 +135,9 @@ public class DatabaseCrud {
   public static void insertGroup(
       DSLContext dslContext,
       final GroupId id,
-      final String name,
+      final GroupName name,
       final String description,
-      final String currencyCode,
+      final CurrencyUnit currency,
       final Instant createdAt) {
     val createdAtDateTime = OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC);
     dslContext
@@ -147,7 +149,7 @@ public class DatabaseCrud {
             Groups.GROUPS.CURRENCY_CODE,
             Groups.GROUPS.CREATED_AT,
             Groups.GROUPS.UPDATED_AT)
-        .values(id.value(), name, description, currencyCode, createdAtDateTime, createdAtDateTime)
+        .values(id.value(), name.value(), description, currency.getCurrencyCode(), createdAtDateTime, createdAtDateTime)
         .execute();
   }
 

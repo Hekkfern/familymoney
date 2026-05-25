@@ -41,4 +41,8 @@ public final class FakeGenerator {
   public static String emailVerificationToken() {
     return EmailVerificationToken.generate().toString();
   }
+
+  public static String groupName() {
+    return random.next(10, LOWER_CHARACTERS);
+  }
 }
