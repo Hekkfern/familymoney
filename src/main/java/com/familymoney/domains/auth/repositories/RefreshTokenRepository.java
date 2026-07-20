@@ -68,15 +68,15 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
   @Override
   public boolean updateByToken(final RefreshToken token, final UpdateRefreshTokenDto data) {
     val expiresAtVal =
-        data.getExpiresAt() != null
-            ? OffsetDateTime.ofInstant(data.getExpiresAt(), ZoneOffset.UTC)
+        data.expiresAt() != null
+            ? OffsetDateTime.ofInstant(data.expiresAt(), ZoneOffset.UTC)
             : null;
     val rowsAffected =
         db.update(RefreshTokens.REFRESH_TOKENS)
             .set(
                 RefreshTokens.REFRESH_TOKENS.TOKEN,
                 DSL.coalesce(
-                    DSL.val(data.getToken() != null ? data.getToken().value() : null),
+                    DSL.val(data.token() != null ? data.token().value() : null),
                     RefreshTokens.REFRESH_TOKENS.TOKEN))
             .set(
                 RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,
@@ -89,15 +89,15 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
   @Override
   public boolean updateByUserId(final UserId userId, final UpdateRefreshTokenDto data) {
     val expiresAtVal =
-        data.getExpiresAt() != null
-            ? OffsetDateTime.ofInstant(data.getExpiresAt(), ZoneOffset.UTC)
+        data.expiresAt() != null
+            ? OffsetDateTime.ofInstant(data.expiresAt(), ZoneOffset.UTC)
             : null;
     val rowsAffected =
         db.update(RefreshTokens.REFRESH_TOKENS)
             .set(
                 RefreshTokens.REFRESH_TOKENS.TOKEN,
                 DSL.coalesce(
-                    DSL.val(data.getToken() != null ? data.getToken().value() : null),
+                    DSL.val(data.token() != null ? data.token().value() : null),
                     RefreshTokens.REFRESH_TOKENS.TOKEN))
             .set(
                 RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,

@@ -129,24 +129,24 @@ public class UserRepository implements IUserRepository {
             .set(
                 Users.USERS.USERNAME,
                 DSL.coalesce(
-                    DSL.val(data.getUsername() != null ? data.getUsername().value() : null),
+                    DSL.val(data.username() != null ? data.username().value() : null),
                     Users.USERS.USERNAME))
             .set(
                 Users.USERS.EMAIL,
                 DSL.coalesce(
-                    DSL.val(data.getEmail() != null ? data.getEmail().value() : null),
+                    DSL.val(data.email() != null ? data.email().value() : null),
                     Users.USERS.EMAIL))
             .set(
                 Users.USERS.HASHED_PASSWORD,
                 DSL.coalesce(
-                    DSL.val(data.getHashedPassword() != null ? data.getHashedPassword() : null),
+                    DSL.val(data.hashedPassword() != null ? data.hashedPassword() : null),
                     Users.USERS.HASHED_PASSWORD))
             .set(
                 Users.USERS.IS_EMAIL_VERIFIED,
-                DSL.coalesce(DSL.val(data.getIsEmailVerified()), Users.USERS.IS_EMAIL_VERIFIED))
+                DSL.coalesce(DSL.val(data.isEmailVerified()), Users.USERS.IS_EMAIL_VERIFIED))
             .set(
                 Users.USERS.IS_ENABLED,
-                DSL.coalesce(DSL.val(data.getIsEnabled()), Users.USERS.IS_ENABLED))
+                DSL.coalesce(DSL.val(data.isEnabled()), Users.USERS.IS_ENABLED))
             .where(Users.USERS.ID.eq(id.value()))
             .execute();
     return rowsAffected > 0;

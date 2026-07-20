@@ -49,11 +49,11 @@ public class UserService implements IUserService {
       userRepository.updateById(
           userId,
           UpdateUserDto.builder()
-              .username(data.getUsername())
-              .email(data.getEmail())
+              .username(data.username())
+              .email(data.email())
               .hashedPassword(
-                  data.getPassword() != null
-                      ? passwordEncoder.encode(data.getPassword().value())
+                  data.password() != null
+                      ? passwordEncoder.encode(data.password().value())
                       : null)
               .build());
     }

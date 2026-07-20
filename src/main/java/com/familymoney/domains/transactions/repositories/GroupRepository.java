@@ -64,7 +64,7 @@ public class GroupRepository implements IGroupRepository {
             .set(
                 Groups.GROUPS.DESCRIPTION,
                 DSL.coalesce(
-                    DSL.val(data.getDescription() != null ? data.getDescription() : null),
+                    DSL.val(data.description() != null ? data.description() : null),
                     Groups.GROUPS.DESCRIPTION))
             .where(Groups.GROUPS.ID.eq(id.value()))
             .execute();

@@ -10,6 +10,6 @@ public class UpdateGroupDataMapper {
   }
 
   public static UpdateGroupDto toDbo(UpdateGroupData data) {
-    return UpdateGroupDto.builder().name(data.getName()).description(data.getDescription()).build();
+    return UpdateGroupDto.builder().name(data.name()).description(data.description()).build();
   }
 }

@@ -78,14 +78,14 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
             .set(
                 EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN,
                 DSL.coalesce(
-                    DSL.val(data.getToken() != null ? data.getToken().value() : null),
+                    DSL.val(data.token() != null ? data.token().value() : null),
                     EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN))
             .set(
                 EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.EXPIRES_AT,
                 DSL.coalesce(
                     DSL.val(
-                        data.getExpiresAt() != null
-                            ? OffsetDateTime.ofInstant(data.getExpiresAt(), ZoneOffset.UTC)
+                        data.expiresAt() != null
+                            ? OffsetDateTime.ofInstant(data.expiresAt(), ZoneOffset.UTC)
                             : null),
                     EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.EXPIRES_AT))
             .where(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.USER_ID.eq(userId.value()))

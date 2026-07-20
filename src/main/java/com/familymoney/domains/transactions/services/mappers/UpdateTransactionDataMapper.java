@@ -11,11 +11,11 @@ public class UpdateTransactionDataMapper {
 
   public static UpdateTransactionDto toDbo(UpdateTransactionData data) {
     return UpdateTransactionDto.builder()
-        .amount(data.getAmount())
-        .description(data.getDescription())
-        .from(data.getFrom())
-        .to(data.getTo())
-        .doneAt(data.getDoneAt())
+        .amount(data.amount())
+        .description(data.description())
+        .from(data.from())
+        .to(data.to())
+        .doneAt(data.doneAt())
         .build();
   }
 }

@@ -64,16 +64,16 @@ public class TransactionRepository implements ITransactionRepository {
   @Override
   public boolean updateById(final TransactionId id, final UpdateTransactionDto data) {
     val amountVal =
-        data.getAmount() != null
-            ? data.getAmount().getNumber().numberValue(java.math.BigDecimal.class)
+        data.amount() != null
+            ? data.amount().getNumber().numberValue(java.math.BigDecimal.class)
             : null;
     val currencyVal =
-        data.getAmount() != null ? data.getAmount().getCurrency().getCurrencyCode() : null;
-    val fromVal = data.getFrom() != null ? data.getFrom().value() : null;
-    val toVal = data.getTo() != null ? data.getTo().value() : null;
+        data.amount() != null ? data.amount().getCurrency().getCurrencyCode() : null;
+    val fromVal = data.from() != null ? data.from().value() : null;
+    val toVal = data.to() != null ? data.to().value() : null;
     val doneAtVal =
-        data.getDoneAt() != null
-            ? OffsetDateTime.ofInstant(data.getDoneAt(), ZoneOffset.UTC)
+        data.doneAt() != null
+            ? OffsetDateTime.ofInstant(data.doneAt(), ZoneOffset.UTC)
             : null;
 
     val rowsAffected =
@@ -86,7 +86,7 @@ public class TransactionRepository implements ITransactionRepository {
                 DSL.coalesce(DSL.val(currencyVal), Transactions.TRANSACTIONS.CURRENCY_CODE))
             .set(
                 Transactions.TRANSACTIONS.DESCRIPTION,
-                DSL.coalesce(DSL.val(data.getDescription()), Transactions.TRANSACTIONS.DESCRIPTION))
+                DSL.coalesce(DSL.val(data.description()), Transactions.TRANSACTIONS.DESCRIPTION))
             .set(
                 Transactions.TRANSACTIONS.FROM_USER_ID,
                 DSL.coalesce(DSL.val(fromVal), Transactions.TRANSACTIONS.FROM_USER_ID))

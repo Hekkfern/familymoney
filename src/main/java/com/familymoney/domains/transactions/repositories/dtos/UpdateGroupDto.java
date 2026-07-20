@@ -2,15 +2,10 @@ package com.familymoney.domains.transactions.repositories.dtos;
 
 import com.familymoney.domains.transactions.types.GroupName;
 import lombok.Builder;
-import lombok.Builder.Default;
-import lombok.Data;
 import org.jspecify.annotations.Nullable;
 
-@Data
 @Builder
-public class UpdateGroupDto {
-  @Nullable @Default private GroupName name = null;
-  @Nullable @Default private String description = null;
+public record UpdateGroupDto(@Nullable GroupName name, @Nullable String description) {
 
   public boolean isEmpty() {
     return name == null && description == null;
