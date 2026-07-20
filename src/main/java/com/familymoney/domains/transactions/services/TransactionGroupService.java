@@ -27,7 +27,7 @@ import com.familymoney.domains.transactions.types.TransactionId;
 import com.familymoney.domains.user.exceptions.UserNotFoundException;
 import com.familymoney.domains.user.repositories.IUserRepository;
 import com.familymoney.domains.user.types.UserId;
-import com.familymoney.exceptions.*;
+import com.familymoney.exceptions.DatabaseExecutionException;
 import com.familymoney.testutils.UUIDGenerator;
 import java.time.Clock;
 import java.time.Duration;

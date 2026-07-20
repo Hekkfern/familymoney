@@ -17,6 +17,4 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "familymoney.admin")
 @Validated
 public record AdminProperties(
-    @NotNull UserName username,
-    @NotNull Email email,
-    @NotNull Password password) {}
+    @NotNull UserName username, @NotNull Email email, @NotNull Password password) {}

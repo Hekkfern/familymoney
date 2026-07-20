@@ -14,8 +14,8 @@ import org.springframework.data.domain.Pageable;
 /**
  * Repository contract for persistence operations related to transaction groups.
  *
- * <p>Implementations are responsible for creating, updating, deleting, and querying groups, as
- * well as managing group membership and paged lookups for a user's groups.
+ * <p>Implementations are responsible for creating, updating, deleting, and querying groups, as well
+ * as managing group membership and paged lookups for a user's groups.
  *
  * <p>Methods return domain entities, primitive success flags, or {@link Optional} values when a
  * result may be absent.
@@ -56,8 +56,8 @@ public interface IGroupRepository {
    *
    * @param userId the user identifier
    * @param pageable paging information such as page number, size, and sort
-   * @return a page of {@link GroupEntity} objects representing the user's groups; empty if the
-   *     user has no groups
+   * @return a page of {@link GroupEntity} objects representing the user's groups; empty if the user
+   *     has no groups
    */
   Page<GroupEntity> findByUserId(UserId userId, Pageable pageable);
 

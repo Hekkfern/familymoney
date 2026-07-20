@@ -1,7 +1,7 @@
 package com.familymoney.validation;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.familymoney.domains.transactions.validations.ValidGroupName;
 import jakarta.validation.ConstraintViolation;

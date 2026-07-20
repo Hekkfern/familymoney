@@ -92,11 +92,8 @@ public class BalanceRepository implements IBalanceRepository {
   @Override
   public boolean updateById(final BalanceId id, final UpdateBalanceDto data) {
     val amountValue =
-        data.money() != null
-            ? data.money().getNumber().numberValue(BigDecimal.class)
-            : null;
-    val currencyValue =
-        data.money() != null ? data.money().getCurrency().getCurrencyCode() : null;
+        data.money() != null ? data.money().getNumber().numberValue(BigDecimal.class) : null;
+    val currencyValue = data.money() != null ? data.money().getCurrency().getCurrencyCode() : null;
     val user1Value = data.user1() != null ? data.user1().value() : null;
     val user2Value = data.user2() != null ? data.user2().value() : null;
 

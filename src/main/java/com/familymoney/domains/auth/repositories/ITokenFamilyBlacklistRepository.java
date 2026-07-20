@@ -7,9 +7,9 @@ import java.util.Optional;
 
 public interface ITokenFamilyBlacklistRepository {
 
-   Optional<TokenFamilyBlacklistEntity> create(CreateTokenFamilyBlacklistDto data);
+  Optional<TokenFamilyBlacklistEntity> create(CreateTokenFamilyBlacklistDto data);
 
-   boolean exists(TokenFamily family);
+  boolean exists(TokenFamily family);
 
-   boolean deleteByFamily(TokenFamily family);
+  boolean deleteByFamily(TokenFamily family);
 }

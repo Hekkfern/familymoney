@@ -1,16 +1,19 @@
 package com.familymoney.services;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.familymoney.config.ThymeleafConfig;
+import com.familymoney.domains.auth.services.EmailSenderService;
+import com.familymoney.domains.auth.types.EmailVerificationToken;
+import com.familymoney.domains.user.types.Email;
+import com.familymoney.domains.user.types.UserName;
 import com.familymoney.properties.AppProperties;
 import com.familymoney.properties.MailSenderProperties;
-import com.familymoney.domains.auth.services.EmailSenderService;
-import com.familymoney.domains.user.types.Email;
-import com.familymoney.domains.auth.types.EmailVerificationToken;
-import com.familymoney.domains.user.types.UserName;
 import com.familymoney.testutils.FakeGenerator;
 import jakarta.mail.Message;
 import jakarta.mail.internet.MimeMessage;

@@ -31,33 +31,33 @@ class TransactionRepositoryTest {
     this.transactionRepository = new TransactionRepository(dslContext);
   }
 
-  //region ITransactionRepository.create()
+  // region ITransactionRepository.create()
 
-    //TODO
+  // TODO
 
-    //endregion
+  // endregion
 
-    //region ITransactionRepository.updateById()
+  // region ITransactionRepository.updateById()
 
-    //TODO
+  // TODO
 
-    //endregion
+  // endregion
 
-    //region ITransactionRepository.deleteById()
+  // region ITransactionRepository.deleteById()
 
-    //TODO
+  // TODO
 
-    //endregion
+  // endregion
 
-    //region ITransactionRepository.findById()
+  // region ITransactionRepository.findById()
 
-    //TODO
+  // TODO
 
-    //endregion
+  // endregion
 
-    //region ITransactionRepository.findAllByGroupId()
+  // region ITransactionRepository.findAllByGroupId()
 
-    //TODO
+  // TODO
 
-    //endregion
+  // endregion
 }

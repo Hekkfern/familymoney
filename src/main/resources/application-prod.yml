@@ -1,8 +1,9 @@
+---
 spring:
   datasource:
     tomcat:
       test-while-idle: true
-      validation-query: SELECT 1
+      validation-query: "SELECT 1"
       time-between-eviction-runs-millis: 30000
 springdoc:
   api-docs:
@@ -11,5 +12,4 @@ springdoc:
     enabled: false
 logging:
   level:
-    root: WARN
-
+    root: "WARN"

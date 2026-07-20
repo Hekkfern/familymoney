@@ -67,14 +67,11 @@ public class TransactionRepository implements ITransactionRepository {
         data.amount() != null
             ? data.amount().getNumber().numberValue(java.math.BigDecimal.class)
             : null;
-    val currencyVal =
-        data.amount() != null ? data.amount().getCurrency().getCurrencyCode() : null;
+    val currencyVal = data.amount() != null ? data.amount().getCurrency().getCurrencyCode() : null;
     val fromVal = data.from() != null ? data.from().value() : null;
     val toVal = data.to() != null ? data.to().value() : null;
     val doneAtVal =
-        data.doneAt() != null
-            ? OffsetDateTime.ofInstant(data.doneAt(), ZoneOffset.UTC)
-            : null;
+        data.doneAt() != null ? OffsetDateTime.ofInstant(data.doneAt(), ZoneOffset.UTC) : null;
 
     val rowsAffected =
         db.update(Transactions.TRANSACTIONS)

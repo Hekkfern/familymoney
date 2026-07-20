@@ -17,24 +17,24 @@ architecture.
 ## Table of Contents
 
 - [FamilyMoney Backend](#familymoney-backend)
-    - [Table of Contents](#table-of-contents)
-    - [Overview](#overview)
-    - [Architecture](#architecture)
-    - [Tech Stack](#tech-stack)
-    - [Requirements](#requirements)
-    - [Getting Started](#getting-started)
-    - [Configuration](#configuration)
-    - [Database and Migrations](#database-and-migrations)
-    - [Running Locally](#running-locally)
-    - [Testing](#testing)
-        - [Unit tests](#unit-tests)
-        - [Integration tests](#integration-tests)
-    - [API Documentation](#api-documentation)
-    - [Security](#security)
-    - [Observability](#observability)
-    - [Deployment](#deployment)
-    - [Contributing](#contributing)
-    - [License](#license)
+	- [Table of Contents](#table-of-contents)
+	- [Overview](#overview)
+	- [Architecture](#architecture)
+	- [Tech Stack](#tech-stack)
+	- [Requirements](#requirements)
+	- [Getting Started](#getting-started)
+	- [Configuration](#configuration)
+	- [Database and Migrations](#database-and-migrations)
+	- [Running Locally](#running-locally)
+	- [Testing](#testing)
+		- [Unit tests](#unit-tests)
+		- [Integration tests](#integration-tests)
+	- [API Documentation](#api-documentation)
+	- [Security](#security)
+	- [Observability](#observability)
+	- [Deployment](#deployment)
+	- [Contributing](#contributing)
+	- [License](#license)
 
 ## Overview
 
@@ -45,14 +45,14 @@ architecture.
 The project is divided in three main layers:
 
 - **Controller layer**: This layer is responsible for handling incoming HTTP requests, validating them, and returning
-  appropriate responses. It acts as the entry point to the application and delegates the processing to the service
-  layer.
+appropriate responses. It acts as the entry point to the application and delegates the processing to the service
+layer.
 - **Service layer**: This layer contains the business logic of the application. It processes the requests received from
-  the controller layer, interacts with the repository layer to perform database operations, and applies any necessary
-  business rules.
+the controller layer, interacts with the repository layer to perform database operations, and applies any necessary
+business rules.
 - **Repository layer**: This layer is responsible for interacting with the database. It uses JOOQ to build type-safe SQL
-  queries and manage database interactions. It abstracts away the details of data access and provides a clean interface
-  for the service layer to perform CRUD operations on the database.
+queries and manage database interactions. It abstracts away the details of data access and provides a clean interface
+for the service layer to perform CRUD operations on the database.
 
 ## Tech Stack
 

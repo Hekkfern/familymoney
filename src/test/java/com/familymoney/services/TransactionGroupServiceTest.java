@@ -107,7 +107,7 @@ class TransactionGroupServiceTest {
   }
 
   private GroupInvitationEntity invitationDbo(
-          GroupId groupId, GroupInvitationToken token, Instant expiresAt) {
+      GroupId groupId, GroupInvitationToken token, Instant expiresAt) {
     return GroupInvitationEntity.builder()
         .id(UUID.randomUUID())
         .groupId(groupId)
@@ -277,7 +277,8 @@ class TransactionGroupServiceTest {
     when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
     val token = GroupInvitationToken.fromString("token-123");
     val invitation = invitationDbo(gid, token, now.plusSeconds(3600));
-    when(groupInvitationRepository.create(new CreateGroupInvitationDto(any(), gid,user, any(), any())))
+    when(groupInvitationRepository.create(
+            new CreateGroupInvitationDto(any(), gid, user, any(), any())))
         .thenReturn(Optional.of(invitation));
 
     val result = transactionGroupService.getInvitationToken(gid, user);
@@ -300,7 +301,8 @@ class TransactionGroupServiceTest {
     val gid = GroupId.fromUuid(UUID.randomUUID());
     val user = UserId.fromUuid(UUID.randomUUID());
     when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
-    when(groupInvitationRepository.create(new CreateGroupInvitationDto(any(), gid,user, any(), any())))
+    when(groupInvitationRepository.create(
+            new CreateGroupInvitationDto(any(), gid, user, any(), any())))
         .thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> transactionGroupService.getInvitationToken(gid, user))

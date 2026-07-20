@@ -1,6 +1,7 @@
 package com.familymoney.controllers.dtos;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import com.familymoney.domains.auth.controllers.dtos.LoginRequestDto;
 import com.fasterxml.jackson.databind.ObjectMapper;

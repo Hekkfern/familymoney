@@ -1,34 +1,34 @@
-# Spring Boot application properties
+---
 spring:
   application:
-    name: familymoney
+    name: "familymoney"
   main:
-    banner-mode: off
+    banner-mode: false
   threads:
     virtual:
       enabled: true
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
-    username: ${POSTGRES_USER}
-    password: ${POSTGRES_PASSWORD}
-    driver-class-name: org.postgresql.Driver
+    url: "jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}"
+    username: "${POSTGRES_USER}"
+    password: "${POSTGRES_PASSWORD}"
+    driver-class-name: "org.postgresql.Driver"
   config:
-    import: optional:file:.env[.properties]
+    import: "optional:file:.env[.properties]"
   mail:
-    host: ${MAIL_SENDER_HOST}
-    port: ${MAIL_SENDER_PORT}
-    username: ${MAIL_SENDER_USERNAME}
-    password: ${MAIL_SENDER_PASSWORD}
+    host: "${MAIL_SENDER_HOST}"
+    port: "${MAIL_SENDER_PORT}"
+    username: "${MAIL_SENDER_USERNAME}"
+    password: "${MAIL_SENDER_PASSWORD}"
     properties:
       mail:
         transport:
-          protocol: ${MAIL_SENDER_PROTOCOL}
+          protocol: "${MAIL_SENDER_PROTOCOL}"
         smtp:
           auth: true
           starttls:
             enable: true
 server:
-  port: ${APP_PORT}
+  port: "${APP_PORT}"
 logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} | %level | %msg%n"
@@ -36,7 +36,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: "health,info,metrics"
 springdoc:
   swagger-ui:
     display-request-duration: true
@@ -45,24 +45,22 @@ springdoc:
   show-actuator: true
   cache:
     disabled: true
-
-# Custom application properties
 familymoney:
   jwt:
-    key: ${JWT_KEY}
-    access-token-duration: 5m
-    refresh-token-duration: 7d
+    key: "${JWT_KEY}"
+    access-token-duration: "5m"
+    refresh-token-duration: "7d"
   email-verification:
-    token-duration: 24h
-    wait-time: 2m
+    token-duration: "24h"
+    wait-time: "2m"
   mail:
     sender:
-      email: ${MAIL_SENDER_FROM_EMAIL}
-      name: ${MAIL_SENDER_FROM_NAME}
+      email: "${MAIL_SENDER_FROM_EMAIL}"
+      name: "${MAIL_SENDER_FROM_NAME}"
   admin:
-    username: ${ADMIN_USERNAME}
-    email: ${ADMIN_EMAIL}
-    password: ${ADMIN_PASSWORD}
+    username: "${ADMIN_USERNAME}"
+    email: "${ADMIN_EMAIL}"
+    password: "${ADMIN_PASSWORD}"
   groupInvitation:
-    invitation-duration: 1h
+    invitation-duration: "1h"
     max-num-invitations: 5

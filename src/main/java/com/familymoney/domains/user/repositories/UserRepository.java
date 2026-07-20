@@ -134,8 +134,7 @@ public class UserRepository implements IUserRepository {
             .set(
                 Users.USERS.EMAIL,
                 DSL.coalesce(
-                    DSL.val(data.email() != null ? data.email().value() : null),
-                    Users.USERS.EMAIL))
+                    DSL.val(data.email() != null ? data.email().value() : null), Users.USERS.EMAIL))
             .set(
                 Users.USERS.HASHED_PASSWORD,
                 DSL.coalesce(

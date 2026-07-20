@@ -1,16 +1,18 @@
 package com.familymoney.services;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import com.familymoney.domains.user.repositories.IRoleRepository;
 import com.familymoney.domains.user.repositories.IUserRepository;
 import com.familymoney.domains.user.repositories.entitites.UserEntity;
-import com.familymoney.security.UserPasswordEncoder;
 import com.familymoney.domains.user.services.UserService;
 import com.familymoney.domains.user.types.Email;
 import com.familymoney.domains.user.types.UserId;
 import com.familymoney.domains.user.types.UserName;
+import com.familymoney.security.UserPasswordEncoder;
 import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;
 import java.util.Optional;

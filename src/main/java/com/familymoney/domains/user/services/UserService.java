@@ -52,9 +52,7 @@ public class UserService implements IUserService {
               .username(data.username())
               .email(data.email())
               .hashedPassword(
-                  data.password() != null
-                      ? passwordEncoder.encode(data.password().value())
-                      : null)
+                  data.password() != null ? passwordEncoder.encode(data.password().value()) : null)
               .build());
     }
   }
