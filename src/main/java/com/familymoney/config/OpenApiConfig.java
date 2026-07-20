@@ -12,7 +12,7 @@ import io.swagger.v3.oas.annotations.security.SecurityScheme;
     info =
         @Info(
             title = "\"Family Money\" backend",
-            version = "1.0",
+            version = "1.0.0",
             description = "Backend API for \"Family Money\" application",
             contact =
                 @Contact(name = "Hector Fernandez", email = "hector.fernandez.carmona@gmail.com")),

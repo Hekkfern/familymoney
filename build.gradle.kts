@@ -1,34 +1,27 @@
 import dev.monosoul.jooq.RecommendedVersions.JOOQ_VERSION
+import io.github.simonhauck.release.version.api.Version
 
 plugins {
     java
     alias(libs.plugins.springboot)
     alias(libs.plugins.springboot.dependencymanagement)
     idea
-    checkstyle
+    jacoco
     alias(libs.plugins.jooq)
     alias(libs.plugins.lombok)
     alias(libs.plugins.integrationtest)
     alias(libs.plugins.versions)
+    alias(libs.plugins.spotless)
+    alias(libs.plugins.release)
 }
 
 group = "com.familymoney"
-version = "1.0.0"
+version = Version.fromPropertiesFile(layout.projectDirectory.file("version.properties").asFile)
 description = "Backend of the \"Family Money\" application"
 
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(25)
-    }
-}
-
-checkstyle {
-    toolVersion = "12.3.0"
-}
-
-configurations {
-    compileOnly {
-        extendsFrom(configurations.annotationProcessor.get())
     }
 }
 
@@ -102,5 +95,48 @@ tasks {
         migrationLocations.setFromFilesystem(
             project.files("$projectDir/src/main/resources/db/migration"),
         )
+    }
+}
+
+spotless {
+    format("misc") {
+        target("**/*.md", "*.gradle", ".gitattributes", ".gitignore")
+        trimTrailingWhitespace()
+        leadingSpacesToTabs()
+        endWithNewline()
+    }
+    java {
+        googleJavaFormat()
+        removeUnusedImports()
+        forbidWildcardImports()
+        targetExclude("**/build/**")
+        formatAnnotations()
+    }
+    kotlinGradle {
+        ktlint()
+    }
+    json {
+        target("src/**/*.json")
+        jackson()
+    }
+    yaml {
+        target("src/**/*.yaml", "src/**/*.yml")
+        jackson()
+    }
+    sql {
+        target("src/main/resources/**/*.sql")
+        dbeaver()
+    }
+}
+
+jacoco {
+    toolVersion = "0.8.15"
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.testAll)
+    reports {
+        xml.required = true
+        html.required = true
     }
 }
