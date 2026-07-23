@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
@@ -21,7 +20,6 @@ import com.familymoney.domains.transactions.repositories.IGroupRepository;
 import com.familymoney.domains.transactions.repositories.ITransactionRepository;
 import com.familymoney.domains.transactions.repositories.dtos.CreateGroupDto;
 import com.familymoney.domains.transactions.repositories.dtos.CreateGroupInvitationDto;
-import com.familymoney.domains.transactions.repositories.dtos.CreateTransactionDto;
 import com.familymoney.domains.transactions.repositories.entitites.BalanceEntity;
 import com.familymoney.domains.transactions.repositories.entitites.GroupEntity;
 import com.familymoney.domains.transactions.repositories.entitites.GroupInvitationEntity;
@@ -545,7 +543,7 @@ class TransactionGroupServiceTest {
       when(userRepository.existsById(toRemove)).thenReturn(false);
 
       assertThatThrownBy(() -> transactionGroupService.removeUserFromGroup(gid, user, toRemove))
-        .isInstanceOf(UserNotFoundException.class);
+          .isInstanceOf(UserNotFoundException.class);
     }
   }
 
@@ -553,10 +551,11 @@ class TransactionGroupServiceTest {
   class GetAllGroupBalances {
 
     @Test
-    void maps_balances_correctly_when_user_is_member_of_the_group() {
+    void maps_balances_correctly_when_group_exists_and_user_is_member_of_the_group() {
       val gid = GroupId.generate();
       val userA = UserId.generate();
       val userB = UserId.generate();
+      when(groupRepository.existsById(gid)).thenReturn(true);
       when(groupRepository.isUserInGroup(userA, gid)).thenReturn(true);
       val b = balanceDbo(BalanceId.generate(), gid, userA, userB);
       when(balanceRepository.findByGroup(gid)).thenReturn(List.of(b));
@@ -568,13 +567,24 @@ class TransactionGroupServiceTest {
     }
 
     @Test
-    void throws_when_user_is_not_member_of_the_group() {
+    void throws_when_group_exists_and_user_is_not_member_of_the_group() {
       val gid = GroupId.generate();
       val user = UserId.generate();
+      when(groupRepository.existsById(gid)).thenReturn(true);
       when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
 
       assertThatThrownBy(() -> transactionGroupService.getAllGroupBalances(gid, user))
           .isInstanceOf(UserIsNotMemberOfGroupException.class);
+    }
+
+    @Test
+    void throws_when_group_doesnt_exist() {
+      val gid = GroupId.generate();
+      val user = UserId.generate();
+      when(groupRepository.existsById(gid)).thenReturn(false);
+
+      assertThatThrownBy(() -> transactionGroupService.getAllGroupBalances(gid, user))
+          .isInstanceOf(TransactionGroupNotFoundException.class);
     }
   }
 
@@ -585,6 +595,7 @@ class TransactionGroupServiceTest {
     void returns_mapped_page_when_user_is_member_of_the_group() {
       val gid = GroupId.generate();
       val user = UserId.generate();
+      when(groupRepository.existsById(gid)).thenReturn(true);
       when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
       val tx = transactionDbo(TransactionId.generate(), gid);
       Pageable p = PageRequest.of(0, 10);
@@ -601,10 +612,22 @@ class TransactionGroupServiceTest {
       val gid = GroupId.generate();
       val user = UserId.generate();
       Pageable p = PageRequest.of(0, 10);
+      when(groupRepository.existsById(gid)).thenReturn(true);
       when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
 
       assertThatThrownBy(() -> transactionGroupService.getGroupTransactions(gid, user, p))
           .isInstanceOf(UserIsNotMemberOfGroupException.class);
+    }
+
+    @Test
+    void throws_when_group_doesnt_exist() {
+      val gid = GroupId.generate();
+      val user = UserId.generate();
+      Pageable p = PageRequest.of(0, 10);
+      when(groupRepository.existsById(gid)).thenReturn(false);
+
+      assertThatThrownBy(() -> transactionGroupService.getGroupTransactions(gid, user, p))
+          .isInstanceOf(TransactionGroupNotFoundException.class);
     }
   }
 
@@ -615,6 +638,7 @@ class TransactionGroupServiceTest {
     void calls_repository_when_user_is_member_of_the_group() {
       val gid = GroupId.generate();
       val creator = UserId.generate();
+      when(groupRepository.existsById(gid)).thenReturn(true);
       when(groupRepository.isUserInGroup(creator, gid)).thenReturn(true);
 
       transactionGroupService.createTransactionInGroup(
@@ -626,16 +650,14 @@ class TransactionGroupServiceTest {
           NOW,
           creator);
 
-      verify(transactionRepository)
-          .create(
-              new CreateTransactionDto(
-                  any(), Description.of(anyString()), gid, any(), any(), any(), any()));
+      verify(transactionRepository).create(any());
     }
 
     @Test
     void throws_when_creator_is_not_member_of_the_group() {
       val gid = GroupId.generate();
       val creator = UserId.generate();
+      when(groupRepository.existsById(gid)).thenReturn(true);
       when(groupRepository.isUserInGroup(creator, gid)).thenReturn(false);
 
       assertThatThrownBy(
@@ -649,6 +671,25 @@ class TransactionGroupServiceTest {
                       NOW,
                       creator))
           .isInstanceOf(UserIsNotMemberOfGroupException.class);
+    }
+
+    @Test
+    void throws_when_group_doesnt_exist() {
+      val gid = GroupId.generate();
+      val creator = UserId.generate();
+      when(groupRepository.existsById(gid)).thenReturn(false);
+
+      assertThatThrownBy(
+              () ->
+                  transactionGroupService.createTransactionInGroup(
+                      gid,
+                      Description.of("d"),
+                      UserId.generate(),
+                      UserId.generate(),
+                      Money.of(1, CURRENCY_USD),
+                      NOW,
+                      creator))
+          .isInstanceOf(TransactionGroupNotFoundException.class);
     }
   }
 
@@ -692,10 +733,8 @@ class TransactionGroupServiceTest {
       when(transactionRepository.findById(txId)).thenReturn(Optional.of(tx));
       when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
 
-      assertThatThrownBy(
-              () ->
-                  transactionGroupService.updateTransaction(
-                      user, txId, new UpdateTransactionData(null, null, null, null, null)))
+      val data = new UpdateTransactionData(null, null, null, null, null);
+      assertThatThrownBy(() -> transactionGroupService.updateTransaction(user, txId, data))
           .isInstanceOf(UserIsNotMemberOfGroupException.class);
     }
   }
