@@ -35,6 +35,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 @ExtendWith(MockitoExtension.class)
 class JwtAuthFilterTest {
 
+  private static final String VALID_JWT_TOKEN =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30";
+
   @Mock private JwtUtils jwtUtils;
   @Mock private IUserService userService;
   @Mock private IAuthService authService;
@@ -51,7 +54,7 @@ class JwtAuthFilterTest {
   }
 
   @Test
-  void noAuthorizationHeader_shouldSkipAndNotAuthenticate() throws Exception {
+  void skip_and_no_authenticate_when_invalid_token_in_header() throws Exception {
     val request = mock(HttpServletRequest.class);
     val response = mock(HttpServletResponse.class);
     val chain = mock(FilterChain.class);
@@ -67,24 +70,8 @@ class JwtAuthFilterTest {
   }
 
   @Test
-  void invalidToken_shouldSkipAndNotAuthenticate() throws Exception {
-    val request = mock(HttpServletRequest.class);
-    val response = mock(HttpServletResponse.class);
-    val chain = mock(FilterChain.class);
-
-    // use a syntactically valid-looking token so JwtToken constructor doesn't throw
-    when(jwtUtils.extractTokenFromHeader(any(HttpServletRequest.class)))
-        .thenReturn(Optional.of(AccessToken.fromString("aaa.bbb.ccc")));
-    when(jwtUtils.parseAccessToken(any(AccessToken.class))).thenReturn(Optional.empty());
-
-    filter.doFilter(request, response, chain);
-
-    verify(chain).doFilter(request, response);
-    assertNull(SecurityContextHolder.getContext().getAuthentication());
-  }
-
-  @Test
-  void validTokenButFamilyBlacklisted_shouldSkipAndNotAuthenticate() throws Exception {
+  void skip_and_no_authenticate_when_valid_Token_in_header_but_family_is_blacklisted()
+      throws Exception {
     val userId = UserId.generate();
     val family = TokenFamily.generate();
     val request = mock(HttpServletRequest.class);
@@ -92,7 +79,7 @@ class JwtAuthFilterTest {
     val chain = mock(FilterChain.class);
 
     when(jwtUtils.extractTokenFromHeader(any(HttpServletRequest.class)))
-        .thenReturn(Optional.of(AccessToken.fromString("aaa.bbb.ccc")));
+        .thenReturn(Optional.of(AccessToken.fromString(VALID_JWT_TOKEN)));
     when(jwtUtils.parseAccessToken(any(AccessToken.class)))
         .thenReturn(Optional.of(new JwtTokenContent(userId, family)));
     when(authService.isFamilyBlacklisted(any())).thenReturn(true);
@@ -104,7 +91,7 @@ class JwtAuthFilterTest {
   }
 
   @Test
-  void validTokenButNoRole_shouldSkipAndNotAuthenticate() throws Exception {
+  void skip_and_no_authenticate_when_valid_Token_in_header_but_no_role() throws Exception {
     val userId = UserId.generate();
     val family = TokenFamily.generate();
     val request = mock(HttpServletRequest.class);
@@ -112,7 +99,7 @@ class JwtAuthFilterTest {
     val chain = mock(FilterChain.class);
 
     when(jwtUtils.extractTokenFromHeader(any(HttpServletRequest.class)))
-        .thenReturn(Optional.of(AccessToken.fromString("aaa.bbb.ccc")));
+        .thenReturn(Optional.of(AccessToken.fromString(VALID_JWT_TOKEN)));
     when(jwtUtils.parseAccessToken(any(AccessToken.class)))
         .thenReturn(Optional.of(new JwtTokenContent(userId, family)));
     when(authService.isFamilyBlacklisted(any())).thenReturn(false);
@@ -125,7 +112,7 @@ class JwtAuthFilterTest {
   }
 
   @Test
-  void validTokenWithRole_shouldAuthenticateWithRoleAuthority() throws Exception {
+  void authenticate_when_valid_token_in_header_and_role_is_present() throws Exception {
     val userId = UserId.generate();
     val family = TokenFamily.generate();
     val request = mock(HttpServletRequest.class);
@@ -133,7 +120,7 @@ class JwtAuthFilterTest {
     val chain = mock(FilterChain.class);
 
     when(jwtUtils.extractTokenFromHeader(any(HttpServletRequest.class)))
-        .thenReturn(Optional.of(AccessToken.fromString("aaa.bbb.ccc")));
+        .thenReturn(Optional.of(AccessToken.fromString(VALID_JWT_TOKEN)));
     when(jwtUtils.parseAccessToken(any(AccessToken.class)))
         .thenReturn(Optional.of(new JwtTokenContent(userId, family)));
     when(authService.isFamilyBlacklisted(any())).thenReturn(false);

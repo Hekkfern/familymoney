@@ -17,6 +17,7 @@ import com.familymoney.domains.transactions.controllers.mappers.GetInvitationTok
 import com.familymoney.domains.transactions.controllers.mappers.GetUsersInGroupResponseMapper;
 import com.familymoney.domains.transactions.controllers.mappers.UpdateGroupRequestMapper;
 import com.familymoney.domains.transactions.services.ITransactionGroupService;
+import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import com.familymoney.domains.transactions.types.GroupName;
@@ -34,12 +35,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class GroupController implements IGroupController {
 
   private final ITransactionGroupService transactionGroupService;
-  private final CreateGroupResponseMapper createGroupResponseMapper;
-  private final GetGroupResponseMapper getGroupResponseMapper;
-  private final UpdateGroupRequestMapper updateGroupRequestMapper;
-  private final GetInvitationTokenResponseMapper getInvitationTokenResponseMapper;
-  private final GetUsersInGroupResponseMapper getUsersInGroupResponseMapper;
-  private final GetGroupBalancesResponseMapper getGroupBalancesResponseMapper;
 
   @Override
   public CreateGroupResponseDto createGroup(final CreateGroupRequestDto request) {
@@ -49,11 +44,11 @@ public class GroupController implements IGroupController {
     val groupId =
         transactionGroupService.createGroup(
             GroupName.fromString(request.name()),
-            request.description().trim(),
+            Description.of(request.description().trim()),
             Monetary.getCurrency(request.currencyCode()),
             user.id());
     // Generate response
-    return createGroupResponseMapper.toDto(groupId);
+    return CreateGroupResponseMapper.toDto(groupId);
   }
 
   @Override
@@ -64,7 +59,7 @@ public class GroupController implements IGroupController {
     val groupPages = transactionGroupService.getGroupsByUser(user.id(), pageable);
     // Generate response
     return GetGroupsResponseDto.builder()
-        .groups(groupPages.getContent().stream().map(getGroupResponseMapper::toDto).toList())
+        .groups(groupPages.getContent().stream().map(GetGroupResponseMapper::toDto).toList())
         .build();
   }
 
@@ -83,7 +78,7 @@ public class GroupController implements IGroupController {
     // Get group info
     val groupData = transactionGroupService.getGroupInfo(GroupId.fromUuid(groupId), user.id());
     // Generate response
-    return getGroupResponseMapper.toDto(groupData);
+    return GetGroupResponseMapper.toDto(groupData);
   }
 
   @Override
@@ -92,7 +87,7 @@ public class GroupController implements IGroupController {
     val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Update group info
     transactionGroupService.updateGroupInfo(
-        GroupId.fromUuid(groupId), user.id(), updateGroupRequestMapper.fromDto(request));
+        GroupId.fromUuid(groupId), user.id(), UpdateGroupRequestMapper.fromDto(request));
   }
 
   @Override
@@ -102,7 +97,7 @@ public class GroupController implements IGroupController {
     // Get invitation token
     val token = transactionGroupService.getInvitationToken(GroupId.fromUuid(groupId), user.id());
     // Generate response
-    return getInvitationTokenResponseMapper.toDto(token);
+    return GetInvitationTokenResponseMapper.toDto(token);
   }
 
   @Override
@@ -121,7 +116,7 @@ public class GroupController implements IGroupController {
     // Get users in group
     val users = transactionGroupService.getUsersInGroup(GroupId.fromUuid(groupId), user.id());
     // Generate response
-    return getUsersInGroupResponseMapper.toDto(users);
+    return GetUsersInGroupResponseMapper.toDto(users);
   }
 
   @Override
@@ -141,6 +136,6 @@ public class GroupController implements IGroupController {
     val balances =
         transactionGroupService.getAllGroupBalances(GroupId.fromUuid(groupId), user.id());
     // Generate response
-    return getGroupBalancesResponseMapper.toDto(balances);
+    return GetGroupBalancesResponseMapper.toDto(balances);
   }
 }

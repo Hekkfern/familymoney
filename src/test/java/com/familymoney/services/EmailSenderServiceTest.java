@@ -1,6 +1,6 @@
 package com.familymoney.services;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -67,16 +67,20 @@ class EmailSenderServiceTest {
 
     val sentMessage = messageCaptor.getValue();
     assertNotNull(sentMessage);
-    assertDoesNotThrow(
-        () ->
-            assertEquals(
-                String.format("%s <%s>", mailSenderProperties.name(), mailSenderProperties.email()),
-                sentMessage.getFrom()[0].toString()));
-    assertDoesNotThrow(
-        () ->
-            assertEquals(
-                email.toString(),
-                sentMessage.getRecipients(Message.RecipientType.TO)[0].toString()));
-    assertDoesNotThrow(() -> assertFalse(sentMessage.getContent().toString().isEmpty()));
+    assertThatCode(
+            () ->
+                assertEquals(
+                    String.format(
+                        "%s <%s>", mailSenderProperties.name(), mailSenderProperties.email()),
+                    sentMessage.getFrom()[0].toString()))
+        .doesNotThrowAnyException();
+    assertThatCode(
+            () ->
+                assertEquals(
+                    email.toString(),
+                    sentMessage.getRecipients(Message.RecipientType.TO)[0].toString()))
+        .doesNotThrowAnyException();
+    assertThatCode(() -> assertFalse(sentMessage.getContent().toString().isEmpty()))
+        .doesNotThrowAnyException();
   }
 }

@@ -1,6 +1,7 @@
 package com.familymoney.domains.transactions.services;
 
 import com.familymoney.domains.transactions.exceptions.GroupInvitationInvalidException;
+import com.familymoney.domains.transactions.exceptions.MaximumGroupInvitationsReachedException;
 import com.familymoney.domains.transactions.exceptions.TransactionGroupNotFoundException;
 import com.familymoney.domains.transactions.exceptions.TransactionNotFoundException;
 import com.familymoney.domains.transactions.exceptions.UserIsNotMemberOfGroupException;
@@ -20,6 +21,8 @@ import com.familymoney.domains.transactions.services.mappers.GroupDataMapper;
 import com.familymoney.domains.transactions.services.mappers.TransactionDataMapper;
 import com.familymoney.domains.transactions.services.mappers.UpdateGroupDataMapper;
 import com.familymoney.domains.transactions.services.mappers.UpdateTransactionDataMapper;
+import com.familymoney.domains.transactions.types.Description;
+import com.familymoney.domains.transactions.types.ExpirationTime;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import com.familymoney.domains.transactions.types.GroupName;
@@ -28,9 +31,9 @@ import com.familymoney.domains.user.exceptions.UserNotFoundException;
 import com.familymoney.domains.user.repositories.IUserRepository;
 import com.familymoney.domains.user.types.UserId;
 import com.familymoney.exceptions.DatabaseExecutionException;
+import com.familymoney.properties.GroupInvitationProperties;
 import com.familymoney.testutils.UUIDGenerator;
 import java.time.Clock;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -50,29 +53,22 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class TransactionGroupService implements ITransactionGroupService {
 
-  private static final Duration INVITATION_TOKEN_EXPIRY = Duration.ofHours(24);
-
   private final IGroupRepository groupRepository;
   private final IBalanceRepository balanceRepository;
   private final ITransactionRepository transactionRepository;
   private final IGroupInvitationRepository groupInvitationRepository;
   private final IUserRepository userRepository;
   private final Clock clock;
+  private final GroupInvitationProperties groupInvitationProperties;
 
   @Override
   @Transactional
   public GroupId createGroup(
-      GroupName name, String description, CurrencyUnit currency, UserId createdBy) {
+      GroupName name, Description description, CurrencyUnit currency, UserId createdBy) {
     // Create group in the database
     val groupId = GroupId.generate();
     groupRepository
-        .create(
-            CreateGroupDto.builder()
-                .id(groupId)
-                .name(name)
-                .description(description)
-                .currency(currency)
-                .build())
+        .create(new CreateGroupDto(groupId, name, description, currency))
         .orElseThrow(() -> new DatabaseExecutionException("Unable to create group"));
     // Add creator to the group
     groupRepository
@@ -92,9 +88,9 @@ public class TransactionGroupService implements ITransactionGroupService {
   private void checkIfUserIsInGroup(UserId userId, GroupId groupId)
       throws UserIsNotMemberOfGroupException {
     if (!groupRepository.isUserInGroup(userId, groupId)) {
-      log.info("User {} is not a member of group {}", userId, groupId);
-      throw new UserIsNotMemberOfGroupException(
-          String.format("User %s is not a member of group %s", userId, groupId));
+      val msg = "User '%s' is not a member of group '%s'".formatted(userId, groupId);
+      log.info(msg);
+      throw new UserIsNotMemberOfGroupException(msg);
     }
   }
 
@@ -107,17 +103,18 @@ public class TransactionGroupService implements ITransactionGroupService {
   private void checkIfGroupExists(GroupId groupId) {
     val exists = groupRepository.existsById(groupId);
     if (!exists) {
-      log.info("Group {} does not exist", groupId);
-      throw new TransactionGroupNotFoundException(
-          String.format("Group %s does not exist", groupId));
+      val msg = "Group '%s' does not exist".formatted(groupId);
+      log.info(msg);
+      throw new TransactionGroupNotFoundException(msg);
     }
   }
 
   private void checkIfUserExists(UserId userId) {
     val exists = userRepository.existsById(userId);
     if (!exists) {
-      log.info("User {} does not exist", userId);
-      throw new UserNotFoundException(String.format("Group %s does not exist", userId));
+      val msg = "User '%s' does not exist".formatted(userId);
+      log.info(msg);
+      throw new UserNotFoundException(msg);
     }
   }
 
@@ -168,18 +165,18 @@ public class TransactionGroupService implements ITransactionGroupService {
     checkIfGroupExists(groupId);
     // Check if the user is a member of the group
     checkIfUserIsInGroup(userId, groupId);
+    // check that we didn't surpass the limit of concurrent invitations
+    if (groupInvitationRepository.countByGroupIdAndUserId(groupId, userId)
+        >= groupInvitationProperties.maxNumInvitations()) {
+      throw new MaximumGroupInvitationsReachedException();
+    }
     // Generate token
     val token = GroupInvitationToken.generate();
-    val expiresAt = Instant.now(clock).plus(INVITATION_TOKEN_EXPIRY);
+    val expiresAt =
+        ExpirationTime.of(Instant.now(clock).plus(groupInvitationProperties.invitationDuration()));
     val invitationId = UUIDGenerator.generate();
     groupInvitationRepository
-        .create(
-            CreateGroupInvitationDto.builder()
-                .id(invitationId)
-                .groupId(groupId)
-                .token(token)
-                .expiresAt(expiresAt)
-                .build())
+        .create(new CreateGroupInvitationDto(invitationId, groupId, userId, token, expiresAt))
         .orElseThrow(() -> new DatabaseExecutionException("Unable to create invitation token"));
     return token;
   }
@@ -193,7 +190,7 @@ public class TransactionGroupService implements ITransactionGroupService {
             .findByToken(token)
             .orElseThrow(() -> new GroupInvitationInvalidException("Invitation token not found"));
     // Check if the invitation is expired
-    if (invitationDb.expiresAt().isBefore(Instant.now(clock))) {
+    if (invitationDb.expiresAt().isExpired(clock)) {
       log.info("Invitation token {} is expired", token);
       throw new GroupInvitationInvalidException("Invitation token expired");
     }
@@ -258,7 +255,7 @@ public class TransactionGroupService implements ITransactionGroupService {
   @Override
   public void createTransactionInGroup(
       GroupId groupId,
-      String description,
+      Description description,
       UserId from,
       UserId to,
       Money amount,
@@ -271,15 +268,7 @@ public class TransactionGroupService implements ITransactionGroupService {
     // create transaction
     val transactionId = TransactionId.generate();
     transactionRepository.create(
-        CreateTransactionDto.builder()
-            .id(transactionId)
-            .description(description)
-            .groupId(groupId)
-            .amount(amount)
-            .lender(from)
-            .borrower(to)
-            .doneAt(doneAt)
-            .build());
+        new CreateTransactionDto(transactionId, description, groupId, amount, from, to, doneAt));
   }
 
   @Override

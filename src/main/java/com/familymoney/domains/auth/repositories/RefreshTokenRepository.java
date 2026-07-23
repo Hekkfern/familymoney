@@ -7,8 +7,6 @@ import com.familymoney.domains.auth.repositories.mappers.RefreshTokenJooqMapper;
 import com.familymoney.domains.auth.types.RefreshToken;
 import com.familymoney.domains.user.types.UserId;
 import com.familymoney.generated.tables.RefreshTokens;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
@@ -36,7 +34,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
             data.userId().value(),
             data.token().value(),
             data.family().value(),
-            OffsetDateTime.ofInstant(data.expiresAt(), ZoneOffset.UTC))
+            data.expiresAt().toOffsetDateTime())
         .returning(
             RefreshTokens.REFRESH_TOKENS.ID,
             RefreshTokens.REFRESH_TOKENS.USER_ID,
@@ -67,10 +65,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
 
   @Override
   public boolean updateByToken(final RefreshToken token, final UpdateRefreshTokenDto data) {
-    val expiresAtVal =
-        data.expiresAt() != null
-            ? OffsetDateTime.ofInstant(data.expiresAt(), ZoneOffset.UTC)
-            : null;
+    val expiresAtVal = data.expiresAt() != null ? data.expiresAt().toOffsetDateTime() : null;
     val rowsAffected =
         db.update(RefreshTokens.REFRESH_TOKENS)
             .set(
@@ -88,10 +83,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
 
   @Override
   public boolean updateByUserId(final UserId userId, final UpdateRefreshTokenDto data) {
-    val expiresAtVal =
-        data.expiresAt() != null
-            ? OffsetDateTime.ofInstant(data.expiresAt(), ZoneOffset.UTC)
-            : null;
+    val expiresAtVal = data.expiresAt() != null ? data.expiresAt().toOffsetDateTime() : null;
     val rowsAffected =
         db.update(RefreshTokens.REFRESH_TOKENS)
             .set(

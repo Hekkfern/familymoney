@@ -6,6 +6,7 @@ import com.familymoney.domains.transactions.controllers.dtos.UpdateTransactionRe
 import com.familymoney.domains.transactions.controllers.mappers.GetGroupTransactionsResponseMapper;
 import com.familymoney.domains.transactions.controllers.mappers.UpdateTransactionRequestMapper;
 import com.familymoney.domains.transactions.services.ITransactionGroupService;
+import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.TransactionId;
 import com.familymoney.domains.user.types.UserId;
@@ -21,8 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class TransactionController implements ITransactionController {
 
   private final ITransactionGroupService transactionGroupService;
-  private final GetGroupTransactionsResponseMapper getGroupTransactionsResponseMapper;
-  private final UpdateTransactionRequestMapper updateTransactionRequestMapper;
 
   @Override
   public GetTransactionsResponseDto getGroupTransactions(UUID groupId, Pageable pageable) {
@@ -33,7 +32,7 @@ public class TransactionController implements ITransactionController {
         transactionGroupService.getGroupTransactions(
             GroupId.fromUuid(groupId), user.id(), pageable);
     // Generate response
-    return getGroupTransactionsResponseMapper.toDto(transactionPages);
+    return GetGroupTransactionsResponseMapper.toDto(transactionPages);
   }
 
   @Override
@@ -43,7 +42,7 @@ public class TransactionController implements ITransactionController {
     // Create transaction
     transactionGroupService.createTransactionInGroup(
         GroupId.fromUuid(groupId),
-        request.description(),
+        Description.of(request.description()),
         UserId.fromUuid(request.from()),
         UserId.fromUuid(request.to()),
         request.amount(),
@@ -59,7 +58,7 @@ public class TransactionController implements ITransactionController {
     transactionGroupService.updateTransaction(
         user.id(),
         TransactionId.fromUuid(transactionId),
-        updateTransactionRequestMapper.fromDto(request));
+        UpdateTransactionRequestMapper.fromDto(request));
   }
 
   @Override

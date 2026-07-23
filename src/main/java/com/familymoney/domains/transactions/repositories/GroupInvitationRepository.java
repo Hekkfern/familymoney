@@ -7,8 +7,6 @@ import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import com.familymoney.domains.user.types.UserId;
 import com.familymoney.generated.tables.GroupInvitations;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
@@ -35,7 +33,7 @@ public class GroupInvitationRepository implements IGroupInvitationRepository {
             data.groupId().value(),
             data.userId().value(),
             data.token().value(),
-            OffsetDateTime.ofInstant(data.expiresAt(), ZoneOffset.UTC))
+            data.expiresAt().toOffsetDateTime())
         .returning(
             GroupInvitations.GROUP_INVITATIONS.ID,
             GroupInvitations.GROUP_INVITATIONS.GROUP_ID,

@@ -4,9 +4,7 @@ import com.familymoney.domains.user.types.Email;
 import com.familymoney.domains.user.types.UserId;
 import com.familymoney.domains.user.types.UserName;
 import java.time.Instant;
-import lombok.Builder;
 
-@Builder
 public record UserData(
     UserId id,
     UserName username,

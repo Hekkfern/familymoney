@@ -18,6 +18,7 @@ import com.familymoney.domains.auth.repositories.dtos.UpdateEmailVerificationTok
 import com.familymoney.domains.auth.repositories.dtos.UpdateRefreshTokenDto;
 import com.familymoney.domains.auth.services.data.TokenPair;
 import com.familymoney.domains.auth.types.EmailVerificationToken;
+import com.familymoney.domains.auth.types.ExpirationTime;
 import com.familymoney.domains.auth.types.PasswordResetToken;
 import com.familymoney.domains.auth.types.RefreshToken;
 import com.familymoney.domains.auth.types.TokenFamily;
@@ -89,11 +90,11 @@ public class AuthService implements IAuthService {
     val emailVerificationTokenDb =
         emailVerificationRepository
             .create(
-                CreateEmailVerificationDto.builder()
-                    .userId(userId)
-                    .token(EmailVerificationToken.generate())
-                    .expiresAt(Instant.now(clock).plus(emailVerificationProperties.tokenDuration()))
-                    .build())
+                new CreateEmailVerificationDto(
+                    userId,
+                    EmailVerificationToken.generate(),
+                    ExpirationTime.of(
+                        Instant.now(clock).plus(emailVerificationProperties.tokenDuration()))))
             .orElseThrow(
                 () ->
                     new DatabaseExecutionException(
@@ -133,13 +134,12 @@ public class AuthService implements IAuthService {
     // Save refresh token in database
     refreshTokenRepository
         .create(
-            CreateRefreshTokenDto.builder()
-                .id(UUIDGenerator.generate())
-                .userId(userDb.id())
-                .token(refreshToken)
-                .family(family)
-                .expiresAt(Instant.now(clock).plus(jwtProperties.refreshTokenDuration()))
-                .build())
+            new CreateRefreshTokenDto(
+                UUIDGenerator.generate(),
+                userDb.id(),
+                refreshToken,
+                family,
+                ExpirationTime.of(Instant.now(clock).plus(jwtProperties.refreshTokenDuration()))))
         .orElseThrow(
             () -> new DatabaseExecutionException("Could not create refresh token in the database"));
     // Build response with both tokens
@@ -156,8 +156,8 @@ public class AuthService implements IAuthService {
             .findByToken(refreshToken)
             .orElseThrow(() -> new NoSuchElementException("Refresh token not found"));
     // Check if the refresh token is expired
-    if (Instant.now(clock).isAfter(refreshTokenDb.expiresAt())) {
-      val msg = "Invalid refresh token";
+    if (refreshTokenDb.expiresAt().isExpired(clock)) {
+      val msg = "Expired refresh token";
       log.info(msg);
       throw new RefreshTokenInvalidException(msg);
     }
@@ -171,7 +171,9 @@ public class AuthService implements IAuthService {
             refreshToken,
             UpdateRefreshTokenDto.builder()
                 .token(newRefreshToken)
-                .expiresAt(Instant.now(clock).plus(jwtProperties.refreshTokenDuration()))
+                .expiresAt(
+                    ExpirationTime.of(
+                        Instant.now(clock).plus(jwtProperties.refreshTokenDuration())))
                 .build());
     if (!refreshTokenUpdated) {
       throw new DatabaseExecutionException("Could not create new refresh token in the database");
@@ -190,7 +192,7 @@ public class AuthService implements IAuthService {
             .orElseThrow(
                 () -> new VerificationTokenNotFoundException("Invalid email verification token"));
     // Check if the token is expired
-    if (Instant.now(clock).isAfter(emailVerificationTokenDb.expiresAt())) {
+    if (emailVerificationTokenDb.expiresAt().isExpired(clock)) {
       throw new VerificationTokenExpiredException("Email verification token has expired");
     }
     // Verify the user's email
@@ -241,7 +243,9 @@ public class AuthService implements IAuthService {
             userDb.id(),
             UpdateEmailVerificationTokenDto.builder()
                 .token(newEmailVerificationToken)
-                .expiresAt(Instant.now(clock).plus(emailVerificationProperties.tokenDuration()))
+                .expiresAt(
+                    ExpirationTime.of(
+                        Instant.now(clock).plus(emailVerificationProperties.tokenDuration())))
                 .build());
     if (!emailVerificationTokenUpdated) {
       throw new DatabaseExecutionException(
@@ -271,7 +275,7 @@ public class AuthService implements IAuthService {
             .orElseThrow(
                 () -> new RefreshTokenNotFoundException("Refresh token not found in the database"));
     // Check if the refresh token is expired
-    if (Instant.now(clock).isAfter(refreshTokenDb.expiresAt())) {
+    if (refreshTokenDb.expiresAt().isExpired(clock)) {
       val msg = "Expired refresh token";
       log.trace(msg);
       throw new RefreshTokenInvalidException(msg);

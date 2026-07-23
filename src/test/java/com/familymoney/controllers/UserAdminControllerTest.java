@@ -82,16 +82,7 @@ class UserAdminControllerTest {
     val email = Email.fromString(FakeGenerator.email());
     val userId = UserId.fromUuid(UUID.randomUUID());
     when(userService.getUserData(any()))
-        .thenReturn(
-            Optional.of(
-                UserData.builder()
-                    .id(userId)
-                    .username(username)
-                    .email(email)
-                    .createdAt(now)
-                    .isEmailVerified(true)
-                    .isEnabled(true)
-                    .build()));
+        .thenReturn(Optional.of(new UserData(userId, username, email, now, true, true)));
     when(userService.getUserRole(any())).thenReturn(Optional.of(Role.ADMIN));
 
     val data =
@@ -118,16 +109,7 @@ class UserAdminControllerTest {
     val email = Email.fromString(FakeGenerator.email());
     val userId = UserId.fromUuid(UUID.randomUUID());
     when(userService.getUserData(any()))
-        .thenReturn(
-            Optional.of(
-                UserData.builder()
-                    .id(userId)
-                    .username(username)
-                    .email(email)
-                    .createdAt(Instant.now())
-                    .isEmailVerified(true)
-                    .isEnabled(true)
-                    .build()));
+        .thenReturn(Optional.of(new UserData(userId, username, email, Instant.now(), true, true)));
     when(userService.getUserRole(any())).thenReturn(Optional.of(Role.USER));
 
     client

@@ -17,6 +17,7 @@ import java.util.Date;
 import lombok.val;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -28,7 +29,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class JwtUtilsTest {
 
-  private final Instant now = Instant.parse("2025-01-01T00:00:00Z");
+  private static final Instant now = Instant.parse("2025-01-01T00:00:00Z");
+  private static final String VALID_JWT_TOKEN =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30";
+  private static final String INVALID_JWT_TOKEN = "aaa.bbbb.ccc";
 
   @Spy private AppProperties appProperties = new AppProperties("testapp");
   @Mock private io.jsonwebtoken.Clock jwtClock;
@@ -42,83 +46,75 @@ class JwtUtilsTest {
 
   @InjectMocks private JwtUtils jwtUtils;
 
-  // region JwtUtils.generateAccessToken()
+  @Nested
+  class GenerateAccessToken {
 
-  // TODO
+    // TODO
 
-  // endregion
-
-  // region JwtUtils.parseAccessToken()
-
-  @Test
-  void parseAccessToken_invalid_token_fails() {
-    val token = AccessToken.fromString("aaa.bbbb.ccc");
-
-    val contentOpt = jwtUtils.parseAccessToken(token);
-
-    assertThat(contentOpt).isEmpty();
   }
 
-  @Test
-  void parseAccessToken_expired_token_fails() {
-    when(jwtClock.now())
-        .thenReturn(Date.from(now))
-        .thenReturn(Date.from(now.plus(10, ChronoUnit.DAYS)));
+  @Nested
+  class ParseAccessToken {
 
-    val userId = UserId.generate();
-    val family = TokenFamily.generate();
-    val token = jwtUtils.generateAccessToken(userId, family);
+    @Test
+    void returns_empty_when_token_is_expired() {
+      when(jwtClock.now())
+          .thenReturn(Date.from(now))
+          .thenReturn(Date.from(now.plus(10, ChronoUnit.DAYS)));
 
-    val contentOpt = jwtUtils.parseAccessToken(token);
-    assertThat(contentOpt).isEmpty();
+      val userId = UserId.generate();
+      val family = TokenFamily.generate();
+      val token = jwtUtils.generateAccessToken(userId, family);
+
+      val contentOpt = jwtUtils.parseAccessToken(token);
+      assertThat(contentOpt).isEmpty();
+    }
+
+    @Test
+    void returns_token_when_token_is_valid() {
+      when(jwtClock.now()).thenReturn(Date.from(now));
+
+      val userId = UserId.generate();
+      val family = TokenFamily.generate();
+      val token = jwtUtils.generateAccessToken(userId, family);
+
+      val contentOpt = jwtUtils.parseAccessToken(token);
+      assertThat(contentOpt).isNotEmpty();
+      val content = contentOpt.get();
+      assertThat(content).isNotNull();
+      assertThat(content.userId()).isEqualTo(userId);
+      assertThat(content.family()).isEqualTo(family);
+    }
   }
 
-  @Test
-  void parseAccessToken_valid_token_succeeds() {
-    when(jwtClock.now()).thenReturn(Date.from(now));
+  @Nested
+  class ExtractTokenFromHeader {
 
-    val userId = UserId.generate();
-    val family = TokenFamily.generate();
-    val token = jwtUtils.generateAccessToken(userId, family);
+    @Test
+    void extractTokenFromHeader_without_authorization_header_returns_empty() {
+      val request = mock(HttpServletRequest.class);
+      when(request.getHeader("Authorization")).thenReturn(null);
 
-    val contentOpt = jwtUtils.parseAccessToken(token);
-    assertThat(contentOpt).isNotEmpty();
-    val content = contentOpt.get();
-    assertThat(content).isNotNull();
-    assertThat(content.userId()).isEqualTo(userId);
-    assertThat(content.family()).isEqualTo(family);
+      val tokenOpt = jwtUtils.extractTokenFromHeader(request);
+      assertThat(tokenOpt).isEmpty();
+    }
+
+    @Test
+    void extractTokenFromHeader_without_bearer_authorization_header_returns_empty() {
+      val request = mock(HttpServletRequest.class);
+      when(request.getHeader("Authorization")).thenReturn("Basic aaaaaaaa");
+
+      val tokenOpt = jwtUtils.extractTokenFromHeader(request);
+      assertThat(tokenOpt).isEmpty();
+    }
+
+    @Test
+    void extractTokenFromHeader_with_bearer_authorization_header_returns_token() {
+      val request = mock(HttpServletRequest.class);
+      when(request.getHeader("Authorization")).thenReturn("Bearer aaaa.bbbb.cccc");
+
+      val tokenOpt = jwtUtils.extractTokenFromHeader(request);
+      assertThat(tokenOpt).isNotEmpty().contains(AccessToken.fromString("aaaa.bbbb.cccc"));
+    }
   }
-
-  // endregion
-
-  // region JwtUtils.extractTokenFromHeader()
-
-  @Test
-  void extractTokenFromHeader_without_authorization_header_returns_empty() {
-    val request = mock(HttpServletRequest.class);
-    when(request.getHeader("Authorization")).thenReturn(null);
-
-    val tokenOpt = jwtUtils.extractTokenFromHeader(request);
-    assertThat(tokenOpt).isEmpty();
-  }
-
-  @Test
-  void extractTokenFromHeader_without_bearer_authorization_header_returns_empty() {
-    val request = mock(HttpServletRequest.class);
-    when(request.getHeader("Authorization")).thenReturn("Basic aaaaaaaa");
-
-    val tokenOpt = jwtUtils.extractTokenFromHeader(request);
-    assertThat(tokenOpt).isEmpty();
-  }
-
-  @Test
-  void extractTokenFromHeader_with_bearer_authorization_header_returns_token() {
-    val request = mock(HttpServletRequest.class);
-    when(request.getHeader("Authorization")).thenReturn("Bearer aaaa.bbbb.cccc");
-
-    val tokenOpt = jwtUtils.extractTokenFromHeader(request);
-    assertThat(tokenOpt).isNotEmpty().contains(AccessToken.fromString("aaaa.bbbb.cccc"));
-  }
-
-  // endregion
 }

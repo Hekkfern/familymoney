@@ -1,11 +1,10 @@
 package com.familymoney.domains.auth.repositories.dtos;
 
+import com.familymoney.domains.auth.types.ExpirationTime;
 import com.familymoney.domains.auth.types.RefreshToken;
 import com.familymoney.domains.auth.types.TokenFamily;
 import com.familymoney.domains.user.types.UserId;
-import java.time.Instant;
 import java.util.UUID;
-import lombok.Builder;
 
 /**
  * DTO for creating a new refresh token record in the database *
@@ -18,6 +17,5 @@ import lombok.Builder;
  * @param expiresAt the timestamp indicating when the refresh token will expire and should no longer
  *     be accepted for authentication.
  */
-@Builder
 public record CreateRefreshTokenDto(
-    UUID id, UserId userId, RefreshToken token, TokenFamily family, Instant expiresAt) {}
+    UUID id, UserId userId, RefreshToken token, TokenFamily family, ExpirationTime expiresAt) {}

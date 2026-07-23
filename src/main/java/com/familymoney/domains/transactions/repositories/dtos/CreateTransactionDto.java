@@ -1,10 +1,10 @@
 package com.familymoney.domains.transactions.repositories.dtos;
 
+import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.TransactionId;
 import com.familymoney.domains.user.types.UserId;
 import java.time.Instant;
-import lombok.Builder;
 import org.javamoney.moneta.Money;
 
 /**
@@ -17,15 +17,15 @@ import org.javamoney.moneta.Money;
  * @param borrower ID of the user who borrowed the money. Must be different from lender.
  * @param doneAt The timestamp indicating when the transaction was completed.
  */
-@Builder
 public record CreateTransactionDto(
     TransactionId id,
-    String description,
+    Description description,
     GroupId groupId,
     Money amount,
     UserId lender,
     UserId borrower,
     Instant doneAt) {
+
   public CreateTransactionDto {
     assert amount.isGreaterThan(Money.zero(amount.getCurrency())) : "Amount must be positive";
     assert !lender.equals(borrower) : "Lender and borrower must be different users";

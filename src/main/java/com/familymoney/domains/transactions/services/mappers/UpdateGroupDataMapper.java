@@ -3,13 +3,13 @@ package com.familymoney.domains.transactions.services.mappers;
 import com.familymoney.domains.transactions.repositories.dtos.UpdateGroupDto;
 import com.familymoney.domains.transactions.services.data.UpdateGroupData;
 
-public class UpdateGroupDataMapper {
+public final class UpdateGroupDataMapper {
 
   private UpdateGroupDataMapper() {
     /* This utility class should not be instantiated */
   }
 
-  public static UpdateGroupDto toDbo(UpdateGroupData data) {
-    return UpdateGroupDto.builder().name(data.name()).description(data.description()).build();
+  public static UpdateGroupDto toDbo(final UpdateGroupData data) {
+    return new UpdateGroupDto(data.name(), data.description());
   }
 }

@@ -104,7 +104,7 @@ public class JwtUtils {
                   UserId.fromString(claims.getSubject()),
                   TokenFamily.fromString(claims.get("family", String.class))))
           : Optional.empty();
-    } catch (Exception _) {
+    } catch (final Exception _) {
       return Optional.empty();
     }
   }
@@ -115,7 +115,11 @@ public class JwtUtils {
     if (bearerToken != null && bearerToken.startsWith(BEARER_PREFIX)) {
       val rawToken = Strings.CI.removeStart(bearerToken, BEARER_PREFIX);
       log.debug("Access Token: {}", rawToken);
-      return Optional.of(AccessToken.fromString(rawToken));
+      try {
+        return Optional.of(AccessToken.fromString(rawToken));
+      } catch (final IllegalArgumentException _) {
+        return Optional.empty();
+      }
     }
     return Optional.empty();
   }

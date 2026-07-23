@@ -7,8 +7,6 @@ import com.familymoney.domains.auth.repositories.mappers.EmailVerificationJooqMa
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.user.types.UserId;
 import com.familymoney.generated.tables.EmailVerificationTokens;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
@@ -29,10 +27,7 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.USER_ID,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.EXPIRES_AT)
-        .values(
-            data.userId().value(),
-            data.token().value(),
-            OffsetDateTime.ofInstant(data.expiresAt(), ZoneOffset.UTC))
+        .values(data.userId().value(), data.token().value(), data.expiresAt().toOffsetDateTime())
         .returning(
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.USER_ID,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN,
@@ -83,10 +78,7 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
             .set(
                 EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.EXPIRES_AT,
                 DSL.coalesce(
-                    DSL.val(
-                        data.expiresAt() != null
-                            ? OffsetDateTime.ofInstant(data.expiresAt(), ZoneOffset.UTC)
-                            : null),
+                    DSL.val(data.expiresAt() != null ? data.expiresAt().toOffsetDateTime() : null),
                     EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.EXPIRES_AT))
             .where(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.USER_ID.eq(userId.value()))
             .execute();

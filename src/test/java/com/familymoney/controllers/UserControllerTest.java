@@ -71,15 +71,7 @@ class UserControllerTest {
     val username = UserName.fromString(FakeGenerator.username());
     val email = Email.fromString(FakeGenerator.email());
     when(userService.getUserData(any()))
-        .thenReturn(
-            Optional.of(
-                UserData.builder()
-                    .username(username)
-                    .email(email)
-                    .createdAt(now)
-                    .isEmailVerified(true)
-                    .isEnabled(true)
-                    .build()));
+        .thenReturn(Optional.of(new UserData(null, username, email, now, true, true)));
     when(userService.getUserRole(any())).thenReturn(Optional.of(Role.USER));
 
     val data =
@@ -122,16 +114,7 @@ class UserControllerTest {
     val userId = UserId.generate();
     val family = TokenFamily.generate();
     when(userService.getUserData(any()))
-        .thenReturn(
-            Optional.of(
-                UserData.builder()
-                    .id(userId)
-                    .username(username)
-                    .email(email)
-                    .createdAt(Instant.now())
-                    .isEmailVerified(true)
-                    .isEnabled(true)
-                    .build()));
+        .thenReturn(Optional.of(new UserData(userId, username, email, Instant.now(), true, true)));
     when(userService.getUserRole(any())).thenReturn(Optional.empty());
 
     // Request
@@ -157,14 +140,13 @@ class UserControllerTest {
     when(userService.getUserData(any()))
         .thenReturn(
             Optional.of(
-                UserData.builder()
-                    .id(UserId.fromUuid(UUID.randomUUID()))
-                    .username(username)
-                    .email(email)
-                    .createdAt(Instant.now())
-                    .isEmailVerified(true)
-                    .isEnabled(true)
-                    .build()));
+                new UserData(
+                    UserId.fromUuid(UUID.randomUUID()),
+                    username,
+                    email,
+                    Instant.now(),
+                    true,
+                    true)));
     when(userService.getUserRole(any())).thenReturn(Optional.of(Role.USER));
 
     client
@@ -197,16 +179,7 @@ class UserControllerTest {
     val userId = UserId.generate();
     val family = TokenFamily.generate();
     when(userService.getUserData(any()))
-        .thenReturn(
-            Optional.of(
-                UserData.builder()
-                    .id(userId)
-                    .username(username)
-                    .email(email)
-                    .createdAt(Instant.now())
-                    .isEmailVerified(true)
-                    .isEnabled(true)
-                    .build()));
+        .thenReturn(Optional.of(new UserData(userId, username, email, Instant.now(), true, true)));
     when(userService.getUserRole(any())).thenReturn(Optional.of(Role.USER));
 
     val newUsername = FakeGenerator.username();
@@ -229,16 +202,7 @@ class UserControllerTest {
     val userId = UserId.generate();
     val family = TokenFamily.generate();
     when(userService.getUserData(any()))
-        .thenReturn(
-            Optional.of(
-                UserData.builder()
-                    .id(userId)
-                    .username(username)
-                    .email(email)
-                    .createdAt(Instant.now())
-                    .isEmailVerified(true)
-                    .isEnabled(true)
-                    .build()));
+        .thenReturn(Optional.of(new UserData(userId, username, email, Instant.now(), true, true)));
     when(userService.getUserRole(any())).thenReturn(Optional.of(Role.USER));
 
     val newUsername = FakeGenerator.username();
@@ -259,16 +223,7 @@ class UserControllerTest {
     val userId = UserId.generate();
     val family = TokenFamily.generate();
     when(userService.getUserData(any()))
-        .thenReturn(
-            Optional.of(
-                UserData.builder()
-                    .id(userId)
-                    .username(username)
-                    .email(email)
-                    .createdAt(Instant.now())
-                    .isEmailVerified(true)
-                    .isEnabled(true)
-                    .build()));
+        .thenReturn(Optional.of(new UserData(userId, username, email, Instant.now(), true, true)));
     when(userService.getUserRole(any())).thenReturn(Optional.of(Role.USER));
 
     val newEmail = FakeGenerator.email();
@@ -289,16 +244,7 @@ class UserControllerTest {
     val userId = UserId.generate();
     val family = TokenFamily.generate();
     when(userService.getUserData(any()))
-        .thenReturn(
-            Optional.of(
-                UserData.builder()
-                    .id(userId)
-                    .username(username)
-                    .email(email)
-                    .createdAt(Instant.now())
-                    .isEmailVerified(true)
-                    .isEnabled(true)
-                    .build()));
+        .thenReturn(Optional.of(new UserData(userId, username, email, Instant.now(), true, true)));
     when(userService.getUserRole(any())).thenReturn(Optional.of(Role.USER));
 
     val newPassword = FakeGenerator.password();

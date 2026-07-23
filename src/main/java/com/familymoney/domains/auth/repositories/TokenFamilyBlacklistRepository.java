@@ -5,8 +5,6 @@ import com.familymoney.domains.auth.repositories.entitites.TokenFamilyBlacklistE
 import com.familymoney.domains.auth.repositories.mappers.TokenFamilyBlacklistJooqMapper;
 import com.familymoney.domains.auth.types.TokenFamily;
 import com.familymoney.generated.tables.TokenfamilyBlacklist;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
@@ -22,10 +20,8 @@ public class TokenFamilyBlacklistRepository implements ITokenFamilyBlacklistRepo
   @Override
   public Optional<TokenFamilyBlacklistEntity> create(final CreateTokenFamilyBlacklistDto data) {
     return db.insertInto(TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST)
-        .columns(
-            TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST.FAMILY,
-            TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST.CREATED_AT)
-        .values(data.family().value(), OffsetDateTime.ofInstant(data.createdAt(), ZoneOffset.UTC))
+        .columns(TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST.FAMILY)
+        .values(data.family().value())
         .returning(
             TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST.FAMILY,
             TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST.CREATED_AT)

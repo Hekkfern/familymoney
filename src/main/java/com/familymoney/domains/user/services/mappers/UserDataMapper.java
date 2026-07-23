@@ -9,14 +9,13 @@ public class UserDataMapper {
     /* This utility class should not be instantiated */
   }
 
-  public static UserData fromDbo(UserEntity entity) {
-    return UserData.builder()
-        .id(entity.id())
-        .username(entity.username())
-        .email(entity.email())
-        .createdAt(entity.createdAt())
-        .isEmailVerified(entity.isEmailVerified())
-        .isEnabled(entity.isEnabled())
-        .build();
+  public static UserData fromDbo(final UserEntity entity) {
+    return new UserData(
+        entity.id(),
+        entity.username(),
+        entity.email(),
+        entity.createdAt(),
+        entity.isEmailVerified(),
+        entity.isEnabled());
   }
 }

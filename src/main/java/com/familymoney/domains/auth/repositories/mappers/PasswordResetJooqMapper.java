@@ -1,6 +1,7 @@
 package com.familymoney.domains.auth.repositories.mappers;
 
 import com.familymoney.domains.auth.repositories.entitites.PasswordResetEntity;
+import com.familymoney.domains.auth.types.ExpirationTime;
 import com.familymoney.domains.auth.types.PasswordResetToken;
 import com.familymoney.domains.user.types.UserId;
 import com.familymoney.generated.tables.PasswordResetTokens;
@@ -10,23 +11,23 @@ import org.jooq.Record;
 
 public final class PasswordResetJooqMapper {
 
-  private PasswordResetJooqMapper() {}
+  private PasswordResetJooqMapper() {
+    /* this class is not meant to be instantiated */
+  }
 
   public static PasswordResetEntity toEntity(final Record r) {
-    OffsetDateTime createdAt =
+    final OffsetDateTime createdAt =
         Objects.requireNonNull(r.get(PasswordResetTokens.PASSWORD_RESET_TOKENS.CREATED_AT));
-    OffsetDateTime updatedAt =
+    final OffsetDateTime updatedAt =
         Objects.requireNonNull(r.get(PasswordResetTokens.PASSWORD_RESET_TOKENS.UPDATED_AT));
-    OffsetDateTime expiresAt =
+    final OffsetDateTime expiresAt =
         Objects.requireNonNull(r.get(PasswordResetTokens.PASSWORD_RESET_TOKENS.EXPIRES_AT));
 
-    return PasswordResetEntity.builder()
-        .userId(UserId.fromUuid(r.get(PasswordResetTokens.PASSWORD_RESET_TOKENS.USER_ID)))
-        .token(
-            PasswordResetToken.fromString(r.get(PasswordResetTokens.PASSWORD_RESET_TOKENS.TOKEN)))
-        .createdAt(createdAt.toInstant())
-        .updatedAt(updatedAt.toInstant())
-        .expiresAt(expiresAt.toInstant())
-        .build();
+    return new PasswordResetEntity(
+        UserId.fromUuid(r.get(PasswordResetTokens.PASSWORD_RESET_TOKENS.USER_ID)),
+        PasswordResetToken.fromString(r.get(PasswordResetTokens.PASSWORD_RESET_TOKENS.TOKEN)),
+        createdAt.toInstant(),
+        updatedAt.toInstant(),
+        ExpirationTime.of(expiresAt));
   }
 }

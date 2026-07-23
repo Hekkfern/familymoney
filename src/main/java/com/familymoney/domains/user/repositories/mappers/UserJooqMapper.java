@@ -11,21 +11,22 @@ import org.jooq.Record;
 
 public final class UserJooqMapper {
 
-  private UserJooqMapper() {}
+  private UserJooqMapper() {
+    /* this class is not meant to be instantiated */
+  }
 
   public static UserEntity toEntity(final Record r) {
     OffsetDateTime createdAt = Objects.requireNonNull(r.get(Users.USERS.CREATED_AT));
     OffsetDateTime updatedAt = Objects.requireNonNull(r.get(Users.USERS.UPDATED_AT));
 
-    return UserEntity.builder()
-        .id(UserId.fromUuid(r.get(Users.USERS.ID)))
-        .username(UserName.fromString(r.get(Users.USERS.USERNAME)))
-        .email(Email.fromString(r.get(Users.USERS.EMAIL)))
-        .hashedPassword(r.get(Users.USERS.HASHED_PASSWORD))
-        .createdAt(createdAt.toInstant())
-        .updatedAt(updatedAt.toInstant())
-        .isEmailVerified(Boolean.TRUE.equals(r.get(Users.USERS.IS_EMAIL_VERIFIED)))
-        .isEnabled(Boolean.TRUE.equals(r.get(Users.USERS.IS_ENABLED)))
-        .build();
+    return new UserEntity(
+        UserId.fromUuid(r.get(Users.USERS.ID)),
+        UserName.fromString(r.get(Users.USERS.USERNAME)),
+        Email.fromString(r.get(Users.USERS.EMAIL)),
+        r.get(Users.USERS.HASHED_PASSWORD),
+        createdAt.toInstant(),
+        updatedAt.toInstant(),
+        Boolean.TRUE.equals(r.get(Users.USERS.IS_EMAIL_VERIFIED)),
+        Boolean.TRUE.equals(r.get(Users.USERS.IS_ENABLED)));
   }
 }

@@ -5,16 +5,17 @@ import com.familymoney.domains.user.services.data.UpdateUserData;
 import com.familymoney.domains.user.types.Email;
 import com.familymoney.domains.user.types.Password;
 import com.familymoney.domains.user.types.UserName;
-import org.springframework.stereotype.Component;
 
-@Component
-public class UpdateUserRequestMapper {
+public final class UpdateUserRequestMapper {
 
-  public UpdateUserData fromDto(UpdateUserRequestDto dto) {
-    return UpdateUserData.builder()
-        .username(dto.username() != null ? UserName.fromString(dto.username()) : null)
-        .email(dto.email() != null ? Email.fromString(dto.email()) : null)
-        .password(dto.password() != null ? Password.fromString(dto.password()) : null)
-        .build();
+  private UpdateUserRequestMapper() {
+    /* this class is not meant to be instantiated */
+  }
+
+  public static UpdateUserData fromDto(final UpdateUserRequestDto dto) {
+    return new UpdateUserData(
+        dto.username() != null ? UserName.fromString(dto.username()) : null,
+        dto.email() != null ? Email.fromString(dto.email()) : null,
+        dto.password() != null ? Password.fromString(dto.password()) : null);
   }
 }

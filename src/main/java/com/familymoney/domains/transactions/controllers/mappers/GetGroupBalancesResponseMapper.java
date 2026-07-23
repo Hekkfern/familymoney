@@ -4,16 +4,19 @@ import com.familymoney.domains.transactions.controllers.dtos.GetGroupBalancesRes
 import com.familymoney.domains.user.types.UserId;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.val;
 import org.javamoney.moneta.Money;
-import org.springframework.stereotype.Component;
 
-@Component
-public class GetGroupBalancesResponseMapper {
+public final class GetGroupBalancesResponseMapper {
 
-  public GetGroupBalancesResponseDto toDto(Map<UserId, Money> balanceMap) {
-    var balances =
+  private GetGroupBalancesResponseMapper() {
+    /* this class is not intended to be instantiated */
+  }
+
+  public static GetGroupBalancesResponseDto toDto(final Map<UserId, Money> balanceMap) {
+    val balances =
         balanceMap.entrySet().stream()
             .collect(Collectors.toMap(e -> e.getKey().value(), Map.Entry::getValue));
-    return GetGroupBalancesResponseDto.builder().balances(balances).build();
+    return new GetGroupBalancesResponseDto(balances);
   }
 }

@@ -4,9 +4,6 @@ spring:
     name: "familymoney"
   main:
     banner-mode: false
-  threads:
-    virtual:
-      enabled: true
   datasource:
     url: "jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}"
     username: "${POSTGRES_USER}"
@@ -53,6 +50,9 @@ familymoney:
   email-verification:
     token-duration: "24h"
     wait-time: "2m"
+  group-invitation:
+    invitation-duration: "1h"
+    max-num-invitations: 5
   mail:
     sender:
       email: "${MAIL_SENDER_FROM_EMAIL}"
@@ -61,6 +61,3 @@ familymoney:
     username: "${ADMIN_USERNAME}"
     email: "${ADMIN_EMAIL}"
     password: "${ADMIN_PASSWORD}"
-  groupInvitation:
-    invitation-duration: "1h"
-    max-num-invitations: 5

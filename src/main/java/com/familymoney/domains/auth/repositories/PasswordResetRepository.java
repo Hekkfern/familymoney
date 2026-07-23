@@ -6,8 +6,6 @@ import com.familymoney.domains.auth.repositories.mappers.PasswordResetJooqMapper
 import com.familymoney.domains.auth.types.PasswordResetToken;
 import com.familymoney.domains.user.types.UserId;
 import com.familymoney.generated.tables.PasswordResetTokens;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
@@ -27,10 +25,7 @@ public class PasswordResetRepository implements IPasswordResetRepository {
             PasswordResetTokens.PASSWORD_RESET_TOKENS.USER_ID,
             PasswordResetTokens.PASSWORD_RESET_TOKENS.TOKEN,
             PasswordResetTokens.PASSWORD_RESET_TOKENS.EXPIRES_AT)
-        .values(
-            data.userId().value(),
-            data.token().value(),
-            OffsetDateTime.ofInstant(data.expiresAt(), ZoneOffset.UTC))
+        .values(data.userId().value(), data.token().value(), data.expiresAt().toOffsetDateTime())
         .returning(
             PasswordResetTokens.PASSWORD_RESET_TOKENS.USER_ID,
             PasswordResetTokens.PASSWORD_RESET_TOKENS.TOKEN,

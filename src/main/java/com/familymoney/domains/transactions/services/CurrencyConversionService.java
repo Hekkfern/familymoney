@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 public class CurrencyConversionService implements ICurrencyConversionService {
+
   @Override
   public Money convert(Money amount, CurrencyUnit targetCurrency) {
     val conv = MonetaryConversions.getConversion(targetCurrency);

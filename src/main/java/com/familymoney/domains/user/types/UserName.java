@@ -2,7 +2,7 @@ package com.familymoney.domains.user.types;
 
 public record UserName(String value) {
 
-  public static UserName fromString(String value) {
+  public static UserName fromString(final String value) {
     return new UserName(value);
   }
 

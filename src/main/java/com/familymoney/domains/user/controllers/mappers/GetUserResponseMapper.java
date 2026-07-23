@@ -2,18 +2,20 @@ package com.familymoney.domains.user.controllers.mappers;
 
 import com.familymoney.domains.user.controllers.dtos.GetUserResponseDto;
 import com.familymoney.domains.user.services.data.UserData;
-import org.springframework.stereotype.Component;
 
-@Component
-public class GetUserResponseMapper {
+public final class GetUserResponseMapper {
 
-  public GetUserResponseDto toDto(UserData userData) {
-    return GetUserResponseDto.builder()
-        .id(userData.id().value())
-        .username(userData.username().value())
-        .email(userData.email().value())
-        .createdAt(userData.createdAt())
-        .isEnabled(userData.isEnabled())
-        .build();
+  private GetUserResponseMapper() {
+    /* this class is not meant to be instantiated */
+  }
+
+  public static GetUserResponseDto toDto(final UserData userData) {
+    return new GetUserResponseDto(
+        userData.id().value(),
+        userData.username().value(),
+        userData.email().value(),
+        userData.createdAt(),
+        userData.isEmailVerified(),
+        userData.isEnabled());
   }
 }

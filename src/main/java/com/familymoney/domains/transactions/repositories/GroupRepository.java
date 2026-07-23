@@ -39,7 +39,7 @@ public class GroupRepository implements IGroupRepository {
         .values(
             data.id().value(),
             data.name().value(),
-            data.description(),
+            data.description().value(),
             data.currency().getCurrencyCode())
         .returning(
             Groups.GROUPS.ID,
@@ -59,12 +59,11 @@ public class GroupRepository implements IGroupRepository {
             .set(
                 Groups.GROUPS.NAME,
                 DSL.coalesce(
-                    DSL.val(data.getName() != null ? data.getName().value() : null),
-                    Groups.GROUPS.NAME))
+                    DSL.val(data.name() != null ? data.name().value() : null), Groups.GROUPS.NAME))
             .set(
                 Groups.GROUPS.DESCRIPTION,
                 DSL.coalesce(
-                    DSL.val(data.description() != null ? data.description() : null),
+                    DSL.val(data.description() != null ? data.description().value() : null),
                     Groups.GROUPS.DESCRIPTION))
             .where(Groups.GROUPS.ID.eq(id.value()))
             .execute();

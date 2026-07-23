@@ -5,11 +5,11 @@ import java.util.UUID;
 
 public record UserId(UUID value) {
 
-  public static UserId fromString(String value) {
+  public static UserId fromString(final String value) {
     return new UserId(UUID.fromString(value));
   }
 
-  public static UserId fromUuid(UUID value) {
+  public static UserId fromUuid(final UUID value) {
     return new UserId(value);
   }
 

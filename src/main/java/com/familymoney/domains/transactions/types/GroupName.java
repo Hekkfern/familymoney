@@ -3,7 +3,7 @@ package com.familymoney.domains.transactions.types;
 public record GroupName(String value) {
 
   public GroupName {
-    if (value.isEmpty()) {
+    if (value.isBlank()) {
       throw new IllegalArgumentException("Invalid group name");
     }
   }

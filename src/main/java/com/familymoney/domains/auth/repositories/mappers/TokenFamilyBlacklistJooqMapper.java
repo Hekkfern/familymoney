@@ -9,7 +9,9 @@ import org.jooq.Record;
 
 public final class TokenFamilyBlacklistJooqMapper {
 
-  private TokenFamilyBlacklistJooqMapper() {}
+  private TokenFamilyBlacklistJooqMapper() {
+    /* this class is not meant to be instantiated */
+  }
 
   public static TokenFamilyBlacklistEntity toEntity(final Record r) {
     final OffsetDateTime expiresAt =
@@ -17,9 +19,6 @@ public final class TokenFamilyBlacklistJooqMapper {
     final TokenFamily family =
         TokenFamily.fromUuid(
             Objects.requireNonNull(r.get(TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST.FAMILY)));
-    return TokenFamilyBlacklistEntity.builder()
-        .family(family)
-        .createdAt(expiresAt.toInstant())
-        .build();
+    return new TokenFamilyBlacklistEntity(family, expiresAt.toInstant());
   }
 }

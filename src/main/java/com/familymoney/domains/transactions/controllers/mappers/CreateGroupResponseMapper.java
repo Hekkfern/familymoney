@@ -2,12 +2,14 @@ package com.familymoney.domains.transactions.controllers.mappers;
 
 import com.familymoney.domains.transactions.controllers.dtos.CreateGroupResponseDto;
 import com.familymoney.domains.transactions.types.GroupId;
-import org.springframework.stereotype.Component;
 
-@Component
-public class CreateGroupResponseMapper {
+public final class CreateGroupResponseMapper {
 
-  public CreateGroupResponseDto toDto(GroupId groupId) {
-    return CreateGroupResponseDto.builder().id(groupId.value()).build();
+  private CreateGroupResponseMapper() {
+    /* this class is not intended to be instantiated */
+  }
+
+  public static CreateGroupResponseDto toDto(final GroupId groupId) {
+    return new CreateGroupResponseDto(groupId.value());
   }
 }

@@ -1,11 +1,10 @@
 package com.familymoney.domains.transactions.repositories.dtos;
 
+import com.familymoney.domains.transactions.types.ExpirationTime;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import com.familymoney.domains.user.types.UserId;
-import java.time.Instant;
 import java.util.UUID;
-import lombok.Builder;
 
 /**
  * DTO for creating a new group invitation record in the database
@@ -17,6 +16,9 @@ import lombok.Builder;
  * @param expiresAt the timestamp indicating when the invitation expires, after which it should no
  *     longer be valid
  */
-@Builder
 public record CreateGroupInvitationDto(
-    UUID id, GroupId groupId, UserId userId, GroupInvitationToken token, Instant expiresAt) {}
+    UUID id,
+    GroupId groupId,
+    UserId userId,
+    GroupInvitationToken token,
+    ExpirationTime expiresAt) {}

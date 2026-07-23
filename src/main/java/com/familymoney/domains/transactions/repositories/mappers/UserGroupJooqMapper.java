@@ -5,19 +5,21 @@ import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.user.types.UserId;
 import com.familymoney.generated.tables.UserGroups;
 import java.time.OffsetDateTime;
+import java.util.Objects;
 import org.jooq.Record;
 
 public final class UserGroupJooqMapper {
 
-  private UserGroupJooqMapper() {}
+  private UserGroupJooqMapper() {
+    /* this class is not intended to be instantiated */
+  }
 
   public static UserGroupEntity toEntity(final Record r) {
-    OffsetDateTime joinedAt = r.get(UserGroups.USER_GROUPS.JOINED_AT);
+    OffsetDateTime joinedAt = Objects.requireNonNull(r.get(UserGroups.USER_GROUPS.JOINED_AT));
 
-    return UserGroupEntity.builder()
-        .userId(UserId.fromUuid(r.get(UserGroups.USER_GROUPS.USER_ID)))
-        .groupId(GroupId.fromUuid(r.get(UserGroups.USER_GROUPS.GROUP_ID)))
-        .joinedAt(joinedAt != null ? joinedAt.toInstant() : null)
-        .build();
+    return new UserGroupEntity(
+        UserId.fromUuid(r.get(UserGroups.USER_GROUPS.USER_ID)),
+        GroupId.fromUuid(r.get(UserGroups.USER_GROUPS.GROUP_ID)),
+        joinedAt.toInstant());
   }
 }

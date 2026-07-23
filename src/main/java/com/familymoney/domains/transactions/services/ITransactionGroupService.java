@@ -8,6 +8,7 @@ import com.familymoney.domains.transactions.services.data.GroupData;
 import com.familymoney.domains.transactions.services.data.TransactionData;
 import com.familymoney.domains.transactions.services.data.UpdateGroupData;
 import com.familymoney.domains.transactions.services.data.UpdateTransactionData;
+import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import com.familymoney.domains.transactions.types.GroupName;
@@ -34,7 +35,8 @@ public interface ITransactionGroupService {
    * @return Identifier of the newly created group
    * @throws DatabaseExecutionException if any database operation fails
    */
-  GroupId createGroup(GroupName name, String description, CurrencyUnit currency, UserId createdBy);
+  GroupId createGroup(
+      GroupName name, Description description, CurrencyUnit currency, UserId createdBy);
 
   /**
    * Delete a group
@@ -155,7 +157,7 @@ public interface ITransactionGroupService {
    */
   void createTransactionInGroup(
       GroupId groupId,
-      String description,
+      Description description,
       UserId from,
       UserId to,
       Money amount,

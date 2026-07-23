@@ -44,7 +44,7 @@ public class UserService implements IUserService {
 
   @Transactional
   @Override
-  public void updateUserInfo(final UserId userId, UpdateUserData data) {
+  public void updateUserInfo(final UserId userId, final UpdateUserData data) {
     if (!data.isEmpty()) {
       userRepository.updateById(
           userId,

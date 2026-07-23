@@ -50,16 +50,7 @@ class UserServiceTest {
     when(userRepository.findById(userId))
         .thenReturn(
             Optional.of(
-                UserEntity.builder()
-                    .id(userId)
-                    .username(username)
-                    .email(email)
-                    .hashedPassword("hashedpassword")
-                    .createdAt(now)
-                    .updatedAt(now)
-                    .isEmailVerified(false)
-                    .isEnabled(true)
-                    .build()));
+                new UserEntity(userId, username, email, "hashedpassword", now, now, false, true)));
 
     val dataOpt = userService.getUserData(userId);
     assertTrue(dataOpt.isPresent());

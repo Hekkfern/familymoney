@@ -23,8 +23,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserAdminController implements IUserAdminController {
 
   private final IUserService userService;
-  private final GetUserResponseMapper getUserResponseMapper;
-  private final UpdateUserRequestMapper updateUserRequestMapper;
 
   @Override
   public GetUserResponseDto getUserInfo(UUID userId) {
@@ -34,7 +32,7 @@ public class UserAdminController implements IUserAdminController {
             .getUserData(UserId.fromUuid(userId))
             .orElseThrow(() -> new UserNotFoundException("User not found"));
     // Return response
-    return getUserResponseMapper.toDto(userData);
+    return GetUserResponseMapper.toDto(userData);
   }
 
   @Override
@@ -44,31 +42,31 @@ public class UserAdminController implements IUserAdminController {
         Sort.by(direction, sort.toString().toLowerCase()).and(Sort.by(Sort.Direction.ASC, "id"));
     final Pageable pageable = PageRequest.of(page, size, stableSort);
     val userDataPages = userService.getUsers(pageable);
-    return PageResponse.from(userDataPages.map(getUserResponseMapper::toDto));
+    return PageResponse.from(userDataPages.map(GetUserResponseMapper::toDto));
   }
 
   @Override
-  public void enableUser(UUID userId, boolean enabled) {
+  public void enableUser(final UUID userId, boolean enabled) {
     userService.enableUser(UserId.fromUuid(userId), enabled);
   }
 
   @Override
-  public void deleteUser(UUID userId) {
+  public void deleteUser(final UUID userId) {
     userService.deleteUser(UserId.fromUuid(userId));
   }
 
   @Override
-  public void updateUserInfo(UUID userId, UpdateUserRequestDto request) {
-    userService.updateUserInfo(UserId.fromUuid(userId), updateUserRequestMapper.fromDto(request));
+  public void updateUserInfo(final UUID userId, final UpdateUserRequestDto request) {
+    userService.updateUserInfo(UserId.fromUuid(userId), UpdateUserRequestMapper.fromDto(request));
   }
 
   @Override
-  public void setUserRole(UUID userId, String role) {
+  public void setUserRole(final UUID userId, final String role) {
     userService.setUserRole(UserId.fromUuid(userId), Role.fromString(role));
   }
 
   @Override
-  public GetUserRoleResponseDto getUserRole(UUID userId) {
+  public GetUserRoleResponseDto getUserRole(final UUID userId) {
     return userService
         .getUserRole(UserId.fromUuid(userId))
         .map(GetUserRoleResponseDto::new)

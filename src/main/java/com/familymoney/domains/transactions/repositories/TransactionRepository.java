@@ -40,7 +40,7 @@ public class TransactionRepository implements ITransactionRepository {
             Transactions.TRANSACTIONS.DONE_AT)
         .values(
             data.id().value(),
-            data.description(),
+            data.description().value(),
             data.groupId().value(),
             data.amount().getNumber().numberValue(java.math.BigDecimal.class),
             data.amount().getCurrency().getCurrencyCode(),
@@ -68,6 +68,7 @@ public class TransactionRepository implements ITransactionRepository {
             ? data.amount().getNumber().numberValue(java.math.BigDecimal.class)
             : null;
     val currencyVal = data.amount() != null ? data.amount().getCurrency().getCurrencyCode() : null;
+    val descriptionVal = data.description() != null ? data.description().value() : null;
     val fromVal = data.from() != null ? data.from().value() : null;
     val toVal = data.to() != null ? data.to().value() : null;
     val doneAtVal =
@@ -83,7 +84,7 @@ public class TransactionRepository implements ITransactionRepository {
                 DSL.coalesce(DSL.val(currencyVal), Transactions.TRANSACTIONS.CURRENCY_CODE))
             .set(
                 Transactions.TRANSACTIONS.DESCRIPTION,
-                DSL.coalesce(DSL.val(data.description()), Transactions.TRANSACTIONS.DESCRIPTION))
+                DSL.coalesce(DSL.val(descriptionVal), Transactions.TRANSACTIONS.DESCRIPTION))
             .set(
                 Transactions.TRANSACTIONS.FROM_USER_ID,
                 DSL.coalesce(DSL.val(fromVal), Transactions.TRANSACTIONS.FROM_USER_ID))

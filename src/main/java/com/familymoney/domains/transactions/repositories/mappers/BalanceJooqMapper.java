@@ -11,18 +11,18 @@ import org.jooq.Record;
 
 public final class BalanceJooqMapper {
 
-  private BalanceJooqMapper() {}
+  private BalanceJooqMapper() {
+    /* this class is not intended to be instantiated */
+  }
 
   public static BalanceEntity toEntity(final Record r) {
-    return BalanceEntity.builder()
-        .id(BalanceId.fromString(String.valueOf(r.get(Balances.BALANCES.ID))))
-        .groupId(GroupId.fromString(String.valueOf(r.get(Balances.BALANCES.GROUP_ID))))
-        .money(
-            Money.of(
-                r.get(Balances.BALANCES.AMOUNT),
-                Monetary.getCurrency(r.get(Balances.BALANCES.CURRENCY_CODE))))
-        .user1(UserId.fromString(String.valueOf(r.get(Balances.BALANCES.USER_ID_1))))
-        .user2(UserId.fromString(String.valueOf(r.get(Balances.BALANCES.USER_ID_2))))
-        .build();
+    return new BalanceEntity(
+        BalanceId.fromString(String.valueOf(r.get(Balances.BALANCES.ID))),
+        GroupId.fromString(String.valueOf(r.get(Balances.BALANCES.GROUP_ID))),
+        Money.of(
+            r.get(Balances.BALANCES.AMOUNT),
+            Monetary.getCurrency(r.get(Balances.BALANCES.CURRENCY_CODE))),
+        UserId.fromString(String.valueOf(r.get(Balances.BALANCES.USER_ID_1))),
+        UserId.fromString(String.valueOf(r.get(Balances.BALANCES.USER_ID_2))));
   }
 }

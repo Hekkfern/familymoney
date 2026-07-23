@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController implements IUserController {
 
   private final IUserService userService;
-  private final GetMyUserResponseMapper getUserResponseMapper;
-  private final UpdateUserRequestMapper updateUserRequestMapper;
 
   @Override
   public GetMyUserResponseDto getMyUserInfo() {
@@ -30,7 +28,7 @@ public class UserController implements IUserController {
             .orElseThrow(
                 () -> new NoSuchElementException("User not found for id: %s".formatted(user.id())));
     // Return response
-    return getUserResponseMapper.toDto(userData);
+    return GetMyUserResponseMapper.toDto(userData);
   }
 
   @Override
@@ -42,10 +40,10 @@ public class UserController implements IUserController {
   }
 
   @Override
-  public void updateMyUserInfo(UpdateUserRequestDto request) {
+  public void updateMyUserInfo(final UpdateUserRequestDto request) {
     // Get user ID from security context (validated)
     val user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Update user
-    userService.updateUserInfo(user.id(), updateUserRequestMapper.fromDto(request));
+    userService.updateUserInfo(user.id(), UpdateUserRequestMapper.fromDto(request));
   }
 }

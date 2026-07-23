@@ -2,19 +2,15 @@ package com.familymoney.domains.transactions.controllers.mappers;
 
 import com.familymoney.domains.transactions.controllers.dtos.GetTransactionsResponseDto;
 import com.familymoney.domains.transactions.services.data.TransactionData;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.stereotype.Component;
 
-@Component
-@RequiredArgsConstructor
-public class GetGroupTransactionsResponseMapper {
+public final class GetGroupTransactionsResponseMapper {
 
-  private final TransactionMapper transactionMapper;
+  private GetGroupTransactionsResponseMapper() {
+    /* this class is not intended to be instantiated */
+  }
 
-  public GetTransactionsResponseDto toDto(Page<TransactionData> transactions) {
-    return GetTransactionsResponseDto.builder()
-        .transactions(transactions.map(transactionMapper::toDto))
-        .build();
+  public static GetTransactionsResponseDto toDto(final Page<TransactionData> transactions) {
+    return new GetTransactionsResponseDto(transactions.map(TransactionMapper::toDto));
   }
 }

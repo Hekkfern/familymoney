@@ -1,6 +1,7 @@
 package com.familymoney.domains.auth.repositories.mappers;
 
 import com.familymoney.domains.auth.repositories.entitites.RefreshTokenEntity;
+import com.familymoney.domains.auth.types.ExpirationTime;
 import com.familymoney.domains.auth.types.RefreshToken;
 import com.familymoney.domains.auth.types.TokenFamily;
 import com.familymoney.domains.user.types.UserId;
@@ -11,26 +12,27 @@ import org.jooq.Record;
 
 public final class RefreshTokenJooqMapper {
 
-  private RefreshTokenJooqMapper() {}
+  private RefreshTokenJooqMapper() {
+    /* this class is not meant to be instantiated */
+  }
 
   public static RefreshTokenEntity toEntity(final Record r) {
-    OffsetDateTime createdAt =
+    final OffsetDateTime createdAt =
         Objects.requireNonNull(r.get(RefreshTokens.REFRESH_TOKENS.CREATED_AT));
-    OffsetDateTime updatedAt =
+    final OffsetDateTime updatedAt =
         Objects.requireNonNull(r.get(RefreshTokens.REFRESH_TOKENS.UPDATED_AT));
-    OffsetDateTime expiresAt =
+    final OffsetDateTime expiresAt =
         Objects.requireNonNull(r.get(RefreshTokens.REFRESH_TOKENS.EXPIRES_AT));
     final TokenFamily family =
         TokenFamily.fromUuid(Objects.requireNonNull(r.get(RefreshTokens.REFRESH_TOKENS.FAMILY)));
 
-    return RefreshTokenEntity.builder()
-        .id(r.get(RefreshTokens.REFRESH_TOKENS.ID))
-        .userId(UserId.fromUuid(r.get(RefreshTokens.REFRESH_TOKENS.USER_ID)))
-        .token(RefreshToken.fromString(r.get(RefreshTokens.REFRESH_TOKENS.TOKEN)))
-        .createdAt(createdAt.toInstant())
-        .updatedAt(updatedAt.toInstant())
-        .expiresAt(expiresAt.toInstant())
-        .family(family)
-        .build();
+    return new RefreshTokenEntity(
+        r.get(RefreshTokens.REFRESH_TOKENS.ID),
+        UserId.fromUuid(r.get(RefreshTokens.REFRESH_TOKENS.USER_ID)),
+        RefreshToken.fromString(r.get(RefreshTokens.REFRESH_TOKENS.TOKEN)),
+        createdAt.toInstant(),
+        updatedAt.toInstant(),
+        ExpirationTime.of(expiresAt),
+        family);
   }
 }

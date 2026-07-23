@@ -4,13 +4,15 @@ import com.familymoney.domains.transactions.controllers.dtos.GetUsersInGroupResp
 import com.familymoney.domains.user.types.UserId;
 import java.util.List;
 import lombok.val;
-import org.springframework.stereotype.Component;
 
-@Component
-public class GetUsersInGroupResponseMapper {
+public final class GetUsersInGroupResponseMapper {
 
-  public GetUsersInGroupResponseDto toDto(List<UserId> users) {
+  private GetUsersInGroupResponseMapper() {
+    /* this class is not intended to be instantiated */
+  }
+
+  public static GetUsersInGroupResponseDto toDto(final List<UserId> users) {
     val userIds = users.stream().map(UserId::value).toList();
-    return GetUsersInGroupResponseDto.builder().userIds(userIds).build();
+    return new GetUsersInGroupResponseDto(userIds);
   }
 }
