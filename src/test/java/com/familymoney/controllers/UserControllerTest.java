@@ -24,6 +24,8 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayNameGeneration;
+import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
@@ -37,6 +39,7 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 @WebMvcTest(controllers = UserController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @AutoConfigureRestTestClient
+@DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class UserControllerTest {
 
   private final Instant now = Instant.parse("2025-01-01T00:00:00Z");

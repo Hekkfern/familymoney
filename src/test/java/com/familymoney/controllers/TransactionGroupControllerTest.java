@@ -13,6 +13,8 @@ import com.familymoney.security.JwtUtils;
 import java.time.Instant;
 import java.util.Date;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayNameGeneration;
+import org.junit.jupiter.api.DisplayNameGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
@@ -36,6 +38,7 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 })
 @EnableConfigurationProperties({AppProperties.class, JwtProperties.class})
 @AutoConfigureRestTestClient
+@DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class TransactionGroupControllerTest {
 
   private final Instant now = Instant.parse("2025-01-01T00:00:00Z");

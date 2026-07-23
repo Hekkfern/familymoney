@@ -1,6 +1,6 @@
 package com.familymoney.domains.auth.controllers.dtos;
 
 import com.familymoney.domains.auth.validation.ValidRefreshToken;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 
-public record RefreshTokenRequestDto(@NotNull @ValidRefreshToken String refreshToken) {}
+public record RefreshTokenRequestDto(@NotBlank @ValidRefreshToken String refreshToken) {}

@@ -1,6 +1,6 @@
 package com.familymoney.domains.auth.controllers.dtos;
 
 import com.familymoney.domains.user.validation.ValidEmail;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 
-public record ResendVerificationEmailRequestDto(@NotNull @ValidEmail String email) {}
+public record ResendVerificationEmailRequestDto(@NotBlank @ValidEmail String email) {}

@@ -10,6 +10,8 @@ public final class TestDataFactory {
   public static List<String> INVALID_USERNAMES =
       List.of(
           "",
+          "   ",
+          "\n",
           "a",
           "ab",
           "1abc",
@@ -35,6 +37,8 @@ public final class TestDataFactory {
   public static List<String> INVALID_EMAILS =
       List.of(
           "",
+          "   ",
+          " \n",
           "plainaddress",
           "@no-local-part.com",
           "no-at.domain.com",
@@ -54,6 +58,8 @@ public final class TestDataFactory {
 
   public static List<String> INVALID_PASSWORDS =
       List.of(
+          " ",
+          "\n",
           "Short1!",
           "alllowercase1!",
           "ALLUPPERCASE1!",
@@ -74,6 +80,8 @@ public final class TestDataFactory {
 
   public static List<String> INVALID_REFRESHTOKENS =
       List.of(
+          "   ",
+          "\n",
           "alice99alice99alice99alice99ali!",
           "!alice99alice99alice99alice99ali",
           "shorttoken123",
