@@ -8,8 +8,6 @@ import static org.mockito.Mockito.when;
 import com.familymoney.domains.auth.types.TokenFamily;
 import com.familymoney.domains.user.controllers.UserController;
 import com.familymoney.domains.user.controllers.dtos.GetMyUserResponseDto;
-import com.familymoney.domains.user.controllers.mappers.GetMyUserResponseMapper;
-import com.familymoney.domains.user.controllers.mappers.UpdateUserRequestMapper;
 import com.familymoney.domains.user.services.IUserService;
 import com.familymoney.domains.user.services.data.UserData;
 import com.familymoney.domains.user.types.Email;
@@ -51,8 +49,6 @@ class UserControllerTest {
   @MockitoSpyBean private JwtUtils jwtUtils;
   @MockitoBean private IUserService userService;
   @MockitoBean private io.jsonwebtoken.Clock jwtClock;
-  @MockitoSpyBean private GetMyUserResponseMapper getMyUserResponseMapper;
-  @MockitoSpyBean private UpdateUserRequestMapper updateUserRequestMapper;
 
   // endregion
 

@@ -29,7 +29,6 @@ import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTe
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 @WebMvcTest(controllers = AuthController.class)
@@ -47,8 +46,6 @@ class AuthControllerTest {
   @MockitoBean private io.jsonwebtoken.Clock jwtClock;
   @MockitoBean private JwtUtils jwtUtils;
   @MockitoBean private IUserService userService;
-  @MockitoSpyBean private LoginResponseMapper loginResponseMapper;
-  @MockitoSpyBean private RefreshResponseMapper refreshResponseMapper;
 
   // endregion
 

@@ -4,7 +4,6 @@ import static org.mockito.Mockito.when;
 
 import com.familymoney.config.SecurityConfig;
 import com.familymoney.domains.admin.controllers.UserAdminController;
-import com.familymoney.domains.user.controllers.mappers.GetMyUserResponseMapper;
 import com.familymoney.domains.user.controllers.mappers.GetUserResponseMapper;
 import com.familymoney.domains.user.controllers.mappers.UpdateUserRequestMapper;
 import com.familymoney.domains.user.services.IUserService;
@@ -48,8 +47,6 @@ class TransactionGroupControllerTest {
   @MockitoSpyBean private JwtUtils jwtUtils;
   @MockitoBean private IUserService userService;
   @MockitoBean private io.jsonwebtoken.Clock jwtClock;
-  @MockitoSpyBean private GetMyUserResponseMapper getMyUserResponseMapper;
-  @MockitoSpyBean private UpdateUserRequestMapper updateUserRequestMapper;
 
   // endregion
 

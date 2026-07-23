@@ -63,8 +63,6 @@ class UserAdminControllerTest {
   @MockitoSpyBean private JwtUtils jwtUtils;
   @MockitoBean private IUserService userService;
   @MockitoBean private io.jsonwebtoken.Clock jwtClock;
-  @MockitoSpyBean private GetUserResponseMapper getUserResponseMapper;
-  @MockitoSpyBean private UpdateUserRequestMapper updateUserRequestMapper;
 
   // endregion
 
