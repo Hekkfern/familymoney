@@ -12,7 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.FieldSource;
 
-public class PasswordTest {
+ class PasswordTest {
 
   private Validator validator;
 
@@ -24,7 +24,7 @@ public class PasswordTest {
   record TestClass(@ValidPassword String value) {}
 
   @ParameterizedTest
-  @FieldSource("com.familymoney.utils.TestDataFactory#VALID_PASSWORDS")
+  @FieldSource("com.familymoney.testutils.TestDataFactory#VALID_PASSWORDS")
   void PasswordType_Valid(String str) {
     val testClass = new TestClass(str);
     val violations = validator.validate(testClass);
@@ -32,7 +32,7 @@ public class PasswordTest {
   }
 
   @ParameterizedTest
-  @FieldSource("com.familymoney.utils.TestDataFactory#INVALID_PASSWORDS")
+  @FieldSource("com.familymoney.testutils.TestDataFactory#INVALID_PASSWORDS")
   void PasswordType_Invalid(String str) {
     val testClass = new TestClass(str);
     val violations = validator.validate(testClass);

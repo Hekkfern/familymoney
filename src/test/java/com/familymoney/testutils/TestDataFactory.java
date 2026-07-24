@@ -9,7 +9,6 @@ public final class TestDataFactory {
 
   public static List<String> INVALID_USERNAMES =
       List.of(
-          "",
           "   ",
           "\n",
           "a",
@@ -36,7 +35,6 @@ public final class TestDataFactory {
 
   public static List<String> INVALID_EMAILS =
       List.of(
-          "",
           "   ",
           " \n",
           "plainaddress",

@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.EmptySource;
 import org.junit.jupiter.params.provider.FieldSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -93,6 +94,7 @@ class AuthControllerTest {
 
     @ParameterizedTest
     @FieldSource("com.familymoney.testutils.TestDataFactory#INVALID_USERNAMES")
+    @EmptySource
     void badrequest_when_username_is_invalid(String username) {
       client
           .post()
@@ -123,6 +125,7 @@ class AuthControllerTest {
 
     @ParameterizedTest
     @FieldSource("com.familymoney.testutils.TestDataFactory#INVALID_EMAILS")
+    @EmptySource
     void badrequest_when_email_is_invalid(String email) {
       client
           .post()
@@ -153,6 +156,7 @@ class AuthControllerTest {
 
     @ParameterizedTest
     @FieldSource("com.familymoney.testutils.TestDataFactory#INVALID_PASSWORDS")
+    @EmptySource
     void badrequest_when_password_is_invalid(String password) {
       client
           .post()
@@ -218,6 +222,7 @@ class AuthControllerTest {
 
     @ParameterizedTest
     @FieldSource("com.familymoney.testutils.TestDataFactory#INVALID_EMAILS")
+    @EmptySource
     void badrequest_when_email_is_invalid(String email) {
       client
           .post()
@@ -241,6 +246,7 @@ class AuthControllerTest {
 
     @ParameterizedTest
     @FieldSource("com.familymoney.testutils.TestDataFactory#INVALID_PASSWORDS")
+    @EmptySource
     void badrequest_when_password_is_invalid(String password) {
       client
           .post()

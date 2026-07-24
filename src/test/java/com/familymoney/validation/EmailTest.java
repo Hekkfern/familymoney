@@ -12,7 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.FieldSource;
 
-public class EmailTest {
+class EmailTest {
 
   private Validator validator;
 
@@ -24,7 +24,7 @@ public class EmailTest {
   record TestClass(@ValidEmail String value) {}
 
   @ParameterizedTest
-  @FieldSource("com.familymoney.utils.TestDataFactory#VALID_EMAILS")
+  @FieldSource("com.familymoney.testutils.TestDataFactory#VALID_EMAILS")
   void EmailType_Valid(String str) {
     val testClass = new TestClass(str);
     val violations = validator.validate(testClass);
@@ -32,7 +32,7 @@ public class EmailTest {
   }
 
   @ParameterizedTest
-  @FieldSource("com.familymoney.utils.TestDataFactory#INVALID_EMAILS")
+  @FieldSource("com.familymoney.testutils.TestDataFactory#INVALID_EMAILS")
   void EmailType_Invalid(String str) {
     val testClass = new TestClass(str);
     val violations = validator.validate(testClass);

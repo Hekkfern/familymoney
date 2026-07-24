@@ -12,7 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.FieldSource;
 
-public class GroupNameTest {
+ class GroupNameTest {
 
   private Validator validator;
 
@@ -24,7 +24,7 @@ public class GroupNameTest {
   record TestClass(@ValidGroupName String value) {}
 
   @ParameterizedTest
-  @FieldSource("com.familymoney.utils.TestDataFactory#VALID_GROUPNAMES")
+  @FieldSource("com.familymoney.testutils.TestDataFactory#VALID_GROUPNAMES")
   void GroupNameType_Valid(String str) {
     val testClass = new TestClass(str);
     val violations = validator.validate(testClass);
@@ -32,7 +32,7 @@ public class GroupNameTest {
   }
 
   @ParameterizedTest
-  @FieldSource("com.familymoney.utils.TestDataFactory#INVALID_GROUPNAMES")
+  @FieldSource("com.familymoney.testutils.TestDataFactory#INVALID_GROUPNAMES")
   void GroupNameType_Invalid(String str) {
     val testClass = new TestClass(str);
     val violations = validator.validate(testClass);

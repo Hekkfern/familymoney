@@ -12,7 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.FieldSource;
 
-public class RefreshTokenTest {
+ class RefreshTokenTest {
 
   private Validator validator;
 
@@ -24,7 +24,7 @@ public class RefreshTokenTest {
   record TestClass(@ValidRefreshToken String value) {}
 
   @ParameterizedTest
-  @FieldSource("com.familymoney.utils.TestDataFactory#VALID_REFRESHTOKENS")
+  @FieldSource("com.familymoney.testutils.TestDataFactory#VALID_REFRESHTOKENS")
   void RefreshTokenType_Valid(String str) {
     val testClass = new TestClass(str);
     val violations = validator.validate(testClass);
@@ -32,7 +32,7 @@ public class RefreshTokenTest {
   }
 
   @ParameterizedTest
-  @FieldSource("com.familymoney.utils.TestDataFactory#INVALID_REFRESHTOKENS")
+  @FieldSource("com.familymoney.testutils.TestDataFactory#INVALID_REFRESHTOKENS")
   void RefreshTokenType_Invalid(String str) {
     val testClass = new TestClass(str);
     val violations = validator.validate(testClass);

@@ -12,7 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.FieldSource;
 
-public class UserNameTest {
+ class UserNameTest {
 
   private Validator validator;
 
@@ -24,7 +24,7 @@ public class UserNameTest {
   record TestClass(@ValidUserName String value) {}
 
   @ParameterizedTest
-  @FieldSource("com.familymoney.utils.TestDataFactory#VALID_USERNAMES")
+  @FieldSource("com.familymoney.testutils.TestDataFactory#VALID_USERNAMES")
   void UserNameType_Valid(String str) {
     val testClass = new TestClass(str);
     val violations = validator.validate(testClass);
@@ -32,7 +32,7 @@ public class UserNameTest {
   }
 
   @ParameterizedTest
-  @FieldSource("com.familymoney.utils.TestDataFactory#INVALID_USERNAMES")
+  @FieldSource("com.familymoney.testutils.TestDataFactory#INVALID_USERNAMES")
   void UserNameType_Invalid(String str) {
     val testClass = new TestClass(str);
     val violations = validator.validate(testClass);
