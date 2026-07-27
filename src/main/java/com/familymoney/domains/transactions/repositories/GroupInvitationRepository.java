@@ -5,7 +5,7 @@ import com.familymoney.domains.transactions.repositories.entitites.GroupInvitati
 import com.familymoney.domains.transactions.repositories.mappers.GroupInvitationJooqMapper;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
-import com.familymoney.domains.user.types.UserId;
+import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.tables.GroupInvitations;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;

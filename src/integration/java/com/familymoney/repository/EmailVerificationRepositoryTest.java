@@ -8,9 +8,10 @@ import com.familymoney.domains.auth.repositories.EmailVerificationRepository;
 import com.familymoney.domains.auth.repositories.dtos.CreateEmailVerificationDto;
 import com.familymoney.domains.auth.repositories.dtos.UpdateEmailVerificationTokenDto;
 import com.familymoney.domains.auth.types.EmailVerificationToken;
-import com.familymoney.domains.user.types.Email;
-import com.familymoney.domains.user.types.UserId;
-import com.familymoney.domains.user.types.UserName;
+import com.familymoney.domains.auth.types.ExpirationTime;
+import com.familymoney.domains.users.types.Email;
+import com.familymoney.domains.users.types.UserId;
+import com.familymoney.domains.users.types.UserName;
 import com.familymoney.testutils.DatabaseCrud;
 import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;
@@ -65,7 +66,7 @@ class EmailVerificationRepositoryTest {
   void create_persists_email_verification_token_record() {
     val userId = insertRandomUser();
     val token = EmailVerificationToken.generate();
-    val expiresAt = Instant.now().plusSeconds(3600);
+    val expiresAt = ExpirationTime.of(Instant.now().plusSeconds(3600));
 
     val tokenCreatedOpt =
         emailVerificationRepository.create(
@@ -83,7 +84,9 @@ class EmailVerificationRepositoryTest {
   void create_throws_when_user_does_not_exist() {
     val dto =
         new CreateEmailVerificationDto(
-            UserId.generate(), EmailVerificationToken.generate(), Instant.now().plusSeconds(300));
+            UserId.generate(),
+            EmailVerificationToken.generate(),
+            ExpirationTime.of(Instant.now().plusSeconds(300)));
     assertThatThrownBy(() -> emailVerificationRepository.create(dto))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
@@ -92,7 +95,7 @@ class EmailVerificationRepositoryTest {
   void create_throws_when_user_id_is_duplicate() {
     val userId = insertRandomUser();
     val now = Instant.now();
-    val expiration = now.plusSeconds(3600);
+    val expiration = ExpirationTime.of(now.plusSeconds(3600));
 
     DatabaseCrud.insertEmailVerificationToken(
         dslContext, userId, EmailVerificationToken.generate(), now, expiration);
@@ -108,7 +111,7 @@ class EmailVerificationRepositoryTest {
     val userId2 = insertRandomUser();
     val token = EmailVerificationToken.generate();
     val now = Instant.now();
-    val expiration = now.plusSeconds(3600);
+    val expiration = ExpirationTime.of(now.plusSeconds(3600));
 
     DatabaseCrud.insertEmailVerificationToken(dslContext, userId1, token, now, expiration);
 
@@ -126,7 +129,7 @@ class EmailVerificationRepositoryTest {
     val userId = insertRandomUser();
     val token = EmailVerificationToken.generate();
     val now = Instant.now();
-    val expiration = now.plusSeconds(3600);
+    val expiration = ExpirationTime.of(now.plusSeconds(3600));
     DatabaseCrud.insertEmailVerificationToken(dslContext, userId, token, now, expiration);
 
     val tokenFoundOpt = emailVerificationRepository.findByUserId(userId);
@@ -156,7 +159,7 @@ class EmailVerificationRepositoryTest {
     val userId = insertRandomUser();
     val token = EmailVerificationToken.generate();
     val now = Instant.now();
-    val expiration = now.plusSeconds(3600);
+    val expiration = ExpirationTime.of(now.plusSeconds(3600));
     DatabaseCrud.insertEmailVerificationToken(dslContext, userId, token, now, expiration);
 
     val tokenFoundOpt = emailVerificationRepository.findByToken(token);
@@ -186,7 +189,7 @@ class EmailVerificationRepositoryTest {
     val userId = insertRandomUser();
     val token = EmailVerificationToken.generate();
     val now = Instant.now();
-    val expiration = now.plusSeconds(3600);
+    val expiration = ExpirationTime.of(now.plusSeconds(3600));
     DatabaseCrud.insertEmailVerificationToken(dslContext, userId, token, now, expiration);
 
     val newToken = EmailVerificationToken.generate();
@@ -207,7 +210,7 @@ class EmailVerificationRepositoryTest {
     val userId = insertRandomUser();
     val token = EmailVerificationToken.generate();
     val now = Instant.now();
-    val expiration = now.plusSeconds(3600);
+    val expiration = ExpirationTime.of(now.plusSeconds(3600));
     DatabaseCrud.insertEmailVerificationToken(dslContext, userId, token, now, expiration);
 
     val nullDto = UpdateEmailVerificationTokenDto.builder().build();
@@ -241,7 +244,7 @@ class EmailVerificationRepositoryTest {
     val userId = insertRandomUser();
     val token = EmailVerificationToken.generate();
     val now = Instant.now();
-    val expiration = now.plusSeconds(3600);
+    val expiration = ExpirationTime.of(now.plusSeconds(3600));
     DatabaseCrud.insertEmailVerificationToken(dslContext, userId, token, now, expiration);
 
     val deleted = emailVerificationRepository.deleteByUserId(userId);

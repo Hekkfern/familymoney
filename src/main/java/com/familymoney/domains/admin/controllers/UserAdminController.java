@@ -1,14 +1,14 @@
 package com.familymoney.domains.admin.controllers;
 
-import com.familymoney.domains.user.controllers.dtos.GetUserResponseDto;
-import com.familymoney.domains.user.controllers.dtos.GetUserRoleResponseDto;
-import com.familymoney.domains.user.controllers.dtos.UpdateUserRequestDto;
-import com.familymoney.domains.user.controllers.mappers.GetUserResponseMapper;
-import com.familymoney.domains.user.controllers.mappers.UpdateUserRequestMapper;
-import com.familymoney.domains.user.exceptions.UserNotFoundException;
-import com.familymoney.domains.user.services.IUserService;
-import com.familymoney.domains.user.types.Role;
-import com.familymoney.domains.user.types.UserId;
+import com.familymoney.domains.users.controllers.dtos.GetUserResponseDto;
+import com.familymoney.domains.users.controllers.dtos.GetUserRoleResponseDto;
+import com.familymoney.domains.users.controllers.dtos.UpdateUserRequestDto;
+import com.familymoney.domains.users.controllers.mappers.GetUserResponseMapper;
+import com.familymoney.domains.users.controllers.mappers.UpdateUserRequestMapper;
+import com.familymoney.domains.users.exceptions.UserNotFoundException;
+import com.familymoney.domains.users.services.IUserService;
+import com.familymoney.domains.users.types.Role;
+import com.familymoney.domains.users.types.UserId;
 import com.familymoney.testutils.PageResponse;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;

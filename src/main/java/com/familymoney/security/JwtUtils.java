@@ -2,7 +2,7 @@ package com.familymoney.security;
 
 import com.familymoney.domains.auth.types.AccessToken;
 import com.familymoney.domains.auth.types.TokenFamily;
-import com.familymoney.domains.user.types.UserId;
+import com.familymoney.domains.users.types.UserId;
 import com.familymoney.properties.AppProperties;
 import com.familymoney.properties.JwtProperties;
 import io.jsonwebtoken.Jwts;
@@ -73,7 +73,7 @@ public class JwtUtils {
    * </ul>
    *
    * <p>If all checks pass, the method extracts the subject (interpreted as a {@link
-   * com.familymoney.domains.user.types.UserId}) and the custom "family" claim (interpreted as a
+   * com.familymoney.domains.users.types.UserId}) and the custom "family" claim (interpreted as a
    * {@link com.familymoney.domains.auth.types.TokenFamily}) and returns a {@link JwtTokenContent}
    * containing both values wrapped in {@link Optional}.
    *

@@ -11,9 +11,9 @@ import com.familymoney.domains.transactions.repositories.entitites.BalanceEntity
 import com.familymoney.domains.transactions.types.BalanceId;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupName;
-import com.familymoney.domains.user.types.Email;
-import com.familymoney.domains.user.types.UserId;
-import com.familymoney.domains.user.types.UserName;
+import com.familymoney.domains.users.types.Email;
+import com.familymoney.domains.users.types.UserId;
+import com.familymoney.domains.users.types.UserName;
 import com.familymoney.testutils.DatabaseCrud;
 import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;
@@ -114,10 +114,8 @@ class BalanceRepositoryTest {
     val userId2 = UserId.generate();
     val money = Money.of(23, "USD");
 
-    assertThatThrownBy(
-            () ->
-                balanceRepository.create(
-                    new CreateBalanceDto(BalanceId.generate(), groupId, userId1, userId2, money)))
+    val dto = new CreateBalanceDto(BalanceId.generate(), groupId, userId1, userId2, money);
+    assertThatThrownBy(() -> balanceRepository.create(dto))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 
@@ -131,10 +129,8 @@ class BalanceRepositoryTest {
     balanceRepository.create(
         new CreateBalanceDto(BalanceId.generate(), groupId, userId1, userId2, money));
 
-    assertThatThrownBy(
-            () ->
-                balanceRepository.create(
-                    new CreateBalanceDto(BalanceId.generate(), groupId, userId2, userId1, money)))
+    val dto = new CreateBalanceDto(BalanceId.generate(), groupId, userId2, userId1, money);
+    assertThatThrownBy(() -> balanceRepository.create(dto))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 
@@ -144,10 +140,8 @@ class BalanceRepositoryTest {
     val userId1 = insertRandomUser();
     val money = Money.of(23, "USD");
 
-    assertThatThrownBy(
-            () ->
-                balanceRepository.create(
-                    new CreateBalanceDto(BalanceId.generate(), groupId, userId1, userId1, money)))
+    val dto = new CreateBalanceDto(BalanceId.generate(), groupId, userId1, userId1, money);
+    assertThatThrownBy(() -> balanceRepository.create(dto))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 
@@ -157,7 +151,6 @@ class BalanceRepositoryTest {
 
   @Test
   void findByGroup_returns_all_balances_in_group() {
-    val money = Money.of(23, "USD");
     val groupId1 = insertRandomGroup();
     val groupId2 = insertRandomGroup();
     val userId1 = insertRandomUser();

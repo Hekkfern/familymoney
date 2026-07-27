@@ -1,8 +1,8 @@
 package com.familymoney.properties;
 
-import com.familymoney.domains.user.types.Email;
-import com.familymoney.domains.user.types.Password;
-import com.familymoney.domains.user.types.UserName;
+import com.familymoney.domains.users.types.Email;
+import com.familymoney.domains.users.types.Password;
+import com.familymoney.domains.users.types.UserName;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;

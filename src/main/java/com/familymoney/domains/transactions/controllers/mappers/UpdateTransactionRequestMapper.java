@@ -3,7 +3,7 @@ package com.familymoney.domains.transactions.controllers.mappers;
 import com.familymoney.domains.transactions.controllers.dtos.UpdateTransactionRequestDto;
 import com.familymoney.domains.transactions.services.data.UpdateTransactionData;
 import com.familymoney.domains.transactions.types.Description;
-import com.familymoney.domains.user.types.UserId;
+import com.familymoney.domains.users.types.UserId;
 
 public final class UpdateTransactionRequestMapper {
 

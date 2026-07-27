@@ -3,7 +3,7 @@ package com.familymoney.domains.auth.repositories.mappers;
 import com.familymoney.domains.auth.repositories.entitites.EmailVerificationEntity;
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.auth.types.ExpirationTime;
-import com.familymoney.domains.user.types.UserId;
+import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.tables.EmailVerificationTokens;
 import java.time.OffsetDateTime;
 import java.util.Objects;

@@ -3,7 +3,7 @@ package com.familymoney.domains.transactions.repositories.mappers;
 import com.familymoney.domains.transactions.repositories.entitites.BalanceEntity;
 import com.familymoney.domains.transactions.types.BalanceId;
 import com.familymoney.domains.transactions.types.GroupId;
-import com.familymoney.domains.user.types.UserId;
+import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.tables.Balances;
 import javax.money.Monetary;
 import org.javamoney.moneta.Money;

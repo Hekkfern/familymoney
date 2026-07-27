@@ -6,12 +6,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.familymoney.domains.transactions.repositories.GroupInvitationRepository;
 import com.familymoney.domains.transactions.repositories.dtos.CreateGroupInvitationDto;
+import com.familymoney.domains.transactions.types.ExpirationTime;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import com.familymoney.domains.transactions.types.GroupName;
-import com.familymoney.domains.user.types.Email;
-import com.familymoney.domains.user.types.UserId;
-import com.familymoney.domains.user.types.UserName;
+import com.familymoney.domains.users.types.Email;
+import com.familymoney.domains.users.types.UserId;
+import com.familymoney.domains.users.types.UserName;
 import com.familymoney.testutils.DatabaseCrud;
 import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;
@@ -82,7 +83,7 @@ class GroupInvitationRepositoryTest {
     val now = Instant.now();
     val groupId = insertRandomGroup();
     val token = GroupInvitationToken.generate();
-    val expiration = now.plusSeconds(3600);
+    val expiration = ExpirationTime.of(now.plusSeconds(3600));
 
     val invitationOpt =
         groupInvitationRepository.create(
@@ -99,7 +100,7 @@ class GroupInvitationRepositoryTest {
         .isBetween(now.minusSeconds(1), now.plusSeconds(1));
     assertThat(invitation.expiresAt())
         .isNotNull()
-        .isBetween(expiration.minusSeconds(1), expiration.plusSeconds(1));
+        .isBetween(expiration.value().minusSeconds(1), expiration.value().plusSeconds(1));
   }
 
   @Test

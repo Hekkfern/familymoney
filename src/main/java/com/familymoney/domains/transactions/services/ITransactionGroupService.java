@@ -13,7 +13,7 @@ import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import com.familymoney.domains.transactions.types.GroupName;
 import com.familymoney.domains.transactions.types.TransactionId;
-import com.familymoney.domains.user.types.UserId;
+import com.familymoney.domains.users.types.UserId;
 import com.familymoney.exceptions.DatabaseExecutionException;
 import java.time.Instant;
 import java.util.List;

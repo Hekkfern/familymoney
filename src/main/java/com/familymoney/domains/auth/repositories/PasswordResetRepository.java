@@ -4,7 +4,7 @@ import com.familymoney.domains.auth.repositories.dtos.CreatePasswordResetDto;
 import com.familymoney.domains.auth.repositories.entitites.PasswordResetEntity;
 import com.familymoney.domains.auth.repositories.mappers.PasswordResetJooqMapper;
 import com.familymoney.domains.auth.types.PasswordResetToken;
-import com.familymoney.domains.user.types.UserId;
+import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.tables.PasswordResetTokens;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;

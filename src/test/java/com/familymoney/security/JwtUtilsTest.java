@@ -6,9 +6,10 @@ import static org.mockito.Mockito.when;
 
 import com.familymoney.domains.auth.types.AccessToken;
 import com.familymoney.domains.auth.types.TokenFamily;
-import com.familymoney.domains.user.types.UserId;
+import com.familymoney.domains.users.types.UserId;
 import com.familymoney.properties.AppProperties;
 import com.familymoney.properties.JwtProperties;
+import com.familymoney.testutils.FakeGenerator;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Duration;
 import java.time.Instant;
@@ -110,11 +111,12 @@ class JwtUtilsTest {
 
     @Test
     void extractTokenFromHeader_with_bearer_authorization_header_returns_token() {
+      val token = FakeGenerator.accessToken();
       val request = mock(HttpServletRequest.class);
-      when(request.getHeader("Authorization")).thenReturn("Bearer aaaa.bbbb.cccc");
+      when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
 
       val tokenOpt = jwtUtils.extractTokenFromHeader(request);
-      assertThat(tokenOpt).isNotEmpty().contains(AccessToken.fromString("aaaa.bbbb.cccc"));
+      assertThat(tokenOpt).isNotEmpty().contains(AccessToken.fromString(token));
     }
   }
 }

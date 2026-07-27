@@ -5,7 +5,7 @@ import com.familymoney.domains.transactions.repositories.dtos.UpdateGroupDto;
 import com.familymoney.domains.transactions.repositories.entitites.GroupEntity;
 import com.familymoney.domains.transactions.repositories.entitites.UserGroupEntity;
 import com.familymoney.domains.transactions.types.GroupId;
-import com.familymoney.domains.user.types.UserId;
+import com.familymoney.domains.users.types.UserId;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;

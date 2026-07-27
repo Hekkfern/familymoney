@@ -3,7 +3,7 @@ package com.familymoney.domains.auth.repositories;
 import com.familymoney.domains.auth.repositories.dtos.CreatePasswordResetDto;
 import com.familymoney.domains.auth.repositories.entitites.PasswordResetEntity;
 import com.familymoney.domains.auth.types.PasswordResetToken;
-import com.familymoney.domains.user.types.UserId;
+import com.familymoney.domains.users.types.UserId;
 import java.util.Optional;
 
 public interface IPasswordResetRepository {

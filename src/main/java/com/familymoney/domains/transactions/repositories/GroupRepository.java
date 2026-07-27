@@ -7,7 +7,7 @@ import com.familymoney.domains.transactions.repositories.entitites.UserGroupEnti
 import com.familymoney.domains.transactions.repositories.mappers.GroupJooqMapper;
 import com.familymoney.domains.transactions.repositories.mappers.UserGroupJooqMapper;
 import com.familymoney.domains.transactions.types.GroupId;
-import com.familymoney.domains.user.types.UserId;
+import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.tables.Groups;
 import com.familymoney.generated.tables.UserGroups;
 import java.util.List;

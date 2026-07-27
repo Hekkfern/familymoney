@@ -5,7 +5,7 @@ import com.familymoney.domains.transactions.repositories.dtos.UpdateBalanceDto;
 import com.familymoney.domains.transactions.repositories.entitites.BalanceEntity;
 import com.familymoney.domains.transactions.types.BalanceId;
 import com.familymoney.domains.transactions.types.GroupId;
-import com.familymoney.domains.user.types.UserId;
+import com.familymoney.domains.users.types.UserId;
 import java.util.List;
 import java.util.Optional;
 

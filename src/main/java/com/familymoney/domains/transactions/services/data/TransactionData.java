@@ -3,7 +3,7 @@ package com.familymoney.domains.transactions.services.data;
 import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.TransactionId;
-import com.familymoney.domains.user.types.UserId;
+import com.familymoney.domains.users.types.UserId;
 import java.time.Instant;
 import org.javamoney.moneta.Money;
 

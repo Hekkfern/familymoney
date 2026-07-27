@@ -1,6 +1,6 @@
 package com.familymoney.domains.admin.init;
 
-import com.familymoney.domains.user.services.IUserService;
+import com.familymoney.domains.users.services.IUserService;
 import com.familymoney.properties.AdminProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

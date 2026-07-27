@@ -5,9 +5,9 @@ import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.auth.types.PasswordResetToken;
 import com.familymoney.domains.auth.types.RefreshToken;
 import com.familymoney.domains.auth.types.TokenFamily;
-import com.familymoney.domains.user.types.Email;
-import com.familymoney.domains.user.types.Password;
-import com.familymoney.domains.user.types.UserName;
+import com.familymoney.domains.users.types.Email;
+import com.familymoney.domains.users.types.Password;
+import com.familymoney.domains.users.types.UserName;
 
 public interface IAuthService {
 

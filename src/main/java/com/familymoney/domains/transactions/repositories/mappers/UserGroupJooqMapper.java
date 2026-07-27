@@ -2,7 +2,7 @@ package com.familymoney.domains.transactions.repositories.mappers;
 
 import com.familymoney.domains.transactions.repositories.entitites.UserGroupEntity;
 import com.familymoney.domains.transactions.types.GroupId;
-import com.familymoney.domains.user.types.UserId;
+import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.tables.UserGroups;
 import java.time.OffsetDateTime;
 import java.util.Objects;

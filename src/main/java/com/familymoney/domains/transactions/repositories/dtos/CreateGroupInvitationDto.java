@@ -3,7 +3,7 @@ package com.familymoney.domains.transactions.repositories.dtos;
 import com.familymoney.domains.transactions.types.ExpirationTime;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
-import com.familymoney.domains.user.types.UserId;
+import com.familymoney.domains.users.types.UserId;
 import java.util.UUID;
 
 /**

@@ -1,8 +1,8 @@
 package com.familymoney.domains.auth.services;
 
 import com.familymoney.domains.auth.types.EmailVerificationToken;
-import com.familymoney.domains.user.types.Email;
-import com.familymoney.domains.user.types.UserName;
+import com.familymoney.domains.users.types.Email;
+import com.familymoney.domains.users.types.UserName;
 
 public interface IEmailSenderService {
 

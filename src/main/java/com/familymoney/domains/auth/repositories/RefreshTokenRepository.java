@@ -5,7 +5,7 @@ import com.familymoney.domains.auth.repositories.dtos.UpdateRefreshTokenDto;
 import com.familymoney.domains.auth.repositories.entitites.RefreshTokenEntity;
 import com.familymoney.domains.auth.repositories.mappers.RefreshTokenJooqMapper;
 import com.familymoney.domains.auth.types.RefreshToken;
-import com.familymoney.domains.user.types.UserId;
+import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.tables.RefreshTokens;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;

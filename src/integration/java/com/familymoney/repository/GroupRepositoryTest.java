@@ -8,11 +8,12 @@ import com.familymoney.domains.transactions.repositories.GroupRepository;
 import com.familymoney.domains.transactions.repositories.dtos.CreateGroupDto;
 import com.familymoney.domains.transactions.repositories.dtos.UpdateGroupDto;
 import com.familymoney.domains.transactions.repositories.entitites.GroupEntity;
+import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupName;
-import com.familymoney.domains.user.types.Email;
-import com.familymoney.domains.user.types.UserId;
-import com.familymoney.domains.user.types.UserName;
+import com.familymoney.domains.users.types.Email;
+import com.familymoney.domains.users.types.UserId;
+import com.familymoney.domains.users.types.UserName;
 import com.familymoney.testutils.DatabaseCrud;
 import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;
@@ -84,15 +85,17 @@ class GroupRepositoryTest {
     val currency = Monetary.getCurrency("USD");
     val groupName = GroupName.fromString(FakeGenerator.groupName());
     val groupId = GroupId.generate();
+    val description = Description.of("desc");
     val now = Instant.now();
 
-    val groupOpt = groupRepository.create(new CreateGroupDto(groupId, groupName, "desc", currency));
+    val groupOpt =
+        groupRepository.create(new CreateGroupDto(groupId, groupName, description, currency));
 
     assertThat(groupOpt).isPresent();
     val group = groupOpt.get();
     assertThat(group.id()).isNotNull();
     assertThat(group.name()).isEqualTo(groupName);
-    assertThat(group.description()).isEqualTo("desc");
+    assertThat(group.description()).isEqualTo(description);
     assertThat(group.currency()).isEqualTo(currency);
     assertThat(group.createdAt()).isNotNull().isBetween(now.minusSeconds(1), now.plusSeconds(1));
     assertThat(group.updatedAt()).isNotNull().isBetween(now.minusSeconds(1), now.plusSeconds(1));
@@ -105,7 +108,7 @@ class GroupRepositoryTest {
         new CreateGroupDto(
             groupId,
             GroupName.fromString(FakeGenerator.groupName()),
-            "desc",
+            Description.of("desc"),
             Monetary.getCurrency("USD"));
 
     assertThatThrownBy(() -> groupRepository.create(dto)).isInstanceOf(DuplicateKeyException.class);
@@ -121,16 +124,15 @@ class GroupRepositoryTest {
     val now = Instant.now();
 
     val newGroupName = GroupName.fromString(FakeGenerator.groupName());
-    val newDescription = "new description";
-    val dataToUpdate =
-        UpdateGroupDto.builder().name(newGroupName).description(newDescription).build();
+    val newDescription = Description.of("new description");
+    val dataToUpdate = new UpdateGroupDto(newGroupName, newDescription);
     val updated = groupRepository.updateById(groupId, dataToUpdate);
 
     assertThat(updated).isTrue();
     val found = groupRepository.findById(groupId).orElseThrow();
     assertThat(found.id()).isEqualTo(groupId);
     assertThat(found.name()).isEqualTo(newGroupName);
-    assertThat(found.description()).isEqualTo("new description");
+    assertThat(found.description()).isEqualTo(newDescription);
     assertThat(found.currency()).isEqualTo(Monetary.getCurrency("USD"));
     assertThat(found.createdAt()).isNotNull().isBetween(now.minusSeconds(1), now.plusSeconds(1));
     assertThat(found.updatedAt()).isNotNull().isBetween(now.minusSeconds(1), now.plusSeconds(1));
@@ -155,13 +157,14 @@ class GroupRepositoryTest {
   void updateById_returns_true_when_only_description_is_updated() {
     val groupId = insertRandomGroup();
     val original = groupRepository.findById(groupId).orElseThrow();
-    val dataToUpdate = UpdateGroupDto.builder().description("only-desc-changed").build();
+    val newDescription = Description.of("only-desc-changed");
+    val dataToUpdate = UpdateGroupDto.builder().description(newDescription).build();
 
     val updated = groupRepository.updateById(groupId, dataToUpdate);
 
     assertThat(updated).isTrue();
     val found = groupRepository.findById(groupId).orElseThrow();
-    assertThat(found.description()).isEqualTo("only-desc-changed");
+    assertThat(found.description()).isEqualTo(newDescription);
     assertThat(found.name()).isEqualTo(original.name());
   }
 
@@ -181,8 +184,9 @@ class GroupRepositoryTest {
 
   @Test
   void updateById_returns_false_when_group_does_not_exist() {
+    val newDescription = Description.of("new-desc");
     val groupId = GroupId.generate();
-    val dataToUpdate = UpdateGroupDto.builder().description("new-desc").build();
+    val dataToUpdate = UpdateGroupDto.builder().description(newDescription).build();
 
     val updated = groupRepository.updateById(groupId, dataToUpdate);
 

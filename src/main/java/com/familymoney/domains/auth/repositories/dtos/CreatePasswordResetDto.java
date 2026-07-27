@@ -2,7 +2,7 @@ package com.familymoney.domains.auth.repositories.dtos;
 
 import com.familymoney.domains.auth.types.ExpirationTime;
 import com.familymoney.domains.auth.types.PasswordResetToken;
-import com.familymoney.domains.user.types.UserId;
+import com.familymoney.domains.users.types.UserId;
 
 /**
  * DTO for creating a new password reset record in the database

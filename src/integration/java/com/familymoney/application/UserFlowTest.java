@@ -10,7 +10,7 @@ import com.familymoney.domains.auth.controllers.dtos.LoginResponseDto;
 import com.familymoney.domains.auth.controllers.dtos.RegisterRequestDto;
 import com.familymoney.domains.auth.services.IEmailSenderService;
 import com.familymoney.domains.auth.types.EmailVerificationToken;
-import com.familymoney.domains.user.controllers.dtos.GetMyUserResponseDto;
+import com.familymoney.domains.users.controllers.dtos.GetMyUserResponseDto;
 import com.familymoney.testutils.AuthControllerUriFactory;
 import com.familymoney.testutils.FakeGenerator;
 import com.familymoney.testutils.UserControllerUriFactory;

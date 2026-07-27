@@ -4,7 +4,7 @@ import com.familymoney.domains.auth.repositories.dtos.CreateEmailVerificationDto
 import com.familymoney.domains.auth.repositories.dtos.UpdateEmailVerificationTokenDto;
 import com.familymoney.domains.auth.repositories.entitites.EmailVerificationEntity;
 import com.familymoney.domains.auth.types.EmailVerificationToken;
-import com.familymoney.domains.user.types.UserId;
+import com.familymoney.domains.users.types.UserId;
 import java.util.Optional;
 
 public interface IEmailVerificationRepository {

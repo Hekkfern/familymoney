@@ -4,7 +4,7 @@ import com.familymoney.domains.auth.repositories.dtos.CreateRefreshTokenDto;
 import com.familymoney.domains.auth.repositories.dtos.UpdateRefreshTokenDto;
 import com.familymoney.domains.auth.repositories.entitites.RefreshTokenEntity;
 import com.familymoney.domains.auth.types.RefreshToken;
-import com.familymoney.domains.user.types.UserId;
+import com.familymoney.domains.users.types.UserId;
 import java.util.Optional;
 
 /** Repository contract for managing refresh tokens used for session renewal. */

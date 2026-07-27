@@ -1,7 +1,7 @@
 package com.familymoney.testutils;
 
-import com.familymoney.domains.user.types.Role;
-import com.familymoney.domains.user.types.UserId;
+import com.familymoney.domains.users.types.Role;
+import com.familymoney.domains.users.types.UserId;
 import lombok.Builder;
 
 @Builder

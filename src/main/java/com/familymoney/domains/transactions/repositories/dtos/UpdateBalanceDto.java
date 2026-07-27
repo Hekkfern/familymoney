@@ -1,9 +1,11 @@
 package com.familymoney.domains.transactions.repositories.dtos;
 
-import com.familymoney.domains.user.types.UserId;
+import com.familymoney.domains.users.types.UserId;
+import lombok.Builder;
 import org.javamoney.moneta.Money;
 import org.jspecify.annotations.Nullable;
 
+@Builder
 public record UpdateBalanceDto(
     @Nullable Money money, @Nullable UserId user1, @Nullable UserId user2) {
 

@@ -4,11 +4,11 @@ import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.familymoney.domains.user.repositories.RoleRepository;
-import com.familymoney.domains.user.types.Email;
-import com.familymoney.domains.user.types.Role;
-import com.familymoney.domains.user.types.UserId;
-import com.familymoney.domains.user.types.UserName;
+import com.familymoney.domains.users.repositories.RoleRepository;
+import com.familymoney.domains.users.types.Email;
+import com.familymoney.domains.users.types.Role;
+import com.familymoney.domains.users.types.UserId;
+import com.familymoney.domains.users.types.UserName;
 import com.familymoney.testutils.DatabaseCrud;
 import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;

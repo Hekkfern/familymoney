@@ -1,6 +1,6 @@
 package com.familymoney.config;
 
-import com.familymoney.domains.user.types.Role;
+import com.familymoney.domains.users.types.Role;
 import com.familymoney.security.JwtAuthFilter;
 import com.familymoney.security.JwtAuthenticationEntryPoint;
 import jakarta.servlet.DispatcherType;

@@ -1,6 +1,6 @@
 package com.familymoney.testutils;
 
-import com.familymoney.domains.user.types.UserId;
+import com.familymoney.domains.users.types.UserId;
 import java.util.List;
 import lombok.val;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
