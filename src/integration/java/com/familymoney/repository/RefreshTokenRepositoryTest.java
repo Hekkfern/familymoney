@@ -107,7 +107,11 @@ class RefreshTokenRepositoryTest {
 
     val dto =
         new CreateRefreshTokenDto(
-            UUID.randomUUID(), missingUserId, RefreshToken.generate(), TokenFamily.generate(), expiresAt);
+            UUID.randomUUID(),
+            missingUserId,
+            RefreshToken.generate(),
+            TokenFamily.generate(),
+            expiresAt);
     assertThatThrownBy(() -> refreshTokenRepository.create(dto))
         .isInstanceOf(DataIntegrityViolationException.class);
   }

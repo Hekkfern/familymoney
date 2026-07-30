@@ -135,12 +135,11 @@ class UserFlowTest {
   @Test
   void UserFlow_Get_user_data_when_not_logged_in() {
     // Get user data without logging in
-    val userDataResponse =
-        client
-            .get()
-            .uri(UserControllerUriFactory.getMePath())
-            .exchange()
-            .expectStatus()
-            .isUnauthorized();
+    client
+        .get()
+        .uri(UserControllerUriFactory.getMePath())
+        .exchange()
+        .expectStatus()
+        .isUnauthorized();
   }
 }

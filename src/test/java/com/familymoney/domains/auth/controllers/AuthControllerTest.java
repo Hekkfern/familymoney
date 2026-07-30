@@ -275,8 +275,9 @@ class AuthControllerTest {
     void success() {
       doNothing().when(authService).verifyEmail(any());
       client
-          .get()
-          .uri(AuthControllerUriFactory.getVerifyEmailPath(FakeGenerator.emailVerificationToken()))
+          .post()
+          .uri(AuthControllerUriFactory.getVerifyEmailPath())
+          .body(Map.of("token", FakeGenerator.emailVerificationToken()))
           .exchange()
           .expectStatus()
           .isOk();
@@ -285,8 +286,9 @@ class AuthControllerTest {
     @Test
     void badrequest_when_email_verification_token_is_invalid() {
       client
-          .get()
-          .uri(AuthControllerUriFactory.getVerifyEmailPath("nBErlAqusirf5!ylhUWY65j+)1Yh"))
+          .post()
+          .uri(AuthControllerUriFactory.getVerifyEmailPath())
+          .body(Map.of("token", "1a!"))
           .exchange()
           .expectStatus()
           .isBadRequest();
@@ -295,11 +297,11 @@ class AuthControllerTest {
     @Test
     void badrequest_when_email_verification_token_is_missing() {
       client
-          .get()
-          .uri(AuthControllerUriFactory.getVerifyEmailPath(""))
+          .post()
+          .uri(AuthControllerUriFactory.getVerifyEmailPath())
           .exchange()
           .expectStatus()
-          .isNotFound();
+          .isBadRequest();
     }
   }
 

@@ -10,6 +10,7 @@ import com.familymoney.domains.auth.controllers.dtos.LogoutRequestDto;
 import com.familymoney.domains.auth.controllers.dtos.RefreshResponseDto;
 import com.familymoney.domains.auth.controllers.dtos.RefreshTokenRequestDto;
 import com.familymoney.domains.auth.controllers.dtos.RegisterRequestDto;
+import com.familymoney.domains.auth.controllers.dtos.VerifyEmailRequestDto;
 import com.familymoney.domains.auth.services.IEmailSenderService;
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.testutils.AuthControllerUriFactory;
@@ -73,8 +74,9 @@ class AuthFlowTest {
 
     // verify email
     client
-        .get()
-        .uri(AuthControllerUriFactory.getVerifyEmailPath(verificationToken.value()))
+        .post()
+        .uri(AuthControllerUriFactory.getVerifyEmailPath())
+        .body(new VerifyEmailRequestDto(verificationToken.value()))
         .exchange()
         .expectStatus()
         .isOk()
@@ -185,14 +187,13 @@ class AuthFlowTest {
         .isOk()
         .expectBody()
         .isEmpty();
-    // attempt to login
-    val loginResponse =
-        client
-            .post()
-            .uri(AuthControllerUriFactory.getLoginPath())
-            .body(new LoginRequestDto(email, password))
-            .exchange()
-            .expectStatus()
-            .isUnauthorized();
+    // attempt to log in
+    client
+        .post()
+        .uri(AuthControllerUriFactory.getLoginPath())
+        .body(new LoginRequestDto(email, password))
+        .exchange()
+        .expectStatus()
+        .isUnauthorized();
   }
 }

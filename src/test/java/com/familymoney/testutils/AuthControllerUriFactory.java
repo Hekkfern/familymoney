@@ -7,7 +7,7 @@ public class AuthControllerUriFactory {
   private static final String BASE_PATH = "/api/v1/auth";
   private static final String REGISTER_PATH = BASE_PATH + "/register";
   private static final String LOGIN_PATH = BASE_PATH + "/login";
-  private static final String VERIFY_EMAIL_PATH = BASE_PATH + "/verify-email/%s";
+  private static final String VERIFY_EMAIL_PATH = BASE_PATH + "/verify-email";
   private static final String REFRESH_PATH = BASE_PATH + "/refresh";
   private static final String LOGOUT_PATH = BASE_PATH + "/logout";
 
@@ -23,8 +23,8 @@ public class AuthControllerUriFactory {
     return LOGIN_PATH;
   }
 
-  public static String getVerifyEmailPath(String token) {
-    return String.format(VERIFY_EMAIL_PATH, token);
+  public static String getVerifyEmailPath() {
+    return VERIFY_EMAIL_PATH;
   }
 
   public static String getRefreshPath() {

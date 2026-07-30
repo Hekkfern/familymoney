@@ -9,6 +9,7 @@ import com.familymoney.domains.auth.controllers.dtos.RefreshTokenRequestDto;
 import com.familymoney.domains.auth.controllers.dtos.RegisterRequestDto;
 import com.familymoney.domains.auth.controllers.dtos.ResendVerificationEmailRequestDto;
 import com.familymoney.domains.auth.controllers.dtos.ResetPasswordRequestDto;
+import com.familymoney.domains.auth.controllers.dtos.VerifyEmailRequestDto;
 import com.familymoney.domains.auth.controllers.mappers.LoginResponseMapper;
 import com.familymoney.domains.auth.controllers.mappers.RefreshResponseMapper;
 import com.familymoney.domains.auth.services.IAuthService;
@@ -27,11 +28,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController implements IAuthController {
 
   private final IAuthService authService;
-  private final LoginResponseMapper loginResponseMapper;
-  private final RefreshResponseMapper refreshResponseMapper;
 
   @Override
-  public void register(RegisterRequestDto request) {
+  public void register(final RegisterRequestDto request) {
     authService.registerUser(
         UserName.fromString(request.username()),
         Email.fromString(request.email()),
@@ -39,42 +38,42 @@ public class AuthController implements IAuthController {
   }
 
   @Override
-  public LoginResponseDto login(LoginRequestDto request) {
+  public LoginResponseDto login(final LoginRequestDto request) {
     val tokenPair =
         authService.loginUser(
             Email.fromString(request.email()), Password.fromString(request.password()));
-    return loginResponseMapper.toDto(tokenPair);
+    return LoginResponseMapper.toDto(tokenPair);
   }
 
   @Override
-  public void verifyEmail(String token) {
-    authService.verifyEmail(EmailVerificationToken.fromString(token));
+  public void verifyEmail(final VerifyEmailRequestDto request) {
+    authService.verifyEmail(EmailVerificationToken.fromString(request.token()));
   }
 
   @Override
-  public void resendVerificationEmail(ResendVerificationEmailRequestDto request) {
+  public void resendVerificationEmail(final ResendVerificationEmailRequestDto request) {
     authService.resendVerificationEmail(Email.fromString(request.email()));
   }
 
   @Override
-  public void forgotPassword(ForgotPasswordRequestDto request) {
+  public void forgotPassword(final ForgotPasswordRequestDto request) {
     authService.forgotPassword(Email.fromString(request.email()));
   }
 
   @Override
-  public void resetPassword(ResetPasswordRequestDto request) {
+  public void resetPassword(final ResetPasswordRequestDto request) {
     authService.resetPassword(
         PasswordResetToken.fromString(request.token()), Password.fromString(request.newPassword()));
   }
 
   @Override
-  public RefreshResponseDto refresh(RefreshTokenRequestDto request) {
+  public RefreshResponseDto refresh(final RefreshTokenRequestDto request) {
     val tokenPair = authService.refreshTokens(RefreshToken.fromString(request.refreshToken()));
-    return refreshResponseMapper.toDto(tokenPair);
+    return RefreshResponseMapper.toDto(tokenPair);
   }
 
   @Override
-  public void logout(LogoutRequestDto request) {
+  public void logout(final LogoutRequestDto request) {
     authService.logoutUser(RefreshToken.fromString(request.refreshToken()));
   }
 }

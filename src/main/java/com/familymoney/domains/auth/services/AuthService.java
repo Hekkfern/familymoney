@@ -77,12 +77,8 @@ public class AuthService implements IAuthService {
     val userId = UserId.generate();
     userRepository
         .create(
-            CreateUserDto.builder()
-                .id(userId)
-                .username(username)
-                .email(email)
-                .passwordHash(passwordEncoder.encode(password.value()))
-                .build())
+            new CreateUserDto(
+                userId, username, email, passwordEncoder.encode(password.value()), true, false))
         .orElseThrow(() -> new DatabaseExecutionException("Could not create user in the database"));
     // Assign user permissions (default role)
     roleRepository.setRoleForUserId(userId, Role.USER);

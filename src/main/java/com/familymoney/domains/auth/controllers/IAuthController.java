@@ -9,7 +9,7 @@ import com.familymoney.domains.auth.controllers.dtos.RefreshTokenRequestDto;
 import com.familymoney.domains.auth.controllers.dtos.RegisterRequestDto;
 import com.familymoney.domains.auth.controllers.dtos.ResendVerificationEmailRequestDto;
 import com.familymoney.domains.auth.controllers.dtos.ResetPasswordRequestDto;
-import com.familymoney.domains.auth.validation.ValidEmailVerificationToken;
+import com.familymoney.domains.auth.controllers.dtos.VerifyEmailRequestDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -17,10 +17,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -88,8 +85,8 @@ public interface IAuthController {
   LoginResponseDto login(@RequestBody @Valid LoginRequestDto request);
 
   @Operation(summary = "Verify the email address of an user account using the verification token")
-  @GetMapping(path = "verify-email/{token}", version = "1")
-  void verifyEmail(@PathVariable @NotNull @ValidEmailVerificationToken String token);
+  @PostMapping(path = "verify-email", version = "1")
+  void verifyEmail(@RequestBody @Valid VerifyEmailRequestDto request);
 
   @Operation(summary = "Resend the email verification email to the user")
   @PostMapping(path = "verify-email/resend", version = "1")

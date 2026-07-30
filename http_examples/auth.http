@@ -53,14 +53,25 @@ Content-Type: application/json
 
 # @name Verify email for user
 < {%
-    request.variables.set("emailVerificationToken", "Kg5QgI4jC6eFSGDCqkxceGYN94odudG2PmCjIDVWFweOrdTSWzj8gyKhOmtkkqCn")
+    request.variables.set("emailVerificationToken", "NboNCzl1HsP6l2dOtIyfJcb0dTzRsedZ0KFpLqSOudya7oW2gsvrPko1G1knXbhS")
 %}
-GET {{BaseUrl}}/api/v1/auth/verify-email/{{emailVerificationToken}}
+POST {{BaseUrl}}/api/v1/auth/verify-email
+Content-Type: application/json
+
+{
+    "token": "{{emailVerificationToken}}"
+}
 
 ###
 
 # @name Verify email with wrong parameters
-GET {{BaseUrl}}/api/v1/auth/verify-email/aaa
+POST {{BaseUrl}}/api/v1/auth/verify-email
+
+Content-Type: application/json
+
+{
+    "token": "a1!"
+}
 
 ###
 
