@@ -98,7 +98,7 @@ class GroupInvitationRepositoryTest {
     assertThat(invitation.createdAt())
         .isNotNull()
         .isBetween(now.minusSeconds(1), now.plusSeconds(1));
-    assertThat(invitation.expiresAt())
+    assertThat(invitation.expiresAt().value())
         .isNotNull()
         .isBetween(expiration.value().minusSeconds(1), expiration.value().plusSeconds(1));
   }
@@ -114,7 +114,7 @@ class GroupInvitationRepositoryTest {
             groupId,
             userId,
             GroupInvitationToken.generate(),
-            Instant.now().plusSeconds(300));
+            ExpirationTime.of(Instant.now().plusSeconds(300)));
     assertThatThrownBy(() -> groupInvitationRepository.create(dto))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
@@ -130,7 +130,7 @@ class GroupInvitationRepositoryTest {
             groupId,
             userId,
             GroupInvitationToken.generate(),
-            Instant.now().plusSeconds(300));
+            ExpirationTime.of(Instant.now().plusSeconds(300)));
     assertThatThrownBy(() -> groupInvitationRepository.create(dto))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
@@ -149,11 +149,17 @@ class GroupInvitationRepositoryTest {
         now);
     val token = GroupInvitationToken.generate();
     DatabaseCrud.insertGroupInvitation(
-        dslContext, UUID.randomUUID(), groupId, userId, token, now, now.plusSeconds(300));
+        dslContext,
+        UUID.randomUUID(),
+        groupId,
+        userId,
+        token,
+        now,
+        ExpirationTime.of(now.plusSeconds(300)));
 
     val dto =
         new CreateGroupInvitationDto(
-            UUID.randomUUID(), groupId, userId, token, now.plusSeconds(600));
+            UUID.randomUUID(), groupId, userId, token, ExpirationTime.of(now.plusSeconds(600)));
     assertThatThrownBy(() -> groupInvitationRepository.create(dto))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
@@ -175,7 +181,7 @@ class GroupInvitationRepositoryTest {
         Monetary.getCurrency("USD"),
         now);
     val token = GroupInvitationToken.generate();
-    val expiration = now.plusSeconds(300);
+    val expiration = ExpirationTime.of(now.plusSeconds(300));
     DatabaseCrud.insertGroupInvitation(
         dslContext, UUID.randomUUID(), groupId, userId, token, now, expiration);
 
@@ -209,7 +215,7 @@ class GroupInvitationRepositoryTest {
     val groupId = insertRandomGroup();
     val now = Instant.now();
     val token = GroupInvitationToken.generate();
-    val expiration = now.plusSeconds(300);
+    val expiration = ExpirationTime.of(now.plusSeconds(300));
     DatabaseCrud.insertGroupInvitation(
         dslContext, UUID.randomUUID(), groupId, userId, token, now, expiration);
 
@@ -239,7 +245,7 @@ class GroupInvitationRepositoryTest {
     val groupId = insertRandomGroup();
     val anotherGroupId = insertRandomGroup();
     val now = Instant.now();
-    val expiration = now.plusSeconds(300);
+    val expiration = ExpirationTime.of(now.plusSeconds(300));
 
     DatabaseCrud.insertGroupInvitation(
         dslContext,
@@ -256,7 +262,7 @@ class GroupInvitationRepositoryTest {
         userId,
         GroupInvitationToken.generate(),
         now.plusSeconds(1),
-        expiration.plusSeconds(1));
+        ExpirationTime.of(expiration.value().plusSeconds(1)));
     DatabaseCrud.insertGroupInvitation(
         dslContext,
         UUID.randomUUID(),
@@ -286,7 +292,7 @@ class GroupInvitationRepositoryTest {
     val groupId = insertRandomGroup();
     val anotherGroupId = insertRandomGroup();
     val now = Instant.now();
-    val expiration = now.plusSeconds(300);
+    val expiration = ExpirationTime.of(now.plusSeconds(300));
 
     DatabaseCrud.insertGroupInvitation(
         dslContext,

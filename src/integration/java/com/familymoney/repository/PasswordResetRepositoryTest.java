@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.familymoney.domains.auth.repositories.PasswordResetRepository;
 import com.familymoney.domains.auth.repositories.dtos.CreatePasswordResetDto;
+import com.familymoney.domains.auth.types.ExpirationTime;
 import com.familymoney.domains.auth.types.PasswordResetToken;
 import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.UserId;
@@ -66,7 +67,7 @@ class PasswordResetRepositoryTest {
     val userId = insertRandomUser();
     val token = PasswordResetToken.generate();
     val now = Instant.now();
-    val expiresAt = now.plusSeconds(3600);
+    val expiresAt = ExpirationTime.of(now.plusSeconds(3600));
 
     val passwordResetOpt =
         passwordResetRepository.create(new CreatePasswordResetDto(userId, token, expiresAt));
@@ -81,9 +82,9 @@ class PasswordResetRepositoryTest {
     assertThat(passwordReset.updatedAt())
         .isNotNull()
         .isBetween(now.minusSeconds(1), now.plusSeconds(1));
-    assertThat(passwordReset.expiresAt())
+    assertThat(passwordReset.expiresAt().value())
         .isNotNull()
-        .isBetween(expiresAt.minusSeconds(1), expiresAt.plusSeconds(1));
+        .isBetween(expiresAt.value().minusSeconds(1), expiresAt.value().plusSeconds(1));
   }
 
   @Test
@@ -92,7 +93,7 @@ class PasswordResetRepositoryTest {
 
     val dto =
         new CreatePasswordResetDto(
-            missingUserId, PasswordResetToken.generate(), Instant.now().plusSeconds(300));
+            missingUserId, PasswordResetToken.generate(), ExpirationTime.of(Instant.now().plusSeconds(300)));
     assertThatThrownBy(() -> passwordResetRepository.create(dto))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
@@ -104,9 +105,9 @@ class PasswordResetRepositoryTest {
     val now = Instant.now();
 
     DatabaseCrud.insertPasswordResetToken(
-        dslContext, userId, token, now, Instant.now().plusSeconds(300));
+        dslContext, userId, token, now, ExpirationTime.of(now.plusSeconds(300)));
 
-    val dto2 = new CreatePasswordResetDto(userId, token, now.plusSeconds(600));
+    val dto2 = new CreatePasswordResetDto(userId, token, ExpirationTime.of(now.plusSeconds(600)));
     assertThatThrownBy(() -> passwordResetRepository.create(dto2))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
@@ -116,10 +117,10 @@ class PasswordResetRepositoryTest {
     val userId = insertRandomUser();
     val now = Instant.now();
     DatabaseCrud.insertPasswordResetToken(
-        dslContext, userId, PasswordResetToken.generate(), now, now.plusSeconds(3600));
+        dslContext, userId, PasswordResetToken.generate(), now, ExpirationTime.of(now.plusSeconds(3600)));
 
     val dto =
-        new CreatePasswordResetDto(userId, PasswordResetToken.generate(), now.plusSeconds(300));
+        new CreatePasswordResetDto(userId, PasswordResetToken.generate(), ExpirationTime.of(now.plusSeconds(300)));
     assertThatThrownBy(() -> passwordResetRepository.create(dto))
         .isInstanceOf(DuplicateKeyException.class);
   }
@@ -133,7 +134,7 @@ class PasswordResetRepositoryTest {
     val userId = insertRandomUser();
     val token = PasswordResetToken.generate();
     val now = Instant.now();
-    val expiration = now.plusSeconds(3600);
+    val expiration = ExpirationTime.of(now.plusSeconds(3600));
     DatabaseCrud.insertPasswordResetToken(dslContext, userId, token, now, expiration);
 
     val entryFoundOpt = passwordResetRepository.findByToken(token);
@@ -163,7 +164,7 @@ class PasswordResetRepositoryTest {
     val userId = insertRandomUser();
     val token = PasswordResetToken.generate();
     val now = Instant.now();
-    DatabaseCrud.insertPasswordResetToken(dslContext, userId, token, now, now.plusSeconds(3600));
+    DatabaseCrud.insertPasswordResetToken(dslContext, userId, token, now, ExpirationTime.of(now.plusSeconds(3600)));
 
     val deleted = passwordResetRepository.deleteByUserId(userId);
 

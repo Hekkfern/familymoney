@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.familymoney.domains.auth.repositories.RefreshTokenRepository;
 import com.familymoney.domains.auth.repositories.dtos.CreateRefreshTokenDto;
 import com.familymoney.domains.auth.repositories.dtos.UpdateRefreshTokenDto;
+import com.familymoney.domains.auth.types.ExpirationTime;
 import com.familymoney.domains.auth.types.RefreshToken;
 import com.familymoney.domains.auth.types.TokenFamily;
 import com.familymoney.domains.users.types.Email;
@@ -70,7 +71,7 @@ class RefreshTokenRepositoryTest {
     val family = TokenFamily.generate();
 
     val now = Instant.now();
-    val expiration = now.plusSeconds(3600);
+    val expiration = ExpirationTime.of(now.plusSeconds(3600));
 
     val refreshTokenCreated =
         refreshTokenRepository.create(
@@ -87,9 +88,9 @@ class RefreshTokenRepositoryTest {
     assertThat(refreshToken.updatedAt())
         .isNotNull()
         .isBetween(now.minusSeconds(1), now.plusSeconds(1));
-    assertThat(refreshToken.expiresAt())
+    assertThat(refreshToken.expiresAt().value())
         .isNotNull()
-        .isBetween(expiration.minusSeconds(1), expiration.plusSeconds(1));
+        .isBetween(expiration.value().minusSeconds(1), expiration.value().plusSeconds(1));
     assertThat(refreshToken.family()).isNotNull().isEqualTo(family);
   }
 
@@ -102,10 +103,11 @@ class RefreshTokenRepositoryTest {
     val missingUserId = UserId.generate();
 
     val now = Instant.now();
+    val expiresAt = ExpirationTime.of(now);
 
     val dto =
         new CreateRefreshTokenDto(
-            UUID.randomUUID(), missingUserId, RefreshToken.generate(), TokenFamily.generate(), now);
+            UUID.randomUUID(), missingUserId, RefreshToken.generate(), TokenFamily.generate(), expiresAt);
     assertThatThrownBy(() -> refreshTokenRepository.create(dto))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
@@ -116,7 +118,7 @@ class RefreshTokenRepositoryTest {
     val token = RefreshToken.generate();
 
     val now = Instant.now();
-    val expiration = now.plusSeconds(3600);
+    val expiration = ExpirationTime.of(now.plusSeconds(3600));
 
     DatabaseCrud.insertRefreshToken(
         dslContext, UUID.randomUUID(), userId, token, now, expiration, TokenFamily.generate());
@@ -134,7 +136,7 @@ class RefreshTokenRepositoryTest {
     val family = TokenFamily.generate();
 
     val now = Instant.now();
-    val expiration = now.plusSeconds(3600);
+    val expiration = ExpirationTime.of(now.plusSeconds(3600));
 
     DatabaseCrud.insertRefreshToken(
         dslContext, UUID.randomUUID(), userId, RefreshToken.generate(), now, expiration, family);
@@ -157,7 +159,7 @@ class RefreshTokenRepositoryTest {
     val family = TokenFamily.generate();
     val id = UUID.randomUUID();
     val now = Instant.now();
-    val expiration = now.plusSeconds(3600);
+    val expiration = ExpirationTime.of(now.plusSeconds(3600));
     DatabaseCrud.insertRefreshToken(dslContext, id, userId, token, now, expiration, family);
 
     val tokenFoundOpt = refreshTokenRepository.findByToken(token);
@@ -189,7 +191,7 @@ class RefreshTokenRepositoryTest {
     val family = TokenFamily.generate();
     val id = UUID.randomUUID();
     val now = Instant.now();
-    val expiration = now.plusSeconds(3600);
+    val expiration = ExpirationTime.of(now.plusSeconds(3600));
     DatabaseCrud.insertRefreshToken(dslContext, id, userId, token, now, expiration, family);
 
     val newToken = RefreshToken.generate();
@@ -214,7 +216,7 @@ class RefreshTokenRepositoryTest {
     val family = TokenFamily.generate();
     val id = UUID.randomUUID();
     val now = Instant.now();
-    val expiration = now.plusSeconds(3600);
+    val expiration = ExpirationTime.of(now.plusSeconds(3600));
     DatabaseCrud.insertRefreshToken(dslContext, id, userId, token, now, expiration, family);
 
     val nullDto = UpdateRefreshTokenDto.builder().build();
@@ -233,7 +235,8 @@ class RefreshTokenRepositoryTest {
 
   @Test
   void updateByToken_does_nothing_and_returns_false_when_token_does_not_exist() {
-    val update = UpdateRefreshTokenDto.builder().expiresAt(Instant.now().plusSeconds(2000)).build();
+    val newExpiration = ExpirationTime.of(Instant.now().plusSeconds(2000));
+    val update = UpdateRefreshTokenDto.builder().expiresAt(newExpiration).build();
 
     val updated = refreshTokenRepository.updateByToken(RefreshToken.generate(), update);
 
@@ -251,7 +254,7 @@ class RefreshTokenRepositoryTest {
     val family = TokenFamily.generate();
     val id = UUID.randomUUID();
     val now = Instant.now();
-    val expiration = now.plusSeconds(3600);
+    val expiration = ExpirationTime.of(now.plusSeconds(3600));
     DatabaseCrud.insertRefreshToken(dslContext, id, userId, token, now, expiration, family);
 
     val newToken = RefreshToken.generate();
@@ -276,7 +279,7 @@ class RefreshTokenRepositoryTest {
     val family = TokenFamily.generate();
     val id = UUID.randomUUID();
     val now = Instant.now();
-    val expiration = now.plusSeconds(3600);
+    val expiration = ExpirationTime.of(now.plusSeconds(3600));
     DatabaseCrud.insertRefreshToken(dslContext, id, userId, token, now, expiration, family);
 
     val nullDto = UpdateRefreshTokenDto.builder().build();
@@ -295,7 +298,8 @@ class RefreshTokenRepositoryTest {
 
   @Test
   void updateByUserId_does_nothing_and_returns_false_when_user_does_not_exist() {
-    val update = UpdateRefreshTokenDto.builder().expiresAt(Instant.now().plusSeconds(2000)).build();
+    val newExpiration = ExpirationTime.of(Instant.now().plusSeconds(2000));
+    val update = UpdateRefreshTokenDto.builder().expiresAt(newExpiration).build();
 
     val updated = refreshTokenRepository.updateByUserId(UserId.generate(), update);
 
@@ -313,7 +317,7 @@ class RefreshTokenRepositoryTest {
     val family = TokenFamily.generate();
     val id = UUID.randomUUID();
     val now = Instant.now();
-    val expiration = now.plusSeconds(3600);
+    val expiration = ExpirationTime.of(now.plusSeconds(3600));
     DatabaseCrud.insertRefreshToken(dslContext, id, userId, token, now, expiration, family);
 
     val deleted = refreshTokenRepository.deleteByToken(token);
