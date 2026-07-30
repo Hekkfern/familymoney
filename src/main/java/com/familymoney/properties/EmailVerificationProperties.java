@@ -11,5 +11,5 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "familymoney.email-verification")
 @Validated
 public record EmailVerificationProperties(
-    @NotNull @DurationMin(hours = 1) @DurationMax(minutes = 48) Duration tokenDuration,
+    @NotNull @DurationMin(hours = 1) @DurationMax(hours = 48) Duration tokenDuration,
     @NotNull @DurationMin(minutes = 1) @DurationMax(minutes = 15) Duration waitTime) {}
