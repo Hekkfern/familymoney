@@ -24,10 +24,12 @@ import com.familymoney.domains.auth.repositories.IRefreshTokenRepository;
 import com.familymoney.domains.auth.repositories.ITokenFamilyBlacklistRepository;
 import com.familymoney.domains.auth.repositories.dtos.CreateEmailVerificationDto;
 import com.familymoney.domains.auth.repositories.dtos.CreateRefreshTokenDto;
+import com.familymoney.domains.auth.repositories.dtos.CreateTokenFamilyBlacklistDto;
 import com.familymoney.domains.auth.repositories.dtos.UpdateEmailVerificationTokenDto;
 import com.familymoney.domains.auth.repositories.dtos.UpdateRefreshTokenDto;
 import com.familymoney.domains.auth.repositories.entitites.EmailVerificationEntity;
 import com.familymoney.domains.auth.repositories.entitites.RefreshTokenEntity;
+import com.familymoney.domains.auth.repositories.entitites.TokenFamilyBlacklistEntity;
 import com.familymoney.domains.auth.types.AccessToken;
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.auth.types.ExpirationTime;
@@ -57,8 +59,6 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.val;
-import org.junit.jupiter.api.DisplayNameGeneration;
-import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -69,7 +69,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.BadCredentialsException;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class AuthServiceTest {
 
   private final Instant now = Instant.parse("2025-01-01T00:00:00Z");
@@ -637,12 +636,13 @@ class AuthServiceTest {
 
       mockRefreshTokenFindByToken();
       when(refreshTokenRepository.deleteByToken(any(RefreshToken.class))).thenReturn(true);
-      when(tokenFamilyBlacklistRepository.deleteByFamily(any(TokenFamily.class))).thenReturn(true);
+      when(tokenFamilyBlacklistRepository.create(any(CreateTokenFamilyBlacklistDto.class)))
+          .thenReturn(Optional.of(new TokenFamilyBlacklistEntity(TokenFamily.generate(), now)));
 
       assertThatCode(() -> authService.logoutUser(refreshToken)).doesNotThrowAnyException();
 
       verify(refreshTokenRepository).deleteByToken(any(RefreshToken.class));
-      verify(tokenFamilyBlacklistRepository).deleteByFamily(any(TokenFamily.class));
+      verify(tokenFamilyBlacklistRepository).create(any(CreateTokenFamilyBlacklistDto.class));
     }
 
     @Test
@@ -654,7 +654,8 @@ class AuthServiceTest {
       assertThrows(RefreshTokenNotFoundException.class, () -> authService.logoutUser(refreshToken));
 
       verify(refreshTokenRepository, never()).deleteByToken(any(RefreshToken.class));
-      verify(tokenFamilyBlacklistRepository, never()).deleteByFamily(any(TokenFamily.class));
+      verify(tokenFamilyBlacklistRepository, never())
+          .create(any(CreateTokenFamilyBlacklistDto.class));
     }
 
     @Test
@@ -679,7 +680,8 @@ class AuthServiceTest {
       assertThrows(RefreshTokenInvalidException.class, () -> authService.logoutUser(refreshToken));
 
       verify(refreshTokenRepository, never()).deleteByToken(any(RefreshToken.class));
-      verify(tokenFamilyBlacklistRepository, never()).deleteByFamily(any(TokenFamily.class));
+      verify(tokenFamilyBlacklistRepository, never())
+          .create(any(CreateTokenFamilyBlacklistDto.class));
     }
 
     @Test
@@ -701,12 +703,13 @@ class AuthServiceTest {
 
       mockRefreshTokenFindByToken();
       when(refreshTokenRepository.deleteByToken(any(RefreshToken.class))).thenReturn(true);
-      when(tokenFamilyBlacklistRepository.deleteByFamily(any(TokenFamily.class))).thenReturn(false);
+      when(tokenFamilyBlacklistRepository.create(any(CreateTokenFamilyBlacklistDto.class)))
+          .thenReturn(Optional.empty());
 
       assertThrows(DatabaseExecutionException.class, () -> authService.logoutUser(refreshToken));
 
       verify(refreshTokenRepository).deleteByToken(any(RefreshToken.class));
-      verify(tokenFamilyBlacklistRepository).deleteByFamily(any(TokenFamily.class));
+      verify(tokenFamilyBlacklistRepository).create(any(CreateTokenFamilyBlacklistDto.class));
     }
   }
 

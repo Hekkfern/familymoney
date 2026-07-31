@@ -14,6 +14,7 @@ import com.familymoney.domains.auth.repositories.IRefreshTokenRepository;
 import com.familymoney.domains.auth.repositories.ITokenFamilyBlacklistRepository;
 import com.familymoney.domains.auth.repositories.dtos.CreateEmailVerificationDto;
 import com.familymoney.domains.auth.repositories.dtos.CreateRefreshTokenDto;
+import com.familymoney.domains.auth.repositories.dtos.CreateTokenFamilyBlacklistDto;
 import com.familymoney.domains.auth.repositories.dtos.UpdateEmailVerificationTokenDto;
 import com.familymoney.domains.auth.repositories.dtos.UpdateRefreshTokenDto;
 import com.familymoney.domains.auth.services.data.TokenPair;
@@ -157,6 +158,12 @@ public class AuthService implements IAuthService {
       log.info(msg);
       throw new RefreshTokenInvalidException(msg);
     }
+    // Check if the family token is blacklisted
+    if (tokenFamilyBlacklistRepository.exists(refreshTokenDb.family())) {
+      val msg = "Token family is blacklisted";
+      log.info(msg);
+      throw new RefreshTokenInvalidException(msg);
+    }
     // Generate new tokens
     val newAccessToken =
         jwtUtils.generateAccessToken(refreshTokenDb.userId(), refreshTokenDb.family());
@@ -276,6 +283,12 @@ public class AuthService implements IAuthService {
       log.trace(msg);
       throw new RefreshTokenInvalidException(msg);
     }
+    // Check if the family token is blacklisted
+    if (tokenFamilyBlacklistRepository.exists(refreshTokenDb.family())) {
+      val msg = "Token family is blacklisted";
+      log.info(msg);
+      throw new RefreshTokenInvalidException(msg);
+    }
     // Invalidate refresh token from the database
     val refreshTokenDeleted = refreshTokenRepository.deleteByToken(refreshToken);
     if (!refreshTokenDeleted) {
@@ -283,8 +296,9 @@ public class AuthService implements IAuthService {
     }
     // Invalidate any existing access token
     val accessTokenBlacklisted =
-        tokenFamilyBlacklistRepository.deleteByFamily(refreshTokenDb.family());
-    if (!accessTokenBlacklisted) {
+        tokenFamilyBlacklistRepository.create(
+            new CreateTokenFamilyBlacklistDto(refreshTokenDb.family()));
+    if (accessTokenBlacklisted.isEmpty()) {
       throw new DatabaseExecutionException(
           "Could not blacklist the family of tokens in the database");
     }

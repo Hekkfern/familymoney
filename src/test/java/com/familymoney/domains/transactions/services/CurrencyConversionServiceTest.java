@@ -7,15 +7,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import javax.money.Monetary;
 import lombok.val;
 import org.javamoney.moneta.Money;
-import org.junit.jupiter.api.DisplayNameGeneration;
-import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class CurrencyConversionServiceTest {
 
   @InjectMocks private CurrencyConversionService currencyConversionService;

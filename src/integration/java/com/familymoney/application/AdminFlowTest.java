@@ -14,8 +14,6 @@ import com.familymoney.testutils.AuthControllerUriFactory;
 import com.familymoney.testutils.FakeGenerator;
 import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayNameGeneration;
-import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,7 +27,6 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
-@DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class AdminFlowTest {
 
   // region Fields

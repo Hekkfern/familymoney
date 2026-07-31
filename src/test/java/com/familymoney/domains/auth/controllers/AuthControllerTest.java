@@ -18,8 +18,6 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayNameGeneration;
-import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -37,7 +35,6 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 @WebMvcTest(controllers = AuthController.class)
 @Import({JwtUtils.class, LoginResponseMapper.class, RefreshResponseMapper.class})
 @AutoConfigureRestTestClient
-@DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class AuthControllerTest {
 
   private final Instant now = Instant.parse("2025-01-01T00:00:00Z");
