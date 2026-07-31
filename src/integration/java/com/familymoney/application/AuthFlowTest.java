@@ -52,7 +52,7 @@ class AuthFlowTest {
 
   // region Helpers
 
-  private void registerAndVerifyNewUser(String username, String email, String password) {
+  private void registerAndVerifyNewUser(final String username, final String email, final String password) {
     // Mock email sender
     val verificationTokenCaptor = ArgumentCaptor.forClass(EmailVerificationToken.class);
 

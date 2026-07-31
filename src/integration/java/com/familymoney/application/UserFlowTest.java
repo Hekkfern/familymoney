@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import com.familymoney.domains.auth.controllers.dtos.LoginRequestDto;
 import com.familymoney.domains.auth.controllers.dtos.LoginResponseDto;
 import com.familymoney.domains.auth.controllers.dtos.RegisterRequestDto;
+import com.familymoney.domains.auth.controllers.dtos.VerifyEmailRequestDto;
 import com.familymoney.domains.auth.services.IEmailSenderService;
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.users.controllers.dtos.GetMyUserResponseDto;
@@ -80,8 +81,9 @@ class UserFlowTest {
 
     // verify email
     client
-        .get()
-        .uri(AuthControllerUriFactory.getVerifyEmailPath(verificationToken.value()))
+        .post()
+        .uri(AuthControllerUriFactory.getVerifyEmailPath())
+        .body(new VerifyEmailRequestDto(verificationToken.value()))
         .exchange()
         .expectStatus()
         .isOk()

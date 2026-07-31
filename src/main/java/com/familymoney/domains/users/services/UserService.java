@@ -88,12 +88,8 @@ public class UserService implements IUserService {
     val userId = UserId.generate();
     val userDbOpt =
         userRepository.create(
-            CreateUserDto.builder()
-                .id(userId)
-                .username(username)
-                .email(email)
-                .passwordHash(passwordEncoder.encode(password.value()))
-                .build());
+            new CreateUserDto(
+                userId, username, email, passwordEncoder.encode(password.value()), true, true));
     if (userDbOpt.isEmpty()) {
       log.error("Could not create user in the database");
       return;
