@@ -205,8 +205,7 @@ class AuthControllerTest {
       when(authService.loginUser(any(), any()))
           .thenReturn(
               new TokenPair(
-                  AccessToken.fromString(FakeGenerator.accessToken()),
-                  RefreshToken.fromString(FakeGenerator.refreshToken())));
+                  AccessToken.fromString(FakeGenerator.accessToken()), RefreshToken.generate()));
       client
           .post()
           .uri(AuthControllerUriFactory.getLoginPath())
@@ -310,8 +309,7 @@ class AuthControllerTest {
       when(authService.refreshTokens(any()))
           .thenReturn(
               new TokenPair(
-                  AccessToken.fromString(FakeGenerator.accessToken()),
-                  RefreshToken.fromString(FakeGenerator.refreshToken())));
+                  AccessToken.fromString(FakeGenerator.accessToken()), RefreshToken.generate()));
       client
           .post()
           .uri(AuthControllerUriFactory.getRefreshPath())

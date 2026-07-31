@@ -1,5 +1,6 @@
 package com.familymoney.domains.auth.services;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.familymoney.domains.auth.exceptions.BlacklistedFamilyException;
 import com.familymoney.domains.auth.exceptions.EmailAlreadyVerifiedException;
 import com.familymoney.domains.auth.exceptions.EmailNotFoundException;
 import com.familymoney.domains.auth.exceptions.NewEmailVerificationTooSoonException;
@@ -363,7 +365,7 @@ class AuthServiceTest {
 
     @Test
     void succeeds_when_refresh_token_is_valid() {
-      val refreshToken = RefreshToken.fromString(FakeGenerator.refreshToken());
+      val refreshToken = RefreshToken.generate();
 
       mockRefreshTokenFindByToken();
       when(refreshTokenRepository.updateByToken(
@@ -387,7 +389,7 @@ class AuthServiceTest {
 
     @Test
     void throws_when_refresh_token_doesnt_exist() {
-      val refreshToken = RefreshToken.fromString(FakeGenerator.refreshToken());
+      val refreshToken = RefreshToken.generate();
 
       when(refreshTokenRepository.findByToken(any(RefreshToken.class)))
           .thenReturn(Optional.empty());
@@ -397,7 +399,7 @@ class AuthServiceTest {
 
     @Test
     void throws_when_updating_refresh_token_fails() {
-      val refreshToken = RefreshToken.fromString(FakeGenerator.refreshToken());
+      val refreshToken = RefreshToken.generate();
 
       mockRefreshTokenFindByToken();
       when(refreshTokenRepository.updateByToken(any(), any())).thenReturn(false);
@@ -409,7 +411,7 @@ class AuthServiceTest {
 
     @Test
     void throws_when_refresh_token_is_expired() {
-      val refreshToken = RefreshToken.fromString(FakeGenerator.refreshToken());
+      val refreshToken = RefreshToken.generate();
 
       when(refreshTokenRepository.findByToken(any(RefreshToken.class)))
           .thenAnswer(
@@ -428,6 +430,19 @@ class AuthServiceTest {
 
       assertThrows(
           RefreshTokenInvalidException.class, () -> authService.refreshTokens(refreshToken));
+    }
+
+    @Test
+    void throws_when_family_is_blacklisted() {
+      val refreshToken = RefreshToken.generate();
+
+      mockRefreshTokenFindByToken();
+      when(tokenFamilyBlacklistRepository.exists(any(TokenFamily.class))).thenReturn(true);
+
+      assertThrows(BlacklistedFamilyException.class, () -> authService.refreshTokens(refreshToken));
+
+      verify(refreshTokenRepository, never())
+          .updateByToken(any(RefreshToken.class), any(UpdateRefreshTokenDto.class));
     }
   }
 
@@ -647,7 +662,7 @@ class AuthServiceTest {
 
     @Test
     void throws_when_refresh_token_doesnt_exist() {
-      val refreshToken = RefreshToken.fromString(FakeGenerator.refreshToken());
+      val refreshToken = RefreshToken.generate();
 
       when(refreshTokenRepository.findByToken(refreshToken)).thenReturn(Optional.empty());
 
@@ -660,7 +675,7 @@ class AuthServiceTest {
 
     @Test
     void throws_when_refresh_token_is_expired() {
-      val refreshToken = RefreshToken.fromString(FakeGenerator.refreshToken());
+      val refreshToken = RefreshToken.generate();
 
       when(refreshTokenRepository.findByToken(any(RefreshToken.class)))
           .thenAnswer(
@@ -685,8 +700,22 @@ class AuthServiceTest {
     }
 
     @Test
+    void throws_when_family_is_blacklisted() {
+      val refreshToken = RefreshToken.generate();
+
+      mockRefreshTokenFindByToken();
+      when(tokenFamilyBlacklistRepository.exists(any(TokenFamily.class))).thenReturn(true);
+
+      assertThrows(BlacklistedFamilyException.class, () -> authService.logoutUser(refreshToken));
+
+      verify(refreshTokenRepository, never()).deleteByToken(any(RefreshToken.class));
+      verify(tokenFamilyBlacklistRepository, never())
+          .create(any(CreateTokenFamilyBlacklistDto.class));
+    }
+
+    @Test
     void throws_when_deleting_refresh_token_fails() {
-      val refreshToken = RefreshToken.fromString(FakeGenerator.refreshToken());
+      val refreshToken = RefreshToken.generate();
 
       mockRefreshTokenFindByToken();
       when(refreshTokenRepository.deleteByToken(any(RefreshToken.class))).thenReturn(false);
@@ -699,7 +728,7 @@ class AuthServiceTest {
 
     @Test
     void throws_when_blacklisting_family_token_fails() {
-      val refreshToken = RefreshToken.fromString(FakeGenerator.refreshToken());
+      val refreshToken = RefreshToken.generate();
 
       mockRefreshTokenFindByToken();
       when(refreshTokenRepository.deleteByToken(any(RefreshToken.class))).thenReturn(true);
@@ -715,6 +744,21 @@ class AuthServiceTest {
 
   @Nested
   class IsFamilyBlacklisted {
-    // TODO
+
+    @Test
+    void returns_true_when_family_is_blacklisted() {
+      val family = TokenFamily.generate();
+      when(tokenFamilyBlacklistRepository.exists(family)).thenReturn(true);
+
+      assertThat(authService.isFamilyBlacklisted(family)).isTrue();
+    }
+
+    @Test
+    void returns_false_when_family_is_not_blacklisted() {
+      val family = TokenFamily.generate();
+      when(tokenFamilyBlacklistRepository.exists(family)).thenReturn(false);
+
+      assertThat(authService.isFamilyBlacklisted(family)).isFalse();
+    }
   }
 }

@@ -1,5 +1,6 @@
 package com.familymoney.domains.auth.services;
 
+import com.familymoney.domains.auth.exceptions.BlacklistedFamilyException;
 import com.familymoney.domains.auth.exceptions.EmailAlreadyVerifiedException;
 import com.familymoney.domains.auth.exceptions.EmailNotFoundException;
 import com.familymoney.domains.auth.exceptions.NewEmailVerificationTooSoonException;
@@ -162,7 +163,7 @@ public class AuthService implements IAuthService {
     if (tokenFamilyBlacklistRepository.exists(refreshTokenDb.family())) {
       val msg = "Token family is blacklisted";
       log.info(msg);
-      throw new RefreshTokenInvalidException(msg);
+      throw new BlacklistedFamilyException(msg);
     }
     // Generate new tokens
     val newAccessToken =
@@ -287,7 +288,7 @@ public class AuthService implements IAuthService {
     if (tokenFamilyBlacklistRepository.exists(refreshTokenDb.family())) {
       val msg = "Token family is blacklisted";
       log.info(msg);
-      throw new RefreshTokenInvalidException(msg);
+      throw new BlacklistedFamilyException(msg);
     }
     // Invalidate refresh token from the database
     val refreshTokenDeleted = refreshTokenRepository.deleteByToken(refreshToken);
