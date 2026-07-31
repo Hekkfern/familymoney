@@ -5,6 +5,7 @@ import com.familymoney.domains.auth.types.TokenFamily;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.properties.AppProperties;
 import com.familymoney.properties.JwtProperties;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,7 +15,6 @@ import java.util.Optional;
 import javax.crypto.SecretKey;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.apache.commons.lang3.Strings;
 import org.springframework.stereotype.Component;
 
@@ -42,9 +42,9 @@ public class JwtUtils {
    * @return an AccessToken containing the generated JWT
    */
   public AccessToken generateAccessToken(final UserId userId, final TokenFamily tokenFamily) {
-    val now = jwtClock.now();
-    val expiryDate = Date.from(now.toInstant().plus(jwtProperties.accessTokenDuration()));
-    val token =
+    final Date now = jwtClock.now();
+    final Date expiryDate = Date.from(now.toInstant().plus(jwtProperties.accessTokenDuration()));
+    final String token =
         Jwts.builder()
             .subject(userId.value().toString())
             .issuedAt(now)
@@ -87,17 +87,17 @@ public class JwtUtils {
    */
   public Optional<JwtTokenContent> parseAccessToken(final AccessToken token) {
     try {
-      val claims =
+      final Claims claims =
           Jwts.parser()
               .clock(jwtClock)
               .verifyWith(getSigningKey())
               .build()
               .parseSignedClaims(token.value())
               .getPayload();
-      val audienceMatches =
+      final boolean audienceMatches =
           claims.getAudience() != null && claims.getAudience().contains(appProperties.name());
-      val issuerMatches = claims.getIssuer().equals(appProperties.name());
-      val isExpired = claims.getExpiration().before(jwtClock.now());
+      final boolean issuerMatches = claims.getIssuer().equals(appProperties.name());
+      final boolean isExpired = claims.getExpiration().before(jwtClock.now());
       return (audienceMatches && issuerMatches && !isExpired)
           ? Optional.of(
               new JwtTokenContent(
@@ -110,10 +110,10 @@ public class JwtUtils {
   }
 
   public Optional<AccessToken> extractTokenFromHeader(final HttpServletRequest request) {
-    val bearerToken = request.getHeader(AUTHORIZATION_HEADER);
+    final String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
     log.debug("Authorization Header: {}", bearerToken);
     if (bearerToken != null && bearerToken.startsWith(BEARER_PREFIX)) {
-      val rawToken = Strings.CI.removeStart(bearerToken, BEARER_PREFIX);
+      final String rawToken = Strings.CI.removeStart(bearerToken, BEARER_PREFIX);
       log.debug("Access Token: {}", rawToken);
       try {
         return Optional.of(AccessToken.fromString(rawToken));

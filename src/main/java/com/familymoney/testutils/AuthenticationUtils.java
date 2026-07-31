@@ -2,9 +2,9 @@ package com.familymoney.testutils;
 
 import com.familymoney.domains.users.types.Role;
 import com.familymoney.domains.users.types.UserId;
-import lombok.val;
 import org.apache.commons.lang3.Strings;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 public class AuthenticationUtils {
@@ -23,7 +23,7 @@ public class AuthenticationUtils {
    */
   public static AuthorizedUser getUserIdFromSecurityContext()
       throws AuthenticationCredentialsNotFoundException {
-    val authentication = SecurityContextHolder.getContext().getAuthentication();
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     if (authentication == null) {
       throw new AuthenticationCredentialsNotFoundException("User ID not found in security context");
     }
@@ -31,10 +31,10 @@ public class AuthenticationUtils {
     if (!(principal instanceof UserId userId)) {
       throw new AuthenticationCredentialsNotFoundException("User ID not found in security context");
     }
-    val roleStr =
+    final String roleStr =
         Strings.CS.removeStart(
             authentication.getAuthorities().iterator().next().getAuthority(), ROLE_PREFIX);
-    val role = Role.fromString(roleStr);
+    final Role role = Role.fromString(roleStr);
     return AuthorizedUser.builder().id(userId).role(role).build();
   }
 }

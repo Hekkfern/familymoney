@@ -18,7 +18,11 @@ import com.familymoney.domains.auth.repositories.dtos.CreateRefreshTokenDto;
 import com.familymoney.domains.auth.repositories.dtos.CreateTokenFamilyBlacklistDto;
 import com.familymoney.domains.auth.repositories.dtos.UpdateEmailVerificationTokenDto;
 import com.familymoney.domains.auth.repositories.dtos.UpdateRefreshTokenDto;
+import com.familymoney.domains.auth.repositories.entitites.EmailVerificationEntity;
+import com.familymoney.domains.auth.repositories.entitites.RefreshTokenEntity;
+import com.familymoney.domains.auth.repositories.entitites.TokenFamilyBlacklistEntity;
 import com.familymoney.domains.auth.services.data.TokenPair;
+import com.familymoney.domains.auth.types.AccessToken;
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.auth.types.ExpirationTime;
 import com.familymoney.domains.auth.types.PasswordResetToken;
@@ -28,6 +32,7 @@ import com.familymoney.domains.users.repositories.IRoleRepository;
 import com.familymoney.domains.users.repositories.IUserRepository;
 import com.familymoney.domains.users.repositories.dtos.CreateUserDto;
 import com.familymoney.domains.users.repositories.dtos.UpdateUserDto;
+import com.familymoney.domains.users.repositories.entitites.UserEntity;
 import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.Password;
 import com.familymoney.domains.users.types.Role;
@@ -42,9 +47,9 @@ import com.familymoney.testutils.UUIDGenerator;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -76,7 +81,7 @@ public class AuthService implements IAuthService {
       throw new UserAlreadyExistsException("A user with that email or username already exists.");
     }
     // Create user
-    val userId = UserId.generate();
+    final UserId userId = UserId.generate();
     userRepository
         .create(
             new CreateUserDto(
@@ -85,7 +90,7 @@ public class AuthService implements IAuthService {
     // Assign user permissions (default role)
     roleRepository.setRoleForUserId(userId, Role.USER);
     // Generate and save verification token to database
-    val emailVerificationTokenDb =
+    final EmailVerificationEntity emailVerificationTokenDb =
         emailVerificationRepository
             .create(
                 new CreateEmailVerificationDto(
@@ -107,7 +112,7 @@ public class AuthService implements IAuthService {
   public TokenPair loginUser(final Email email, final Password password) {
     log.trace("loginUser() started");
     // Find user by email
-    val userDb =
+    final UserEntity userDb =
         userRepository
             .findByEmail(email)
             .orElseThrow(() -> new BadCredentialsException("Email doesn't exist"));
@@ -124,11 +129,11 @@ public class AuthService implements IAuthService {
       throw new BadCredentialsException("Wrong password for the given email");
     }
     // Generate family ID for the tokens of this session
-    val family = TokenFamily.generate();
+    final TokenFamily family = TokenFamily.generate();
     // Generate access token
-    val accessToken = jwtUtils.generateAccessToken(userDb.id(), family);
+    final AccessToken accessToken = jwtUtils.generateAccessToken(userDb.id(), family);
     // Generate refresh token
-    val refreshToken = RefreshToken.generate();
+    final RefreshToken refreshToken = RefreshToken.generate();
     // Save refresh token in database
     refreshTokenRepository
         .create(
@@ -149,28 +154,28 @@ public class AuthService implements IAuthService {
   public TokenPair refreshTokens(final RefreshToken refreshToken) {
     log.trace("refreshTokens() started");
     // Find the refresh token in the database
-    val refreshTokenDb =
+    final RefreshTokenEntity refreshTokenDb =
         refreshTokenRepository
             .findByToken(refreshToken)
             .orElseThrow(() -> new NoSuchElementException("Refresh token not found"));
     // Check if the refresh token is expired
     if (refreshTokenDb.expiresAt().isExpired(clock)) {
-      val msg = "Expired refresh token";
+      final String msg = "Expired refresh token";
       log.info(msg);
       throw new RefreshTokenInvalidException(msg);
     }
     // Check if the family token is blacklisted
     if (tokenFamilyBlacklistRepository.exists(refreshTokenDb.family())) {
-      val msg = "Token family is blacklisted";
+      final String msg = "Token family is blacklisted";
       log.info(msg);
       throw new BlacklistedFamilyException(msg);
     }
     // Generate new tokens
-    val newAccessToken =
+    final AccessToken newAccessToken =
         jwtUtils.generateAccessToken(refreshTokenDb.userId(), refreshTokenDb.family());
-    val newRefreshToken = RefreshToken.generate();
+    final RefreshToken newRefreshToken = RefreshToken.generate();
     // Save new refresh token in database
-    val refreshTokenUpdated =
+    final boolean refreshTokenUpdated =
         refreshTokenRepository.updateByToken(
             refreshToken,
             UpdateRefreshTokenDto.builder()
@@ -190,7 +195,7 @@ public class AuthService implements IAuthService {
   @Override
   public void verifyEmail(final EmailVerificationToken token) {
     // Find the verification token in the database
-    val emailVerificationTokenDb =
+    final EmailVerificationEntity emailVerificationTokenDb =
         emailVerificationRepository
             .findByToken(token)
             .orElseThrow(
@@ -200,7 +205,7 @@ public class AuthService implements IAuthService {
       throw new VerificationTokenExpiredException("Email verification token has expired");
     }
     // Verify the user's email
-    val userUpdated =
+    final boolean userUpdated =
         userRepository.updateById(
             emailVerificationTokenDb.userId(),
             UpdateUserDto.builder().isEmailVerified(true).build());
@@ -209,7 +214,7 @@ public class AuthService implements IAuthService {
           "Could not set the is_email_verified column of the user in the database");
     }
     // Delete all the verification tokens assigned to this user from the database
-    val tokenDeleted =
+    final boolean tokenDeleted =
         emailVerificationRepository.deleteByUserId(emailVerificationTokenDb.userId());
     if (!tokenDeleted) {
       throw new DatabaseExecutionException(
@@ -220,7 +225,7 @@ public class AuthService implements IAuthService {
   @Override
   public void resendVerificationEmail(final Email email) {
     // Look for user by email
-    val userDb =
+    final UserEntity userDb =
         userRepository
             .findByEmail(email)
             .orElseThrow(() -> new EmailNotFoundException("User with that email not found"));
@@ -230,7 +235,8 @@ public class AuthService implements IAuthService {
     }
     // check minimum wait time between requests. If the current instant is before the createdAt
     // plus the configured wait time, the user is requesting a new verification email too soon.
-    val oldEmailVerificationTokenDb = emailVerificationRepository.findByUserId(userDb.id());
+    final Optional<EmailVerificationEntity> oldEmailVerificationTokenDb =
+        emailVerificationRepository.findByUserId(userDb.id());
     if (oldEmailVerificationTokenDb.isPresent()
         && Instant.now(clock)
             .isBefore(
@@ -241,8 +247,8 @@ public class AuthService implements IAuthService {
       throw new NewEmailVerificationTooSoonException();
     }
     // Generate and save verification token to database
-    val newEmailVerificationToken = EmailVerificationToken.generate();
-    val emailVerificationTokenUpdated =
+    final EmailVerificationToken newEmailVerificationToken = EmailVerificationToken.generate();
+    final boolean emailVerificationTokenUpdated =
         emailVerificationRepository.updateByUserId(
             userDb.id(),
             UpdateEmailVerificationTokenDto.builder()
@@ -273,30 +279,30 @@ public class AuthService implements IAuthService {
   @Override
   public void logoutUser(final RefreshToken refreshToken) {
     // Find the refresh token in the database
-    val refreshTokenDb =
+    final RefreshTokenEntity refreshTokenDb =
         refreshTokenRepository
             .findByToken(refreshToken)
             .orElseThrow(
                 () -> new RefreshTokenNotFoundException("Refresh token not found in the database"));
     // Check if the refresh token is expired
     if (refreshTokenDb.expiresAt().isExpired(clock)) {
-      val msg = "Expired refresh token";
+      final String msg = "Expired refresh token";
       log.trace(msg);
       throw new RefreshTokenInvalidException(msg);
     }
     // Check if the family token is blacklisted
     if (tokenFamilyBlacklistRepository.exists(refreshTokenDb.family())) {
-      val msg = "Token family is blacklisted";
+      final String msg = "Token family is blacklisted";
       log.info(msg);
       throw new BlacklistedFamilyException(msg);
     }
     // Invalidate refresh token from the database
-    val refreshTokenDeleted = refreshTokenRepository.deleteByToken(refreshToken);
+    final boolean refreshTokenDeleted = refreshTokenRepository.deleteByToken(refreshToken);
     if (!refreshTokenDeleted) {
       throw new DatabaseExecutionException("Could not delete the refresh token in the database");
     }
     // Invalidate any existing access token
-    val accessTokenBlacklisted =
+    final Optional<TokenFamilyBlacklistEntity> accessTokenBlacklisted =
         tokenFamilyBlacklistRepository.create(
             new CreateTokenFamilyBlacklistDto(refreshTokenDb.family()));
     if (accessTokenBlacklisted.isEmpty()) {

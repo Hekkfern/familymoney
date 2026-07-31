@@ -17,9 +17,10 @@ import com.familymoney.domains.users.types.UserName;
 import com.familymoney.testutils.DatabaseCrud;
 import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import javax.money.Monetary;
-import lombok.val;
 import org.javamoney.moneta.Money;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,8 +51,8 @@ class BalanceRepositoryTest {
   }
 
   private UserId insertRandomUser() {
-    val userId = UserId.generate();
-    val now = Instant.ofEpochSecond(1778755330);
+    final UserId userId = UserId.generate();
+    final Instant now = Instant.ofEpochSecond(1778755330);
     DatabaseCrud.insertUser(
         dslContext,
         userId,
@@ -65,8 +66,8 @@ class BalanceRepositoryTest {
   }
 
   private GroupId insertRandomGroup() {
-    val groupId = GroupId.generate();
-    val now = Instant.now();
+    final GroupId groupId = GroupId.generate();
+    final Instant now = Instant.now();
     DatabaseCrud.insertGroup(
         dslContext,
         groupId,
@@ -79,7 +80,7 @@ class BalanceRepositoryTest {
 
   private BalanceId insertRandomBalance(
       final GroupId groupId, final UserId userId1, final UserId userId2) {
-    val balanceId = BalanceId.generate();
+    final BalanceId balanceId = BalanceId.generate();
     DatabaseCrud.insertBalance(
         dslContext, balanceId, groupId, Money.of(10, "USD"), userId1, userId2);
     return balanceId;
@@ -89,17 +90,17 @@ class BalanceRepositoryTest {
 
   @Test
   void create_persists_balance_record() {
-    val groupId = insertRandomGroup();
-    val userId1 = insertRandomUser();
-    val userId2 = insertRandomUser();
-    val balanceId = BalanceId.generate();
-    val money = Money.of(23, "USD");
+    final GroupId groupId = insertRandomGroup();
+    final UserId userId1 = insertRandomUser();
+    final UserId userId2 = insertRandomUser();
+    final BalanceId balanceId = BalanceId.generate();
+    final Money money = Money.of(23, "USD");
 
-    val balanceOpt =
+    final Optional<BalanceEntity> balanceOpt =
         balanceRepository.create(new CreateBalanceDto(balanceId, groupId, userId1, userId2, money));
 
     assertThat(balanceOpt).isPresent();
-    val balance = balanceOpt.get();
+    final BalanceEntity balance = balanceOpt.get();
     assertThat(balance.id()).isEqualTo(balanceId);
     assertThat(balance.groupId()).isEqualTo(groupId);
     assertThat(balance.money()).isEqualTo(money);
@@ -109,38 +110,41 @@ class BalanceRepositoryTest {
 
   @Test
   void create_throws_when_user_does_not_exist() {
-    val groupId = insertRandomGroup();
-    val userId1 = insertRandomUser();
-    val userId2 = UserId.generate();
-    val money = Money.of(23, "USD");
+    final GroupId groupId = insertRandomGroup();
+    final UserId userId1 = insertRandomUser();
+    final UserId userId2 = UserId.generate();
+    final Money money = Money.of(23, "USD");
 
-    val dto = new CreateBalanceDto(BalanceId.generate(), groupId, userId1, userId2, money);
+    final CreateBalanceDto dto =
+        new CreateBalanceDto(BalanceId.generate(), groupId, userId1, userId2, money);
     assertThatThrownBy(() -> balanceRepository.create(dto))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 
   @Test
   void create_throws_when_it_is_duplicate() {
-    val groupId = insertRandomGroup();
-    val userId1 = insertRandomUser();
-    val userId2 = insertRandomUser();
-    val money = Money.of(23, "USD");
+    final GroupId groupId = insertRandomGroup();
+    final UserId userId1 = insertRandomUser();
+    final UserId userId2 = insertRandomUser();
+    final Money money = Money.of(23, "USD");
 
     balanceRepository.create(
         new CreateBalanceDto(BalanceId.generate(), groupId, userId1, userId2, money));
 
-    val dto = new CreateBalanceDto(BalanceId.generate(), groupId, userId2, userId1, money);
+    final CreateBalanceDto dto =
+        new CreateBalanceDto(BalanceId.generate(), groupId, userId2, userId1, money);
     assertThatThrownBy(() -> balanceRepository.create(dto))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 
   @Test
   void create_throws_when_users_are_same() {
-    val groupId = insertRandomGroup();
-    val userId1 = insertRandomUser();
-    val money = Money.of(23, "USD");
+    final GroupId groupId = insertRandomGroup();
+    final UserId userId1 = insertRandomUser();
+    final Money money = Money.of(23, "USD");
 
-    val dto = new CreateBalanceDto(BalanceId.generate(), groupId, userId1, userId1, money);
+    final CreateBalanceDto dto =
+        new CreateBalanceDto(BalanceId.generate(), groupId, userId1, userId1, money);
     assertThatThrownBy(() -> balanceRepository.create(dto))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
@@ -151,15 +155,15 @@ class BalanceRepositoryTest {
 
   @Test
   void findByGroup_returns_all_balances_in_group() {
-    val groupId1 = insertRandomGroup();
-    val groupId2 = insertRandomGroup();
-    val userId1 = insertRandomUser();
-    val userId2 = insertRandomUser();
-    val userId3 = insertRandomUser();
-    val balanceGroup1 = insertRandomBalance(groupId1, userId1, userId2);
+    final GroupId groupId1 = insertRandomGroup();
+    final GroupId groupId2 = insertRandomGroup();
+    final UserId userId1 = insertRandomUser();
+    final UserId userId2 = insertRandomUser();
+    final UserId userId3 = insertRandomUser();
+    final BalanceId balanceGroup1 = insertRandomBalance(groupId1, userId1, userId2);
     insertRandomBalance(groupId2, userId1, userId3);
 
-    val balances = balanceRepository.findByGroup(groupId1);
+    final List<BalanceEntity> balances = balanceRepository.findByGroup(groupId1);
 
     assertThat(balances)
         .isNotEmpty()
@@ -178,14 +182,15 @@ class BalanceRepositoryTest {
 
   @Test
   void findByUserAndGroup_returns_balances_for_user() {
-    val groupId = insertRandomGroup();
-    val userId1 = insertRandomUser();
-    val userId2 = insertRandomUser();
-    val userId3 = insertRandomUser();
-    val balance1 = insertRandomBalance(groupId, userId1, userId2);
-    val balance2 = insertRandomBalance(groupId, userId2, userId3);
+    final GroupId groupId = insertRandomGroup();
+    final UserId userId1 = insertRandomUser();
+    final UserId userId2 = insertRandomUser();
+    final UserId userId3 = insertRandomUser();
+    final BalanceId balance1 = insertRandomBalance(groupId, userId1, userId2);
+    final BalanceId balance2 = insertRandomBalance(groupId, userId2, userId3);
 
-    val balancesForUser1 = balanceRepository.findByUserAndGroup(userId1, groupId);
+    final List<BalanceEntity> balancesForUser1 =
+        balanceRepository.findByUserAndGroup(userId1, groupId);
 
     assertThat(balancesForUser1)
         .isNotEmpty()
@@ -204,30 +209,31 @@ class BalanceRepositoryTest {
 
   @Test
   void updateById_updates_balance() {
-    val groupId = insertRandomGroup();
-    val userId1 = insertRandomUser();
-    val userId2 = insertRandomUser();
-    val userId3 = insertRandomUser();
-    val balance1 = insertRandomBalance(groupId, userId1, userId2);
-    val newMoney = Money.of(15.75, "USD");
-    val dataToUpdate = UpdateBalanceDto.builder().money(newMoney).user2(userId3).build();
+    final GroupId groupId = insertRandomGroup();
+    final UserId userId1 = insertRandomUser();
+    final UserId userId2 = insertRandomUser();
+    final UserId userId3 = insertRandomUser();
+    final BalanceId balance1 = insertRandomBalance(groupId, userId1, userId2);
+    final Money newMoney = Money.of(15.75, "USD");
+    final UpdateBalanceDto dataToUpdate =
+        UpdateBalanceDto.builder().money(newMoney).user2(userId3).build();
 
-    val updated = balanceRepository.updateById(balance1, dataToUpdate);
+    final boolean updated = balanceRepository.updateById(balance1, dataToUpdate);
 
     assertThat(updated).isTrue();
-    val found = balanceRepository.findById(balance1).orElseThrow();
+    final BalanceEntity found = balanceRepository.findById(balance1).orElseThrow();
     assertThat(found.money()).isEqualTo(newMoney);
     assertThat(found.user2()).isEqualTo(userId3);
   }
 
   @Test
   void updateById_throws_when_user_does_not_exist() {
-    val groupId = insertRandomGroup();
-    val userId1 = insertRandomUser();
-    val userId2 = insertRandomUser();
-    val userId3 = UserId.generate();
-    val balance1 = insertRandomBalance(groupId, userId1, userId2);
-    val dataToUpdate = UpdateBalanceDto.builder().user1(userId3).build();
+    final GroupId groupId = insertRandomGroup();
+    final UserId userId1 = insertRandomUser();
+    final UserId userId2 = insertRandomUser();
+    final UserId userId3 = UserId.generate();
+    final BalanceId balance1 = insertRandomBalance(groupId, userId1, userId2);
+    final UpdateBalanceDto dataToUpdate = UpdateBalanceDto.builder().user1(userId3).build();
 
     assertThatThrownBy(() -> balanceRepository.updateById(balance1, dataToUpdate))
         .isInstanceOf(DataIntegrityViolationException.class);
@@ -239,21 +245,22 @@ class BalanceRepositoryTest {
 
   @Test
   void findById_returns_balance_when_it_exists() {
-    val groupId = insertRandomGroup();
-    val userId1 = insertRandomUser();
-    val userId2 = insertRandomUser();
-    val balance1 = insertRandomBalance(groupId, userId1, userId2);
+    final GroupId groupId = insertRandomGroup();
+    final UserId userId1 = insertRandomUser();
+    final UserId userId2 = insertRandomUser();
+    final BalanceId balance1 = insertRandomBalance(groupId, userId1, userId2);
 
-    val balanceFoundOpt = balanceRepository.findById(balance1);
+    final Optional<BalanceEntity> balanceFoundOpt = balanceRepository.findById(balance1);
 
     assertThat(balanceFoundOpt).isPresent();
-    val balanceFound = balanceFoundOpt.get();
+    final BalanceEntity balanceFound = balanceFoundOpt.get();
     assertThat(balanceFound.id()).isEqualTo(balance1);
   }
 
   @Test
   void findById_returns_empty_when_it_does_not_exist() {
-    val found = balanceRepository.findById(BalanceId.fromUuid(UUID.randomUUID()));
+    final Optional<BalanceEntity> found =
+        balanceRepository.findById(BalanceId.fromUuid(UUID.randomUUID()));
 
     assertThat(found).isEmpty();
   }

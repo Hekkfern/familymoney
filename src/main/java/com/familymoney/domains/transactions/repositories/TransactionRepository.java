@@ -7,11 +7,13 @@ import com.familymoney.domains.transactions.repositories.mappers.TransactionJooq
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.TransactionId;
 import com.familymoney.generated.tables.Transactions;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 import org.springframework.data.domain.Page;
@@ -63,18 +65,19 @@ public class TransactionRepository implements ITransactionRepository {
 
   @Override
   public boolean updateById(final TransactionId id, final UpdateTransactionDto data) {
-    val amountVal =
+    final BigDecimal amountVal =
         data.amount() != null
             ? data.amount().getNumber().numberValue(java.math.BigDecimal.class)
             : null;
-    val currencyVal = data.amount() != null ? data.amount().getCurrency().getCurrencyCode() : null;
-    val descriptionVal = data.description() != null ? data.description().value() : null;
-    val fromVal = data.from() != null ? data.from().value() : null;
-    val toVal = data.to() != null ? data.to().value() : null;
-    val doneAtVal =
+    final String currencyVal =
+        data.amount() != null ? data.amount().getCurrency().getCurrencyCode() : null;
+    final String descriptionVal = data.description() != null ? data.description().value() : null;
+    final UUID fromVal = data.from() != null ? data.from().value() : null;
+    final UUID toVal = data.to() != null ? data.to().value() : null;
+    final OffsetDateTime doneAtVal =
         data.doneAt() != null ? OffsetDateTime.ofInstant(data.doneAt(), ZoneOffset.UTC) : null;
 
-    val rowsAffected =
+    final int rowsAffected =
         db.update(Transactions.TRANSACTIONS)
             .set(
                 Transactions.TRANSACTIONS.AMOUNT,
@@ -101,7 +104,7 @@ public class TransactionRepository implements ITransactionRepository {
 
   @Override
   public boolean deleteById(final TransactionId id) {
-    val rowsAffected =
+    final int rowsAffected =
         db.deleteFrom(Transactions.TRANSACTIONS)
             .where(Transactions.TRANSACTIONS.ID.eq(id.value()))
             .execute();
@@ -128,14 +131,14 @@ public class TransactionRepository implements ITransactionRepository {
 
   @Override
   public Page<TransactionEntity> findAllByGroupId(final GroupId groupId, final Pageable pageable) {
-    val total =
+    final Long total =
         db.selectCount()
             .from(Transactions.TRANSACTIONS)
             .where(Transactions.TRANSACTIONS.GROUP_ID.eq(groupId.value()))
             .fetchOne(0, Long.class);
-    val safeTotal = total != null ? total : 0L;
+    final long safeTotal = total != null ? total : 0L;
 
-    val data =
+    final List<TransactionEntity> data =
         db.select(
                 Transactions.TRANSACTIONS.ID,
                 Transactions.TRANSACTIONS.DESCRIPTION,

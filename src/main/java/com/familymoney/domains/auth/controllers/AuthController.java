@@ -13,6 +13,7 @@ import com.familymoney.domains.auth.controllers.dtos.VerifyEmailRequestDto;
 import com.familymoney.domains.auth.controllers.mappers.LoginResponseMapper;
 import com.familymoney.domains.auth.controllers.mappers.RefreshResponseMapper;
 import com.familymoney.domains.auth.services.IAuthService;
+import com.familymoney.domains.auth.services.data.TokenPair;
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.auth.types.PasswordResetToken;
 import com.familymoney.domains.auth.types.RefreshToken;
@@ -20,7 +21,6 @@ import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.Password;
 import com.familymoney.domains.users.types.UserName;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -39,7 +39,7 @@ public class AuthController implements IAuthController {
 
   @Override
   public LoginResponseDto login(final LoginRequestDto request) {
-    val tokenPair =
+    final TokenPair tokenPair =
         authService.loginUser(
             Email.fromString(request.email()), Password.fromString(request.password()));
     return LoginResponseMapper.toDto(tokenPair);
@@ -68,7 +68,8 @@ public class AuthController implements IAuthController {
 
   @Override
   public RefreshResponseDto refresh(final RefreshTokenRequestDto request) {
-    val tokenPair = authService.refreshTokens(RefreshToken.fromString(request.refreshToken()));
+    final TokenPair tokenPair =
+        authService.refreshTokens(RefreshToken.fromString(request.refreshToken()));
     return RefreshResponseMapper.toDto(tokenPair);
   }
 

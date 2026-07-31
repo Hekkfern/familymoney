@@ -24,7 +24,6 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
 import javax.money.CurrencyUnit;
-import lombok.val;
 import org.javamoney.moneta.Money;
 import org.jooq.DSLContext;
 
@@ -39,7 +38,7 @@ public class DatabaseCrud {
       final Instant createdAt,
       final boolean isEmailVerified,
       final boolean isEnabled) {
-    val createdAtDateTime = OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC);
+    final OffsetDateTime createdAtDateTime = OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC);
     dslContext
         .insertInto(Users.USERS)
         .columns(
@@ -71,8 +70,9 @@ public class DatabaseCrud {
       final Instant createdAt,
       final com.familymoney.domains.auth.types.ExpirationTime expiresAt,
       final TokenFamily family) {
-    val createdAtDateTime = OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC);
-    val expiresAtDateTime = OffsetDateTime.ofInstant(expiresAt.value(), ZoneOffset.UTC);
+    final OffsetDateTime createdAtDateTime = OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC);
+    final OffsetDateTime expiresAtDateTime =
+        OffsetDateTime.ofInstant(expiresAt.value(), ZoneOffset.UTC);
     dslContext
         .insertInto(RefreshTokens.REFRESH_TOKENS)
         .columns(
@@ -100,8 +100,9 @@ public class DatabaseCrud {
       final EmailVerificationToken token,
       final Instant createdAt,
       final com.familymoney.domains.auth.types.ExpirationTime expiresAt) {
-    val createdAtDateTime = OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC);
-    val expiresAtDateTime = OffsetDateTime.ofInstant(expiresAt.value(), ZoneOffset.UTC);
+    final OffsetDateTime createdAtDateTime = OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC);
+    final OffsetDateTime expiresAtDateTime =
+        OffsetDateTime.ofInstant(expiresAt.value(), ZoneOffset.UTC);
     dslContext
         .insertInto(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS)
         .columns(
@@ -121,8 +122,9 @@ public class DatabaseCrud {
       final PasswordResetToken token,
       final Instant createdAt,
       final com.familymoney.domains.auth.types.ExpirationTime expiresAt) {
-    val createdAtDateTime = OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC);
-    val expiresAtDateTime = OffsetDateTime.ofInstant(expiresAt.value(), ZoneOffset.UTC);
+    final OffsetDateTime createdAtDateTime = OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC);
+    final OffsetDateTime expiresAtDateTime =
+        OffsetDateTime.ofInstant(expiresAt.value(), ZoneOffset.UTC);
     dslContext
         .insertInto(PasswordResetTokens.PASSWORD_RESET_TOKENS)
         .columns(
@@ -143,7 +145,7 @@ public class DatabaseCrud {
       final String description,
       final CurrencyUnit currency,
       final Instant createdAt) {
-    val createdAtDateTime = OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC);
+    final OffsetDateTime createdAtDateTime = OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC);
     dslContext
         .insertInto(Groups.GROUPS)
         .columns(
@@ -171,8 +173,9 @@ public class DatabaseCrud {
       final GroupInvitationToken token,
       final Instant createdAt,
       final com.familymoney.domains.transactions.types.ExpirationTime expiresAt) {
-    val createdAtDateTime = OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC);
-    val expiresAtDateTime = OffsetDateTime.ofInstant(expiresAt.value(), ZoneOffset.UTC);
+    final OffsetDateTime createdAtDateTime = OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC);
+    final OffsetDateTime expiresAtDateTime =
+        OffsetDateTime.ofInstant(expiresAt.value(), ZoneOffset.UTC);
     dslContext
         .insertInto(GroupInvitations.GROUP_INVITATIONS)
         .columns(

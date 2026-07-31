@@ -11,8 +11,8 @@ import com.familymoney.generated.tables.Balances;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 import org.springframework.stereotype.Repository;
@@ -91,11 +91,12 @@ public class BalanceRepository implements IBalanceRepository {
 
   @Override
   public boolean updateById(final BalanceId id, final UpdateBalanceDto data) {
-    val amountValue =
+    final BigDecimal amountValue =
         data.money() != null ? data.money().getNumber().numberValue(BigDecimal.class) : null;
-    val currencyValue = data.money() != null ? data.money().getCurrency().getCurrencyCode() : null;
-    val user1Value = data.user1() != null ? data.user1().value() : null;
-    val user2Value = data.user2() != null ? data.user2().value() : null;
+    final String currencyValue =
+        data.money() != null ? data.money().getCurrency().getCurrencyCode() : null;
+    final UUID user1Value = data.user1() != null ? data.user1().value() : null;
+    final UUID user2Value = data.user2() != null ? data.user2().value() : null;
 
     int rowsAffected =
         db.update(Balances.BALANCES)

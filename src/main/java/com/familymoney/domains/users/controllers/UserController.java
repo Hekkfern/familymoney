@@ -5,10 +5,11 @@ import com.familymoney.domains.users.controllers.dtos.UpdateUserRequestDto;
 import com.familymoney.domains.users.controllers.mappers.GetMyUserResponseMapper;
 import com.familymoney.domains.users.controllers.mappers.UpdateUserRequestMapper;
 import com.familymoney.domains.users.services.IUserService;
+import com.familymoney.domains.users.services.data.UserData;
 import com.familymoney.testutils.AuthenticationUtils;
+import com.familymoney.testutils.AuthorizedUser;
 import java.util.NoSuchElementException;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -20,9 +21,9 @@ public class UserController implements IUserController {
   @Override
   public GetMyUserResponseDto getMyUserInfo() {
     // Get user ID from security context (validated)
-    val user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Fetch user data
-    val userData =
+    final UserData userData =
         userService
             .getUserData(user.id())
             .orElseThrow(
@@ -34,7 +35,7 @@ public class UserController implements IUserController {
   @Override
   public void deleteMyUser() {
     // Get user ID from security context (validated)
-    val user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Delete user
     userService.deleteUser(user.id());
   }
@@ -42,7 +43,7 @@ public class UserController implements IUserController {
   @Override
   public void updateMyUserInfo(final UpdateUserRequestDto request) {
     // Get user ID from security context (validated)
-    val user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Update user
     userService.updateUserInfo(user.id(), UpdateUserRequestMapper.fromDto(request));
   }

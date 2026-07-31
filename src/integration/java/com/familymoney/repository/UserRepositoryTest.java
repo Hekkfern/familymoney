@@ -15,7 +15,7 @@ import com.familymoney.testutils.DatabaseCrud;
 import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;
 import java.util.List;
-import lombok.val;
+import java.util.Optional;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jooq.test.autoconfigure.JooqTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
@@ -49,16 +50,16 @@ class UserRepositoryTest {
   }
 
   private List<UserId> insertThreeUsersForTesting() {
-    val userId1 = UserId.generate();
-    val userId2 = UserId.generate();
-    val userId3 = UserId.generate();
-    val username1 = UserName.fromString("username1");
-    val username2 = UserName.fromString("username2");
-    val username3 = UserName.fromString("username3");
-    val email1 = Email.fromString(FakeGenerator.email());
-    val email2 = Email.fromString(FakeGenerator.email());
-    val email3 = Email.fromString(FakeGenerator.email());
-    val now = Instant.ofEpochSecond(1778755330);
+    final UserId userId1 = UserId.generate();
+    final UserId userId2 = UserId.generate();
+    final UserId userId3 = UserId.generate();
+    final UserName username1 = UserName.fromString("username1");
+    final UserName username2 = UserName.fromString("username2");
+    final UserName username3 = UserName.fromString("username3");
+    final Email email1 = Email.fromString(FakeGenerator.email());
+    final Email email2 = Email.fromString(FakeGenerator.email());
+    final Email email3 = Email.fromString(FakeGenerator.email());
+    final Instant now = Instant.ofEpochSecond(1778755330);
     DatabaseCrud.insertUser(dslContext, userId1, username1, email1, "pass1", now, true, true);
     DatabaseCrud.insertUser(
         dslContext, userId2, username2, email2, "pass2", now.plusSeconds(1000), true, true);
@@ -71,19 +72,19 @@ class UserRepositoryTest {
 
   @Test
   void create_persists_user_record() {
-    val userId = UserId.generate();
-    val username = UserName.fromString(FakeGenerator.username());
-    val email = Email.fromString(FakeGenerator.email());
-    val passwordHash = "hashed-password";
+    final UserId userId = UserId.generate();
+    final UserName username = UserName.fromString(FakeGenerator.username());
+    final Email email = Email.fromString(FakeGenerator.email());
+    final String passwordHash = "hashed-password";
 
-    val now = Instant.now();
+    final Instant now = Instant.now();
 
-    val userCreated =
+    final Optional<UserEntity> userCreated =
         userRepository.create(
             new CreateUserDto(userId, username, email, passwordHash, true, false));
 
     assertThat(userCreated).isPresent();
-    val user = userCreated.get();
+    final UserEntity user = userCreated.get();
     assertThat(user.id()).isNotNull().isEqualTo(userId);
     assertThat(user.username()).isNotNull().isEqualTo(username);
     assertThat(user.email()).isNotNull().isEqualTo(email);
@@ -96,33 +97,37 @@ class UserRepositoryTest {
 
   @Test
   void create_throws_when_email_is_duplicate() {
-    val userId1 = UserId.generate();
-    val userId2 = UserId.generate();
-    val username1 = UserName.fromString(FakeGenerator.username());
-    val username2 = UserName.fromString(FakeGenerator.username());
-    val email = Email.fromString(FakeGenerator.email());
-    val passwordHash = "hashed-password";
+    final UserId userId1 = UserId.generate();
+    final UserId userId2 = UserId.generate();
+    final UserName username1 = UserName.fromString(FakeGenerator.username());
+    final UserName username2 = UserName.fromString(FakeGenerator.username());
+    final Email email = Email.fromString(FakeGenerator.email());
+    final String passwordHash = "hashed-password";
 
-    val dto1 = new CreateUserDto(userId1, username1, email, passwordHash, true, false);
+    final CreateUserDto dto1 =
+        new CreateUserDto(userId1, username1, email, passwordHash, true, false);
     userRepository.create(dto1);
 
-    val dto2 = new CreateUserDto(userId2, username2, email, passwordHash, true, false);
+    final CreateUserDto dto2 =
+        new CreateUserDto(userId2, username2, email, passwordHash, true, false);
     assertThatThrownBy(() -> userRepository.create(dto2)).isInstanceOf(DuplicateKeyException.class);
   }
 
   @Test
   void create_throws_when_username_is_duplicate() {
-    val userId1 = UserId.generate();
-    val userId2 = UserId.generate();
-    val username = UserName.fromString(FakeGenerator.username());
-    val email1 = Email.fromString(FakeGenerator.email());
-    val email2 = Email.fromString(FakeGenerator.email());
-    val passwordHash = "hashed-password";
+    final UserId userId1 = UserId.generate();
+    final UserId userId2 = UserId.generate();
+    final UserName username = UserName.fromString(FakeGenerator.username());
+    final Email email1 = Email.fromString(FakeGenerator.email());
+    final Email email2 = Email.fromString(FakeGenerator.email());
+    final String passwordHash = "hashed-password";
 
-    val dto1 = new CreateUserDto(userId1, username, email1, passwordHash, true, false);
+    final CreateUserDto dto1 =
+        new CreateUserDto(userId1, username, email1, passwordHash, true, false);
     userRepository.create(dto1);
 
-    val dto2 = new CreateUserDto(userId2, username, email2, passwordHash, true, false);
+    final CreateUserDto dto2 =
+        new CreateUserDto(userId2, username, email2, passwordHash, true, false);
     assertThatThrownBy(() -> userRepository.create(dto2)).isInstanceOf(DuplicateKeyException.class);
   }
 
@@ -132,17 +137,17 @@ class UserRepositoryTest {
 
   @Test
   void findById_returns_user_when_exists() {
-    val userId = UserId.generate();
-    val username = UserName.fromString(FakeGenerator.username());
-    val email = Email.fromString(FakeGenerator.email());
-    val now = Instant.now();
+    final UserId userId = UserId.generate();
+    final UserName username = UserName.fromString(FakeGenerator.username());
+    final Email email = Email.fromString(FakeGenerator.email());
+    final Instant now = Instant.now();
     DatabaseCrud.insertUser(
         dslContext, userId, username, email, "hashed_password", now, false, true);
 
-    val found = userRepository.findById(userId);
+    final Optional<UserEntity> found = userRepository.findById(userId);
 
     assertThat(found).isPresent();
-    val userFound = found.get();
+    final UserEntity userFound = found.get();
     assertThat(userFound.id()).isEqualTo(userId);
     assertThat(userFound.username()).isEqualTo(username);
     assertThat(userFound.email()).isEqualTo(email);
@@ -159,9 +164,9 @@ class UserRepositoryTest {
 
   @Test
   void findById_returns_empty_when_missing() {
-    val userId = UserId.generate();
+    final UserId userId = UserId.generate();
 
-    val found = userRepository.findById(userId);
+    final Optional<UserEntity> found = userRepository.findById(userId);
 
     assertThat(found).isEmpty();
   }
@@ -172,17 +177,17 @@ class UserRepositoryTest {
 
   @Test
   void findByEmail_returns_user_when_exists() {
-    val userId = UserId.generate();
-    val username = UserName.fromString(FakeGenerator.username());
-    val email = Email.fromString(FakeGenerator.email());
-    val now = Instant.now();
+    final UserId userId = UserId.generate();
+    final UserName username = UserName.fromString(FakeGenerator.username());
+    final Email email = Email.fromString(FakeGenerator.email());
+    final Instant now = Instant.now();
     DatabaseCrud.insertUser(
         dslContext, userId, username, email, "hashed_password", now, false, true);
 
-    val found = userRepository.findByEmail(email);
+    final Optional<UserEntity> found = userRepository.findByEmail(email);
 
     assertThat(found).isPresent();
-    val userFound = found.get();
+    final UserEntity userFound = found.get();
     assertThat(userFound.id()).isEqualTo(userId);
     assertThat(userFound.username()).isEqualTo(username);
     assertThat(userFound.email()).isEqualTo(email);
@@ -199,9 +204,9 @@ class UserRepositoryTest {
 
   @Test
   void findByEmail_returns_empty_when_missing() {
-    val email = Email.fromString(FakeGenerator.email());
+    final Email email = Email.fromString(FakeGenerator.email());
 
-    val found = userRepository.findByEmail(email);
+    final Optional<UserEntity> found = userRepository.findByEmail(email);
 
     assertThat(found).isEmpty();
   }
@@ -212,17 +217,17 @@ class UserRepositoryTest {
 
   @Test
   void findByUsername_returns_user_when_exists() {
-    val userId = UserId.generate();
-    val username = UserName.fromString(FakeGenerator.username());
-    val email = Email.fromString(FakeGenerator.email());
-    val now = Instant.now();
+    final UserId userId = UserId.generate();
+    final UserName username = UserName.fromString(FakeGenerator.username());
+    final Email email = Email.fromString(FakeGenerator.email());
+    final Instant now = Instant.now();
     DatabaseCrud.insertUser(
         dslContext, userId, username, email, "hashed_password", now, false, true);
 
-    val found = userRepository.findByUsername(username);
+    final Optional<UserEntity> found = userRepository.findByUsername(username);
 
     assertThat(found).isPresent();
-    val userFound = found.get();
+    final UserEntity userFound = found.get();
     assertThat(userFound.id()).isEqualTo(userId);
     assertThat(userFound.username()).isEqualTo(username);
     assertThat(userFound.email()).isEqualTo(email);
@@ -239,9 +244,9 @@ class UserRepositoryTest {
 
   @Test
   void findByUsername_returns_empty_when_missing() {
-    val username = UserName.fromString(FakeGenerator.username());
+    final UserName username = UserName.fromString(FakeGenerator.username());
 
-    val found = userRepository.findByUsername(username);
+    final Optional<UserEntity> found = userRepository.findByUsername(username);
 
     assertThat(found).isEmpty();
   }
@@ -252,10 +257,10 @@ class UserRepositoryTest {
 
   @Test
   void existsByEmailOrUsername_returns_true_when_either_matches() {
-    val userId = UserId.generate();
-    val username = UserName.fromString(FakeGenerator.username());
-    val email = Email.fromString(FakeGenerator.email());
-    val now = Instant.now();
+    final UserId userId = UserId.generate();
+    final UserName username = UserName.fromString(FakeGenerator.username());
+    final Email email = Email.fromString(FakeGenerator.email());
+    final Instant now = Instant.now();
     DatabaseCrud.insertUser(
         dslContext, userId, username, email, "hashed_password", now, false, true);
 
@@ -271,10 +276,10 @@ class UserRepositoryTest {
 
   @Test
   void existsByEmailOrUsername_returns_true_when_both_match() {
-    val userId = UserId.generate();
-    val username = UserName.fromString(FakeGenerator.username());
-    val email = Email.fromString(FakeGenerator.email());
-    val now = Instant.now();
+    final UserId userId = UserId.generate();
+    final UserName username = UserName.fromString(FakeGenerator.username());
+    final Email email = Email.fromString(FakeGenerator.email());
+    final Instant now = Instant.now();
     DatabaseCrud.insertUser(
         dslContext, userId, username, email, "hashed_password", now, false, true);
 
@@ -296,10 +301,10 @@ class UserRepositoryTest {
 
   @Test
   void existsById_returns_true_when_it_exists() {
-    val userId = UserId.generate();
-    val username = UserName.fromString(FakeGenerator.username());
-    val email = Email.fromString(FakeGenerator.email());
-    val now = Instant.now();
+    final UserId userId = UserId.generate();
+    final UserName username = UserName.fromString(FakeGenerator.username());
+    final Email email = Email.fromString(FakeGenerator.email());
+    final Instant now = Instant.now();
     DatabaseCrud.insertUser(
         dslContext, userId, username, email, "hashed_password", now, false, true);
 
@@ -308,7 +313,7 @@ class UserRepositoryTest {
 
   @Test
   void existsById_returns_false_when_it_doesnt_exist() {
-    val otherUserId = UserId.generate();
+    final UserId otherUserId = UserId.generate();
     assertThat(userRepository.existsById(otherUserId)).isFalse();
   }
 
@@ -318,16 +323,16 @@ class UserRepositoryTest {
 
   @Test
   void updateById_updates_all_fields_and_returns_true_when_updates_all_fields() {
-    val userId = UserId.generate();
-    val username1 = UserName.fromString(FakeGenerator.username());
-    val username2 = UserName.fromString(FakeGenerator.username());
-    val email1 = Email.fromString(FakeGenerator.email());
-    val email2 = Email.fromString(FakeGenerator.email());
-    val now = Instant.now();
+    final UserId userId = UserId.generate();
+    final UserName username1 = UserName.fromString(FakeGenerator.username());
+    final UserName username2 = UserName.fromString(FakeGenerator.username());
+    final Email email1 = Email.fromString(FakeGenerator.email());
+    final Email email2 = Email.fromString(FakeGenerator.email());
+    final Instant now = Instant.now();
     DatabaseCrud.insertUser(
         dslContext, userId, username1, email1, "hashed_password", now, false, true);
 
-    val dataToUpdate =
+    final UpdateUserDto dataToUpdate =
         UpdateUserDto.builder()
             .username(username2)
             .email(email2)
@@ -336,12 +341,12 @@ class UserRepositoryTest {
             .isEnabled(false)
             .build();
 
-    val updated = userRepository.updateById(userId, dataToUpdate);
+    final boolean updated = userRepository.updateById(userId, dataToUpdate);
 
     assertThat(updated).isTrue();
-    val found = userRepository.findById(userId);
+    final Optional<UserEntity> found = userRepository.findById(userId);
     assertThat(found).isPresent();
-    val userFound = found.get();
+    final UserEntity userFound = found.get();
     assertThat(userFound.id()).isEqualTo(userId);
     assertThat(userFound.username()).isEqualTo(username2);
     assertThat(userFound.email()).isEqualTo(email2);
@@ -358,22 +363,22 @@ class UserRepositoryTest {
 
   @Test
   void updateById_updates_some_fields_and_returns_true_when_updates_some_fields() {
-    val userId = UserId.generate();
-    val username1 = UserName.fromString(FakeGenerator.username());
-    val username2 = UserName.fromString(FakeGenerator.username());
-    val email = Email.fromString(FakeGenerator.email());
-    val now = Instant.now();
+    final UserId userId = UserId.generate();
+    final UserName username1 = UserName.fromString(FakeGenerator.username());
+    final UserName username2 = UserName.fromString(FakeGenerator.username());
+    final Email email = Email.fromString(FakeGenerator.email());
+    final Instant now = Instant.now();
     DatabaseCrud.insertUser(
         dslContext, userId, username1, email, "hashed_password", now, false, true);
 
-    val dataToUpdate = UpdateUserDto.builder().username(username2).build();
+    final UpdateUserDto dataToUpdate = UpdateUserDto.builder().username(username2).build();
 
-    val updated = userRepository.updateById(userId, dataToUpdate);
+    final boolean updated = userRepository.updateById(userId, dataToUpdate);
 
     assertThat(updated).isTrue();
-    val found = userRepository.findById(userId);
+    final Optional<UserEntity> found = userRepository.findById(userId);
     assertThat(found).isPresent();
-    val userFound = found.get();
+    final UserEntity userFound = found.get();
     assertThat(userFound.id()).isEqualTo(userId);
     assertThat(userFound.username()).isEqualTo(username2);
     assertThat(userFound.email()).isEqualTo(email);
@@ -390,11 +395,12 @@ class UserRepositoryTest {
 
   @Test
   void updateById_returns_false_when_userid_not_found() {
-    val userId = UserId.generate();
+    final UserId userId = UserId.generate();
 
-    val updateData = UpdateUserDto.builder().email(Email.fromString(FakeGenerator.email())).build();
+    final UpdateUserDto updateData =
+        UpdateUserDto.builder().email(Email.fromString(FakeGenerator.email())).build();
 
-    val updated = userRepository.updateById(userId, updateData);
+    final boolean updated = userRepository.updateById(userId, updateData);
 
     assertThat(updated).isFalse();
   }
@@ -405,15 +411,15 @@ class UserRepositoryTest {
 
   @Test
   void deleteById_returns_true_when_user_exists() {
-    val userId = UserId.generate();
-    val username = UserName.fromString(FakeGenerator.username());
-    val email = Email.fromString(FakeGenerator.email());
-    val now = Instant.now();
+    final UserId userId = UserId.generate();
+    final UserName username = UserName.fromString(FakeGenerator.username());
+    final Email email = Email.fromString(FakeGenerator.email());
+    final Instant now = Instant.now();
     DatabaseCrud.insertUser(
         dslContext, userId, username, email, "hashed_password", now, false, true);
     assertThat(userRepository.findById(userId)).isPresent();
 
-    val deleted = userRepository.deleteById(userId);
+    final boolean deleted = userRepository.deleteById(userId);
 
     assertThat(deleted).isTrue();
     assertThat(userRepository.findById(userId)).isEmpty();
@@ -421,9 +427,9 @@ class UserRepositoryTest {
 
   @Test
   void deleteById_returns_false_when_user_doesnt_exist() {
-    val userId = UserId.generate();
+    final UserId userId = UserId.generate();
 
-    val deleted = userRepository.deleteById(userId);
+    final boolean deleted = userRepository.deleteById(userId);
 
     assertThat(deleted).isFalse();
   }
@@ -434,26 +440,26 @@ class UserRepositoryTest {
 
   @Test
   void getAll_returns_page_with_2_items_when_requests_page_0_with_size_2_and_default_sort() {
-    val userIdsForTesting = insertThreeUsersForTesting();
+    final List<UserId> userIdsForTesting = insertThreeUsersForTesting();
 
-    val page = userRepository.getAll(PageRequest.of(0, 2));
+    final Page<UserEntity> page = userRepository.getAll(PageRequest.of(0, 2));
 
     assertThat(page.getTotalElements()).isEqualTo(3);
     assertThat(page.getNumberOfElements()).isEqualTo(2);
-    val ids = page.getContent().stream().map(UserEntity::id).toList();
+    final List<UserId> ids = page.getContent().stream().map(UserEntity::id).toList();
     assertThat(ids.get(0)).isEqualTo(userIdsForTesting.get(2));
     assertThat(ids.get(1)).isEqualTo(userIdsForTesting.get(1));
   }
 
   @Test
   void getAll_returns_page_with_3_items_when_requests_page_0_with_size_4_and_default_sort() {
-    val userIdsForTesting = insertThreeUsersForTesting();
+    final List<UserId> userIdsForTesting = insertThreeUsersForTesting();
 
-    val page = userRepository.getAll(PageRequest.of(0, 4));
+    final Page<UserEntity> page = userRepository.getAll(PageRequest.of(0, 4));
 
     assertThat(page.getTotalElements()).isEqualTo(3);
     assertThat(page.getNumberOfElements()).isEqualTo(3);
-    val ids = page.getContent().stream().map(UserEntity::id).toList();
+    final List<UserId> ids = page.getContent().stream().map(UserEntity::id).toList();
     assertThat(ids.get(0)).isEqualTo(userIdsForTesting.get(2));
     assertThat(ids.get(1)).isEqualTo(userIdsForTesting.get(1));
     assertThat(ids.get(2)).isEqualTo(userIdsForTesting.get(0));
@@ -461,13 +467,13 @@ class UserRepositoryTest {
 
   @Test
   void getAll_returns_page_with_1_item_when_requests_page_1_with_size_2_and_default_sort() {
-    val userIdsForTesting = insertThreeUsersForTesting();
+    final List<UserId> userIdsForTesting = insertThreeUsersForTesting();
 
-    val page = userRepository.getAll(PageRequest.of(1, 2));
+    final Page<UserEntity> page = userRepository.getAll(PageRequest.of(1, 2));
 
     assertThat(page.getTotalElements()).isEqualTo(3);
     assertThat(page.getNumberOfElements()).isEqualTo(1);
-    val ids = page.getContent().stream().map(UserEntity::id).toList();
+    final List<UserId> ids = page.getContent().stream().map(UserEntity::id).toList();
     assertThat(ids.getFirst()).isEqualTo(userIdsForTesting.get(0));
   }
 
@@ -475,7 +481,7 @@ class UserRepositoryTest {
   void getAll_returns_empty_page_when_offset_exceeds_total() {
     insertThreeUsersForTesting();
 
-    val page = userRepository.getAll(PageRequest.of(100, 2));
+    final Page<UserEntity> page = userRepository.getAll(PageRequest.of(100, 2));
 
     assertThat(page.getNumberOfElements()).isZero();
     assertThat(page.getTotalElements()).isZero();
@@ -484,13 +490,14 @@ class UserRepositoryTest {
   @Test
   void
       getAll_returns_page_with_2_items_when_requests_page_0_with_size_2_and_order_by_username_asc() {
-    val userIdsForTesting = insertThreeUsersForTesting();
+    final List<UserId> userIdsForTesting = insertThreeUsersForTesting();
 
-    val page = userRepository.getAll(PageRequest.of(0, 2, Sort.by(Sort.Direction.ASC, "username")));
+    final Page<UserEntity> page =
+        userRepository.getAll(PageRequest.of(0, 2, Sort.by(Sort.Direction.ASC, "username")));
 
     assertThat(page.getTotalElements()).isEqualTo(3);
     assertThat(page.getNumberOfElements()).isEqualTo(2);
-    val ids = page.getContent().stream().map(UserEntity::id).toList();
+    final List<UserId> ids = page.getContent().stream().map(UserEntity::id).toList();
     assertThat(ids.get(0)).isEqualTo(userIdsForTesting.get(0));
     assertThat(ids.get(1)).isEqualTo(userIdsForTesting.get(1));
   }
@@ -498,14 +505,14 @@ class UserRepositoryTest {
   @Test
   void
       getAll_returns_page_with_2_items_when_requests_page_0_with_size_2_and_order_by_username_desc() {
-    val userIdsForTesting = insertThreeUsersForTesting();
+    final List<UserId> userIdsForTesting = insertThreeUsersForTesting();
 
-    val page =
+    final Page<UserEntity> page =
         userRepository.getAll(PageRequest.of(0, 2, Sort.by(Sort.Direction.DESC, "username")));
 
     assertThat(page.getTotalElements()).isEqualTo(3);
     assertThat(page.getNumberOfElements()).isEqualTo(2);
-    val ids = page.getContent().stream().map(UserEntity::id).toList();
+    final List<UserId> ids = page.getContent().stream().map(UserEntity::id).toList();
     assertThat(ids.get(0)).isEqualTo(userIdsForTesting.get(2));
     assertThat(ids.get(1)).isEqualTo(userIdsForTesting.get(1));
   }
@@ -513,14 +520,14 @@ class UserRepositoryTest {
   @Test
   void
       getAll_returns_page_with_2_items_when_requests_page_0_with_size_2_and_order_by_createdAt_asc() {
-    val userIdsForTesting = insertThreeUsersForTesting();
+    final List<UserId> userIdsForTesting = insertThreeUsersForTesting();
 
-    val page =
+    final Page<UserEntity> page =
         userRepository.getAll(PageRequest.of(0, 2, Sort.by(Sort.Direction.ASC, "created_at")));
 
     assertThat(page.getTotalElements()).isEqualTo(3);
     assertThat(page.getNumberOfElements()).isEqualTo(2);
-    val ids = page.getContent().stream().map(UserEntity::id).toList();
+    final List<UserId> ids = page.getContent().stream().map(UserEntity::id).toList();
     assertThat(ids.get(0)).isEqualTo(userIdsForTesting.get(0));
     assertThat(ids.get(1)).isEqualTo(userIdsForTesting.get(1));
   }

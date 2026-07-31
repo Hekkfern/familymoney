@@ -6,7 +6,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
-import lombok.val;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
@@ -27,7 +26,8 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         ProblemDetail.forStatusAndDetail(
             HttpStatus.UNAUTHORIZED, "Please log in to access this resource.");
     pd.setInstance(URI.create(request.getRequestURI()));
-    val mapper = new ObjectMapper().setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL);
+    final ObjectMapper mapper =
+        new ObjectMapper().setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL);
     response.getWriter().write(mapper.writeValueAsString(pd));
   }
 }

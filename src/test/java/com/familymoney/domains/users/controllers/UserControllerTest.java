@@ -16,7 +16,6 @@ import com.familymoney.testutils.WithMockUserId;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
-import lombok.val;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,12 +50,12 @@ class UserControllerTest {
     @Test
     @WithMockUserId(userId = USER_ID)
     void success() {
-      val username = UserName.fromString(FakeGenerator.username());
-      val email = Email.fromString(FakeGenerator.email());
+      final UserName username = UserName.fromString(FakeGenerator.username());
+      final Email email = Email.fromString(FakeGenerator.email());
       when(userService.getUserData(any()))
           .thenReturn(Optional.of(new UserData(null, username, email, now, true, true)));
 
-      val data =
+      final GetMyUserResponseDto data =
           client
               .get()
               .uri(UserControllerUriFactory.getMePath())
@@ -103,9 +102,9 @@ class UserControllerTest {
     @Test
     @WithMockUserId(userId = USER_ID)
     void success_when_updating_everything() {
-      val newUsername = FakeGenerator.username();
-      val newEmail = FakeGenerator.email();
-      val newPassword = FakeGenerator.password();
+      final String newUsername = FakeGenerator.username();
+      final String newEmail = FakeGenerator.email();
+      final String newPassword = FakeGenerator.password();
       client
           .patch()
           .uri(UserControllerUriFactory.getMePath())
@@ -118,7 +117,7 @@ class UserControllerTest {
     @Test
     @WithMockUserId(userId = USER_ID)
     void success_when_updating_username_only() {
-      val newUsername = FakeGenerator.username();
+      final String newUsername = FakeGenerator.username();
       client
           .patch()
           .uri(UserControllerUriFactory.getMePath())
@@ -131,7 +130,7 @@ class UserControllerTest {
     @Test
     @WithMockUserId(userId = USER_ID)
     void success_when_updating_email_only() {
-      val newEmail = FakeGenerator.email();
+      final String newEmail = FakeGenerator.email();
       client
           .patch()
           .uri(UserControllerUriFactory.getMePath())
@@ -144,7 +143,7 @@ class UserControllerTest {
     @Test
     @WithMockUserId(userId = USER_ID)
     void success_when_updating_password_only() {
-      val newPassword = FakeGenerator.password();
+      final String newPassword = FakeGenerator.password();
       client
           .patch()
           .uri(UserControllerUriFactory.getMePath())

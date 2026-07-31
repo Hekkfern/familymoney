@@ -4,7 +4,6 @@ import com.familymoney.domains.users.types.Role;
 import com.familymoney.domains.users.types.UserId;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 import org.springframework.stereotype.Repository;
@@ -29,7 +28,7 @@ public class RoleRepository implements IRoleRepository {
 
   @Override
   public boolean setRoleForUserId(final UserId userId, final Role role) {
-    val sql =
+    final String sql =
         """
         WITH r AS (
             SELECT id AS role_id FROM roles WHERE name = ?
@@ -39,7 +38,7 @@ public class RoleRepository implements IRoleRepository {
         ON CONFLICT (user_id) DO UPDATE
             SET role_id = EXCLUDED.role_id;
         """;
-    val rowsAffected = db.query(sql, role.toString(), userId.value()).execute();
+    final int rowsAffected = db.query(sql, role.toString(), userId.value()).execute();
     return rowsAffected > 0;
   }
 }

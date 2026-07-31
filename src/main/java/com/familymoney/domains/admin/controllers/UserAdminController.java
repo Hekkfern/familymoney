@@ -7,12 +7,13 @@ import com.familymoney.domains.users.controllers.mappers.GetUserResponseMapper;
 import com.familymoney.domains.users.controllers.mappers.UpdateUserRequestMapper;
 import com.familymoney.domains.users.exceptions.UserNotFoundException;
 import com.familymoney.domains.users.services.IUserService;
+import com.familymoney.domains.users.services.data.UserData;
 import com.familymoney.domains.users.types.Role;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.testutils.PageResponse;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -27,7 +28,7 @@ public class UserAdminController implements IUserAdminController {
   @Override
   public GetUserResponseDto getUserInfo(UUID userId) {
     // Fetch user data
-    val userData =
+    final UserData userData =
         userService
             .getUserData(UserId.fromUuid(userId))
             .orElseThrow(() -> new UserNotFoundException("User not found"));
@@ -41,7 +42,7 @@ public class UserAdminController implements IUserAdminController {
     final Sort stableSort =
         Sort.by(direction, sort.toString().toLowerCase()).and(Sort.by(Sort.Direction.ASC, "id"));
     final Pageable pageable = PageRequest.of(page, size, stableSort);
-    val userDataPages = userService.getUsers(pageable);
+    final Page<UserData> userDataPages = userService.getUsers(pageable);
     return PageResponse.from(userDataPages.map(GetUserResponseMapper::toDto));
   }
 

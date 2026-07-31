@@ -25,6 +25,8 @@ import com.familymoney.domains.transactions.repositories.entitites.GroupEntity;
 import com.familymoney.domains.transactions.repositories.entitites.GroupInvitationEntity;
 import com.familymoney.domains.transactions.repositories.entitites.TransactionEntity;
 import com.familymoney.domains.transactions.repositories.entitites.UserGroupEntity;
+import com.familymoney.domains.transactions.services.data.GroupData;
+import com.familymoney.domains.transactions.services.data.TransactionData;
 import com.familymoney.domains.transactions.services.data.UpdateGroupData;
 import com.familymoney.domains.transactions.services.data.UpdateTransactionData;
 import com.familymoney.domains.transactions.types.BalanceId;
@@ -44,11 +46,11 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import javax.money.CurrencyUnit;
 import javax.money.Monetary;
-import lombok.val;
 import org.javamoney.moneta.Money;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -58,6 +60,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -155,9 +158,9 @@ class TransactionGroupServiceTest {
 
     @Test
     void returns_id_when_repository_succeeds() {
-      val groupName = GroupName.fromString("mygroup");
-      val desc = Description.of("mydesc");
-      val createdBy = UserId.generate();
+      final GroupName groupName = GroupName.fromString("mygroup");
+      final Description desc = Description.of("mydesc");
+      final UserId createdBy = UserId.generate();
       mockCreateInGroupRepository();
       mockAddUserToGroupRepository();
 
@@ -206,8 +209,8 @@ class TransactionGroupServiceTest {
 
     @Test
     void deletes_group_when_group_exists_and_user_is_member_of_the_group() {
-      val gid = GroupId.generate();
-      val user = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId user = UserId.generate();
       when(groupRepository.existsById(gid)).thenReturn(true);
       when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
 
@@ -218,8 +221,8 @@ class TransactionGroupServiceTest {
 
     @Test
     void throws_when_when_group_doesnt_exist() {
-      val gid = GroupId.generate();
-      val user = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId user = UserId.generate();
       when(groupRepository.existsById(gid)).thenReturn(false);
 
       assertThatThrownBy(() -> transactionGroupService.deleteGroup(gid, user))
@@ -228,8 +231,8 @@ class TransactionGroupServiceTest {
 
     @Test
     void throws_when_when_group_exists_and_user_is_not_member_of_the_group() {
-      val gid = GroupId.generate();
-      val user = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId user = UserId.generate();
       when(groupRepository.existsById(gid)).thenReturn(true);
       when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
 
@@ -243,13 +246,13 @@ class TransactionGroupServiceTest {
 
     @Test
     void get_page_from_repository() {
-      val user = UserId.generate();
-      val gid = GroupId.generate();
-      val g = groupDbo(gid);
+      final UserId user = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final GroupEntity g = groupDbo(gid);
       Pageable p = PageRequest.of(0, 10);
       when(groupRepository.findByUserId(user, p)).thenReturn(new PageImpl<>(List.of(g)));
 
-      val page = transactionGroupService.getGroupsByUser(user, p);
+      final Page<GroupData> page = transactionGroupService.getGroupsByUser(user, p);
 
       assertThat(page.getContent()).hasSize(1);
       assertThat(page.getContent().get(0).id()).isEqualTo(gid);
@@ -261,13 +264,13 @@ class TransactionGroupServiceTest {
 
     @Test
     void returns_data_when_group_exists_and_user_is_member_of_the_group() {
-      val gid = GroupId.generate();
-      val user = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId user = UserId.generate();
       when(groupRepository.existsById(gid)).thenReturn(true);
       when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
       when(groupRepository.findById(gid)).thenReturn(Optional.of(groupDbo(gid)));
 
-      val data = transactionGroupService.getGroupInfo(gid, user);
+      final GroupData data = transactionGroupService.getGroupInfo(gid, user);
 
       assertThat(data).isNotNull();
       assertThat(data.id()).isEqualTo(gid);
@@ -275,8 +278,8 @@ class TransactionGroupServiceTest {
 
     @Test
     void throws_when_group_exists_and_user_is_not_member_of_the_group() {
-      val gid = GroupId.generate();
-      val user = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId user = UserId.generate();
       when(groupRepository.existsById(gid)).thenReturn(true);
       when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
 
@@ -286,8 +289,8 @@ class TransactionGroupServiceTest {
 
     @Test
     void throws_when_group_doesnt_exist() {
-      val gid = GroupId.generate();
-      val user = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId user = UserId.generate();
       when(groupRepository.existsById(gid)).thenReturn(false);
 
       assertThatThrownBy(() -> transactionGroupService.getGroupInfo(gid, user))
@@ -300,12 +303,12 @@ class TransactionGroupServiceTest {
 
     @Test
     void calls_repository_when_user_is_member_of_the_group() {
-      val gid = GroupId.generate();
-      val user = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId user = UserId.generate();
       when(groupRepository.existsById(gid)).thenReturn(true);
       when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
 
-      val data = new UpdateGroupData(null, Description.of("new"));
+      final UpdateGroupData data = new UpdateGroupData(null, Description.of("new"));
       transactionGroupService.updateGroupInfo(gid, user, data);
 
       verify(groupRepository).updateById(eq(gid), any());
@@ -313,23 +316,23 @@ class TransactionGroupServiceTest {
 
     @Test
     void throws_when_user_is_not_member_of_the_group() {
-      val gid = GroupId.generate();
-      val user = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId user = UserId.generate();
       when(groupRepository.existsById(gid)).thenReturn(true);
       when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
 
-      val data = new UpdateGroupData(null, Description.of("new"));
+      final UpdateGroupData data = new UpdateGroupData(null, Description.of("new"));
       assertThatThrownBy(() -> transactionGroupService.updateGroupInfo(gid, user, data))
           .isInstanceOf(UserIsNotMemberOfGroupException.class);
     }
 
     @Test
     void throws_when_group_doesnt_exist() {
-      val gid = GroupId.generate();
-      val user = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId user = UserId.generate();
       when(groupRepository.existsById(gid)).thenReturn(false);
 
-      val data = new UpdateGroupData(null, Description.of("new"));
+      final UpdateGroupData data = new UpdateGroupData(null, Description.of("new"));
       assertThatThrownBy(() -> transactionGroupService.updateGroupInfo(gid, user, data))
           .isInstanceOf(TransactionGroupNotFoundException.class);
     }
@@ -348,8 +351,8 @@ class TransactionGroupServiceTest {
 
     @Test
     void returns_token_when_created() {
-      val gid = GroupId.generate();
-      val user = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId user = UserId.generate();
       when(groupRepository.existsById(gid)).thenReturn(true);
       when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
       mockCreateInGroupInvitationRepository();
@@ -362,8 +365,8 @@ class TransactionGroupServiceTest {
 
     @Test
     void throws_when_user_is_not_member_of_the_group() {
-      val gid = GroupId.generate();
-      val user = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId user = UserId.generate();
       when(groupRepository.existsById(gid)).thenReturn(true);
       when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
 
@@ -373,8 +376,8 @@ class TransactionGroupServiceTest {
 
     @Test
     void throws_when_create_fails() {
-      val gid = GroupId.generate();
-      val user = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId user = UserId.generate();
       when(groupRepository.existsById(gid)).thenReturn(true);
       when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
       when(groupInvitationRepository.create(any(CreateGroupInvitationDto.class)))
@@ -386,8 +389,8 @@ class TransactionGroupServiceTest {
 
     @Test
     void throws_when_group_doesnt_exist() {
-      val gid = GroupId.generate();
-      val user = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId user = UserId.generate();
       when(groupRepository.existsById(gid)).thenReturn(false);
 
       assertThatThrownBy(() -> transactionGroupService.getInvitationToken(gid, user))
@@ -396,8 +399,8 @@ class TransactionGroupServiceTest {
 
     @Test
     void throws_when_maximum_number_of_invitations_reached() {
-      val gid = GroupId.generate();
-      val user = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId user = UserId.generate();
       when(groupRepository.existsById(gid)).thenReturn(true);
       when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
       when(groupInvitationRepository.countByGroupIdAndUserId(gid, user)).thenReturn(20L);
@@ -412,10 +415,10 @@ class TransactionGroupServiceTest {
 
     @Test
     void adds_user_when_token_is_valid() {
-      val gid = GroupId.generate();
-      val token = GroupInvitationToken.generate();
-      val invitation = invitationDbo(gid, token, NOW.plusSeconds(3600));
-      val user = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final GroupInvitationToken token = GroupInvitationToken.generate();
+      final GroupInvitationEntity invitation = invitationDbo(gid, token, NOW.plusSeconds(3600));
+      final UserId user = UserId.generate();
       when(groupInvitationRepository.findByToken(token)).thenReturn(Optional.of(invitation));
 
       transactionGroupService.enterToGroupWithToken(token, user);
@@ -426,8 +429,8 @@ class TransactionGroupServiceTest {
 
     @Test
     void throws_when_token_is_missing() {
-      val token = GroupInvitationToken.generate();
-      val user = UserId.generate();
+      final GroupInvitationToken token = GroupInvitationToken.generate();
+      final UserId user = UserId.generate();
       when(groupInvitationRepository.findByToken(token)).thenReturn(Optional.empty());
 
       assertThatThrownBy(() -> transactionGroupService.enterToGroupWithToken(token, user))
@@ -436,10 +439,10 @@ class TransactionGroupServiceTest {
 
     @Test
     void throws_when_token_is_expired() {
-      val gid = GroupId.generate();
-      val token = GroupInvitationToken.generate();
-      val invitation = invitationDbo(gid, token, NOW.minusSeconds(10));
-      val user = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final GroupInvitationToken token = GroupInvitationToken.generate();
+      final GroupInvitationEntity invitation = invitationDbo(gid, token, NOW.minusSeconds(10));
+      final UserId user = UserId.generate();
       when(groupInvitationRepository.findByToken(token)).thenReturn(Optional.of(invitation));
 
       assertThatThrownBy(() -> transactionGroupService.enterToGroupWithToken(token, user))
@@ -453,22 +456,22 @@ class TransactionGroupServiceTest {
 
     @Test
     void returns_list_when_group_exists_and_user_is_member_of_the_group() {
-      val gid = GroupId.generate();
-      val user = UserId.generate();
-      val other = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId user = UserId.generate();
+      final UserId other = UserId.generate();
       when(groupRepository.existsById(gid)).thenReturn(true);
       when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
       when(groupRepository.findUserIdsByGroupId(gid)).thenReturn(List.of(user, other));
 
-      val users = transactionGroupService.getUsersInGroup(gid, user);
+      final List<UserId> users = transactionGroupService.getUsersInGroup(gid, user);
 
       assertThat(users).containsExactly(user, other);
     }
 
     @Test
     void throws_when_group_exists_but_user_is_not_member_of_the_group() {
-      val gid = GroupId.generate();
-      val user = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId user = UserId.generate();
       when(groupRepository.existsById(gid)).thenReturn(true);
       when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
 
@@ -478,8 +481,8 @@ class TransactionGroupServiceTest {
 
     @Test
     void throws_when_group_doesnt_exist() {
-      val gid = GroupId.generate();
-      val user = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId user = UserId.generate();
       when(groupRepository.existsById(gid)).thenReturn(false);
 
       assertThatThrownBy(() -> transactionGroupService.getUsersInGroup(gid, user))
@@ -492,9 +495,9 @@ class TransactionGroupServiceTest {
 
     @Test
     void calls_delete_when_group_exists_and_user_is_member_of_the_group() {
-      val gid = GroupId.generate();
-      val user = UserId.generate();
-      val toRemove = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId user = UserId.generate();
+      final UserId toRemove = UserId.generate();
       when(groupRepository.existsById(gid)).thenReturn(true);
       when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
       when(userRepository.existsById(toRemove)).thenReturn(true);
@@ -508,9 +511,9 @@ class TransactionGroupServiceTest {
 
     @Test
     void throws_when_group_exists_and_user_is_not_member_of_the_group() {
-      val gid = GroupId.generate();
-      val user = UserId.generate();
-      val toRemove = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId user = UserId.generate();
+      final UserId toRemove = UserId.generate();
       when(groupRepository.existsById(gid)).thenReturn(true);
       when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
       when(userRepository.existsById(toRemove)).thenReturn(true);
@@ -521,9 +524,9 @@ class TransactionGroupServiceTest {
 
     @Test
     void throws_when_group_doesnt_exist() {
-      val gid = GroupId.generate();
-      val user = UserId.generate();
-      val toRemove = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId user = UserId.generate();
+      final UserId toRemove = UserId.generate();
       when(groupRepository.existsById(gid)).thenReturn(false);
 
       assertThatThrownBy(() -> transactionGroupService.removeUserFromGroup(gid, user, toRemove))
@@ -532,9 +535,9 @@ class TransactionGroupServiceTest {
 
     @Test
     void throws_when_user_doesnt_exist() {
-      val gid = GroupId.generate();
-      val user = UserId.generate();
-      val toRemove = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId user = UserId.generate();
+      final UserId toRemove = UserId.generate();
       when(groupRepository.existsById(gid)).thenReturn(true);
       when(userRepository.existsById(toRemove)).thenReturn(false);
 
@@ -548,15 +551,15 @@ class TransactionGroupServiceTest {
 
     @Test
     void maps_balances_correctly_when_group_exists_and_user_is_member_of_the_group() {
-      val gid = GroupId.generate();
-      val userA = UserId.generate();
-      val userB = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId userA = UserId.generate();
+      final UserId userB = UserId.generate();
       when(groupRepository.existsById(gid)).thenReturn(true);
       when(groupRepository.isUserInGroup(userA, gid)).thenReturn(true);
-      val b = balanceDbo(BalanceId.generate(), gid, userA, userB);
+      final BalanceEntity b = balanceDbo(BalanceId.generate(), gid, userA, userB);
       when(balanceRepository.findByGroup(gid)).thenReturn(List.of(b));
 
-      val map = transactionGroupService.getAllGroupBalances(gid, userA);
+      final Map<UserId, Money> map = transactionGroupService.getAllGroupBalances(gid, userA);
 
       assertThat(map).hasSize(1).containsKey(userB);
       assertThat(map.get(userB)).isEqualTo(b.money());
@@ -564,8 +567,8 @@ class TransactionGroupServiceTest {
 
     @Test
     void throws_when_group_exists_and_user_is_not_member_of_the_group() {
-      val gid = GroupId.generate();
-      val user = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId user = UserId.generate();
       when(groupRepository.existsById(gid)).thenReturn(true);
       when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
 
@@ -575,8 +578,8 @@ class TransactionGroupServiceTest {
 
     @Test
     void throws_when_group_doesnt_exist() {
-      val gid = GroupId.generate();
-      val user = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId user = UserId.generate();
       when(groupRepository.existsById(gid)).thenReturn(false);
 
       assertThatThrownBy(() -> transactionGroupService.getAllGroupBalances(gid, user))
@@ -589,15 +592,15 @@ class TransactionGroupServiceTest {
 
     @Test
     void returns_mapped_page_when_user_is_member_of_the_group() {
-      val gid = GroupId.generate();
-      val user = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId user = UserId.generate();
       when(groupRepository.existsById(gid)).thenReturn(true);
       when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
-      val tx = transactionDbo(TransactionId.generate(), gid);
+      final TransactionEntity tx = transactionDbo(TransactionId.generate(), gid);
       Pageable p = PageRequest.of(0, 10);
       when(transactionRepository.findAllByGroupId(gid, p)).thenReturn(new PageImpl<>(List.of(tx)));
 
-      val page = transactionGroupService.getGroupTransactions(gid, user, p);
+      final Page<TransactionData> page = transactionGroupService.getGroupTransactions(gid, user, p);
 
       assertThat(page.getContent()).hasSize(1);
       assertThat(page.getContent().get(0).id()).isEqualTo(tx.id());
@@ -605,8 +608,8 @@ class TransactionGroupServiceTest {
 
     @Test
     void throws_when_user_is_not_member_of_the_group() {
-      val gid = GroupId.generate();
-      val user = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId user = UserId.generate();
       Pageable p = PageRequest.of(0, 10);
       when(groupRepository.existsById(gid)).thenReturn(true);
       when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
@@ -617,8 +620,8 @@ class TransactionGroupServiceTest {
 
     @Test
     void throws_when_group_doesnt_exist() {
-      val gid = GroupId.generate();
-      val user = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId user = UserId.generate();
       Pageable p = PageRequest.of(0, 10);
       when(groupRepository.existsById(gid)).thenReturn(false);
 
@@ -632,8 +635,8 @@ class TransactionGroupServiceTest {
 
     @Test
     void calls_repository_when_user_is_member_of_the_group() {
-      val gid = GroupId.generate();
-      val creator = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId creator = UserId.generate();
       when(groupRepository.existsById(gid)).thenReturn(true);
       when(groupRepository.isUserInGroup(creator, gid)).thenReturn(true);
 
@@ -651,8 +654,8 @@ class TransactionGroupServiceTest {
 
     @Test
     void throws_when_creator_is_not_member_of_the_group() {
-      val gid = GroupId.generate();
-      val creator = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId creator = UserId.generate();
       when(groupRepository.existsById(gid)).thenReturn(true);
       when(groupRepository.isUserInGroup(creator, gid)).thenReturn(false);
 
@@ -671,8 +674,8 @@ class TransactionGroupServiceTest {
 
     @Test
     void throws_when_group_doesnt_exist() {
-      val gid = GroupId.generate();
-      val creator = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final UserId creator = UserId.generate();
       when(groupRepository.existsById(gid)).thenReturn(false);
 
       assertThatThrownBy(
@@ -694,10 +697,10 @@ class TransactionGroupServiceTest {
 
     @Test
     void updates_when_transaction_exists_and_user_is_member_of_the_group() {
-      val gid = GroupId.generate();
-      val txId = TransactionId.generate();
-      val tx = transactionDbo(txId, gid);
-      val user = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final TransactionId txId = TransactionId.generate();
+      final TransactionEntity tx = transactionDbo(txId, gid);
+      final UserId user = UserId.generate();
       when(transactionRepository.findById(txId)).thenReturn(Optional.of(tx));
       when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
 
@@ -709,8 +712,8 @@ class TransactionGroupServiceTest {
 
     @Test
     void throws_when_transaction_is_missing() {
-      val txId = TransactionId.generate();
-      val user = UserId.generate();
+      final TransactionId txId = TransactionId.generate();
+      final UserId user = UserId.generate();
       when(transactionRepository.findById(txId)).thenReturn(Optional.empty());
 
       assertThatThrownBy(
@@ -722,14 +725,14 @@ class TransactionGroupServiceTest {
 
     @Test
     void throws_when_user_is_not_member_of_the_group() {
-      val gid = GroupId.generate();
-      val txId = TransactionId.generate();
-      val tx = transactionDbo(txId, gid);
-      val user = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final TransactionId txId = TransactionId.generate();
+      final TransactionEntity tx = transactionDbo(txId, gid);
+      final UserId user = UserId.generate();
       when(transactionRepository.findById(txId)).thenReturn(Optional.of(tx));
       when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
 
-      val data = new UpdateTransactionData(null, null, null, null, null);
+      final UpdateTransactionData data = new UpdateTransactionData(null, null, null, null, null);
       assertThatThrownBy(() -> transactionGroupService.updateTransaction(user, txId, data))
           .isInstanceOf(UserIsNotMemberOfGroupException.class);
     }
@@ -740,10 +743,10 @@ class TransactionGroupServiceTest {
 
     @Test
     void deletes_when_transaction_exists_and_user_is_member_of_the_group() {
-      val gid = GroupId.generate();
-      val txId = TransactionId.generate();
-      val tx = transactionDbo(txId, gid);
-      val user = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final TransactionId txId = TransactionId.generate();
+      final TransactionEntity tx = transactionDbo(txId, gid);
+      final UserId user = UserId.generate();
       when(transactionRepository.findById(txId)).thenReturn(Optional.of(tx));
       when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
 
@@ -754,8 +757,8 @@ class TransactionGroupServiceTest {
 
     @Test
     void throws_when_transaction_is_missing() {
-      val txId = TransactionId.generate();
-      val user = UserId.generate();
+      final TransactionId txId = TransactionId.generate();
+      final UserId user = UserId.generate();
       when(transactionRepository.findById(txId)).thenReturn(Optional.empty());
 
       assertThatThrownBy(() -> transactionGroupService.deleteTransaction(user, txId))
@@ -764,10 +767,10 @@ class TransactionGroupServiceTest {
 
     @Test
     void throws_when_user_is_not_member_of_the_group() {
-      val gid = GroupId.generate();
-      val txId = TransactionId.generate();
-      val tx = transactionDbo(txId, gid);
-      val user = UserId.generate();
+      final GroupId gid = GroupId.generate();
+      final TransactionId txId = TransactionId.generate();
+      final TransactionEntity tx = transactionDbo(txId, gid);
+      final UserId user = UserId.generate();
       when(transactionRepository.findById(txId)).thenReturn(Optional.of(tx));
       when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
 

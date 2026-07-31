@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 import org.springframework.data.domain.Page;
@@ -54,7 +53,7 @@ public class GroupRepository implements IGroupRepository {
 
   @Override
   public boolean updateById(final GroupId id, final UpdateGroupDto data) {
-    val rowsAffected =
+    final int rowsAffected =
         db.update(Groups.GROUPS)
             .set(
                 Groups.GROUPS.NAME,
@@ -72,21 +71,21 @@ public class GroupRepository implements IGroupRepository {
 
   @Override
   public boolean deleteById(final GroupId id) {
-    val rowsAffected =
+    final int rowsAffected =
         db.deleteFrom(Groups.GROUPS).where(Groups.GROUPS.ID.eq(id.value())).execute();
     return rowsAffected > 0;
   }
 
   @Override
   public Page<GroupEntity> findByUserId(final UserId userId, final Pageable pageable) {
-    val total =
+    final Long total =
         db.selectCount()
             .from(UserGroups.USER_GROUPS)
             .where(UserGroups.USER_GROUPS.USER_ID.eq(userId.value()))
             .fetchOne(0, Long.class);
-    val safeTotal = total != null ? total : 0L;
+    final long safeTotal = total != null ? total : 0L;
 
-    val data =
+    final List<GroupEntity> data =
         db.select(
                 Groups.GROUPS.ID,
                 Groups.GROUPS.NAME,
@@ -168,7 +167,7 @@ public class GroupRepository implements IGroupRepository {
 
   @Override
   public boolean deleteUser(UserId userId, GroupId groupId) {
-    val rowsAffected =
+    final int rowsAffected =
         db.deleteFrom(UserGroups.USER_GROUPS)
             .where(
                 UserGroups.USER_GROUPS

@@ -32,6 +32,7 @@ import com.familymoney.domains.auth.repositories.dtos.UpdateRefreshTokenDto;
 import com.familymoney.domains.auth.repositories.entitites.EmailVerificationEntity;
 import com.familymoney.domains.auth.repositories.entitites.RefreshTokenEntity;
 import com.familymoney.domains.auth.repositories.entitites.TokenFamilyBlacklistEntity;
+import com.familymoney.domains.auth.services.data.TokenPair;
 import com.familymoney.domains.auth.types.AccessToken;
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.auth.types.ExpirationTime;
@@ -60,7 +61,6 @@ import java.time.ZoneOffset;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
-import lombok.val;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -216,9 +216,9 @@ class AuthServiceTest {
 
     @Test
     void succeeds_when_register_user_for_the_first_time() {
-      val username = UserName.fromString(FakeGenerator.username());
-      val email = Email.fromString(FakeGenerator.email());
-      val password = Password.fromString(FakeGenerator.password());
+      final UserName username = UserName.fromString(FakeGenerator.username());
+      final Email email = Email.fromString(FakeGenerator.email());
+      final Password password = Password.fromString(FakeGenerator.password());
 
       when(userRepository.existsByEmailOrUsername(email, username)).thenReturn(false);
       mockUserRepositoryCreate();
@@ -234,9 +234,9 @@ class AuthServiceTest {
 
     @Test
     void throws_when_user_already_exists() {
-      val username = UserName.fromString(FakeGenerator.username());
-      val email = Email.fromString(FakeGenerator.email());
-      val password = Password.fromString(FakeGenerator.password());
+      final UserName username = UserName.fromString(FakeGenerator.username());
+      final Email email = Email.fromString(FakeGenerator.email());
+      final Password password = Password.fromString(FakeGenerator.password());
 
       when(userRepository.existsByEmailOrUsername(email, username)).thenReturn(true);
 
@@ -248,9 +248,9 @@ class AuthServiceTest {
 
     @Test
     void throws_when_user_table_fails() {
-      val username = UserName.fromString(FakeGenerator.username());
-      val email = Email.fromString(FakeGenerator.email());
-      val password = Password.fromString(FakeGenerator.password());
+      final UserName username = UserName.fromString(FakeGenerator.username());
+      final Email email = Email.fromString(FakeGenerator.email());
+      final Password password = Password.fromString(FakeGenerator.password());
 
       when(userRepository.existsByEmailOrUsername(email, username)).thenReturn(false);
       when(userRepository.create(any(CreateUserDto.class))).thenReturn(Optional.empty());
@@ -262,9 +262,9 @@ class AuthServiceTest {
 
     @Test
     void fails_when_email_verification_table() {
-      val username = UserName.fromString(FakeGenerator.username());
-      val email = Email.fromString(FakeGenerator.email());
-      val password = Password.fromString(FakeGenerator.password());
+      final UserName username = UserName.fromString(FakeGenerator.username());
+      final Email email = Email.fromString(FakeGenerator.email());
+      final Password password = Password.fromString(FakeGenerator.password());
 
       when(userRepository.existsByEmailOrUsername(email, username)).thenReturn(false);
       mockUserRepositoryCreate();
@@ -282,8 +282,8 @@ class AuthServiceTest {
 
     @Test
     void returns_tokens_when_called_with_correct_credentials() {
-      val email = Email.fromString(FakeGenerator.email());
-      val password = Password.fromString(FakeGenerator.password());
+      final Email email = Email.fromString(FakeGenerator.email());
+      final Password password = Password.fromString(FakeGenerator.password());
 
       mockUserRepositoryFindByEmail(true, true);
       when(passwordEncoder.verify(eq(password.value()), anyString())).thenReturn(true);
@@ -293,7 +293,7 @@ class AuthServiceTest {
 
       assertThatCode(
               () -> {
-                val tokens = authService.loginUser(email, password);
+                final TokenPair tokens = authService.loginUser(email, password);
                 assertNotNull(tokens);
                 assertNotNull(tokens.accessToken());
                 assertNotNull(tokens.refreshToken());
@@ -305,8 +305,8 @@ class AuthServiceTest {
 
     @Test
     void throws_when_called_with_incorrect_password() {
-      val email = Email.fromString(FakeGenerator.email());
-      val password = Password.fromString(FakeGenerator.password());
+      final Email email = Email.fromString(FakeGenerator.email());
+      final Password password = Password.fromString(FakeGenerator.password());
 
       mockUserRepositoryFindByEmail(true, true);
       when(passwordEncoder.verify(eq(password.value()), anyString())).thenReturn(false);
@@ -316,8 +316,8 @@ class AuthServiceTest {
 
     @Test
     void throws_when_no_user_with_that_email_exists() {
-      val email = Email.fromString(FakeGenerator.email());
-      val password = Password.fromString(FakeGenerator.password());
+      final Email email = Email.fromString(FakeGenerator.email());
+      final Password password = Password.fromString(FakeGenerator.password());
 
       when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
 
@@ -326,8 +326,8 @@ class AuthServiceTest {
 
     @Test
     void throws_when_refresh_token_table_fails() {
-      val email = Email.fromString(FakeGenerator.email());
-      val password = Password.fromString(FakeGenerator.password());
+      final Email email = Email.fromString(FakeGenerator.email());
+      final Password password = Password.fromString(FakeGenerator.password());
 
       mockUserRepositoryFindByEmail(true, true);
       when(passwordEncoder.verify(eq(password.value()), anyString())).thenReturn(true);
@@ -341,8 +341,8 @@ class AuthServiceTest {
 
     @Test
     void throws_when_user_has_not_verified_email() {
-      val email = Email.fromString(FakeGenerator.email());
-      val password = Password.fromString(FakeGenerator.password());
+      final Email email = Email.fromString(FakeGenerator.email());
+      final Password password = Password.fromString(FakeGenerator.password());
 
       mockUserRepositoryFindByEmail(true, false);
 
@@ -351,8 +351,8 @@ class AuthServiceTest {
 
     @Test
     void throws_when_user_is_not_enabled() {
-      val email = Email.fromString(FakeGenerator.email());
-      val password = Password.fromString(FakeGenerator.password());
+      final Email email = Email.fromString(FakeGenerator.email());
+      final Password password = Password.fromString(FakeGenerator.password());
 
       mockUserRepositoryFindByEmail(false, true);
 
@@ -365,7 +365,7 @@ class AuthServiceTest {
 
     @Test
     void succeeds_when_refresh_token_is_valid() {
-      val refreshToken = RefreshToken.generate();
+      final RefreshToken refreshToken = RefreshToken.generate();
 
       mockRefreshTokenFindByToken();
       when(refreshTokenRepository.updateByToken(
@@ -376,7 +376,7 @@ class AuthServiceTest {
 
       assertThatCode(
               () -> {
-                val tokens = authService.refreshTokens(refreshToken);
+                final TokenPair tokens = authService.refreshTokens(refreshToken);
                 assertNotNull(tokens);
                 assertNotNull(tokens.accessToken());
                 assertNotNull(tokens.refreshToken());
@@ -389,7 +389,7 @@ class AuthServiceTest {
 
     @Test
     void throws_when_refresh_token_doesnt_exist() {
-      val refreshToken = RefreshToken.generate();
+      final RefreshToken refreshToken = RefreshToken.generate();
 
       when(refreshTokenRepository.findByToken(any(RefreshToken.class)))
           .thenReturn(Optional.empty());
@@ -399,7 +399,7 @@ class AuthServiceTest {
 
     @Test
     void throws_when_updating_refresh_token_fails() {
-      val refreshToken = RefreshToken.generate();
+      final RefreshToken refreshToken = RefreshToken.generate();
 
       mockRefreshTokenFindByToken();
       when(refreshTokenRepository.updateByToken(any(), any())).thenReturn(false);
@@ -411,7 +411,7 @@ class AuthServiceTest {
 
     @Test
     void throws_when_refresh_token_is_expired() {
-      val refreshToken = RefreshToken.generate();
+      final RefreshToken refreshToken = RefreshToken.generate();
 
       when(refreshTokenRepository.findByToken(any(RefreshToken.class)))
           .thenAnswer(
@@ -434,7 +434,7 @@ class AuthServiceTest {
 
     @Test
     void throws_when_family_is_blacklisted() {
-      val refreshToken = RefreshToken.generate();
+      final RefreshToken refreshToken = RefreshToken.generate();
 
       mockRefreshTokenFindByToken();
       when(tokenFamilyBlacklistRepository.exists(any(TokenFamily.class))).thenReturn(true);
@@ -451,7 +451,7 @@ class AuthServiceTest {
 
     @Test
     void succeeds_when_called_with_valid_email_verification_token() {
-      val emailVerificationToken =
+      final EmailVerificationToken emailVerificationToken =
           EmailVerificationToken.fromString(FakeGenerator.emailVerificationToken());
 
       mockEmailVerificationTokenFindByToken();
@@ -467,7 +467,7 @@ class AuthServiceTest {
 
     @Test
     void throws_when_email_verification_token_doesnt_exist() {
-      val emailVerificationToken =
+      final EmailVerificationToken emailVerificationToken =
           EmailVerificationToken.fromString(FakeGenerator.emailVerificationToken());
 
       when(emailVerificationRepository.findByToken(emailVerificationToken))
@@ -480,7 +480,7 @@ class AuthServiceTest {
 
     @Test
     void throws_when_email_verification_token_is_expired() {
-      val emailVerificationToken =
+      final EmailVerificationToken emailVerificationToken =
           EmailVerificationToken.fromString(FakeGenerator.emailVerificationToken());
 
       when(emailVerificationRepository.findByToken(any(EmailVerificationToken.class)))
@@ -507,7 +507,7 @@ class AuthServiceTest {
 
     @Test
     void throws_when_updating_user_fails() {
-      val emailVerificationToken =
+      final EmailVerificationToken emailVerificationToken =
           EmailVerificationToken.fromString(FakeGenerator.emailVerificationToken());
 
       mockEmailVerificationTokenFindByToken();
@@ -523,7 +523,7 @@ class AuthServiceTest {
 
     @Test
     void throws_when_deleting_email_verification_token_fails() {
-      val emailVerificationToken =
+      final EmailVerificationToken emailVerificationToken =
           EmailVerificationToken.fromString(FakeGenerator.emailVerificationToken());
 
       mockEmailVerificationTokenFindByToken();
@@ -543,7 +543,7 @@ class AuthServiceTest {
 
     @Test
     void sends_when_last_attempt_was_long_time_ago() {
-      val email = Email.fromString(FakeGenerator.email());
+      final Email email = Email.fromString(FakeGenerator.email());
 
       mockUserRepositoryFindByEmail(true, false);
       when(emailVerificationRepository.findByUserId(any(UserId.class)))
@@ -570,7 +570,7 @@ class AuthServiceTest {
 
     @Test
     void throws_when_last_attempt_was_recently() {
-      val email = Email.fromString(FakeGenerator.email());
+      final Email email = Email.fromString(FakeGenerator.email());
 
       mockUserRepositoryFindByEmail(true, false);
       mockEmailVerificationRepositoryFindByUserId();
@@ -589,7 +589,7 @@ class AuthServiceTest {
 
     @Test
     void throws_when_updating_email_verification_token_fails() {
-      val email = Email.fromString(FakeGenerator.email());
+      final Email email = Email.fromString(FakeGenerator.email());
 
       mockUserRepositoryFindByEmail(true, false);
       when(emailVerificationRepository.findByUserId(any(UserId.class)))
@@ -616,7 +616,7 @@ class AuthServiceTest {
 
     @Test
     void throws_when_no_user_with_that_email_exists() {
-      val email = Email.fromString(FakeGenerator.email());
+      final Email email = Email.fromString(FakeGenerator.email());
       when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
 
       assertThrows(EmailNotFoundException.class, () -> authService.resendVerificationEmail(email));
@@ -624,7 +624,7 @@ class AuthServiceTest {
 
     @Test
     void throws_when_user_email_is_already_verified() {
-      val email = Email.fromString(FakeGenerator.email());
+      final Email email = Email.fromString(FakeGenerator.email());
       mockUserRepositoryFindByEmail(true, true);
 
       assertThrows(
@@ -647,7 +647,7 @@ class AuthServiceTest {
 
     @Test
     void succeeds_when_token_is_valid() {
-      val refreshToken = RefreshToken.generate();
+      final RefreshToken refreshToken = RefreshToken.generate();
 
       mockRefreshTokenFindByToken();
       when(refreshTokenRepository.deleteByToken(any(RefreshToken.class))).thenReturn(true);
@@ -662,7 +662,7 @@ class AuthServiceTest {
 
     @Test
     void throws_when_refresh_token_doesnt_exist() {
-      val refreshToken = RefreshToken.generate();
+      final RefreshToken refreshToken = RefreshToken.generate();
 
       when(refreshTokenRepository.findByToken(refreshToken)).thenReturn(Optional.empty());
 
@@ -675,7 +675,7 @@ class AuthServiceTest {
 
     @Test
     void throws_when_refresh_token_is_expired() {
-      val refreshToken = RefreshToken.generate();
+      final RefreshToken refreshToken = RefreshToken.generate();
 
       when(refreshTokenRepository.findByToken(any(RefreshToken.class)))
           .thenAnswer(
@@ -701,7 +701,7 @@ class AuthServiceTest {
 
     @Test
     void throws_when_family_is_blacklisted() {
-      val refreshToken = RefreshToken.generate();
+      final RefreshToken refreshToken = RefreshToken.generate();
 
       mockRefreshTokenFindByToken();
       when(tokenFamilyBlacklistRepository.exists(any(TokenFamily.class))).thenReturn(true);
@@ -715,7 +715,7 @@ class AuthServiceTest {
 
     @Test
     void throws_when_deleting_refresh_token_fails() {
-      val refreshToken = RefreshToken.generate();
+      final RefreshToken refreshToken = RefreshToken.generate();
 
       mockRefreshTokenFindByToken();
       when(refreshTokenRepository.deleteByToken(any(RefreshToken.class))).thenReturn(false);
@@ -728,7 +728,7 @@ class AuthServiceTest {
 
     @Test
     void throws_when_blacklisting_family_token_fails() {
-      val refreshToken = RefreshToken.generate();
+      final RefreshToken refreshToken = RefreshToken.generate();
 
       mockRefreshTokenFindByToken();
       when(refreshTokenRepository.deleteByToken(any(RefreshToken.class))).thenReturn(true);
@@ -747,7 +747,7 @@ class AuthServiceTest {
 
     @Test
     void returns_true_when_family_is_blacklisted() {
-      val family = TokenFamily.generate();
+      final TokenFamily family = TokenFamily.generate();
       when(tokenFamilyBlacklistRepository.exists(family)).thenReturn(true);
 
       assertThat(authService.isFamilyBlacklisted(family)).isTrue();
@@ -755,7 +755,7 @@ class AuthServiceTest {
 
     @Test
     void returns_false_when_family_is_not_blacklisted() {
-      val family = TokenFamily.generate();
+      final TokenFamily family = TokenFamily.generate();
       when(tokenFamilyBlacklistRepository.exists(family)).thenReturn(false);
 
       assertThat(authService.isFamilyBlacklisted(family)).isFalse();

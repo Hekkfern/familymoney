@@ -8,7 +8,6 @@ import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.tables.PasswordResetTokens;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Repository;
 
@@ -52,7 +51,7 @@ public class PasswordResetRepository implements IPasswordResetRepository {
 
   @Override
   public boolean deleteByUserId(final UserId userId) {
-    val rowsAffected =
+    final int rowsAffected =
         db.deleteFrom(PasswordResetTokens.PASSWORD_RESET_TOKENS)
             .where(PasswordResetTokens.PASSWORD_RESET_TOKENS.USER_ID.eq(userId.value()))
             .execute();

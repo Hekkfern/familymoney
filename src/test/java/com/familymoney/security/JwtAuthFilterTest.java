@@ -20,7 +20,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Optional;
-import lombok.val;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,9 +54,9 @@ class JwtAuthFilterTest {
 
   @Test
   void skip_and_no_authenticate_when_invalid_token_in_header() throws Exception {
-    val request = mock(HttpServletRequest.class);
-    val response = mock(HttpServletResponse.class);
-    val chain = mock(FilterChain.class);
+    final HttpServletRequest request = mock(HttpServletRequest.class);
+    final HttpServletResponse response = mock(HttpServletResponse.class);
+    final FilterChain chain = mock(FilterChain.class);
 
     when(jwtUtils.extractTokenFromHeader(any(HttpServletRequest.class)))
         .thenReturn(Optional.empty());
@@ -72,11 +71,11 @@ class JwtAuthFilterTest {
   @Test
   void skip_and_no_authenticate_when_valid_Token_in_header_but_family_is_blacklisted()
       throws Exception {
-    val userId = UserId.generate();
-    val family = TokenFamily.generate();
-    val request = mock(HttpServletRequest.class);
-    val response = mock(HttpServletResponse.class);
-    val chain = mock(FilterChain.class);
+    final UserId userId = UserId.generate();
+    final TokenFamily family = TokenFamily.generate();
+    final HttpServletRequest request = mock(HttpServletRequest.class);
+    final HttpServletResponse response = mock(HttpServletResponse.class);
+    final FilterChain chain = mock(FilterChain.class);
 
     when(jwtUtils.extractTokenFromHeader(any(HttpServletRequest.class)))
         .thenReturn(Optional.of(AccessToken.fromString(VALID_JWT_TOKEN)));
@@ -92,11 +91,11 @@ class JwtAuthFilterTest {
 
   @Test
   void skip_and_no_authenticate_when_valid_Token_in_header_but_no_role() throws Exception {
-    val userId = UserId.generate();
-    val family = TokenFamily.generate();
-    val request = mock(HttpServletRequest.class);
-    val response = mock(HttpServletResponse.class);
-    val chain = mock(FilterChain.class);
+    final UserId userId = UserId.generate();
+    final TokenFamily family = TokenFamily.generate();
+    final HttpServletRequest request = mock(HttpServletRequest.class);
+    final HttpServletResponse response = mock(HttpServletResponse.class);
+    final FilterChain chain = mock(FilterChain.class);
 
     when(jwtUtils.extractTokenFromHeader(any(HttpServletRequest.class)))
         .thenReturn(Optional.of(AccessToken.fromString(VALID_JWT_TOKEN)));
@@ -113,11 +112,11 @@ class JwtAuthFilterTest {
 
   @Test
   void authenticate_when_valid_token_in_header_and_role_is_present() throws Exception {
-    val userId = UserId.generate();
-    val family = TokenFamily.generate();
-    val request = mock(HttpServletRequest.class);
-    val response = mock(HttpServletResponse.class);
-    val chain = mock(FilterChain.class);
+    final UserId userId = UserId.generate();
+    final TokenFamily family = TokenFamily.generate();
+    final HttpServletRequest request = mock(HttpServletRequest.class);
+    final HttpServletResponse response = mock(HttpServletResponse.class);
+    final FilterChain chain = mock(FilterChain.class);
 
     when(jwtUtils.extractTokenFromHeader(any(HttpServletRequest.class)))
         .thenReturn(Optional.of(AccessToken.fromString(VALID_JWT_TOKEN)));

@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.familymoney.domains.auth.repositories.EmailVerificationRepository;
 import com.familymoney.domains.auth.repositories.dtos.CreateEmailVerificationDto;
 import com.familymoney.domains.auth.repositories.dtos.UpdateEmailVerificationTokenDto;
+import com.familymoney.domains.auth.repositories.entitites.EmailVerificationEntity;
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.auth.types.ExpirationTime;
 import com.familymoney.domains.users.types.Email;
@@ -15,7 +16,7 @@ import com.familymoney.domains.users.types.UserName;
 import com.familymoney.testutils.DatabaseCrud;
 import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;
-import lombok.val;
+import java.util.Optional;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,8 +47,8 @@ class EmailVerificationRepositoryTest {
   }
 
   private UserId insertRandomUser() {
-    val userId = UserId.generate();
-    val now = Instant.ofEpochSecond(1778755330);
+    final UserId userId = UserId.generate();
+    final Instant now = Instant.ofEpochSecond(1778755330);
     DatabaseCrud.insertUser(
         dslContext,
         userId,
@@ -64,16 +65,16 @@ class EmailVerificationRepositoryTest {
 
   @Test
   void create_persists_email_verification_token_record() {
-    val userId = insertRandomUser();
-    val token = EmailVerificationToken.generate();
-    val expiresAt = ExpirationTime.of(Instant.now().plusSeconds(3600));
+    final UserId userId = insertRandomUser();
+    final EmailVerificationToken token = EmailVerificationToken.generate();
+    final ExpirationTime expiresAt = ExpirationTime.of(Instant.now().plusSeconds(3600));
 
-    val tokenCreatedOpt =
+    final Optional<EmailVerificationEntity> tokenCreatedOpt =
         emailVerificationRepository.create(
             new CreateEmailVerificationDto(userId, token, expiresAt));
 
     assertThat(tokenCreatedOpt).isPresent();
-    val tokenCreated = tokenCreatedOpt.get();
+    final EmailVerificationEntity tokenCreated = tokenCreatedOpt.get();
     assertThat(tokenCreated.userId()).isEqualTo(userId);
     assertThat(tokenCreated.token()).isEqualTo(token);
     assertThat(tokenCreated.expiresAt()).isEqualTo(expiresAt);
@@ -82,7 +83,7 @@ class EmailVerificationRepositoryTest {
 
   @Test
   void create_throws_when_user_does_not_exist() {
-    val dto =
+    final CreateEmailVerificationDto dto =
         new CreateEmailVerificationDto(
             UserId.generate(),
             EmailVerificationToken.generate(),
@@ -93,29 +94,31 @@ class EmailVerificationRepositoryTest {
 
   @Test
   void create_throws_when_user_id_is_duplicate() {
-    val userId = insertRandomUser();
-    val now = Instant.now();
-    val expiration = ExpirationTime.of(now.plusSeconds(3600));
+    final UserId userId = insertRandomUser();
+    final Instant now = Instant.now();
+    final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
 
     DatabaseCrud.insertEmailVerificationToken(
         dslContext, userId, EmailVerificationToken.generate(), now, expiration);
 
-    val dto = new CreateEmailVerificationDto(userId, EmailVerificationToken.generate(), expiration);
+    final CreateEmailVerificationDto dto =
+        new CreateEmailVerificationDto(userId, EmailVerificationToken.generate(), expiration);
     assertThatThrownBy(() -> emailVerificationRepository.create(dto))
         .isInstanceOf(DuplicateKeyException.class);
   }
 
   @Test
   void create_throws_when_token_is_duplicate() {
-    val userId1 = insertRandomUser();
-    val userId2 = insertRandomUser();
-    val token = EmailVerificationToken.generate();
-    val now = Instant.now();
-    val expiration = ExpirationTime.of(now.plusSeconds(3600));
+    final UserId userId1 = insertRandomUser();
+    final UserId userId2 = insertRandomUser();
+    final EmailVerificationToken token = EmailVerificationToken.generate();
+    final Instant now = Instant.now();
+    final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
 
     DatabaseCrud.insertEmailVerificationToken(dslContext, userId1, token, now, expiration);
 
-    val dto = new CreateEmailVerificationDto(userId2, token, expiration);
+    final CreateEmailVerificationDto dto =
+        new CreateEmailVerificationDto(userId2, token, expiration);
     assertThatThrownBy(() -> emailVerificationRepository.create(dto))
         .isInstanceOf(DuplicateKeyException.class);
   }
@@ -126,16 +129,17 @@ class EmailVerificationRepositoryTest {
 
   @Test
   void findByUserId_returns_token_when_it_exists() {
-    val userId = insertRandomUser();
-    val token = EmailVerificationToken.generate();
-    val now = Instant.now();
-    val expiration = ExpirationTime.of(now.plusSeconds(3600));
+    final UserId userId = insertRandomUser();
+    final EmailVerificationToken token = EmailVerificationToken.generate();
+    final Instant now = Instant.now();
+    final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
     DatabaseCrud.insertEmailVerificationToken(dslContext, userId, token, now, expiration);
 
-    val tokenFoundOpt = emailVerificationRepository.findByUserId(userId);
+    final Optional<EmailVerificationEntity> tokenFoundOpt =
+        emailVerificationRepository.findByUserId(userId);
 
     assertThat(tokenFoundOpt).isPresent();
-    val tokenFound = tokenFoundOpt.get();
+    final EmailVerificationEntity tokenFound = tokenFoundOpt.get();
     assertThat(tokenFound.userId()).isEqualTo(userId);
     assertThat(tokenFound.token()).isEqualTo(token);
     assertThat(tokenFound.expiresAt()).isEqualTo(expiration);
@@ -145,7 +149,8 @@ class EmailVerificationRepositoryTest {
 
   @Test
   void findByUserId_returns_empty_when_it_does_not_exist() {
-    val found = emailVerificationRepository.findByUserId(UserId.generate());
+    final Optional<EmailVerificationEntity> found =
+        emailVerificationRepository.findByUserId(UserId.generate());
 
     assertThat(found).isEmpty();
   }
@@ -156,16 +161,17 @@ class EmailVerificationRepositoryTest {
 
   @Test
   void findByToken_returns_token_when_it_exists() {
-    val userId = insertRandomUser();
-    val token = EmailVerificationToken.generate();
-    val now = Instant.now();
-    val expiration = ExpirationTime.of(now.plusSeconds(3600));
+    final UserId userId = insertRandomUser();
+    final EmailVerificationToken token = EmailVerificationToken.generate();
+    final Instant now = Instant.now();
+    final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
     DatabaseCrud.insertEmailVerificationToken(dslContext, userId, token, now, expiration);
 
-    val tokenFoundOpt = emailVerificationRepository.findByToken(token);
+    final Optional<EmailVerificationEntity> tokenFoundOpt =
+        emailVerificationRepository.findByToken(token);
 
     assertThat(tokenFoundOpt).isPresent();
-    val tokenFound = tokenFoundOpt.get();
+    final EmailVerificationEntity tokenFound = tokenFoundOpt.get();
     assertThat(tokenFound.userId()).isEqualTo(userId);
     assertThat(tokenFound.token()).isEqualTo(token);
     assertThat(tokenFound.expiresAt()).isEqualTo(expiration);
@@ -175,7 +181,8 @@ class EmailVerificationRepositoryTest {
 
   @Test
   void findByToken_returns_empty_when_it_does_not_exist() {
-    val found = emailVerificationRepository.findByToken(EmailVerificationToken.generate());
+    final Optional<EmailVerificationEntity> found =
+        emailVerificationRepository.findByToken(EmailVerificationToken.generate());
 
     assertThat(found).isEmpty();
   }
@@ -186,19 +193,21 @@ class EmailVerificationRepositoryTest {
 
   @Test
   void updateByUserId_updates_row_and_returns_true_when_it_succeeds() {
-    val userId = insertRandomUser();
-    val token = EmailVerificationToken.generate();
-    val now = Instant.now();
-    val expiration = ExpirationTime.of(now.plusSeconds(3600));
+    final UserId userId = insertRandomUser();
+    final EmailVerificationToken token = EmailVerificationToken.generate();
+    final Instant now = Instant.now();
+    final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
     DatabaseCrud.insertEmailVerificationToken(dslContext, userId, token, now, expiration);
 
-    val newToken = EmailVerificationToken.generate();
-    val dto = UpdateEmailVerificationTokenDto.builder().token(newToken).build();
+    final EmailVerificationToken newToken = EmailVerificationToken.generate();
+    final UpdateEmailVerificationTokenDto dto =
+        UpdateEmailVerificationTokenDto.builder().token(newToken).build();
 
-    val updated = emailVerificationRepository.updateByUserId(userId, dto);
+    final boolean updated = emailVerificationRepository.updateByUserId(userId, dto);
 
     assertThat(updated).isTrue();
-    val tokenFound = emailVerificationRepository.findByUserId(userId).orElseThrow();
+    final EmailVerificationEntity tokenFound =
+        emailVerificationRepository.findByUserId(userId).orElseThrow();
     assertThat(tokenFound.userId()).isEqualTo(userId);
     assertThat(tokenFound.token()).isEqualTo(newToken);
     assertThat(tokenFound.expiresAt()).isEqualTo(expiration);
@@ -207,18 +216,20 @@ class EmailVerificationRepositoryTest {
 
   @Test
   void updateByUserId_does_nothing_and_returns_false_when_dto_is_all_null() {
-    val userId = insertRandomUser();
-    val token = EmailVerificationToken.generate();
-    val now = Instant.now();
-    val expiration = ExpirationTime.of(now.plusSeconds(3600));
+    final UserId userId = insertRandomUser();
+    final EmailVerificationToken token = EmailVerificationToken.generate();
+    final Instant now = Instant.now();
+    final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
     DatabaseCrud.insertEmailVerificationToken(dslContext, userId, token, now, expiration);
 
-    val nullDto = UpdateEmailVerificationTokenDto.builder().build();
+    final UpdateEmailVerificationTokenDto nullDto =
+        UpdateEmailVerificationTokenDto.builder().build();
 
-    val updated = emailVerificationRepository.updateByUserId(userId, nullDto);
+    final boolean updated = emailVerificationRepository.updateByUserId(userId, nullDto);
 
     assertThat(updated).isTrue();
-    val tokenFound = emailVerificationRepository.findByUserId(userId).orElseThrow();
+    final EmailVerificationEntity tokenFound =
+        emailVerificationRepository.findByUserId(userId).orElseThrow();
     assertThat(tokenFound.userId()).isEqualTo(userId);
     assertThat(tokenFound.token()).isEqualTo(token);
     assertThat(tokenFound.expiresAt()).isEqualTo(expiration);
@@ -227,10 +238,10 @@ class EmailVerificationRepositoryTest {
 
   @Test
   void updateByUserId_does_nothing_and_returns_false_when_user_does_not_exist() {
-    val update =
+    final UpdateEmailVerificationTokenDto update =
         UpdateEmailVerificationTokenDto.builder().token(EmailVerificationToken.generate()).build();
 
-    val updated = emailVerificationRepository.updateByUserId(UserId.generate(), update);
+    final boolean updated = emailVerificationRepository.updateByUserId(UserId.generate(), update);
 
     assertThat(updated).isFalse();
   }
@@ -241,13 +252,13 @@ class EmailVerificationRepositoryTest {
 
   @Test
   void deleteByUserId_removes_tokens() {
-    val userId = insertRandomUser();
-    val token = EmailVerificationToken.generate();
-    val now = Instant.now();
-    val expiration = ExpirationTime.of(now.plusSeconds(3600));
+    final UserId userId = insertRandomUser();
+    final EmailVerificationToken token = EmailVerificationToken.generate();
+    final Instant now = Instant.now();
+    final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
     DatabaseCrud.insertEmailVerificationToken(dslContext, userId, token, now, expiration);
 
-    val deleted = emailVerificationRepository.deleteByUserId(userId);
+    final boolean deleted = emailVerificationRepository.deleteByUserId(userId);
 
     assertThat(deleted).isTrue();
     assertThat(emailVerificationRepository.findByToken(token)).isEmpty();
@@ -255,7 +266,7 @@ class EmailVerificationRepositoryTest {
 
   @Test
   void deleteByUserId_returns_false_when_missing() {
-    val deleted = emailVerificationRepository.deleteByUserId(UserId.generate());
+    final boolean deleted = emailVerificationRepository.deleteByUserId(UserId.generate());
 
     assertThat(deleted).isFalse();
   }

@@ -9,7 +9,6 @@ import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.tables.GroupInvitations;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Repository;
 
@@ -62,7 +61,7 @@ public class GroupInvitationRepository implements IGroupInvitationRepository {
 
   @Override
   public boolean deleteByToken(GroupInvitationToken token) {
-    val rowsAffected =
+    final int rowsAffected =
         db.deleteFrom(GroupInvitations.GROUP_INVITATIONS)
             .where(GroupInvitations.GROUP_INVITATIONS.TOKEN.eq(token.value()))
             .execute();

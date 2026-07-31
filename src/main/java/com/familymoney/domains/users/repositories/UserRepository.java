@@ -11,9 +11,11 @@ import com.familymoney.generated.tables.Users;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import org.jooq.DSLContext;
 import org.jooq.Field;
+import org.jooq.Record;
+import org.jooq.Result;
+import org.jooq.SortField;
 import org.jooq.impl.DSL;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -124,7 +126,7 @@ public class UserRepository implements IUserRepository {
 
   @Override
   public boolean updateById(final UserId id, final UpdateUserDto data) {
-    val rowsAffected =
+    final int rowsAffected =
         db.update(Users.USERS)
             .set(
                 Users.USERS.USERNAME,
@@ -153,15 +155,16 @@ public class UserRepository implements IUserRepository {
 
   @Override
   public boolean deleteById(final UserId id) {
-    val rowsAffected = db.deleteFrom(Users.USERS).where(Users.USERS.ID.eq(id.value())).execute();
+    final int rowsAffected =
+        db.deleteFrom(Users.USERS).where(Users.USERS.ID.eq(id.value())).execute();
     return rowsAffected > 0;
   }
 
   @Override
   public Page<UserEntity> getAll(final Pageable pageable) {
-    val totalField = DSL.count().over().as("total_count");
+    final Field<Integer> totalField = DSL.count().over().as("total_count");
 
-    val orderFields =
+    final List<SortField<?>> orderFields =
         pageable.getSort().stream()
             .map(
                 order -> {
@@ -174,10 +177,10 @@ public class UserRepository implements IUserRepository {
                 })
             .toList();
 
-    val effectiveOrder =
+    final List<SortField<?>> effectiveOrder =
         orderFields.isEmpty() ? List.of(Users.USERS.CREATED_AT.desc()) : orderFields;
 
-    val records =
+    final Result<? extends Record> records =
         db.select(
                 Users.USERS.ID,
                 Users.USERS.USERNAME,
@@ -194,8 +197,8 @@ public class UserRepository implements IUserRepository {
             .offset(pageable.getOffset())
             .fetch();
 
-    val total = records.isEmpty() ? 0L : records.getFirst().get("total_count", Long.class);
-    val data = records.map(UserJooqMapper::toEntity);
+    final long total = records.isEmpty() ? 0L : records.getFirst().get("total_count", Long.class);
+    final List<UserEntity> data = records.map(UserJooqMapper::toEntity);
 
     return new PageImpl<>(data, pageable, total);
   }

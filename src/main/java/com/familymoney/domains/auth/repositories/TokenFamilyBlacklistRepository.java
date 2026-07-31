@@ -7,7 +7,6 @@ import com.familymoney.domains.auth.types.TokenFamily;
 import com.familymoney.generated.tables.TokenfamilyBlacklist;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Repository;
 
@@ -39,7 +38,7 @@ public class TokenFamilyBlacklistRepository implements ITokenFamilyBlacklistRepo
 
   @Override
   public boolean deleteByFamily(final TokenFamily family) {
-    val rows =
+    final int rows =
         db.deleteFrom(TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST)
             .where(TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST.FAMILY.eq(family.value()))
             .execute();

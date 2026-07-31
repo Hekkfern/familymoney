@@ -12,7 +12,7 @@ import com.familymoney.domains.users.types.UserName;
 import com.familymoney.testutils.DatabaseCrud;
 import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;
-import lombok.val;
+import java.util.Optional;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,8 +42,8 @@ class RoleRepositoryTest {
   }
 
   private UserId insertRandomUser() {
-    val userId = UserId.generate();
-    val now = Instant.ofEpochSecond(1778755330);
+    final UserId userId = UserId.generate();
+    final Instant now = Instant.ofEpochSecond(1778755330);
     DatabaseCrud.insertUser(
         dslContext,
         userId,
@@ -60,29 +60,29 @@ class RoleRepositoryTest {
 
   @Test
   void getRoleByUserId_returns_empty_when_not_role_assigned() {
-    val userId = insertRandomUser();
+    final UserId userId = insertRandomUser();
 
-    val role = roleRepository.getRoleByUserId(userId);
+    final Optional<Role> role = roleRepository.getRoleByUserId(userId);
 
     assertThat(role).isEmpty();
   }
 
   @Test
   void getRoleByUserId_returns_empty_when_user_missing() {
-    val missingUserId = UserId.generate();
+    final UserId missingUserId = UserId.generate();
 
-    val role = roleRepository.getRoleByUserId(missingUserId);
+    final Optional<Role> role = roleRepository.getRoleByUserId(missingUserId);
 
     assertThat(role).isEmpty();
   }
 
   @Test
   void getRoleForUserId_returns_role_when_role_assigned() {
-    val userId = insertRandomUser();
-    val updated = roleRepository.setRoleForUserId(userId, Role.USER);
+    final UserId userId = insertRandomUser();
+    final boolean updated = roleRepository.setRoleForUserId(userId, Role.USER);
     assertThat(updated).isTrue();
 
-    val role = roleRepository.getRoleByUserId(userId);
+    final Optional<Role> role = roleRepository.getRoleByUserId(userId);
 
     assertThat(role).contains(Role.USER);
   }
@@ -93,10 +93,10 @@ class RoleRepositoryTest {
 
   @Test
   void setRoleForUserId_updates_existing_role() {
-    val userId = insertRandomUser();
+    final UserId userId = insertRandomUser();
     roleRepository.setRoleForUserId(userId, Role.USER);
 
-    val updated = roleRepository.setRoleForUserId(userId, Role.ADMIN);
+    final boolean updated = roleRepository.setRoleForUserId(userId, Role.ADMIN);
 
     assertThat(updated).isTrue();
     assertThat(roleRepository.getRoleByUserId(userId)).contains(Role.ADMIN);
@@ -104,7 +104,7 @@ class RoleRepositoryTest {
 
   @Test
   void setRoleForUserId_throws_when_user_missing() {
-    val missingUserId = UserId.generate();
+    final UserId missingUserId = UserId.generate();
 
     assertThatThrownBy(() -> roleRepository.setRoleForUserId(missingUserId, Role.USER))
         .isInstanceOf(DataIntegrityViolationException.class);

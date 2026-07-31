@@ -5,8 +5,8 @@ import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.UserName;
 import com.familymoney.properties.AppProperties;
 import com.familymoney.properties.MailSenderProperties;
+import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -27,8 +27,8 @@ public class EmailSenderService implements IEmailSenderService {
       final Email toEmail,
       final UserName username,
       final EmailVerificationToken verificationToken) {
-    val mimeMessage = mailSender.createMimeMessage();
-    val mimeMessageHelper = new MimeMessageHelper(mimeMessage, "UTF-8");
+    final MimeMessage mimeMessage = mailSender.createMimeMessage();
+    final MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, "UTF-8");
 
     try {
       mimeMessageHelper.setFrom(
@@ -36,14 +36,15 @@ public class EmailSenderService implements IEmailSenderService {
       mimeMessageHelper.setTo(toEmail.value());
       mimeMessageHelper.setSubject("Email Verification");
 
-      val context = new Context();
+      final Context context = new Context();
       context.setVariable("userName", username.value());
       context.setVariable("appName", appProperties.name());
       context.setVariable(
           "verificationUrl",
           String.format("https://miticketdecomida.com/verify-email/%s", verificationToken.value()));
-      val VERIFICATION_EMAIL_TEMPLATE_NAME = "email-verification";
-      val processedString = htmlTemplateEngine.process(VERIFICATION_EMAIL_TEMPLATE_NAME, context);
+      final String VERIFICATION_EMAIL_TEMPLATE_NAME = "email-verification";
+      final String processedString =
+          htmlTemplateEngine.process(VERIFICATION_EMAIL_TEMPLATE_NAME, context);
       mimeMessageHelper.setText(processedString, true);
 
       mailSender.send(mimeMessage);

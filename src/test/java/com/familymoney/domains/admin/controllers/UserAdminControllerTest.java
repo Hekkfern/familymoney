@@ -17,7 +17,6 @@ import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
-import lombok.val;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,14 +49,14 @@ class UserAdminControllerTest {
 
     @Test
     void UserAdminController_GetUserInfo_Successful() {
-      val username = UserName.fromString(FakeGenerator.username());
-      val email = Email.fromString(FakeGenerator.email());
-      val userId = UserId.fromUuid(UUID.randomUUID());
+      final UserName username = UserName.fromString(FakeGenerator.username());
+      final Email email = Email.fromString(FakeGenerator.email());
+      final UserId userId = UserId.fromUuid(UUID.randomUUID());
       when(userService.getUserData(any()))
           .thenReturn(Optional.of(new UserData(userId, username, email, now, true, true)));
       when(userService.getUserRole(any())).thenReturn(Optional.of(Role.ADMIN));
 
-      val data =
+      final GetUserResponseDto data =
           client
               .get()
               .uri(AdminControllerUriFactory.getUserPath(userId))

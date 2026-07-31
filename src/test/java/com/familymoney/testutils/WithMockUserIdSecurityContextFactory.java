@@ -2,8 +2,8 @@ package com.familymoney.testutils;
 
 import com.familymoney.domains.users.types.UserId;
 import java.util.List;
-import lombok.val;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,10 +16,12 @@ public class WithMockUserIdSecurityContextFactory
 
   @Override
   public SecurityContext createSecurityContext(WithMockUserId annotation) {
-    val context = SecurityContextHolder.createEmptyContext();
-    val userId = UserId.fromString(annotation.userId());
-    val authorities = List.of(new SimpleGrantedAuthority(ROLE_PREFIX + annotation.role()));
-    val auth = new UsernamePasswordAuthenticationToken(userId, null, authorities);
+    final SecurityContext context = SecurityContextHolder.createEmptyContext();
+    final UserId userId = UserId.fromString(annotation.userId());
+    final List<GrantedAuthority> authorities =
+        List.of(new SimpleGrantedAuthority(ROLE_PREFIX + annotation.role()));
+    final UsernamePasswordAuthenticationToken auth =
+        new UsernamePasswordAuthenticationToken(userId, null, authorities);
     context.setAuthentication(auth);
     return context;
   }

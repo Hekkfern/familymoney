@@ -16,7 +16,6 @@ import com.familymoney.properties.MailSenderProperties;
 import com.familymoney.testutils.FakeGenerator;
 import jakarta.mail.Message;
 import jakarta.mail.internet.MimeMessage;
-import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,17 +50,18 @@ class EmailSenderServiceTest {
 
   @Test
   void sendEmailVerificationEmail_sends_email_successfully() {
-    val email = Email.fromString(FakeGenerator.email());
-    val username = UserName.fromString(FakeGenerator.username());
-    val token = EmailVerificationToken.fromString(FakeGenerator.emailVerificationToken());
+    final Email email = Email.fromString(FakeGenerator.email());
+    final UserName username = UserName.fromString(FakeGenerator.username());
+    final EmailVerificationToken token =
+        EmailVerificationToken.fromString(FakeGenerator.emailVerificationToken());
 
-    val messageCaptor = ArgumentCaptor.forClass(MimeMessage.class);
+    final ArgumentCaptor<MimeMessage> messageCaptor = ArgumentCaptor.forClass(MimeMessage.class);
 
     emailSenderService.sendEmailVerificationEmail(email, username, token);
 
     verify(javaMailSender).send(messageCaptor.capture());
 
-    val sentMessage = messageCaptor.getValue();
+    final MimeMessage sentMessage = messageCaptor.getValue();
     assertNotNull(sentMessage);
     assertThatCode(
             () ->

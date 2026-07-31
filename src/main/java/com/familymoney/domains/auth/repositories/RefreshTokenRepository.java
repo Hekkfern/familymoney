@@ -7,9 +7,9 @@ import com.familymoney.domains.auth.repositories.mappers.RefreshTokenJooqMapper;
 import com.familymoney.domains.auth.types.RefreshToken;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.tables.RefreshTokens;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 import org.springframework.stereotype.Repository;
@@ -65,8 +65,9 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
 
   @Override
   public boolean updateByToken(final RefreshToken token, final UpdateRefreshTokenDto data) {
-    val expiresAtVal = data.expiresAt() != null ? data.expiresAt().toOffsetDateTime() : null;
-    val rowsAffected =
+    final OffsetDateTime expiresAtVal =
+        data.expiresAt() != null ? data.expiresAt().toOffsetDateTime() : null;
+    final int rowsAffected =
         db.update(RefreshTokens.REFRESH_TOKENS)
             .set(
                 RefreshTokens.REFRESH_TOKENS.TOKEN,
@@ -83,8 +84,9 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
 
   @Override
   public boolean updateByUserId(final UserId userId, final UpdateRefreshTokenDto data) {
-    val expiresAtVal = data.expiresAt() != null ? data.expiresAt().toOffsetDateTime() : null;
-    val rowsAffected =
+    final OffsetDateTime expiresAtVal =
+        data.expiresAt() != null ? data.expiresAt().toOffsetDateTime() : null;
+    final int rowsAffected =
         db.update(RefreshTokens.REFRESH_TOKENS)
             .set(
                 RefreshTokens.REFRESH_TOKENS.TOKEN,
@@ -101,7 +103,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
 
   @Override
   public boolean deleteByToken(RefreshToken token) {
-    val rows =
+    final int rows =
         db.delete(RefreshTokens.REFRESH_TOKENS)
             .where(RefreshTokens.REFRESH_TOKENS.TOKEN.eq(token.value()))
             .execute();

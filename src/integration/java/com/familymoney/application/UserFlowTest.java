@@ -15,7 +15,6 @@ import com.familymoney.domains.users.controllers.dtos.GetMyUserResponseDto;
 import com.familymoney.testutils.AuthControllerUriFactory;
 import com.familymoney.testutils.FakeGenerator;
 import com.familymoney.testutils.UserControllerUriFactory;
-import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -58,7 +57,8 @@ class UserFlowTest {
    */
   private String registerAndLoginUser(String username, String email, String password) {
     // Mock email sender
-    val verificationTokenCaptor = ArgumentCaptor.forClass(EmailVerificationToken.class);
+    final ArgumentCaptor<EmailVerificationToken> verificationTokenCaptor =
+        ArgumentCaptor.forClass(EmailVerificationToken.class);
 
     // register the new user
     client
@@ -74,7 +74,7 @@ class UserFlowTest {
     // get the captured email verification token
     verify(emailSenderService)
         .sendEmailVerificationEmail(any(), any(), verificationTokenCaptor.capture());
-    val verificationToken = verificationTokenCaptor.getValue();
+    final EmailVerificationToken verificationToken = verificationTokenCaptor.getValue();
 
     // verify email
     client
@@ -87,7 +87,7 @@ class UserFlowTest {
         .expectBody()
         .isEmpty();
 
-    val loginResponse =
+    final LoginResponseDto loginResponse =
         client
             .post()
             .uri(AuthControllerUriFactory.getLoginPath())
@@ -111,12 +111,12 @@ class UserFlowTest {
   @Test
   void UserFlow_Get_user_data_when_logged_in() {
     // Register and login user
-    val username = FakeGenerator.username();
-    val email = FakeGenerator.email();
-    val password = FakeGenerator.password();
-    val accessToken = registerAndLoginUser(username, email, password);
+    final String username = FakeGenerator.username();
+    final String email = FakeGenerator.email();
+    final String password = FakeGenerator.password();
+    final String accessToken = registerAndLoginUser(username, email, password);
     // Get user data
-    val userDataResponse =
+    final GetMyUserResponseDto userDataResponse =
         client
             .get()
             .uri(UserControllerUriFactory.getMePath())

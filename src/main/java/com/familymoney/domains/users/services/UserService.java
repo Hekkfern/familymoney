@@ -4,6 +4,7 @@ import com.familymoney.domains.users.repositories.IRoleRepository;
 import com.familymoney.domains.users.repositories.IUserRepository;
 import com.familymoney.domains.users.repositories.dtos.CreateUserDto;
 import com.familymoney.domains.users.repositories.dtos.UpdateUserDto;
+import com.familymoney.domains.users.repositories.entitites.UserEntity;
 import com.familymoney.domains.users.services.data.UpdateUserData;
 import com.familymoney.domains.users.services.data.UserData;
 import com.familymoney.domains.users.services.mappers.UserDataMapper;
@@ -16,7 +17,6 @@ import com.familymoney.security.UserPasswordEncoder;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -33,7 +33,7 @@ public class UserService implements IUserService {
 
   @Override
   public Optional<UserData> getUserData(final UserId userId) {
-    val userOpt = userRepository.findById(userId);
+    final Optional<UserEntity> userOpt = userRepository.findById(userId);
     return userOpt.map(UserDataMapper::fromDbo);
   }
 
@@ -85,8 +85,8 @@ public class UserService implements IUserService {
       return;
     }
     // Create user
-    val userId = UserId.generate();
-    val userDbOpt =
+    final UserId userId = UserId.generate();
+    final Optional<UserEntity> userDbOpt =
         userRepository.create(
             new CreateUserDto(
                 userId, username, email, passwordEncoder.encode(password.value()), true, true));

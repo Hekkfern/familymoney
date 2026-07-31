@@ -12,7 +12,6 @@ import com.familymoney.domains.auth.services.IEmailSenderService;
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.testutils.AuthControllerUriFactory;
 import com.familymoney.testutils.FakeGenerator;
-import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -55,7 +54,8 @@ class AdminFlowTest {
    */
   private String registerAndLoginUser(String username, String email, String password) {
     // Mock email sender
-    val verificationTokenCaptor = ArgumentCaptor.forClass(EmailVerificationToken.class);
+    final ArgumentCaptor<EmailVerificationToken> verificationTokenCaptor =
+        ArgumentCaptor.forClass(EmailVerificationToken.class);
 
     // register the new user
     client
@@ -71,7 +71,7 @@ class AdminFlowTest {
     // get the captured email verification token
     verify(emailSenderService)
         .sendEmailVerificationEmail(any(), any(), verificationTokenCaptor.capture());
-    val verificationToken = verificationTokenCaptor.getValue();
+    final EmailVerificationToken verificationToken = verificationTokenCaptor.getValue();
 
     // verify email
     client
@@ -84,7 +84,7 @@ class AdminFlowTest {
         .expectBody()
         .isEmpty();
 
-    val loginResponse =
+    final LoginResponseDto loginResponse =
         client
             .post()
             .uri(AuthControllerUriFactory.getLoginPath())
@@ -108,10 +108,10 @@ class AdminFlowTest {
   @Test
   void AdminFlow_Normal_User_Tries_To_Access_Admin_Endpoints_Should_Fail() {
     // Register and login a non-admin user
-    val username = FakeGenerator.username();
-    val email = FakeGenerator.email();
-    val password = FakeGenerator.password();
-    val accessToken = registerAndLoginUser(username, email, password);
+    final String username = FakeGenerator.username();
+    final String email = FakeGenerator.email();
+    final String password = FakeGenerator.password();
+    final String accessToken = registerAndLoginUser(username, email, password);
     // Get data from another user
     // TODO
   }

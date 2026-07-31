@@ -9,7 +9,6 @@ import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.tables.EmailVerificationTokens;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 import org.springframework.stereotype.Repository;
@@ -68,7 +67,7 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
 
   @Override
   public boolean updateByUserId(final UserId userId, final UpdateEmailVerificationTokenDto data) {
-    val rowsAffected =
+    final int rowsAffected =
         db.update(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS)
             .set(
                 EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN,
@@ -87,7 +86,7 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
 
   @Override
   public boolean deleteByUserId(final UserId userId) {
-    val rowsAffected =
+    final int rowsAffected =
         db.deleteFrom(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS)
             .where(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.USER_ID.eq(userId.value()))
             .execute();

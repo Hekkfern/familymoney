@@ -17,16 +17,21 @@ import com.familymoney.domains.transactions.controllers.mappers.GetInvitationTok
 import com.familymoney.domains.transactions.controllers.mappers.GetUsersInGroupResponseMapper;
 import com.familymoney.domains.transactions.controllers.mappers.UpdateGroupRequestMapper;
 import com.familymoney.domains.transactions.services.ITransactionGroupService;
+import com.familymoney.domains.transactions.services.data.GroupData;
 import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import com.familymoney.domains.transactions.types.GroupName;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.testutils.AuthenticationUtils;
+import com.familymoney.testutils.AuthorizedUser;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import javax.money.Monetary;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
+import org.javamoney.moneta.Money;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -39,9 +44,9 @@ public class GroupController implements IGroupController {
   @Override
   public CreateGroupResponseDto createGroup(final CreateGroupRequestDto request) {
     // Get user ID from security context (validated)
-    val user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Create group
-    val groupId =
+    final GroupId groupId =
         transactionGroupService.createGroup(
             GroupName.fromString(request.name()),
             Description.of(request.description().trim()),
@@ -54,9 +59,9 @@ public class GroupController implements IGroupController {
   @Override
   public GetGroupsResponseDto getGroupsOfUser(final Pageable pageable) {
     // Get user ID from security context (validated)
-    val user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Get groups of user
-    val groupPages = transactionGroupService.getGroupsByUser(user.id(), pageable);
+    final Page<GroupData> groupPages = transactionGroupService.getGroupsByUser(user.id(), pageable);
     // Generate response
     return GetGroupsResponseDto.builder()
         .groups(groupPages.getContent().stream().map(GetGroupResponseMapper::toDto).toList())
@@ -66,7 +71,7 @@ public class GroupController implements IGroupController {
   @Override
   public void deleteGroup(UUID groupId) {
     // Get user ID from security context (validated)
-    val user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Delete group
     transactionGroupService.deleteGroup(GroupId.fromUuid(groupId), user.id());
   }
@@ -74,9 +79,10 @@ public class GroupController implements IGroupController {
   @Override
   public GetGroupResponseDto getGroupInfo(UUID groupId) {
     // Get user ID from security context (validated)
-    val user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Get group info
-    val groupData = transactionGroupService.getGroupInfo(GroupId.fromUuid(groupId), user.id());
+    final GroupData groupData =
+        transactionGroupService.getGroupInfo(GroupId.fromUuid(groupId), user.id());
     // Generate response
     return GetGroupResponseMapper.toDto(groupData);
   }
@@ -84,7 +90,7 @@ public class GroupController implements IGroupController {
   @Override
   public void updateGroupInfo(UUID groupId, UpdateGroupRequestDto request) {
     // Get user ID from security context (validated)
-    val user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Update group info
     transactionGroupService.updateGroupInfo(
         GroupId.fromUuid(groupId), user.id(), UpdateGroupRequestMapper.fromDto(request));
@@ -93,9 +99,10 @@ public class GroupController implements IGroupController {
   @Override
   public GetInvitationTokenResponseDto getInvitationToken(UUID groupId) {
     // Get user ID from security context (validated)
-    val user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Get invitation token
-    val token = transactionGroupService.getInvitationToken(GroupId.fromUuid(groupId), user.id());
+    final GroupInvitationToken token =
+        transactionGroupService.getInvitationToken(GroupId.fromUuid(groupId), user.id());
     // Generate response
     return GetInvitationTokenResponseMapper.toDto(token);
   }
@@ -103,7 +110,7 @@ public class GroupController implements IGroupController {
   @Override
   public void enterToGroup(EnterGroupRequestDto request) {
     // Get user ID from security context (validated)
-    val user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Enter to group
     transactionGroupService.enterToGroupWithToken(
         GroupInvitationToken.fromString(request.token()), user.id());
@@ -112,9 +119,10 @@ public class GroupController implements IGroupController {
   @Override
   public GetUsersInGroupResponseDto getUsersInGroup(UUID groupId) {
     // Get user ID from security context (validated)
-    val user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Get users in group
-    val users = transactionGroupService.getUsersInGroup(GroupId.fromUuid(groupId), user.id());
+    final List<UserId> users =
+        transactionGroupService.getUsersInGroup(GroupId.fromUuid(groupId), user.id());
     // Generate response
     return GetUsersInGroupResponseMapper.toDto(users);
   }
@@ -122,7 +130,7 @@ public class GroupController implements IGroupController {
   @Override
   public void removeUserInGroup(UUID groupId, RemoveUserRequestDto request) {
     // Get user ID from security context (validated)
-    val user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Remove user from group
     transactionGroupService.removeUserFromGroup(
         GroupId.fromUuid(groupId), user.id(), UserId.fromUuid(request.userId()));
@@ -131,9 +139,9 @@ public class GroupController implements IGroupController {
   @Override
   public GetGroupBalancesResponseDto getGroupBalances(UUID groupId) {
     // Get user ID from security context (validated)
-    val user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
     // Get balances
-    val balances =
+    final Map<UserId, Money> balances =
         transactionGroupService.getAllGroupBalances(GroupId.fromUuid(groupId), user.id());
     // Generate response
     return GetGroupBalancesResponseMapper.toDto(balances);

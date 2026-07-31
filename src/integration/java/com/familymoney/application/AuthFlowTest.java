@@ -15,7 +15,6 @@ import com.familymoney.domains.auth.services.IEmailSenderService;
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.testutils.AuthControllerUriFactory;
 import com.familymoney.testutils.FakeGenerator;
-import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -52,7 +51,8 @@ class AuthFlowTest {
   private void registerAndVerifyNewUser(
       final String username, final String email, final String password) {
     // Mock email sender
-    val verificationTokenCaptor = ArgumentCaptor.forClass(EmailVerificationToken.class);
+    final ArgumentCaptor<EmailVerificationToken> verificationTokenCaptor =
+        ArgumentCaptor.forClass(EmailVerificationToken.class);
 
     // register the new user
     client
@@ -68,7 +68,7 @@ class AuthFlowTest {
     // get the captured email verification token
     verify(emailSenderService)
         .sendEmailVerificationEmail(any(), any(), verificationTokenCaptor.capture());
-    val verificationToken = verificationTokenCaptor.getValue();
+    final EmailVerificationToken verificationToken = verificationTokenCaptor.getValue();
 
     // verify email
     client
@@ -85,7 +85,7 @@ class AuthFlowTest {
   record TokenPair(String accessToken, String refreshToken) {}
 
   private TokenPair loginUser(String email, String password) {
-    val loginResponse =
+    final LoginResponseDto loginResponse =
         client
             .post()
             .uri(AuthControllerUriFactory.getLoginPath())
@@ -100,7 +100,7 @@ class AuthFlowTest {
   }
 
   private TokenPair refreshTokens(String refreshToken) {
-    val refreshResponse =
+    final RefreshResponseDto refreshResponse =
         client
             .post()
             .uri(AuthControllerUriFactory.getRefreshPath())
@@ -136,18 +136,18 @@ class AuthFlowTest {
   @Test
   void AuthFlow_register_login_refresh_and_logout_successfully() {
     // register and verify a new user
-    val username = FakeGenerator.username();
-    val email = FakeGenerator.email();
-    val password = FakeGenerator.password();
+    final String username = FakeGenerator.username();
+    final String email = FakeGenerator.email();
+    final String password = FakeGenerator.password();
     registerAndVerifyNewUser(username, email, password);
 
     // login
-    val tokens = loginUser(email, password);
-    val refreshToken = tokens.refreshToken();
+    final TokenPair tokens = loginUser(email, password);
+    final String refreshToken = tokens.refreshToken();
 
     // refresh
-    val newTokens = refreshTokens(refreshToken);
-    val newRefreshToken = newTokens.refreshToken();
+    final TokenPair newTokens = refreshTokens(refreshToken);
+    final String newRefreshToken = newTokens.refreshToken();
 
     // logout
     logoutUser(newRefreshToken);
@@ -156,9 +156,9 @@ class AuthFlowTest {
   @Test
   void AuthFlow_Register_with_existing_email_fails() {
     // register and verify a new user
-    val username = FakeGenerator.username();
-    val email = FakeGenerator.email();
-    val password = FakeGenerator.password();
+    final String username = FakeGenerator.username();
+    final String email = FakeGenerator.email();
+    final String password = FakeGenerator.password();
     registerAndVerifyNewUser(username, email, password);
     // register again with the same email
     client
@@ -173,9 +173,9 @@ class AuthFlowTest {
   @Test
   void AuthFlow_Login_with_unverified_email_fails() {
     // register a new user but do not verify email
-    val username = FakeGenerator.username();
-    val email = FakeGenerator.email();
-    val password = FakeGenerator.password();
+    final String username = FakeGenerator.username();
+    final String email = FakeGenerator.email();
+    final String password = FakeGenerator.password();
     client
         .post()
         .uri(AuthControllerUriFactory.getRegisterPath())
