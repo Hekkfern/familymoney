@@ -41,7 +41,16 @@ dependencies {
   implementation(libs.spring.starter.jooq)
   implementation(libs.flyway.postgresql)
   implementation(libs.thymeleafextras.springsecurity6)
+  implementation(libs.springdoc.openapi)
+  implementation(libs.jjwt.api)
+  implementation(libs.moneta)
+  implementation("org.jooq:jooq:${JOOQ_VERSION}")
+  implementation(libs.uuidcreator)
+
   runtimeOnly("org.postgresql:postgresql")
+  runtimeOnly(libs.jjwt.impl)
+  runtimeOnly(libs.jjwt.jackson)
+
   testImplementation(libs.spring.starter.test)
   testImplementation(libs.spring.security.test)
   testImplementation(libs.spring.testcontainers)
@@ -50,17 +59,15 @@ dependencies {
   testImplementation(libs.testcontainers)
   testImplementation(libs.testcontainers.junit)
   testImplementation(libs.testcontainers.postgresql)
-  testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-  implementation(libs.springdoc.openapi)
-  implementation(libs.jjwt.api)
-  runtimeOnly(libs.jjwt.impl)
-  runtimeOnly(libs.jjwt.jackson)
   testImplementation(libs.spring.resttestclient)
   testImplementation(libs.spring.starter.webmvc.test)
-  implementation(libs.moneta)
-  implementation("org.jooq:jooq:${JOOQ_VERSION}")
+
+  testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
   testCompileOnly(libs.assertj)
+
   jooqCodegen("org.postgresql:postgresql")
+
   integrationImplementation(libs.spring.starter.test)
   integrationImplementation(libs.spring.testcontainers)
   integrationImplementation(libs.spring.starter.flyway.test)
@@ -68,7 +75,6 @@ dependencies {
   integrationImplementation(libs.testcontainers)
   integrationImplementation(libs.testcontainers.junit)
   integrationImplementation(libs.testcontainers.postgresql)
-  implementation(libs.uuidcreator)
 }
 
 tasks.withType<Test> {
