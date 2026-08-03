@@ -15,7 +15,7 @@ public class RandomUtil {
   public static String generateRandomString(final int length) {
     StringBuilder sb = new StringBuilder(length);
     for (int i = 0; i < length; i++) {
-      int idx = SECURE_RANDOM.nextInt(ALPHANUMERIC.length());
+      final int idx = SECURE_RANDOM.nextInt(ALPHANUMERIC.length());
       sb.append(ALPHANUMERIC.charAt(idx));
     }
     return sb.toString();

@@ -66,7 +66,10 @@ public class TransactionGroupService implements ITransactionGroupService {
   @Override
   @Transactional
   public GroupId createGroup(
-      GroupName name, Description description, CurrencyUnit currency, UserId createdBy) {
+      final GroupName name,
+      final Description description,
+      final CurrencyUnit currency,
+      final UserId createdBy) {
     // Create group in the database
     final GroupId groupId = GroupId.generate();
     groupRepository
@@ -87,7 +90,7 @@ public class TransactionGroupService implements ITransactionGroupService {
    * @param groupId Identifier of the group
    * @throws UserIsNotMemberOfGroupException if the user is not a member of the group
    */
-  private void checkIfUserIsInGroup(UserId userId, GroupId groupId)
+  private void checkIfUserIsInGroup(final UserId userId, final GroupId groupId)
       throws UserIsNotMemberOfGroupException {
     if (!groupRepository.isUserInGroup(userId, groupId)) {
       final String msg = "User '%s' is not a member of group '%s'".formatted(userId, groupId);
@@ -102,7 +105,7 @@ public class TransactionGroupService implements ITransactionGroupService {
    * @param groupId Identifier of the group
    * @throws TransactionGroupNotFoundException if the group does not exist
    */
-  private void checkIfGroupExists(GroupId groupId) {
+  private void checkIfGroupExists(final GroupId groupId) {
     final boolean exists = groupRepository.existsById(groupId);
     if (!exists) {
       final String msg = "Group '%s' does not exist".formatted(groupId);
@@ -111,7 +114,7 @@ public class TransactionGroupService implements ITransactionGroupService {
     }
   }
 
-  private void checkIfUserExists(UserId userId) {
+  private void checkIfUserExists(final UserId userId) {
     final boolean exists = userRepository.existsById(userId);
     if (!exists) {
       final String msg = "User '%s' does not exist".formatted(userId);
@@ -121,7 +124,7 @@ public class TransactionGroupService implements ITransactionGroupService {
   }
 
   @Override
-  public void deleteGroup(GroupId groupId, UserId userId) {
+  public void deleteGroup(final GroupId groupId, final UserId userId) {
     // Check if the group exists
     checkIfGroupExists(groupId);
     // Check if the user is a member of the group
@@ -136,7 +139,7 @@ public class TransactionGroupService implements ITransactionGroupService {
   }
 
   @Override
-  public GroupData getGroupInfo(GroupId groupId, UserId userId) {
+  public GroupData getGroupInfo(final GroupId groupId, final UserId userId) {
     // Check if the group exists
     checkIfGroupExists(groupId);
     // Check if the user is a member of the group
@@ -152,7 +155,8 @@ public class TransactionGroupService implements ITransactionGroupService {
   }
 
   @Override
-  public void updateGroupInfo(GroupId groupId, UserId userId, UpdateGroupData data) {
+  public void updateGroupInfo(
+      final GroupId groupId, final UserId userId, final UpdateGroupData data) {
     // Check if the group exists
     checkIfGroupExists(groupId);
     // Check if the user is a member of the group
@@ -162,7 +166,7 @@ public class TransactionGroupService implements ITransactionGroupService {
   }
 
   @Override
-  public GroupInvitationToken getInvitationToken(GroupId groupId, UserId userId) {
+  public GroupInvitationToken getInvitationToken(final GroupId groupId, final UserId userId) {
     // Check if the group exists
     checkIfGroupExists(groupId);
     // Check if the user is a member of the group
@@ -185,7 +189,7 @@ public class TransactionGroupService implements ITransactionGroupService {
 
   @Override
   @Transactional
-  public void enterToGroupWithToken(GroupInvitationToken token, UserId userId) {
+  public void enterToGroupWithToken(final GroupInvitationToken token, final UserId userId) {
     // Get the invitation, if it exists
     final GroupInvitationEntity invitationDb =
         groupInvitationRepository
@@ -203,7 +207,7 @@ public class TransactionGroupService implements ITransactionGroupService {
   }
 
   @Override
-  public List<UserId> getUsersInGroup(GroupId groupId, UserId userId) {
+  public List<UserId> getUsersInGroup(final GroupId groupId, final UserId userId) {
     // Check if the group exists
     checkIfGroupExists(groupId);
     // Check if the user is a member of the group
@@ -213,7 +217,8 @@ public class TransactionGroupService implements ITransactionGroupService {
   }
 
   @Override
-  public void removeUserFromGroup(GroupId groupId, UserId userId, UserId userIdToRemove) {
+  public void removeUserFromGroup(
+      final GroupId groupId, final UserId userId, final UserId userIdToRemove) {
     // Check if the group exists
     checkIfGroupExists(groupId);
     // Check if the user to remove exists
@@ -225,7 +230,7 @@ public class TransactionGroupService implements ITransactionGroupService {
   }
 
   @Override
-  public Map<UserId, Money> getAllGroupBalances(GroupId groupId, UserId userId) {
+  public Map<UserId, Money> getAllGroupBalances(final GroupId groupId, final UserId userId) {
     // Check if the group exists
     checkIfGroupExists(groupId);
     // Check if the user is a member of the group
@@ -243,7 +248,7 @@ public class TransactionGroupService implements ITransactionGroupService {
 
   @Override
   public Page<TransactionData> getGroupTransactions(
-      GroupId groupId, UserId userId, Pageable pageable) {
+      final GroupId groupId, final UserId userId, final Pageable pageable) {
     // Check if the group exists
     checkIfGroupExists(groupId);
     // Check if the user is a member of the group
@@ -257,13 +262,13 @@ public class TransactionGroupService implements ITransactionGroupService {
 
   @Override
   public void createTransactionInGroup(
-      GroupId groupId,
-      Description description,
-      UserId from,
-      UserId to,
-      Money amount,
-      Instant doneAt,
-      UserId createdBy) {
+      final GroupId groupId,
+      final Description description,
+      final UserId from,
+      final UserId to,
+      final Money amount,
+      final Instant doneAt,
+      final UserId createdBy) {
     // Check if the group exists
     checkIfGroupExists(groupId);
     // Check if the user is a member of the group
@@ -276,7 +281,7 @@ public class TransactionGroupService implements ITransactionGroupService {
 
   @Override
   public void updateTransaction(
-      UserId userId, TransactionId transactionId, UpdateTransactionData data) {
+      final UserId userId, final TransactionId transactionId, final UpdateTransactionData data) {
     // Get transaction
     var transactionDb =
         transactionRepository
@@ -289,7 +294,7 @@ public class TransactionGroupService implements ITransactionGroupService {
   }
 
   @Override
-  public void deleteTransaction(UserId userId, TransactionId transactionId) {
+  public void deleteTransaction(final UserId userId, final TransactionId transactionId) {
     // Get transaction
     var transactionDb =
         transactionRepository

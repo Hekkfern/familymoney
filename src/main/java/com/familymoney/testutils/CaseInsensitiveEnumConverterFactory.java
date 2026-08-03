@@ -22,7 +22,7 @@ public class CaseInsensitiveEnumConverterFactory implements ConverterFactory<Str
     }
 
     @Override
-    public T convert(String source) {
+    public T convert(final String source) {
       for (T constant : enumType.getEnumConstants()) {
         if (constant.name().equalsIgnoreCase(source)) {
           return constant;

@@ -35,6 +35,6 @@ public class AuthenticationUtils {
         Strings.CS.removeStart(
             authentication.getAuthorities().iterator().next().getAuthority(), ROLE_PREFIX);
     final Role role = Role.fromString(roleStr);
-    return AuthorizedUser.builder().id(userId).role(role).build();
+    return new AuthorizedUser(userId, role);
   }
 }
