@@ -1,23 +1,15 @@
 package com.familymoney.application;
 
 import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
 
+import com.familymoney.application.utils.FlowUtils;
 import com.familymoney.domains.auth.controllers.dtos.LoginRequestDto;
-import com.familymoney.domains.auth.controllers.dtos.LoginResponseDto;
-import com.familymoney.domains.auth.controllers.dtos.LogoutRequestDto;
-import com.familymoney.domains.auth.controllers.dtos.RefreshResponseDto;
-import com.familymoney.domains.auth.controllers.dtos.RefreshTokenRequestDto;
 import com.familymoney.domains.auth.controllers.dtos.RegisterRequestDto;
-import com.familymoney.domains.auth.controllers.dtos.VerifyEmailRequestDto;
 import com.familymoney.domains.auth.services.IEmailSenderService;
-import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.testutils.AuthControllerUriFactory;
 import com.familymoney.testutils.FakeGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
@@ -35,6 +27,7 @@ class AuthFlowTest {
   // region Fields
 
   private RestTestClient client;
+  private FlowUtils flowUtils;
 
   @MockitoBean private IEmailSenderService emailSenderService;
 
@@ -46,91 +39,10 @@ class AuthFlowTest {
 
   // endregion
 
-  // region Helpers
-
-  private void registerAndVerifyNewUser(
-      final String username, final String email, final String password) {
-    // Mock email sender
-    final ArgumentCaptor<EmailVerificationToken> verificationTokenCaptor =
-        ArgumentCaptor.forClass(EmailVerificationToken.class);
-
-    // register the new user
-    client
-        .post()
-        .uri(AuthControllerUriFactory.getRegisterPath())
-        .body(new RegisterRequestDto(username, email, password))
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectBody()
-        .isEmpty();
-
-    // get the captured email verification token
-    verify(emailSenderService)
-        .sendEmailVerificationEmail(any(), any(), verificationTokenCaptor.capture());
-    final EmailVerificationToken verificationToken = verificationTokenCaptor.getValue();
-
-    // verify email
-    client
-        .post()
-        .uri(AuthControllerUriFactory.getVerifyEmailPath())
-        .body(new VerifyEmailRequestDto(verificationToken.value()))
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectBody()
-        .isEmpty();
-  }
-
-  record TokenPair(String accessToken, String refreshToken) {}
-
-  private TokenPair loginUser(String email, String password) {
-    final LoginResponseDto loginResponse =
-        client
-            .post()
-            .uri(AuthControllerUriFactory.getLoginPath())
-            .body(new LoginRequestDto(email, password))
-            .exchange()
-            .expectStatus()
-            .isOk()
-            .expectBody(LoginResponseDto.class)
-            .returnResult()
-            .getResponseBody();
-    return new TokenPair(loginResponse.accessToken(), loginResponse.refreshToken());
-  }
-
-  private TokenPair refreshTokens(String refreshToken) {
-    final RefreshResponseDto refreshResponse =
-        client
-            .post()
-            .uri(AuthControllerUriFactory.getRefreshPath())
-            .body(new RefreshTokenRequestDto(refreshToken))
-            .exchange()
-            .expectStatus()
-            .isOk()
-            .expectBody(RefreshResponseDto.class)
-            .returnResult()
-            .getResponseBody();
-    return new TokenPair(refreshResponse.accessToken(), refreshResponse.refreshToken());
-  }
-
-  private void logoutUser(String refreshToken) {
-    client
-        .post()
-        .uri(AuthControllerUriFactory.getLogoutPath())
-        .body(new LogoutRequestDto(refreshToken))
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectBody()
-        .isEmpty();
-  }
-
-  // endregion
-
   @BeforeEach
   void setup() {
-    client = RestTestClient.bindToServer().baseUrl("http://localhost:" + port).build();
+    this.client = RestTestClient.bindToServer().baseUrl("http://localhost:" + port).build();
+    this.flowUtils = new FlowUtils(client, emailSenderService);
   }
 
   @Test
@@ -139,18 +51,18 @@ class AuthFlowTest {
     final String username = FakeGenerator.username();
     final String email = FakeGenerator.email();
     final String password = FakeGenerator.password();
-    registerAndVerifyNewUser(username, email, password);
+    flowUtils.registerAndVerifyNewUser(username, email, password);
 
     // login
-    final TokenPair tokens = loginUser(email, password);
+    final FlowUtils.TokenPair tokens = flowUtils.loginUser(email, password);
     final String refreshToken = tokens.refreshToken();
 
     // refresh
-    final TokenPair newTokens = refreshTokens(refreshToken);
+    final FlowUtils.TokenPair newTokens = flowUtils.refreshTokens(refreshToken);
     final String newRefreshToken = newTokens.refreshToken();
 
     // logout
-    logoutUser(newRefreshToken);
+    flowUtils.logoutUser(newRefreshToken);
   }
 
   @Test
@@ -159,7 +71,7 @@ class AuthFlowTest {
     final String username = FakeGenerator.username();
     final String email = FakeGenerator.email();
     final String password = FakeGenerator.password();
-    registerAndVerifyNewUser(username, email, password);
+    flowUtils.registerAndVerifyNewUser(username, email, password);
     // register again with the same email
     client
         .post()

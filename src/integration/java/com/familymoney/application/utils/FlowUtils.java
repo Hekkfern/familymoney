@@ -74,6 +74,21 @@ public class FlowUtils {
     return new TokenPair(loginResponse.accessToken(), loginResponse.refreshToken());
   }
 
+  /**
+   * Registers a new user, verifies their email, and logs them in.
+   *
+   * @param username Name of the account
+   * @param email Email address of the user account
+   * @param password Password of the user account
+   * @return Access Token for the logged-in user.
+   */
+  public String registerAndLoginUser(
+      final String username, final String email, final String password) {
+    registerAndVerifyNewUser(username, email, password);
+    final FlowUtils.TokenPair loginResponse = loginUser(email, password);
+    return loginResponse.accessToken();
+  }
+
   public TokenPair refreshTokens(final String refreshToken) {
     final RefreshResponseDto refreshResponse =
         client

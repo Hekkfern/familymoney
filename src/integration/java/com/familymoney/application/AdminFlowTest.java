@@ -35,25 +35,6 @@ class AdminFlowTest {
 
   // endregion
 
-  // region Helpers
-
-  /**
-   * Registers a new user, verifies their email, and logs them in.
-   *
-   * @param username Name of the account
-   * @param email Email address of the user account
-   * @param password Password of the user account
-   * @return Access Token for the logged-in user.
-   */
-  private String registerAndLoginUser(
-      final String username, final String email, final String password) {
-    flowUtils.registerAndVerifyNewUser(username, email, password);
-    final FlowUtils.TokenPair loginResponse = flowUtils.loginUser(email, password);
-    return loginResponse.accessToken();
-  }
-
-  // endregion
-
   @BeforeEach
   void setup() {
     this.client = RestTestClient.bindToServer().baseUrl("http://localhost:" + port).build();
@@ -66,7 +47,7 @@ class AdminFlowTest {
     final String username = FakeGenerator.username();
     final String email = FakeGenerator.email();
     final String password = FakeGenerator.password();
-    final String accessToken = registerAndLoginUser(username, email, password);
+    final String accessToken = flowUtils.registerAndLoginUser(username, email, password);
     // Get data from another user
     // TODO
   }
