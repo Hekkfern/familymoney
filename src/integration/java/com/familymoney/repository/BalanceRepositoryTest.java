@@ -14,7 +14,7 @@ import com.familymoney.domains.transactions.types.GroupName;
 import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.domains.users.types.UserName;
-import com.familymoney.testutils.DatabaseCrud;
+import com.familymoney.repository.utils.DatabaseCrud;
 import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;
 import java.util.List;
@@ -44,17 +44,18 @@ class BalanceRepositoryTest {
   @Autowired private DSLContext dslContext;
 
   private BalanceRepository balanceRepository;
+  private DatabaseCrud databaseCrud;
 
   @BeforeEach
   void setUp() {
     this.balanceRepository = new BalanceRepository(dslContext);
+    this.databaseCrud = new DatabaseCrud(dslContext);
   }
 
   private UserId insertRandomUser() {
     final UserId userId = UserId.generate();
     final Instant now = Instant.ofEpochSecond(1778755330);
-    DatabaseCrud.insertUser(
-        dslContext,
+    databaseCrud.insertUser(
         userId,
         UserName.fromString(FakeGenerator.username()),
         Email.fromString(FakeGenerator.email()),
@@ -68,8 +69,7 @@ class BalanceRepositoryTest {
   private GroupId insertRandomGroup() {
     final GroupId groupId = GroupId.generate();
     final Instant now = Instant.now();
-    DatabaseCrud.insertGroup(
-        dslContext,
+    databaseCrud.insertGroup(
         groupId,
         GroupName.fromString(FakeGenerator.groupName()),
         "desc",
@@ -81,8 +81,7 @@ class BalanceRepositoryTest {
   private BalanceId insertRandomBalance(
       final GroupId groupId, final UserId userId1, final UserId userId2) {
     final BalanceId balanceId = BalanceId.generate();
-    DatabaseCrud.insertBalance(
-        dslContext, balanceId, groupId, Money.of(10, "USD"), userId1, userId2);
+    databaseCrud.insertBalance(balanceId, groupId, Money.of(10, "USD"), userId1, userId2);
     return balanceId;
   }
 

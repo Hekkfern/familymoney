@@ -11,7 +11,7 @@ import com.familymoney.domains.users.repositories.entitites.UserEntity;
 import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.domains.users.types.UserName;
-import com.familymoney.testutils.DatabaseCrud;
+import com.familymoney.repository.utils.DatabaseCrud;
 import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;
 import java.util.List;
@@ -43,10 +43,12 @@ class UserRepositoryTest {
   @Autowired private DSLContext dslContext;
 
   private UserRepository userRepository;
+  private DatabaseCrud databaseCrud;
 
   @BeforeEach
   void setUp() {
     this.userRepository = new UserRepository(dslContext);
+    this.databaseCrud = new DatabaseCrud(dslContext);
   }
 
   private List<UserId> insertThreeUsersForTesting() {
@@ -60,11 +62,9 @@ class UserRepositoryTest {
     final Email email2 = Email.fromString(FakeGenerator.email());
     final Email email3 = Email.fromString(FakeGenerator.email());
     final Instant now = Instant.ofEpochSecond(1778755330);
-    DatabaseCrud.insertUser(dslContext, userId1, username1, email1, "pass1", now, true, true);
-    DatabaseCrud.insertUser(
-        dslContext, userId2, username2, email2, "pass2", now.plusSeconds(1000), true, true);
-    DatabaseCrud.insertUser(
-        dslContext, userId3, username3, email3, "pass3", now.plusSeconds(2000), true, true);
+    databaseCrud.insertUser(userId1, username1, email1, "pass1", now, true, true);
+    databaseCrud.insertUser(userId2, username2, email2, "pass2", now.plusSeconds(1000), true, true);
+    databaseCrud.insertUser(userId3, username3, email3, "pass3", now.plusSeconds(2000), true, true);
     return List.of(userId1, userId2, userId3);
   }
 
@@ -141,8 +141,7 @@ class UserRepositoryTest {
     final UserName username = UserName.fromString(FakeGenerator.username());
     final Email email = Email.fromString(FakeGenerator.email());
     final Instant now = Instant.now();
-    DatabaseCrud.insertUser(
-        dslContext, userId, username, email, "hashed_password", now, false, true);
+    databaseCrud.insertUser(userId, username, email, "hashed_password", now, false, true);
 
     final Optional<UserEntity> found = userRepository.findById(userId);
 
@@ -181,8 +180,7 @@ class UserRepositoryTest {
     final UserName username = UserName.fromString(FakeGenerator.username());
     final Email email = Email.fromString(FakeGenerator.email());
     final Instant now = Instant.now();
-    DatabaseCrud.insertUser(
-        dslContext, userId, username, email, "hashed_password", now, false, true);
+    databaseCrud.insertUser(userId, username, email, "hashed_password", now, false, true);
 
     final Optional<UserEntity> found = userRepository.findByEmail(email);
 
@@ -221,8 +219,7 @@ class UserRepositoryTest {
     final UserName username = UserName.fromString(FakeGenerator.username());
     final Email email = Email.fromString(FakeGenerator.email());
     final Instant now = Instant.now();
-    DatabaseCrud.insertUser(
-        dslContext, userId, username, email, "hashed_password", now, false, true);
+    databaseCrud.insertUser(userId, username, email, "hashed_password", now, false, true);
 
     final Optional<UserEntity> found = userRepository.findByUsername(username);
 
@@ -261,8 +258,7 @@ class UserRepositoryTest {
     final UserName username = UserName.fromString(FakeGenerator.username());
     final Email email = Email.fromString(FakeGenerator.email());
     final Instant now = Instant.now();
-    DatabaseCrud.insertUser(
-        dslContext, userId, username, email, "hashed_password", now, false, true);
+    databaseCrud.insertUser(userId, username, email, "hashed_password", now, false, true);
 
     assertThat(
             userRepository.existsByEmailOrUsername(
@@ -280,8 +276,7 @@ class UserRepositoryTest {
     final UserName username = UserName.fromString(FakeGenerator.username());
     final Email email = Email.fromString(FakeGenerator.email());
     final Instant now = Instant.now();
-    DatabaseCrud.insertUser(
-        dslContext, userId, username, email, "hashed_password", now, false, true);
+    databaseCrud.insertUser(userId, username, email, "hashed_password", now, false, true);
 
     assertThat(userRepository.existsByEmailOrUsername(email, username)).isTrue();
   }
@@ -305,8 +300,7 @@ class UserRepositoryTest {
     final UserName username = UserName.fromString(FakeGenerator.username());
     final Email email = Email.fromString(FakeGenerator.email());
     final Instant now = Instant.now();
-    DatabaseCrud.insertUser(
-        dslContext, userId, username, email, "hashed_password", now, false, true);
+    databaseCrud.insertUser(userId, username, email, "hashed_password", now, false, true);
 
     assertThat(userRepository.existsById(userId)).isTrue();
   }
@@ -329,8 +323,7 @@ class UserRepositoryTest {
     final Email email1 = Email.fromString(FakeGenerator.email());
     final Email email2 = Email.fromString(FakeGenerator.email());
     final Instant now = Instant.now();
-    DatabaseCrud.insertUser(
-        dslContext, userId, username1, email1, "hashed_password", now, false, true);
+    databaseCrud.insertUser(userId, username1, email1, "hashed_password", now, false, true);
 
     final UpdateUserDto dataToUpdate =
         UpdateUserDto.builder()
@@ -368,8 +361,7 @@ class UserRepositoryTest {
     final UserName username2 = UserName.fromString(FakeGenerator.username());
     final Email email = Email.fromString(FakeGenerator.email());
     final Instant now = Instant.now();
-    DatabaseCrud.insertUser(
-        dslContext, userId, username1, email, "hashed_password", now, false, true);
+    databaseCrud.insertUser(userId, username1, email, "hashed_password", now, false, true);
 
     final UpdateUserDto dataToUpdate = UpdateUserDto.builder().username(username2).build();
 
@@ -415,8 +407,7 @@ class UserRepositoryTest {
     final UserName username = UserName.fromString(FakeGenerator.username());
     final Email email = Email.fromString(FakeGenerator.email());
     final Instant now = Instant.now();
-    DatabaseCrud.insertUser(
-        dslContext, userId, username, email, "hashed_password", now, false, true);
+    databaseCrud.insertUser(userId, username, email, "hashed_password", now, false, true);
     assertThat(userRepository.findById(userId)).isPresent();
 
     final boolean deleted = userRepository.deleteById(userId);

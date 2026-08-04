@@ -12,7 +12,7 @@ import com.familymoney.domains.auth.types.PasswordResetToken;
 import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.domains.users.types.UserName;
-import com.familymoney.testutils.DatabaseCrud;
+import com.familymoney.repository.utils.DatabaseCrud;
 import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;
 import java.util.Optional;
@@ -40,17 +40,18 @@ class PasswordResetRepositoryTest {
   @Autowired private DSLContext dslContext;
 
   private PasswordResetRepository passwordResetRepository;
+  private DatabaseCrud databaseCrud;
 
   @BeforeEach
   void setUp() {
     this.passwordResetRepository = new PasswordResetRepository(dslContext);
+    this.databaseCrud = new DatabaseCrud(dslContext);
   }
 
   private UserId insertRandomUser() {
     final UserId userId = UserId.generate();
     final Instant now = Instant.ofEpochSecond(1778755330);
-    DatabaseCrud.insertUser(
-        dslContext,
+    databaseCrud.insertUser(
         userId,
         UserName.fromString(FakeGenerator.username()),
         Email.fromString(FakeGenerator.email()),
@@ -107,8 +108,8 @@ class PasswordResetRepositoryTest {
     final PasswordResetToken token = PasswordResetToken.generate();
     final Instant now = Instant.now();
 
-    DatabaseCrud.insertPasswordResetToken(
-        dslContext, userId, token, now, ExpirationTime.of(now.plusSeconds(300)));
+    databaseCrud.insertPasswordResetToken(
+        userId, token, now, ExpirationTime.of(now.plusSeconds(300)));
 
     final CreatePasswordResetDto dto2 =
         new CreatePasswordResetDto(userId, token, ExpirationTime.of(now.plusSeconds(600)));
@@ -120,12 +121,8 @@ class PasswordResetRepositoryTest {
   void create_throws_when_user_already_has_an_entry() {
     final UserId userId = insertRandomUser();
     final Instant now = Instant.now();
-    DatabaseCrud.insertPasswordResetToken(
-        dslContext,
-        userId,
-        PasswordResetToken.generate(),
-        now,
-        ExpirationTime.of(now.plusSeconds(3600)));
+    databaseCrud.insertPasswordResetToken(
+        userId, PasswordResetToken.generate(), now, ExpirationTime.of(now.plusSeconds(3600)));
 
     final CreatePasswordResetDto dto =
         new CreatePasswordResetDto(
@@ -144,7 +141,7 @@ class PasswordResetRepositoryTest {
     final PasswordResetToken token = PasswordResetToken.generate();
     final Instant now = Instant.now();
     final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
-    DatabaseCrud.insertPasswordResetToken(dslContext, userId, token, now, expiration);
+    databaseCrud.insertPasswordResetToken(userId, token, now, expiration);
 
     final Optional<PasswordResetEntity> entryFoundOpt = passwordResetRepository.findByToken(token);
 
@@ -174,8 +171,8 @@ class PasswordResetRepositoryTest {
     final UserId userId = insertRandomUser();
     final PasswordResetToken token = PasswordResetToken.generate();
     final Instant now = Instant.now();
-    DatabaseCrud.insertPasswordResetToken(
-        dslContext, userId, token, now, ExpirationTime.of(now.plusSeconds(3600)));
+    databaseCrud.insertPasswordResetToken(
+        userId, token, now, ExpirationTime.of(now.plusSeconds(3600)));
 
     final boolean deleted = passwordResetRepository.deleteByUserId(userId);
 

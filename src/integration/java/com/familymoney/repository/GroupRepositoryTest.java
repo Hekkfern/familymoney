@@ -15,7 +15,7 @@ import com.familymoney.domains.transactions.types.GroupName;
 import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.domains.users.types.UserName;
-import com.familymoney.testutils.DatabaseCrud;
+import com.familymoney.repository.utils.DatabaseCrud;
 import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;
 import java.util.List;
@@ -48,17 +48,18 @@ class GroupRepositoryTest {
   @Autowired private DSLContext dslContext;
 
   private GroupRepository groupRepository;
+  private DatabaseCrud databaseCrud;
 
   @BeforeEach
   void setUp() {
     this.groupRepository = new GroupRepository(dslContext);
+    this.databaseCrud = new DatabaseCrud(dslContext);
   }
 
   private UserId insertRandomUser() {
     final UserId userId = UserId.generate();
     final Instant now = Instant.now();
-    DatabaseCrud.insertUser(
-        dslContext,
+    databaseCrud.insertUser(
         userId,
         UserName.fromString(FakeGenerator.username()),
         Email.fromString(FakeGenerator.email()),
@@ -72,8 +73,7 @@ class GroupRepositoryTest {
   private GroupId insertRandomGroup() {
     final GroupId groupId = GroupId.generate();
     final Instant now = Instant.now();
-    DatabaseCrud.insertGroup(
-        dslContext,
+    databaseCrud.insertGroup(
         groupId,
         GroupName.fromString(FakeGenerator.groupName()),
         "desc",

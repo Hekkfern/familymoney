@@ -9,7 +9,7 @@ import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.Role;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.domains.users.types.UserName;
-import com.familymoney.testutils.DatabaseCrud;
+import com.familymoney.repository.utils.DatabaseCrud;
 import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;
 import java.util.Optional;
@@ -35,17 +35,18 @@ class RoleRepositoryTest {
   @Autowired private DSLContext dslContext;
 
   private RoleRepository roleRepository;
+  private DatabaseCrud databaseCrud;
 
   @BeforeEach
   void setUp() {
     this.roleRepository = new RoleRepository(dslContext);
+    this.databaseCrud = new DatabaseCrud(dslContext);
   }
 
   private UserId insertRandomUser() {
     final UserId userId = UserId.generate();
     final Instant now = Instant.ofEpochSecond(1778755330);
-    DatabaseCrud.insertUser(
-        dslContext,
+    databaseCrud.insertUser(
         userId,
         UserName.fromString(FakeGenerator.username()),
         Email.fromString(FakeGenerator.email()),

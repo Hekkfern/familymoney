@@ -1,4 +1,4 @@
-package com.familymoney.testutils;
+package com.familymoney.repository.utils;
 
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.auth.types.PasswordResetToken;
@@ -24,13 +24,16 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
 import javax.money.CurrencyUnit;
+import lombok.RequiredArgsConstructor;
 import org.javamoney.moneta.Money;
 import org.jooq.DSLContext;
 
+@RequiredArgsConstructor
 public class DatabaseCrud {
 
-  public static void insertUser(
-      DSLContext dslContext,
+  private final DSLContext dslContext;
+
+  public void insertUser(
       final UserId userId,
       final UserName username,
       final Email email,
@@ -62,8 +65,7 @@ public class DatabaseCrud {
         .execute();
   }
 
-  public static void insertRefreshToken(
-      DSLContext dslContext,
+  public void insertRefreshToken(
       final UUID id,
       final UserId userId,
       final RefreshToken token,
@@ -94,8 +96,7 @@ public class DatabaseCrud {
         .execute();
   }
 
-  public static void insertEmailVerificationToken(
-      DSLContext dslContext,
+  public void insertEmailVerificationToken(
       final UserId userId,
       final EmailVerificationToken token,
       final Instant createdAt,
@@ -116,8 +117,7 @@ public class DatabaseCrud {
         .execute();
   }
 
-  public static void insertPasswordResetToken(
-      DSLContext dslContext,
+  public void insertPasswordResetToken(
       final UserId userId,
       final PasswordResetToken token,
       final Instant createdAt,
@@ -138,8 +138,7 @@ public class DatabaseCrud {
         .execute();
   }
 
-  public static void insertGroup(
-      DSLContext dslContext,
+  public void insertGroup(
       final GroupId id,
       final GroupName name,
       final String description,
@@ -165,8 +164,7 @@ public class DatabaseCrud {
         .execute();
   }
 
-  public static void insertGroupInvitation(
-      DSLContext dslContext,
+  public void insertGroupInvitation(
       final UUID id,
       final GroupId groupId,
       final UserId userId,
@@ -195,8 +193,7 @@ public class DatabaseCrud {
         .execute();
   }
 
-  public static void insertBalance(
-      DSLContext dslContext,
+  public void insertBalance(
       final BalanceId id,
       final GroupId groupId,
       final Money amount,

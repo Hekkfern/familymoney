@@ -13,7 +13,7 @@ import com.familymoney.domains.auth.types.ExpirationTime;
 import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.domains.users.types.UserName;
-import com.familymoney.testutils.DatabaseCrud;
+import com.familymoney.repository.utils.DatabaseCrud;
 import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;
 import java.util.Optional;
@@ -40,17 +40,18 @@ class EmailVerificationRepositoryTest {
   @Autowired private DSLContext dslContext;
 
   private EmailVerificationRepository emailVerificationRepository;
+  private DatabaseCrud databaseCrud;
 
   @BeforeEach
   void setUp() {
     this.emailVerificationRepository = new EmailVerificationRepository(dslContext);
+    this.databaseCrud = new DatabaseCrud(dslContext);
   }
 
   private UserId insertRandomUser() {
     final UserId userId = UserId.generate();
     final Instant now = Instant.ofEpochSecond(1778755330);
-    DatabaseCrud.insertUser(
-        dslContext,
+    databaseCrud.insertUser(
         userId,
         UserName.fromString(FakeGenerator.username()),
         Email.fromString(FakeGenerator.email()),
@@ -98,8 +99,8 @@ class EmailVerificationRepositoryTest {
     final Instant now = Instant.now();
     final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
 
-    DatabaseCrud.insertEmailVerificationToken(
-        dslContext, userId, EmailVerificationToken.generate(), now, expiration);
+    databaseCrud.insertEmailVerificationToken(
+        userId, EmailVerificationToken.generate(), now, expiration);
 
     final CreateEmailVerificationDto dto =
         new CreateEmailVerificationDto(userId, EmailVerificationToken.generate(), expiration);
@@ -115,7 +116,7 @@ class EmailVerificationRepositoryTest {
     final Instant now = Instant.now();
     final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
 
-    DatabaseCrud.insertEmailVerificationToken(dslContext, userId1, token, now, expiration);
+    databaseCrud.insertEmailVerificationToken(userId1, token, now, expiration);
 
     final CreateEmailVerificationDto dto =
         new CreateEmailVerificationDto(userId2, token, expiration);
@@ -133,7 +134,7 @@ class EmailVerificationRepositoryTest {
     final EmailVerificationToken token = EmailVerificationToken.generate();
     final Instant now = Instant.now();
     final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
-    DatabaseCrud.insertEmailVerificationToken(dslContext, userId, token, now, expiration);
+    databaseCrud.insertEmailVerificationToken(userId, token, now, expiration);
 
     final Optional<EmailVerificationEntity> tokenFoundOpt =
         emailVerificationRepository.findByUserId(userId);
@@ -165,7 +166,7 @@ class EmailVerificationRepositoryTest {
     final EmailVerificationToken token = EmailVerificationToken.generate();
     final Instant now = Instant.now();
     final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
-    DatabaseCrud.insertEmailVerificationToken(dslContext, userId, token, now, expiration);
+    databaseCrud.insertEmailVerificationToken(userId, token, now, expiration);
 
     final Optional<EmailVerificationEntity> tokenFoundOpt =
         emailVerificationRepository.findByToken(token);
@@ -197,7 +198,7 @@ class EmailVerificationRepositoryTest {
     final EmailVerificationToken token = EmailVerificationToken.generate();
     final Instant now = Instant.now();
     final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
-    DatabaseCrud.insertEmailVerificationToken(dslContext, userId, token, now, expiration);
+    databaseCrud.insertEmailVerificationToken(userId, token, now, expiration);
 
     final EmailVerificationToken newToken = EmailVerificationToken.generate();
     final UpdateEmailVerificationTokenDto dto =
@@ -220,7 +221,7 @@ class EmailVerificationRepositoryTest {
     final EmailVerificationToken token = EmailVerificationToken.generate();
     final Instant now = Instant.now();
     final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
-    DatabaseCrud.insertEmailVerificationToken(dslContext, userId, token, now, expiration);
+    databaseCrud.insertEmailVerificationToken(userId, token, now, expiration);
 
     final UpdateEmailVerificationTokenDto nullDto =
         UpdateEmailVerificationTokenDto.builder().build();
@@ -256,7 +257,7 @@ class EmailVerificationRepositoryTest {
     final EmailVerificationToken token = EmailVerificationToken.generate();
     final Instant now = Instant.now();
     final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
-    DatabaseCrud.insertEmailVerificationToken(dslContext, userId, token, now, expiration);
+    databaseCrud.insertEmailVerificationToken(userId, token, now, expiration);
 
     final boolean deleted = emailVerificationRepository.deleteByUserId(userId);
 

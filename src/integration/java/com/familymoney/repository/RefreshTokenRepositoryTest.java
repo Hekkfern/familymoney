@@ -14,7 +14,7 @@ import com.familymoney.domains.auth.types.TokenFamily;
 import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.domains.users.types.UserName;
-import com.familymoney.testutils.DatabaseCrud;
+import com.familymoney.repository.utils.DatabaseCrud;
 import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;
 import java.util.Optional;
@@ -42,17 +42,18 @@ class RefreshTokenRepositoryTest {
   @Autowired private DSLContext dslContext;
 
   private RefreshTokenRepository refreshTokenRepository;
+  private DatabaseCrud databaseCrud;
 
   @BeforeEach
   void setUp() {
     this.refreshTokenRepository = new RefreshTokenRepository(dslContext);
+    this.databaseCrud = new DatabaseCrud(dslContext);
   }
 
   private UserId insertRandomUser() {
     final UserId userId = UserId.generate();
     final Instant now = Instant.ofEpochSecond(1778755330);
-    DatabaseCrud.insertUser(
-        dslContext,
+    databaseCrud.insertUser(
         userId,
         UserName.fromString(FakeGenerator.username()),
         Email.fromString(FakeGenerator.email()),
@@ -125,8 +126,8 @@ class RefreshTokenRepositoryTest {
     final Instant now = Instant.now();
     final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
 
-    DatabaseCrud.insertRefreshToken(
-        dslContext, UUID.randomUUID(), userId, token, now, expiration, TokenFamily.generate());
+    databaseCrud.insertRefreshToken(
+        UUID.randomUUID(), userId, token, now, expiration, TokenFamily.generate());
 
     final CreateRefreshTokenDto dto =
         new CreateRefreshTokenDto(
@@ -143,8 +144,8 @@ class RefreshTokenRepositoryTest {
     final Instant now = Instant.now();
     final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
 
-    DatabaseCrud.insertRefreshToken(
-        dslContext, UUID.randomUUID(), userId, RefreshToken.generate(), now, expiration, family);
+    databaseCrud.insertRefreshToken(
+        UUID.randomUUID(), userId, RefreshToken.generate(), now, expiration, family);
 
     final CreateRefreshTokenDto dto =
         new CreateRefreshTokenDto(
@@ -165,7 +166,7 @@ class RefreshTokenRepositoryTest {
     final UUID id = UUID.randomUUID();
     final Instant now = Instant.now();
     final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
-    DatabaseCrud.insertRefreshToken(dslContext, id, userId, token, now, expiration, family);
+    databaseCrud.insertRefreshToken(id, userId, token, now, expiration, family);
 
     final Optional<RefreshTokenEntity> tokenFoundOpt = refreshTokenRepository.findByToken(token);
 
@@ -198,7 +199,7 @@ class RefreshTokenRepositoryTest {
     final UUID id = UUID.randomUUID();
     final Instant now = Instant.now();
     final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
-    DatabaseCrud.insertRefreshToken(dslContext, id, userId, token, now, expiration, family);
+    databaseCrud.insertRefreshToken(id, userId, token, now, expiration, family);
 
     final RefreshToken newToken = RefreshToken.generate();
     final UpdateRefreshTokenDto dto = UpdateRefreshTokenDto.builder().token(newToken).build();
@@ -224,7 +225,7 @@ class RefreshTokenRepositoryTest {
     final UUID id = UUID.randomUUID();
     final Instant now = Instant.now();
     final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
-    DatabaseCrud.insertRefreshToken(dslContext, id, userId, token, now, expiration, family);
+    databaseCrud.insertRefreshToken(id, userId, token, now, expiration, family);
 
     final UpdateRefreshTokenDto nullDto = UpdateRefreshTokenDto.builder().build();
 
@@ -263,7 +264,7 @@ class RefreshTokenRepositoryTest {
     final UUID id = UUID.randomUUID();
     final Instant now = Instant.now();
     final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
-    DatabaseCrud.insertRefreshToken(dslContext, id, userId, token, now, expiration, family);
+    databaseCrud.insertRefreshToken(id, userId, token, now, expiration, family);
 
     final RefreshToken newToken = RefreshToken.generate();
     final UpdateRefreshTokenDto dto = UpdateRefreshTokenDto.builder().token(newToken).build();
@@ -289,7 +290,7 @@ class RefreshTokenRepositoryTest {
     final UUID id = UUID.randomUUID();
     final Instant now = Instant.now();
     final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
-    DatabaseCrud.insertRefreshToken(dslContext, id, userId, token, now, expiration, family);
+    databaseCrud.insertRefreshToken(id, userId, token, now, expiration, family);
 
     final UpdateRefreshTokenDto nullDto = UpdateRefreshTokenDto.builder().build();
 
@@ -328,7 +329,7 @@ class RefreshTokenRepositoryTest {
     final UUID id = UUID.randomUUID();
     final Instant now = Instant.now();
     final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
-    DatabaseCrud.insertRefreshToken(dslContext, id, userId, token, now, expiration, family);
+    databaseCrud.insertRefreshToken(id, userId, token, now, expiration, family);
 
     final boolean deleted = refreshTokenRepository.deleteByToken(token);
 

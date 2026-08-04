@@ -14,7 +14,7 @@ import com.familymoney.domains.transactions.types.GroupName;
 import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.domains.users.types.UserName;
-import com.familymoney.testutils.DatabaseCrud;
+import com.familymoney.repository.utils.DatabaseCrud;
 import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;
 import java.util.Optional;
@@ -42,17 +42,18 @@ class GroupInvitationRepositoryTest {
   @Autowired private DSLContext dslContext;
 
   private GroupInvitationRepository groupInvitationRepository;
+  private DatabaseCrud databaseCrud;
 
   @BeforeEach
   void setUp() {
     this.groupInvitationRepository = new GroupInvitationRepository(dslContext);
+    this.databaseCrud = new DatabaseCrud(dslContext);
   }
 
   private UserId insertRandomUser() {
     final UserId userId = UserId.generate();
     final Instant now = Instant.ofEpochSecond(1778755330);
-    DatabaseCrud.insertUser(
-        dslContext,
+    databaseCrud.insertUser(
         userId,
         UserName.fromString(FakeGenerator.username()),
         Email.fromString(FakeGenerator.email()),
@@ -66,8 +67,7 @@ class GroupInvitationRepositoryTest {
   private GroupId insertRandomGroup() {
     final GroupId groupId = GroupId.generate();
     final Instant now = Instant.now();
-    DatabaseCrud.insertGroup(
-        dslContext,
+    databaseCrud.insertGroup(
         groupId,
         GroupName.fromString(FakeGenerator.groupName()),
         "desc",
@@ -141,22 +141,15 @@ class GroupInvitationRepositoryTest {
     final UserId userId = insertRandomUser();
     final GroupId groupId = GroupId.generate();
     final Instant now = Instant.now();
-    DatabaseCrud.insertGroup(
-        dslContext,
+    databaseCrud.insertGroup(
         groupId,
         GroupName.fromString("group-" + FakeGenerator.username()),
         "desc",
         Monetary.getCurrency("USD"),
         now);
     final GroupInvitationToken token = GroupInvitationToken.generate();
-    DatabaseCrud.insertGroupInvitation(
-        dslContext,
-        UUID.randomUUID(),
-        groupId,
-        userId,
-        token,
-        now,
-        ExpirationTime.of(now.plusSeconds(300)));
+    databaseCrud.insertGroupInvitation(
+        UUID.randomUUID(), groupId, userId, token, now, ExpirationTime.of(now.plusSeconds(300)));
 
     final CreateGroupInvitationDto dto =
         new CreateGroupInvitationDto(
@@ -174,8 +167,7 @@ class GroupInvitationRepositoryTest {
     final UserId userId = insertRandomUser();
     final GroupId groupId = GroupId.generate();
     final Instant now = Instant.now();
-    DatabaseCrud.insertGroup(
-        dslContext,
+    databaseCrud.insertGroup(
         groupId,
         GroupName.fromString("group-" + FakeGenerator.username()),
         "desc",
@@ -183,8 +175,7 @@ class GroupInvitationRepositoryTest {
         now);
     final GroupInvitationToken token = GroupInvitationToken.generate();
     final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(300));
-    DatabaseCrud.insertGroupInvitation(
-        dslContext, UUID.randomUUID(), groupId, userId, token, now, expiration);
+    databaseCrud.insertGroupInvitation(UUID.randomUUID(), groupId, userId, token, now, expiration);
 
     final Optional<GroupInvitationEntity> invitationFoundOpt =
         groupInvitationRepository.findByToken(token);
@@ -219,8 +210,7 @@ class GroupInvitationRepositoryTest {
     final Instant now = Instant.now();
     final GroupInvitationToken token = GroupInvitationToken.generate();
     final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(300));
-    DatabaseCrud.insertGroupInvitation(
-        dslContext, UUID.randomUUID(), groupId, userId, token, now, expiration);
+    databaseCrud.insertGroupInvitation(UUID.randomUUID(), groupId, userId, token, now, expiration);
 
     final boolean deleted = groupInvitationRepository.deleteByToken(token);
 
@@ -250,32 +240,23 @@ class GroupInvitationRepositoryTest {
     final Instant now = Instant.now();
     final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(300));
 
-    DatabaseCrud.insertGroupInvitation(
-        dslContext,
-        UUID.randomUUID(),
-        groupId,
-        userId,
-        GroupInvitationToken.generate(),
-        now,
-        expiration);
-    DatabaseCrud.insertGroupInvitation(
-        dslContext,
+    databaseCrud.insertGroupInvitation(
+        UUID.randomUUID(), groupId, userId, GroupInvitationToken.generate(), now, expiration);
+    databaseCrud.insertGroupInvitation(
         UUID.randomUUID(),
         groupId,
         userId,
         GroupInvitationToken.generate(),
         now.plusSeconds(1),
         ExpirationTime.of(expiration.value().plusSeconds(1)));
-    DatabaseCrud.insertGroupInvitation(
-        dslContext,
+    databaseCrud.insertGroupInvitation(
         UUID.randomUUID(),
         groupId,
         anotherUserId,
         GroupInvitationToken.generate(),
         now,
         expiration);
-    DatabaseCrud.insertGroupInvitation(
-        dslContext,
+    databaseCrud.insertGroupInvitation(
         UUID.randomUUID(),
         anotherGroupId,
         userId,
@@ -297,16 +278,14 @@ class GroupInvitationRepositoryTest {
     final Instant now = Instant.now();
     final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(300));
 
-    DatabaseCrud.insertGroupInvitation(
-        dslContext,
+    databaseCrud.insertGroupInvitation(
         UUID.randomUUID(),
         groupId,
         anotherUserId,
         GroupInvitationToken.generate(),
         now,
         expiration);
-    DatabaseCrud.insertGroupInvitation(
-        dslContext,
+    databaseCrud.insertGroupInvitation(
         UUID.randomUUID(),
         anotherGroupId,
         userId,
