@@ -21,6 +21,7 @@ public class JacksonConfig {
     }
 
     private static class TrimmingStringDeserializer extends StringDeserializer {
+
         @Override
         public @Nullable String deserialize(JsonParser p, DeserializationContext ctxt) throws JacksonException {
             String value = super.deserialize(p, ctxt);
