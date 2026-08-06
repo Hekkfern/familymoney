@@ -2,10 +2,14 @@ package com.familymoney.domains.auth.controllers;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.familymoney.domains.auth.controllers.mappers.LoginResponseMapper;
 import com.familymoney.domains.auth.controllers.mappers.RefreshResponseMapper;
+import com.familymoney.domains.auth.exceptions.NewEmailVerificationTooSoonException;
 import com.familymoney.domains.auth.services.IAuthService;
 import com.familymoney.domains.auth.services.data.TokenPair;
 import com.familymoney.domains.auth.types.AccessToken;
@@ -45,6 +49,7 @@ class AuthControllerTest {
 
   @MockitoBean private IAuthService authService;
   @MockitoBean private io.jsonwebtoken.Clock jwtClock;
+  @MockitoBean private java.time.Clock clock;
   @MockitoBean private JwtUtils jwtUtils;
   @MockitoBean private IUserService userService;
 
@@ -53,6 +58,7 @@ class AuthControllerTest {
   @BeforeEach
   void setup() {
     when(jwtClock.now()).thenReturn(java.util.Date.from(now));
+    when(clock.instant()).thenReturn(now);
   }
 
   @Nested
@@ -298,6 +304,76 @@ class AuthControllerTest {
           .exchange()
           .expectStatus()
           .isBadRequest();
+    }
+  }
+
+  @Nested
+  class ResendVerificationEmail {
+
+    @Test
+    void accepted_when_email_is_valid() {
+      doNothing().when(authService).resendVerificationEmail(any());
+      client
+          .post()
+          .uri(AuthControllerUriFactory.getResendVerificationEmailPath())
+          .body(Map.of("email", FakeGenerator.email()))
+          .exchange()
+          .expectStatus()
+          .isAccepted();
+
+      verify(authService).resendVerificationEmail(any());
+    }
+
+    @ParameterizedTest
+    @FieldSource("com.familymoney.testutils.TestDataFactory#INVALID_EMAILS")
+    @EmptySource
+    void badrequest_when_email_is_invalid(final String email) {
+      client
+          .post()
+          .uri(AuthControllerUriFactory.getResendVerificationEmailPath())
+          .body(Map.of("email", email))
+          .exchange()
+          .expectStatus()
+          .isBadRequest();
+
+      verifyNoInteractions(authService);
+    }
+
+    @Test
+    void badrequest_when_email_is_missing() {
+      client
+          .post()
+          .uri(AuthControllerUriFactory.getResendVerificationEmailPath())
+          .body(Map.of())
+          .exchange()
+          .expectStatus()
+          .isBadRequest();
+
+      verifyNoInteractions(authService);
+    }
+
+    @Test
+    void too_many_requests_when_resend_is_rate_limited() {
+      final Instant resetTime = now.plusSeconds(60);
+      doThrow(new NewEmailVerificationTooSoonException(resetTime))
+          .when(authService)
+          .resendVerificationEmail(any());
+
+      client
+          .post()
+          .uri(AuthControllerUriFactory.getResendVerificationEmailPath())
+          .body(Map.of("email", FakeGenerator.email()))
+          .exchange()
+          .expectStatus()
+          .isEqualTo(429)
+          .expectHeader()
+          .valueEquals("Retry-After", "60")
+          .expectHeader()
+          .valueEquals("RateLimit-Limit", "1")
+          .expectHeader()
+          .valueEquals("RateLimit-Remaining", "0")
+          .expectHeader()
+          .valueEquals("RateLimit-Reset", String.valueOf(resetTime.getEpochSecond()));
     }
   }
 

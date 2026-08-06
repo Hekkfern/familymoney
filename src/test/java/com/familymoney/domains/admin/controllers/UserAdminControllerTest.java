@@ -14,9 +14,11 @@ import com.familymoney.domains.users.types.UserId;
 import com.familymoney.domains.users.types.UserName;
 import com.familymoney.testutils.AdminControllerUriFactory;
 import com.familymoney.testutils.FakeGenerator;
+import java.time.Clock;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,12 +45,18 @@ class UserAdminControllerTest {
   @Autowired private RestTestClient client;
 
   @MockitoBean private IUserService userService;
+  @MockitoBean private Clock clock;
+
+  @BeforeEach
+  void setup() {
+    when(clock.instant()).thenReturn(now);
+  }
 
   @Nested
   class GetUserInfo {
 
     @Test
-    void UserAdminController_GetUserInfo_Successful() {
+    void success() {
       final UserName username = UserName.fromString(FakeGenerator.username());
       final Email email = Email.fromString(FakeGenerator.email());
       final UserId userId = UserId.fromUuid(UUID.randomUUID());

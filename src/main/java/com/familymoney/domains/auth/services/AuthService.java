@@ -1,8 +1,6 @@
 package com.familymoney.domains.auth.services;
 
 import com.familymoney.domains.auth.exceptions.BlacklistedFamilyException;
-import com.familymoney.domains.auth.exceptions.EmailAlreadyVerifiedException;
-import com.familymoney.domains.auth.exceptions.EmailNotFoundException;
 import com.familymoney.domains.auth.exceptions.NewEmailVerificationTooSoonException;
 import com.familymoney.domains.auth.exceptions.RefreshTokenInvalidException;
 import com.familymoney.domains.auth.exceptions.RefreshTokenNotFoundException;
@@ -234,26 +232,25 @@ public class AuthService implements IAuthService {
   @Override
   public void resendVerificationEmail(final Email email) {
     // Look for user by email
-    final UserEntity userDb =
-        userRepository
-            .findByEmail(email)
-            .orElseThrow(() -> new EmailNotFoundException("User with that email not found"));
-    // Check if user is already verified. If so, skip
+    final Optional<UserEntity> user = userRepository.findByEmail(email);
+    if (user.isEmpty()) {
+      return;
+    }
+    final UserEntity userDb = user.get();
     if (userDb.isEmailVerified()) {
-      throw new EmailAlreadyVerifiedException("Email is already verified");
+      return;
     }
     // check minimum wait time between requests. If the current instant is before the createdAt
     // plus the configured wait time, the user is requesting a new verification email too soon.
     final Optional<EmailVerificationEntity> oldEmailVerificationTokenDb =
         emailVerificationRepository.findByUserId(userDb.id());
-    if (oldEmailVerificationTokenDb.isPresent()
-        && Instant.now(clock)
-            .isBefore(
-                oldEmailVerificationTokenDb
-                    .get()
-                    .lastSentAt()
-                    .plus(emailVerificationProperties.waitTime()))) {
-      throw new NewEmailVerificationTooSoonException();
+    final Instant now = Instant.now(clock);
+    final Instant nextRequestAt =
+        oldEmailVerificationTokenDb
+            .map(token -> token.lastSentAt().plus(emailVerificationProperties.waitTime()))
+            .orElse(now);
+    if (now.isBefore(nextRequestAt)) {
+      throw new NewEmailVerificationTooSoonException(nextRequestAt);
     }
     // Generate and save verification token to database
     final EmailVerificationToken newEmailVerificationToken = EmailVerificationToken.generate();

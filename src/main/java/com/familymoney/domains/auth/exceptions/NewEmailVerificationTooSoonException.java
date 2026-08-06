@@ -1,6 +1,14 @@
 package com.familymoney.domains.auth.exceptions;
 
-import lombok.experimental.StandardException;
+import java.time.Instant;
+import lombok.Getter;
 
-@StandardException
-public final class NewEmailVerificationTooSoonException extends RuntimeException {}
+@Getter
+public final class NewEmailVerificationTooSoonException extends RuntimeException {
+
+  private final Instant nextRequestAt;
+
+  public NewEmailVerificationTooSoonException(final Instant nextRequestAt) {
+    this.nextRequestAt = nextRequestAt;
+  }
+}

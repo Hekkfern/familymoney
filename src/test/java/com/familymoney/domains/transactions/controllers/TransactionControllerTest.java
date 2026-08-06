@@ -1,7 +1,11 @@
 package com.familymoney.domains.transactions.controllers;
 
+import static org.mockito.Mockito.when;
+
 import com.familymoney.domains.users.services.IUserService;
+import java.time.Clock;
 import java.time.Instant;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -26,4 +30,10 @@ class TransactionControllerTest {
   @Autowired private RestTestClient client;
 
   @MockitoBean private IUserService userService;
+  @MockitoBean private Clock clock;
+
+  @BeforeEach
+  void setup() {
+    when(clock.instant()).thenReturn(now);
+  }
 }

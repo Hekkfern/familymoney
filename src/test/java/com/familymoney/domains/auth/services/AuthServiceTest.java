@@ -13,8 +13,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.familymoney.domains.auth.exceptions.BlacklistedFamilyException;
-import com.familymoney.domains.auth.exceptions.EmailAlreadyVerifiedException;
-import com.familymoney.domains.auth.exceptions.EmailNotFoundException;
 import com.familymoney.domains.auth.exceptions.NewEmailVerificationTooSoonException;
 import com.familymoney.domains.auth.exceptions.RefreshTokenInvalidException;
 import com.familymoney.domains.auth.exceptions.RefreshTokenNotFoundException;
@@ -663,20 +661,29 @@ class AuthServiceTest {
     }
 
     @Test
-    void throws_when_no_user_with_that_email_exists() {
+    void does_nothing_when_no_user_with_that_email_exists() {
       final Email email = Email.fromString(FakeGenerator.email());
       when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
 
-      assertThrows(EmailNotFoundException.class, () -> authService.resendVerificationEmail(email));
+      assertThatCode(() -> authService.resendVerificationEmail(email)).doesNotThrowAnyException();
+
+      verify(emailVerificationRepository, never()).findByUserId(any(UserId.class));
+      verify(emailSenderService, never())
+          .sendEmailVerificationEmail(
+              any(Email.class), any(UserName.class), any(EmailVerificationToken.class));
     }
 
     @Test
-    void throws_when_user_email_is_already_verified() {
+    void does_nothing_when_user_email_is_already_verified() {
       final Email email = Email.fromString(FakeGenerator.email());
       mockUserRepositoryFindByEmail(true, true);
 
-      assertThrows(
-          EmailAlreadyVerifiedException.class, () -> authService.resendVerificationEmail(email));
+      assertThatCode(() -> authService.resendVerificationEmail(email)).doesNotThrowAnyException();
+
+      verify(emailVerificationRepository, never()).findByUserId(any(UserId.class));
+      verify(emailSenderService, never())
+          .sendEmailVerificationEmail(
+              any(Email.class), any(UserName.class), any(EmailVerificationToken.class));
     }
   }
 

@@ -54,3 +54,4 @@ e.g., controllers, services, repositories)
 - For each method in the class to test, create a nested class with `@Nested` annotation and the name of the method to
 test.
 - Execute `./gradlew testAll` to run all tests.
+- Use a `Clock` instance for time-dependent code to facilitate testing.

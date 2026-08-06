@@ -17,10 +17,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 @Tag(
     name = "Registration and Authentication APIs",
@@ -89,7 +91,12 @@ public interface IAuthController {
   void verifyEmail(@RequestBody @Valid VerifyEmailRequestDto request);
 
   @Operation(summary = "Resend the email verification email to the user")
+  @ApiResponses({
+    @ApiResponse(responseCode = "202", description = "Verification email request accepted"),
+    @ApiResponse(responseCode = "429", description = "Verification email request rate limited")
+  })
   @PostMapping(path = "verify-email/resend", version = "1")
+  @ResponseStatus(HttpStatus.ACCEPTED)
   void resendVerificationEmail(@RequestBody @Valid ResendVerificationEmailRequestDto request);
 
   @Operation(summary = "Initiate the password reset process for a user account")

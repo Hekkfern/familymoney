@@ -13,9 +13,11 @@ import com.familymoney.domains.users.types.UserName;
 import com.familymoney.testutils.FakeGenerator;
 import com.familymoney.testutils.UserControllerUriFactory;
 import com.familymoney.testutils.WithMockUserId;
+import java.time.Clock;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +45,12 @@ class UserControllerTest {
   @Autowired private RestTestClient client;
 
   @MockitoBean private IUserService userService;
+  @MockitoBean private Clock clock;
+
+  @BeforeEach
+  void setup() {
+    when(clock.instant()).thenReturn(now);
+  }
 
   @Nested
   class GetMyUserInfo {
