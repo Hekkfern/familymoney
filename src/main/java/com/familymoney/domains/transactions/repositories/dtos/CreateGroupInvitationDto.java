@@ -11,8 +11,7 @@ import java.util.UUID;
  *
  * @param id the unique identifier for the group invitation record
  * @param groupId the identifier of the group for which the invitation is being created
- * @param token the unique token associated with the group invitation, used for validation and
- *     retrieval
+ * @param token the token associated with the group invitation
  * @param expiresAt the timestamp indicating when the invitation expires, after which it should no
  *     longer be valid
  */

@@ -107,7 +107,7 @@ class TransactionGroupServiceTest {
   private GroupInvitationEntity invitationDbo(
       GroupId groupId, GroupInvitationToken token, Instant expiresAt) {
     return new GroupInvitationEntity(
-        UUID.randomUUID(), groupId, null, token, NOW, ExpirationTime.of(expiresAt));
+        UUID.randomUUID(), groupId, null, NOW, ExpirationTime.of(expiresAt));
   }
 
   private void mockCreateInGroupRepository() {
@@ -147,7 +147,6 @@ class TransactionGroupServiceTest {
                       dto.id(), // return the same UserId received
                       dto.groupId(),
                       dto.userId(),
-                      dto.token(),
                       NOW,
                       dto.expiresAt()));
             });

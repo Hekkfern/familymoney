@@ -13,7 +13,9 @@ import com.familymoney.domains.auth.types.ExpirationTime;
 import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.domains.users.types.UserName;
+import com.familymoney.generated.tables.EmailVerificationTokens;
 import com.familymoney.repository.utils.DatabaseCrud;
+import com.familymoney.security.DefaultOpaqueTokenHasher;
 import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;
 import java.util.Optional;
@@ -45,7 +47,8 @@ class EmailVerificationRepositoryTest {
 
   @BeforeEach
   void setUp() {
-    this.emailVerificationRepository = new EmailVerificationRepository(dslContext);
+    this.emailVerificationRepository =
+        new EmailVerificationRepository(dslContext, new DefaultOpaqueTokenHasher());
     this.databaseCrud = new DatabaseCrud(dslContext);
   }
 
@@ -79,10 +82,16 @@ class EmailVerificationRepositoryTest {
       assertThat(tokenCreatedOpt).isPresent();
       final EmailVerificationEntity tokenCreated = tokenCreatedOpt.get();
       assertThat(tokenCreated.userId()).isEqualTo(userId);
-      assertThat(tokenCreated.token()).isEqualTo(token);
       assertThat(tokenCreated.expiresAt()).isEqualTo(expiresAt);
       assertThat(tokenCreated.createdAt()).isNotNull();
       assertThat(tokenCreated.lastSentAt()).isNotNull();
+      assertThat(
+              dslContext
+                  .select(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN_HASH)
+                  .from(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS)
+                  .fetchSingle(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN_HASH))
+          .isEqualTo(new DefaultOpaqueTokenHasher().hash(token.value()))
+          .isNotEqualTo(token.value());
     }
 
     @Test
@@ -145,7 +154,6 @@ class EmailVerificationRepositoryTest {
       assertThat(tokenFoundOpt).isPresent();
       final EmailVerificationEntity tokenFound = tokenFoundOpt.get();
       assertThat(tokenFound.userId()).isEqualTo(userId);
-      assertThat(tokenFound.token()).isEqualTo(token);
       assertThat(tokenFound.expiresAt()).isEqualTo(expiration);
       assertThat(tokenFound.createdAt()).isEqualTo(now);
       assertThat(tokenFound.updatedAt()).isEqualTo(now);
@@ -178,7 +186,6 @@ class EmailVerificationRepositoryTest {
       assertThat(tokenFoundOpt).isPresent();
       final EmailVerificationEntity tokenFound = tokenFoundOpt.get();
       assertThat(tokenFound.userId()).isEqualTo(userId);
-      assertThat(tokenFound.token()).isEqualTo(token);
       assertThat(tokenFound.expiresAt()).isEqualTo(expiration);
       assertThat(tokenFound.createdAt()).isEqualTo(now);
       assertThat(tokenFound.updatedAt()).isEqualTo(now);
@@ -215,7 +222,6 @@ class EmailVerificationRepositoryTest {
       final EmailVerificationEntity tokenFound =
           emailVerificationRepository.findByUserId(userId).orElseThrow();
       assertThat(tokenFound.userId()).isEqualTo(userId);
-      assertThat(tokenFound.token()).isEqualTo(newToken);
       assertThat(tokenFound.expiresAt()).isEqualTo(expiration);
       assertThat(tokenFound.createdAt()).isEqualTo(now);
       assertThat(tokenFound.lastSentAt()).isEqualTo(now);
@@ -238,7 +244,6 @@ class EmailVerificationRepositoryTest {
       final EmailVerificationEntity tokenFound =
           emailVerificationRepository.findByUserId(userId).orElseThrow();
       assertThat(tokenFound.userId()).isEqualTo(userId);
-      assertThat(tokenFound.token()).isEqualTo(token);
       assertThat(tokenFound.expiresAt()).isEqualTo(expiration);
       assertThat(tokenFound.createdAt()).isEqualTo(now);
     }

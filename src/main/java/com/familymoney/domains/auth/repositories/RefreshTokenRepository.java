@@ -7,6 +7,7 @@ import com.familymoney.domains.auth.repositories.mappers.RefreshTokenJooqMapper;
 import com.familymoney.domains.auth.types.RefreshToken;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.tables.RefreshTokens;
+import com.familymoney.security.IOpaqueTokenHasher;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Repository;
 public class RefreshTokenRepository implements IRefreshTokenRepository {
 
   private final DSLContext db;
+  private final IOpaqueTokenHasher tokenHasher;
 
   @Override
   public Optional<RefreshTokenEntity> create(final CreateRefreshTokenDto data) {
@@ -26,19 +28,18 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
         .columns(
             RefreshTokens.REFRESH_TOKENS.ID,
             RefreshTokens.REFRESH_TOKENS.USER_ID,
-            RefreshTokens.REFRESH_TOKENS.TOKEN,
+            RefreshTokens.REFRESH_TOKENS.TOKEN_HASH,
             RefreshTokens.REFRESH_TOKENS.FAMILY,
             RefreshTokens.REFRESH_TOKENS.EXPIRES_AT)
         .values(
             data.id(),
             data.userId().value(),
-            data.token().value(),
+            tokenHasher.hash(data.token().value()),
             data.family().value(),
             data.expiresAt().toOffsetDateTime())
         .returning(
             RefreshTokens.REFRESH_TOKENS.ID,
             RefreshTokens.REFRESH_TOKENS.USER_ID,
-            RefreshTokens.REFRESH_TOKENS.TOKEN,
             RefreshTokens.REFRESH_TOKENS.CREATED_AT,
             RefreshTokens.REFRESH_TOKENS.UPDATED_AT,
             RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,
@@ -52,13 +53,12 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
     return db.select(
             RefreshTokens.REFRESH_TOKENS.ID,
             RefreshTokens.REFRESH_TOKENS.USER_ID,
-            RefreshTokens.REFRESH_TOKENS.TOKEN,
             RefreshTokens.REFRESH_TOKENS.CREATED_AT,
             RefreshTokens.REFRESH_TOKENS.UPDATED_AT,
             RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,
             RefreshTokens.REFRESH_TOKENS.FAMILY)
         .from(RefreshTokens.REFRESH_TOKENS)
-        .where(RefreshTokens.REFRESH_TOKENS.TOKEN.eq(token.value()))
+        .where(RefreshTokens.REFRESH_TOKENS.TOKEN_HASH.eq(tokenHasher.hash(token.value())))
         .fetchOptional()
         .map(RefreshTokenJooqMapper::toEntity);
   }
@@ -70,14 +70,14 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
     final int rowsAffected =
         db.update(RefreshTokens.REFRESH_TOKENS)
             .set(
-                RefreshTokens.REFRESH_TOKENS.TOKEN,
+                RefreshTokens.REFRESH_TOKENS.TOKEN_HASH,
                 DSL.coalesce(
-                    DSL.val(data.token() != null ? data.token().value() : null),
-                    RefreshTokens.REFRESH_TOKENS.TOKEN))
+                    DSL.val(data.token() != null ? tokenHasher.hash(data.token().value()) : null),
+                    RefreshTokens.REFRESH_TOKENS.TOKEN_HASH))
             .set(
                 RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,
                 DSL.coalesce(DSL.val(expiresAtVal), RefreshTokens.REFRESH_TOKENS.EXPIRES_AT))
-            .where(RefreshTokens.REFRESH_TOKENS.TOKEN.eq(token.value()))
+            .where(RefreshTokens.REFRESH_TOKENS.TOKEN_HASH.eq(tokenHasher.hash(token.value())))
             .execute();
     return rowsAffected > 0;
   }
@@ -89,10 +89,10 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
     final int rowsAffected =
         db.update(RefreshTokens.REFRESH_TOKENS)
             .set(
-                RefreshTokens.REFRESH_TOKENS.TOKEN,
+                RefreshTokens.REFRESH_TOKENS.TOKEN_HASH,
                 DSL.coalesce(
-                    DSL.val(data.token() != null ? data.token().value() : null),
-                    RefreshTokens.REFRESH_TOKENS.TOKEN))
+                    DSL.val(data.token() != null ? tokenHasher.hash(data.token().value()) : null),
+                    RefreshTokens.REFRESH_TOKENS.TOKEN_HASH))
             .set(
                 RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,
                 DSL.coalesce(DSL.val(expiresAtVal), RefreshTokens.REFRESH_TOKENS.EXPIRES_AT))
@@ -105,7 +105,7 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
   public boolean deleteByToken(RefreshToken token) {
     final int rows =
         db.delete(RefreshTokens.REFRESH_TOKENS)
-            .where(RefreshTokens.REFRESH_TOKENS.TOKEN.eq(token.value()))
+            .where(RefreshTokens.REFRESH_TOKENS.TOKEN_HASH.eq(tokenHasher.hash(token.value())))
             .execute();
     return rows > 0;
   }

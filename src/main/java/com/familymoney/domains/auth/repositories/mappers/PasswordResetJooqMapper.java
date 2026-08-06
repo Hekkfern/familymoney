@@ -2,7 +2,6 @@ package com.familymoney.domains.auth.repositories.mappers;
 
 import com.familymoney.domains.auth.repositories.entitites.PasswordResetEntity;
 import com.familymoney.domains.auth.types.ExpirationTime;
-import com.familymoney.domains.auth.types.PasswordResetToken;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.tables.PasswordResetTokens;
 import java.time.OffsetDateTime;
@@ -25,7 +24,6 @@ public final class PasswordResetJooqMapper {
 
     return new PasswordResetEntity(
         UserId.fromUuid(r.get(PasswordResetTokens.PASSWORD_RESET_TOKENS.USER_ID)),
-        PasswordResetToken.fromString(r.get(PasswordResetTokens.PASSWORD_RESET_TOKENS.TOKEN)),
         createdAt.toInstant(),
         updatedAt.toInstant(),
         ExpirationTime.of(expiresAt));

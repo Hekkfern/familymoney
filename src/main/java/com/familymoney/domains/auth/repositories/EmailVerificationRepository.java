@@ -7,6 +7,7 @@ import com.familymoney.domains.auth.repositories.mappers.EmailVerificationJooqMa
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.tables.EmailVerificationTokens;
+import com.familymoney.security.IOpaqueTokenHasher;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Optional;
@@ -20,18 +21,21 @@ import org.springframework.stereotype.Repository;
 public class EmailVerificationRepository implements IEmailVerificationRepository {
 
   private final DSLContext db;
+  private final IOpaqueTokenHasher tokenHasher;
 
   @Override
   public Optional<EmailVerificationEntity> create(final CreateEmailVerificationDto data) {
     return db.insertInto(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS)
         .columns(
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.USER_ID,
-            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN,
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN_HASH,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.EXPIRES_AT)
-        .values(data.userId().value(), data.token().value(), data.expiresAt().toOffsetDateTime())
+        .values(
+            data.userId().value(),
+            tokenHasher.hash(data.token().value()),
+            data.expiresAt().toOffsetDateTime())
         .returning(
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.USER_ID,
-            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.EXPIRES_AT,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.LAST_SENT_AT,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.CREATED_AT,
@@ -44,7 +48,6 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
   public Optional<EmailVerificationEntity> findByUserId(final UserId userId) {
     return db.select(
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.USER_ID,
-            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.EXPIRES_AT,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.LAST_SENT_AT,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.CREATED_AT,
@@ -59,13 +62,14 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
   public Optional<EmailVerificationEntity> findByToken(final EmailVerificationToken token) {
     return db.select(
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.USER_ID,
-            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.EXPIRES_AT,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.LAST_SENT_AT,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.CREATED_AT,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.UPDATED_AT)
         .from(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS)
-        .where(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN.eq(token.value()))
+        .where(
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN_HASH.eq(
+                tokenHasher.hash(token.value())))
         .fetchOptional()
         .map(EmailVerificationJooqMapper::toEntity);
   }
@@ -77,10 +81,10 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
     final int rowsAffected =
         db.update(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS)
             .set(
-                EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN,
+                EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN_HASH,
                 DSL.coalesce(
-                    DSL.val(data.token() != null ? data.token().value() : null),
-                    EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN))
+                    DSL.val(data.token() != null ? tokenHasher.hash(data.token().value()) : null),
+                    EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN_HASH))
             .set(
                 EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.EXPIRES_AT,
                 DSL.coalesce(

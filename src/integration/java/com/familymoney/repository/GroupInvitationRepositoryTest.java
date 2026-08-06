@@ -14,7 +14,9 @@ import com.familymoney.domains.transactions.types.GroupName;
 import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.domains.users.types.UserName;
+import com.familymoney.generated.tables.GroupInvitations;
 import com.familymoney.repository.utils.DatabaseCrud;
+import com.familymoney.security.DefaultOpaqueTokenHasher;
 import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;
 import java.util.Optional;
@@ -47,7 +49,8 @@ class GroupInvitationRepositoryTest {
 
   @BeforeEach
   void setUp() {
-    this.groupInvitationRepository = new GroupInvitationRepository(dslContext);
+    this.groupInvitationRepository =
+        new GroupInvitationRepository(dslContext, new DefaultOpaqueTokenHasher());
     this.databaseCrud = new DatabaseCrud(dslContext);
   }
 
@@ -97,13 +100,19 @@ class GroupInvitationRepositoryTest {
       assertThat(invitation.id()).isNotNull();
       assertThat(invitation.groupId()).isNotNull().isEqualTo(groupId);
       assertThat(invitation.userId()).isNotNull().isEqualTo(userId);
-      assertThat(invitation.token()).isNotNull().isEqualTo(token);
       assertThat(invitation.createdAt())
           .isNotNull()
           .isBetween(now.minusSeconds(1), now.plusSeconds(1));
       assertThat(invitation.expiresAt().value())
           .isNotNull()
           .isBetween(expiration.value().minusSeconds(1), expiration.value().plusSeconds(1));
+      assertThat(
+              dslContext
+                  .select(GroupInvitations.GROUP_INVITATIONS.TOKEN_HASH)
+                  .from(GroupInvitations.GROUP_INVITATIONS)
+                  .fetchSingle(GroupInvitations.GROUP_INVITATIONS.TOKEN_HASH))
+          .isEqualTo(new DefaultOpaqueTokenHasher().hash(token.value()))
+          .isNotEqualTo(token.value());
     }
 
     @Test
@@ -187,7 +196,6 @@ class GroupInvitationRepositoryTest {
       final GroupInvitationEntity invitationFound = invitationFoundOpt.get();
       assertThat(invitationFound.id()).isNotNull();
       assertThat(invitationFound.groupId()).isEqualTo(groupId);
-      assertThat(invitationFound.token()).isEqualTo(token);
       assertThat(invitationFound.createdAt()).isEqualTo(now);
       assertThat(invitationFound.expiresAt()).isEqualTo(expiration);
     }

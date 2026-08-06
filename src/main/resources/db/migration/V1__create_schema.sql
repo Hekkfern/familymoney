@@ -87,8 +87,8 @@ CREATE
             user_id UUID PRIMARY KEY NOT NULL REFERENCES users(id) ON
             DELETE
                 CASCADE,
-                token VARCHAR(255) UNIQUE NOT NULL CHECK(
-                    CHAR_LENGTH( BTRIM( token ))> 0
+                token_hash VARCHAR(255) UNIQUE NOT NULL CHECK(
+                    CHAR_LENGTH( BTRIM( token_hash ))> 0
                 ),
                 expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
                 last_sent_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
@@ -110,8 +110,8 @@ CREATE
             user_id UUID PRIMARY KEY NOT NULL REFERENCES users(id) ON
             DELETE
                 CASCADE,
-                token VARCHAR(255) UNIQUE NOT NULL CHECK(
-                    CHAR_LENGTH( BTRIM( token ))> 0
+                token_hash VARCHAR(255) UNIQUE NOT NULL CHECK(
+                    CHAR_LENGTH( BTRIM( token_hash ))> 0
                 ),
                 expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
                 created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
@@ -133,8 +133,8 @@ CREATE
             user_id UUID NOT NULL REFERENCES users(id) ON
             DELETE
                 CASCADE,
-                token VARCHAR(255) UNIQUE NOT NULL CHECK(
-                    CHAR_LENGTH( BTRIM( token ))> 0
+                token_hash VARCHAR(255) UNIQUE NOT NULL CHECK(
+                    CHAR_LENGTH( BTRIM( token_hash ))> 0
                 ),
                 created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
                 updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
@@ -159,8 +159,8 @@ CREATE
     refresh_tokens(family);
 
 CREATE
-    INDEX idx_refresh_tokens_token ON
-    refresh_tokens(token);
+    INDEX idx_refresh_tokens_token_hash ON
+    refresh_tokens(token_hash);
 
 SELECT
     trigger_updated_at('refresh_tokens');
@@ -169,8 +169,8 @@ SELECT
 CREATE
     UNLOGGED TABLE
         used_refresh_tokens(
-            token VARCHAR(255) PRIMARY KEY NOT NULL CHECK(
-                CHAR_LENGTH( BTRIM( token ))> 0
+            token_hash VARCHAR(255) PRIMARY KEY NOT NULL CHECK(
+                CHAR_LENGTH( BTRIM( token_hash ))> 0
             ),
             family UUID NOT NULL,
             used_at TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -326,8 +326,8 @@ CREATE
                 user_id UUID NOT NULL REFERENCES users(id) ON
                 DELETE
                     CASCADE,
-                    token VARCHAR(255) UNIQUE NOT NULL CHECK(
-                        CHAR_LENGTH( BTRIM( token ))> 0
+                    token_hash VARCHAR(255) UNIQUE NOT NULL CHECK(
+                        CHAR_LENGTH( BTRIM( token_hash ))> 0
                     ),
                     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
                     expires_at TIMESTAMP WITH TIME ZONE NOT NULL
@@ -342,5 +342,5 @@ CREATE
     group_invitations(user_id);
 
 CREATE
-    INDEX idx_group_invitations_token ON
-    group_invitations(token);
+    INDEX idx_group_invitations_token_hash ON
+    group_invitations(token_hash);

@@ -8,6 +8,8 @@ import com.familymoney.domains.auth.repositories.dtos.CreateUsedRefreshTokenDto;
 import com.familymoney.domains.auth.repositories.entitites.UsedRefreshTokenEntity;
 import com.familymoney.domains.auth.types.RefreshToken;
 import com.familymoney.domains.auth.types.TokenFamily;
+import com.familymoney.generated.tables.UsedRefreshTokens;
+import com.familymoney.security.DefaultOpaqueTokenHasher;
 import java.time.Instant;
 import java.util.Optional;
 import org.jooq.DSLContext;
@@ -35,7 +37,8 @@ class UsedRefreshTokenRepositoryTest {
 
   @BeforeEach
   void setUp() {
-    this.usedRefreshTokenRepository = new UsedRefreshTokenRepository(dslContext);
+    this.usedRefreshTokenRepository =
+        new UsedRefreshTokenRepository(dslContext, new DefaultOpaqueTokenHasher());
   }
 
   @Nested
@@ -52,10 +55,16 @@ class UsedRefreshTokenRepositoryTest {
 
       assertThat(created).isPresent();
       final UsedRefreshTokenEntity entry = created.get();
-      assertThat(entry.token()).isEqualTo(token);
       assertThat(entry.family()).isEqualTo(family);
       assertThat(entry.usedAt()).isBetween(now.minusSeconds(1), now.plusSeconds(1));
       assertThat(entry.createdAt()).isBetween(now.minusSeconds(1), now.plusSeconds(1));
+      assertThat(
+              dslContext
+                  .select(UsedRefreshTokens.USED_REFRESH_TOKENS.TOKEN_HASH)
+                  .from(UsedRefreshTokens.USED_REFRESH_TOKENS)
+                  .fetchSingle(UsedRefreshTokens.USED_REFRESH_TOKENS.TOKEN_HASH))
+          .isEqualTo(new DefaultOpaqueTokenHasher().hash(token.value()))
+          .isNotEqualTo(token.value());
     }
 
     @Test

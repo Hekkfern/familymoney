@@ -12,7 +12,9 @@ import com.familymoney.domains.auth.types.PasswordResetToken;
 import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.domains.users.types.UserName;
+import com.familymoney.generated.tables.PasswordResetTokens;
 import com.familymoney.repository.utils.DatabaseCrud;
+import com.familymoney.security.DefaultOpaqueTokenHasher;
 import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;
 import java.util.Optional;
@@ -45,7 +47,8 @@ class PasswordResetRepositoryTest {
 
   @BeforeEach
   void setUp() {
-    this.passwordResetRepository = new PasswordResetRepository(dslContext);
+    this.passwordResetRepository =
+        new PasswordResetRepository(dslContext, new DefaultOpaqueTokenHasher());
     this.databaseCrud = new DatabaseCrud(dslContext);
   }
 
@@ -79,7 +82,6 @@ class PasswordResetRepositoryTest {
       assertThat(passwordResetOpt).isPresent();
       final PasswordResetEntity passwordReset = passwordResetOpt.get();
       assertThat(passwordReset.userId()).isNotNull().isEqualTo(userId);
-      assertThat(passwordReset.token()).isNotNull().isEqualTo(token);
       assertThat(passwordReset.createdAt())
           .isNotNull()
           .isBetween(now.minusSeconds(1), now.plusSeconds(1));
@@ -89,6 +91,13 @@ class PasswordResetRepositoryTest {
       assertThat(passwordReset.expiresAt().value())
           .isNotNull()
           .isBetween(expiresAt.value().minusSeconds(1), expiresAt.value().plusSeconds(1));
+      assertThat(
+              dslContext
+                  .select(PasswordResetTokens.PASSWORD_RESET_TOKENS.TOKEN_HASH)
+                  .from(PasswordResetTokens.PASSWORD_RESET_TOKENS)
+                  .fetchSingle(PasswordResetTokens.PASSWORD_RESET_TOKENS.TOKEN_HASH))
+          .isEqualTo(new DefaultOpaqueTokenHasher().hash(token.value()))
+          .isNotEqualTo(token.value());
     }
 
     @Test
@@ -151,7 +160,6 @@ class PasswordResetRepositoryTest {
       assertThat(entryFoundOpt).isPresent();
       final PasswordResetEntity entryFound = entryFoundOpt.get();
       assertThat(entryFound.userId()).isEqualTo(userId);
-      assertThat(entryFound.token()).isEqualTo(token);
       assertThat(entryFound.expiresAt()).isEqualTo(expiration);
       assertThat(entryFound.createdAt()).isEqualTo(now);
       assertThat(entryFound.updatedAt()).isEqualTo(now);

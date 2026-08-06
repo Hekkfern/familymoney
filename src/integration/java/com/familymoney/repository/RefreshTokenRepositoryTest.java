@@ -14,7 +14,9 @@ import com.familymoney.domains.auth.types.TokenFamily;
 import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.domains.users.types.UserName;
+import com.familymoney.generated.tables.RefreshTokens;
 import com.familymoney.repository.utils.DatabaseCrud;
+import com.familymoney.security.DefaultOpaqueTokenHasher;
 import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;
 import java.util.Optional;
@@ -47,7 +49,8 @@ class RefreshTokenRepositoryTest {
 
   @BeforeEach
   void setUp() {
-    this.refreshTokenRepository = new RefreshTokenRepository(dslContext);
+    this.refreshTokenRepository =
+        new RefreshTokenRepository(dslContext, new DefaultOpaqueTokenHasher());
     this.databaseCrud = new DatabaseCrud(dslContext);
   }
 
@@ -85,7 +88,6 @@ class RefreshTokenRepositoryTest {
       final RefreshTokenEntity refreshToken = refreshTokenCreated.get();
       assertThat(refreshToken.id()).isNotNull();
       assertThat(refreshToken.userId()).isNotNull().isEqualTo(userId);
-      assertThat(refreshToken.token()).isNotNull().isEqualTo(token);
       assertThat(refreshToken.createdAt())
           .isNotNull()
           .isBetween(now.minusSeconds(1), now.plusSeconds(1));
@@ -96,6 +98,13 @@ class RefreshTokenRepositoryTest {
           .isNotNull()
           .isBetween(expiration.value().minusSeconds(1), expiration.value().plusSeconds(1));
       assertThat(refreshToken.family()).isNotNull().isEqualTo(family);
+      assertThat(
+              dslContext
+                  .select(RefreshTokens.REFRESH_TOKENS.TOKEN_HASH)
+                  .from(RefreshTokens.REFRESH_TOKENS)
+                  .fetchSingle(RefreshTokens.REFRESH_TOKENS.TOKEN_HASH))
+          .isEqualTo(new DefaultOpaqueTokenHasher().hash(token.value()))
+          .isNotEqualTo(token.value());
     }
 
     void persists_when_same_user_but_different_family() {
@@ -213,7 +222,6 @@ class RefreshTokenRepositoryTest {
           refreshTokenRepository.findByToken(newToken).orElseThrow();
       assertThat(tokenFound.id()).isEqualTo(id);
       assertThat(tokenFound.userId()).isEqualTo(userId);
-      assertThat(tokenFound.token()).isEqualTo(newToken);
       assertThat(tokenFound.createdAt()).isEqualTo(now);
       assertThat(tokenFound.expiresAt()).isEqualTo(expiration);
       assertThat(tokenFound.family()).isEqualTo(family);
@@ -237,7 +245,6 @@ class RefreshTokenRepositoryTest {
       final RefreshTokenEntity tokenFound = refreshTokenRepository.findByToken(token).orElseThrow();
       assertThat(tokenFound.id()).isEqualTo(id);
       assertThat(tokenFound.userId()).isEqualTo(userId);
-      assertThat(tokenFound.token()).isEqualTo(token);
       assertThat(tokenFound.createdAt()).isEqualTo(now);
       assertThat(tokenFound.expiresAt()).isEqualTo(expiration);
       assertThat(tokenFound.family()).isEqualTo(family);
@@ -278,7 +285,6 @@ class RefreshTokenRepositoryTest {
           refreshTokenRepository.findByToken(newToken).orElseThrow();
       assertThat(tokenFound.id()).isEqualTo(id);
       assertThat(tokenFound.userId()).isEqualTo(userId);
-      assertThat(tokenFound.token()).isEqualTo(newToken);
       assertThat(tokenFound.createdAt()).isEqualTo(now);
       assertThat(tokenFound.expiresAt()).isEqualTo(expiration);
       assertThat(tokenFound.family()).isEqualTo(family);
@@ -302,7 +308,6 @@ class RefreshTokenRepositoryTest {
       final RefreshTokenEntity tokenFound = refreshTokenRepository.findByToken(token).orElseThrow();
       assertThat(tokenFound.id()).isEqualTo(id);
       assertThat(tokenFound.userId()).isEqualTo(userId);
-      assertThat(tokenFound.token()).isEqualTo(token);
       assertThat(tokenFound.createdAt()).isEqualTo(now);
       assertThat(tokenFound.expiresAt()).isEqualTo(expiration);
       assertThat(tokenFound.family()).isEqualTo(family);

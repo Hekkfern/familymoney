@@ -92,21 +92,20 @@ public class AuthService implements IAuthService {
     // Assign user permissions (default role)
     roleRepository.setRoleForUserId(userId, Role.USER);
     // Generate and save verification token to database
-    final EmailVerificationEntity emailVerificationTokenDb =
-        emailVerificationRepository
-            .create(
-                new CreateEmailVerificationDto(
-                    userId,
-                    EmailVerificationToken.generate(),
-                    ExpirationTime.of(
-                        Instant.now(clock).plus(emailVerificationProperties.tokenDuration()))))
-            .orElseThrow(
-                () ->
-                    new DatabaseExecutionException(
-                        "Could not create email verification token in the database"));
+    final EmailVerificationToken emailVerificationToken = EmailVerificationToken.generate();
+    emailVerificationRepository
+        .create(
+            new CreateEmailVerificationDto(
+                userId,
+                emailVerificationToken,
+                ExpirationTime.of(
+                    Instant.now(clock).plus(emailVerificationProperties.tokenDuration()))))
+        .orElseThrow(
+            () ->
+                new DatabaseExecutionException(
+                    "Could not create email verification token in the database"));
     // Send verification email asynchronously
-    emailSenderService.sendEmailVerificationEmail(
-        email, username, emailVerificationTokenDb.token());
+    emailSenderService.sendEmailVerificationEmail(email, username, emailVerificationToken);
     log.trace("registerUser() completed");
   }
 
@@ -192,7 +191,7 @@ public class AuthService implements IAuthService {
     final Optional<UsedRefreshTokenEntity> usedRefreshToken =
         usedRefreshTokenRepository.create(
             new CreateUsedRefreshTokenDto(
-                refreshTokenDb.token(), refreshTokenDb.family(), Instant.now(clock)));
+                refreshToken, refreshTokenDb.family(), Instant.now(clock)));
     if (usedRefreshToken.isEmpty()) {
       blacklistFamily(refreshTokenDb.family());
       throw new RefreshTokenReuseDetectedException();

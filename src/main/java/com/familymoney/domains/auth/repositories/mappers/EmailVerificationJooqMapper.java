@@ -1,7 +1,6 @@
 package com.familymoney.domains.auth.repositories.mappers;
 
 import com.familymoney.domains.auth.repositories.entitites.EmailVerificationEntity;
-import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.auth.types.ExpirationTime;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.tables.EmailVerificationTokens;
@@ -28,8 +27,6 @@ public final class EmailVerificationJooqMapper {
 
     return new EmailVerificationEntity(
         UserId.fromUuid(r.get(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.USER_ID)),
-        EmailVerificationToken.fromString(
-            r.get(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN)),
         createdAt.toInstant(),
         updatedAt.toInstant(),
         ExpirationTime.of(expiresAt),

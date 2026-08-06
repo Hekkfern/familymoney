@@ -18,6 +18,8 @@ import com.familymoney.generated.tables.Groups;
 import com.familymoney.generated.tables.PasswordResetTokens;
 import com.familymoney.generated.tables.RefreshTokens;
 import com.familymoney.generated.tables.Users;
+import com.familymoney.security.DefaultOpaqueTokenHasher;
+import com.familymoney.security.IOpaqueTokenHasher;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -30,6 +32,8 @@ import org.jooq.DSLContext;
 
 @RequiredArgsConstructor
 public class DatabaseCrud {
+
+  private static final IOpaqueTokenHasher TOKEN_HASHER = new DefaultOpaqueTokenHasher();
 
   private final DSLContext dslContext;
 
@@ -80,7 +84,7 @@ public class DatabaseCrud {
         .columns(
             RefreshTokens.REFRESH_TOKENS.ID,
             RefreshTokens.REFRESH_TOKENS.USER_ID,
-            RefreshTokens.REFRESH_TOKENS.TOKEN,
+            RefreshTokens.REFRESH_TOKENS.TOKEN_HASH,
             RefreshTokens.REFRESH_TOKENS.CREATED_AT,
             RefreshTokens.REFRESH_TOKENS.UPDATED_AT,
             RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,
@@ -88,7 +92,7 @@ public class DatabaseCrud {
         .values(
             id,
             userId.value(),
-            token.value(),
+            TOKEN_HASHER.hash(token.value()),
             createdAtDateTime,
             createdAtDateTime,
             expiresAtDateTime,
@@ -108,14 +112,14 @@ public class DatabaseCrud {
         .insertInto(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS)
         .columns(
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.USER_ID,
-            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN,
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN_HASH,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.EXPIRES_AT,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.LAST_SENT_AT,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.CREATED_AT,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.UPDATED_AT)
         .values(
             userId.value(),
-            token.value(),
+            TOKEN_HASHER.hash(token.value()),
             expiresAtDateTime,
             createdAtDateTime,
             createdAtDateTime,
@@ -135,12 +139,16 @@ public class DatabaseCrud {
         .insertInto(PasswordResetTokens.PASSWORD_RESET_TOKENS)
         .columns(
             PasswordResetTokens.PASSWORD_RESET_TOKENS.USER_ID,
-            PasswordResetTokens.PASSWORD_RESET_TOKENS.TOKEN,
+            PasswordResetTokens.PASSWORD_RESET_TOKENS.TOKEN_HASH,
             PasswordResetTokens.PASSWORD_RESET_TOKENS.CREATED_AT,
             PasswordResetTokens.PASSWORD_RESET_TOKENS.UPDATED_AT,
             PasswordResetTokens.PASSWORD_RESET_TOKENS.EXPIRES_AT)
         .values(
-            userId.value(), token.value(), createdAtDateTime, createdAtDateTime, expiresAtDateTime)
+            userId.value(),
+            TOKEN_HASHER.hash(token.value()),
+            createdAtDateTime,
+            createdAtDateTime,
+            expiresAtDateTime)
         .execute();
   }
 
@@ -186,14 +194,14 @@ public class DatabaseCrud {
             GroupInvitations.GROUP_INVITATIONS.ID,
             GroupInvitations.GROUP_INVITATIONS.GROUP_ID,
             GroupInvitations.GROUP_INVITATIONS.USER_ID,
-            GroupInvitations.GROUP_INVITATIONS.TOKEN,
+            GroupInvitations.GROUP_INVITATIONS.TOKEN_HASH,
             GroupInvitations.GROUP_INVITATIONS.CREATED_AT,
             GroupInvitations.GROUP_INVITATIONS.EXPIRES_AT)
         .values(
             id,
             groupId.value(),
             userId.value(),
-            token.value(),
+            TOKEN_HASHER.hash(token.value()),
             createdAtDateTime,
             expiresAtDateTime)
         .execute();

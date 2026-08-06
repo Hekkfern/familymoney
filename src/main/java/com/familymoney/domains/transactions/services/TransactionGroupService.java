@@ -197,7 +197,7 @@ public class TransactionGroupService implements ITransactionGroupService {
             .orElseThrow(() -> new GroupInvitationInvalidException("Invitation token not found"));
     // Check if the invitation is expired
     if (invitationDb.expiresAt().isExpired(clock)) {
-      log.info("Invitation token {} is expired", token);
+      log.info("Invitation token is expired");
       throw new GroupInvitationInvalidException("Invitation token expired");
     }
     // Remove token after use

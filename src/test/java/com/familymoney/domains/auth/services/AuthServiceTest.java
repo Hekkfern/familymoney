@@ -129,8 +129,7 @@ class AuthServiceTest {
               CreateEmailVerificationDto dto =
                   invocation.getArgument(0, CreateEmailVerificationDto.class);
               return Optional.of(
-                  new EmailVerificationEntity(
-                      dto.userId(), dto.token(), now, now, dto.expiresAt(), now));
+                  new EmailVerificationEntity(dto.userId(), now, now, dto.expiresAt(), now));
             });
   }
 
@@ -141,12 +140,7 @@ class AuthServiceTest {
               UserId userid = invocation.getArgument(0, UserId.class);
               return Optional.of(
                   new EmailVerificationEntity(
-                      userid,
-                      EmailVerificationToken.generate(),
-                      now,
-                      now,
-                      ExpirationTime.of(now.plusSeconds(3600)),
-                      now));
+                      userid, now, now, ExpirationTime.of(now.plusSeconds(3600)), now));
             });
   }
 
@@ -157,13 +151,7 @@ class AuthServiceTest {
               CreateRefreshTokenDto dto = invocation.getArgument(0, CreateRefreshTokenDto.class);
               return Optional.of(
                   new RefreshTokenEntity(
-                      dto.id(),
-                      dto.userId(),
-                      dto.token(),
-                      now,
-                      now,
-                      dto.expiresAt(),
-                      dto.family()));
+                      dto.id(), dto.userId(), now, now, dto.expiresAt(), dto.family()));
             });
   }
 
@@ -195,7 +183,6 @@ class AuthServiceTest {
                   new RefreshTokenEntity(
                       UUID.randomUUID(),
                       UserId.generate(),
-                      refreshToken,
                       now,
                       now,
                       ExpirationTime.of(now.plusSeconds(3600)),
@@ -229,12 +216,7 @@ class AuthServiceTest {
                   invocation.getArgument(0, EmailVerificationToken.class);
               return Optional.of(
                   new EmailVerificationEntity(
-                      UserId.generate(),
-                      emailVerificationToken,
-                      now,
-                      now,
-                      ExpirationTime.of(now.plusSeconds(3600)),
-                      now));
+                      UserId.generate(), now, now, ExpirationTime.of(now.plusSeconds(3600)), now));
             });
   }
 
@@ -420,10 +402,7 @@ class AuthServiceTest {
       mockRefreshTokenFindByToken();
       mockRefreshTokenOwner(true);
       when(usedRefreshTokenRepository.create(any(CreateUsedRefreshTokenDto.class)))
-          .thenReturn(
-              Optional.of(
-                  new UsedRefreshTokenEntity(
-                      RefreshToken.generate(), TokenFamily.generate(), now, now)));
+          .thenReturn(Optional.of(new UsedRefreshTokenEntity(TokenFamily.generate(), now, now)));
       when(refreshTokenRepository.updateByToken(
               any(RefreshToken.class), any(UpdateRefreshTokenDto.class)))
           .thenReturn(true);
@@ -468,10 +447,7 @@ class AuthServiceTest {
       mockRefreshTokenFindByToken();
       mockRefreshTokenOwner(true);
       when(usedRefreshTokenRepository.create(any(CreateUsedRefreshTokenDto.class)))
-          .thenReturn(
-              Optional.of(
-                  new UsedRefreshTokenEntity(
-                      RefreshToken.generate(), TokenFamily.generate(), now, now)));
+          .thenReturn(Optional.of(new UsedRefreshTokenEntity(TokenFamily.generate(), now, now)));
       when(refreshTokenRepository.updateByToken(any(), any())).thenReturn(false);
       when(jwtUtils.generateAccessToken(any(UserId.class), any(TokenFamily.class)))
           .thenReturn(AccessToken.fromString(FakeGenerator.accessToken()));
@@ -485,7 +461,7 @@ class AuthServiceTest {
       final TokenFamily family = TokenFamily.generate();
       when(refreshTokenRepository.findByToken(refreshToken)).thenReturn(Optional.empty());
       when(usedRefreshTokenRepository.findByToken(refreshToken))
-          .thenReturn(Optional.of(new UsedRefreshTokenEntity(refreshToken, family, now, now)));
+          .thenReturn(Optional.of(new UsedRefreshTokenEntity(family, now, now)));
       when(tokenFamilyBlacklistRepository.create(any(CreateTokenFamilyBlacklistDto.class)))
           .thenReturn(Optional.of(new TokenFamilyBlacklistEntity(family, now)));
 
@@ -528,7 +504,7 @@ class AuthServiceTest {
       final TokenFamily family = TokenFamily.generate();
       when(refreshTokenRepository.findByToken(refreshToken)).thenReturn(Optional.empty());
       when(usedRefreshTokenRepository.findByToken(refreshToken))
-          .thenReturn(Optional.of(new UsedRefreshTokenEntity(refreshToken, family, now, now)));
+          .thenReturn(Optional.of(new UsedRefreshTokenEntity(family, now, now)));
       when(tokenFamilyBlacklistRepository.create(any(CreateTokenFamilyBlacklistDto.class)))
           .thenReturn(Optional.empty());
 
@@ -548,7 +524,6 @@ class AuthServiceTest {
                     new RefreshTokenEntity(
                         UUID.randomUUID(),
                         UserId.generate(),
-                        rf,
                         now.minusSeconds(3600),
                         now,
                         ExpirationTime.of(now.minusSeconds(10)),
@@ -633,7 +608,6 @@ class AuthServiceTest {
                 return Optional.of(
                     new EmailVerificationEntity(
                         UserId.generate(),
-                        evt,
                         now.minusSeconds(3600),
                         now.minusSeconds(3600),
                         ExpirationTime.of(now.minusSeconds(1)),
@@ -694,7 +668,6 @@ class AuthServiceTest {
               Optional.of(
                   new EmailVerificationEntity(
                       UserId.generate(),
-                      EmailVerificationToken.fromString(FakeGenerator.emailVerificationToken()),
                       now.minusSeconds(3600),
                       now.minusSeconds(3600),
                       ExpirationTime.of(now.plusSeconds(100)),
@@ -747,7 +720,6 @@ class AuthServiceTest {
               Optional.of(
                   new EmailVerificationEntity(
                       UserId.generate(),
-                      EmailVerificationToken.fromString(FakeGenerator.emailVerificationToken()),
                       now.minusSeconds(3600),
                       now.minusSeconds(3600),
                       ExpirationTime.of(now.plusSeconds(100)),
@@ -845,7 +817,6 @@ class AuthServiceTest {
                     new RefreshTokenEntity(
                         UUID.randomUUID(),
                         UserId.generate(),
-                        rt,
                         now.minusSeconds(7200),
                         now.minusSeconds(7200),
                         ExpirationTime.of(now.minusSeconds(1)),

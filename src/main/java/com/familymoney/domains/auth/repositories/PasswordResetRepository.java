@@ -6,6 +6,7 @@ import com.familymoney.domains.auth.repositories.mappers.PasswordResetJooqMapper
 import com.familymoney.domains.auth.types.PasswordResetToken;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.tables.PasswordResetTokens;
+import com.familymoney.security.IOpaqueTokenHasher;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
@@ -16,18 +17,21 @@ import org.springframework.stereotype.Repository;
 public class PasswordResetRepository implements IPasswordResetRepository {
 
   private final DSLContext db;
+  private final IOpaqueTokenHasher tokenHasher;
 
   @Override
   public Optional<PasswordResetEntity> create(final CreatePasswordResetDto data) {
     return db.insertInto(PasswordResetTokens.PASSWORD_RESET_TOKENS)
         .columns(
             PasswordResetTokens.PASSWORD_RESET_TOKENS.USER_ID,
-            PasswordResetTokens.PASSWORD_RESET_TOKENS.TOKEN,
+            PasswordResetTokens.PASSWORD_RESET_TOKENS.TOKEN_HASH,
             PasswordResetTokens.PASSWORD_RESET_TOKENS.EXPIRES_AT)
-        .values(data.userId().value(), data.token().value(), data.expiresAt().toOffsetDateTime())
+        .values(
+            data.userId().value(),
+            tokenHasher.hash(data.token().value()),
+            data.expiresAt().toOffsetDateTime())
         .returning(
             PasswordResetTokens.PASSWORD_RESET_TOKENS.USER_ID,
-            PasswordResetTokens.PASSWORD_RESET_TOKENS.TOKEN,
             PasswordResetTokens.PASSWORD_RESET_TOKENS.CREATED_AT,
             PasswordResetTokens.PASSWORD_RESET_TOKENS.UPDATED_AT,
             PasswordResetTokens.PASSWORD_RESET_TOKENS.EXPIRES_AT)
@@ -39,12 +43,13 @@ public class PasswordResetRepository implements IPasswordResetRepository {
   public Optional<PasswordResetEntity> findByToken(final PasswordResetToken token) {
     return db.select(
             PasswordResetTokens.PASSWORD_RESET_TOKENS.USER_ID,
-            PasswordResetTokens.PASSWORD_RESET_TOKENS.TOKEN,
             PasswordResetTokens.PASSWORD_RESET_TOKENS.CREATED_AT,
             PasswordResetTokens.PASSWORD_RESET_TOKENS.UPDATED_AT,
             PasswordResetTokens.PASSWORD_RESET_TOKENS.EXPIRES_AT)
         .from(PasswordResetTokens.PASSWORD_RESET_TOKENS)
-        .where(PasswordResetTokens.PASSWORD_RESET_TOKENS.TOKEN.eq(token.value()))
+        .where(
+            PasswordResetTokens.PASSWORD_RESET_TOKENS.TOKEN_HASH.eq(
+                tokenHasher.hash(token.value())))
         .fetchOptional()
         .map(PasswordResetJooqMapper::toEntity);
   }

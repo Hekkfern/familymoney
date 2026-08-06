@@ -7,6 +7,7 @@ import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.tables.GroupInvitations;
+import com.familymoney.security.IOpaqueTokenHasher;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Repository;
 public class GroupInvitationRepository implements IGroupInvitationRepository {
 
   private final DSLContext db;
+  private final IOpaqueTokenHasher tokenHasher;
 
   @Override
   public Optional<GroupInvitationEntity> create(final CreateGroupInvitationDto data) {
@@ -25,19 +27,18 @@ public class GroupInvitationRepository implements IGroupInvitationRepository {
             GroupInvitations.GROUP_INVITATIONS.ID,
             GroupInvitations.GROUP_INVITATIONS.GROUP_ID,
             GroupInvitations.GROUP_INVITATIONS.USER_ID,
-            GroupInvitations.GROUP_INVITATIONS.TOKEN,
+            GroupInvitations.GROUP_INVITATIONS.TOKEN_HASH,
             GroupInvitations.GROUP_INVITATIONS.EXPIRES_AT)
         .values(
             data.id(),
             data.groupId().value(),
             data.userId().value(),
-            data.token().value(),
+            tokenHasher.hash(data.token().value()),
             data.expiresAt().toOffsetDateTime())
         .returning(
             GroupInvitations.GROUP_INVITATIONS.ID,
             GroupInvitations.GROUP_INVITATIONS.GROUP_ID,
             GroupInvitations.GROUP_INVITATIONS.USER_ID,
-            GroupInvitations.GROUP_INVITATIONS.TOKEN,
             GroupInvitations.GROUP_INVITATIONS.CREATED_AT,
             GroupInvitations.GROUP_INVITATIONS.EXPIRES_AT)
         .fetchOptional()
@@ -50,11 +51,10 @@ public class GroupInvitationRepository implements IGroupInvitationRepository {
             GroupInvitations.GROUP_INVITATIONS.ID,
             GroupInvitations.GROUP_INVITATIONS.GROUP_ID,
             GroupInvitations.GROUP_INVITATIONS.USER_ID,
-            GroupInvitations.GROUP_INVITATIONS.TOKEN,
             GroupInvitations.GROUP_INVITATIONS.CREATED_AT,
             GroupInvitations.GROUP_INVITATIONS.EXPIRES_AT)
         .from(GroupInvitations.GROUP_INVITATIONS)
-        .where(GroupInvitations.GROUP_INVITATIONS.TOKEN.eq(token.value()))
+        .where(GroupInvitations.GROUP_INVITATIONS.TOKEN_HASH.eq(tokenHasher.hash(token.value())))
         .fetchOptional()
         .map(GroupInvitationJooqMapper::toEntity);
   }
@@ -63,7 +63,8 @@ public class GroupInvitationRepository implements IGroupInvitationRepository {
   public boolean deleteByToken(GroupInvitationToken token) {
     final int rowsAffected =
         db.deleteFrom(GroupInvitations.GROUP_INVITATIONS)
-            .where(GroupInvitations.GROUP_INVITATIONS.TOKEN.eq(token.value()))
+            .where(
+                GroupInvitations.GROUP_INVITATIONS.TOKEN_HASH.eq(tokenHasher.hash(token.value())))
             .execute();
     return rowsAffected > 0;
   }
