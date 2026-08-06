@@ -21,6 +21,7 @@ public class TokenFamilyBlacklistRepository implements ITokenFamilyBlacklistRepo
     return db.insertInto(TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST)
         .columns(TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST.FAMILY)
         .values(data.family().value())
+        .onConflictDoNothing()
         .returning(
             TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST.FAMILY,
             TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST.CREATED_AT)

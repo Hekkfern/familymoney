@@ -162,6 +162,26 @@ CREATE
 SELECT
     trigger_updated_at('refresh_tokens');
 
+-- ******************* USED REFRESH TOKEN *******************
+CREATE
+    UNLOGGED TABLE
+        used_refresh_tokens(
+            token VARCHAR(255) PRIMARY KEY NOT NULL CHECK(
+                CHAR_LENGTH( BTRIM( token ))> 0
+            ),
+            family UUID NOT NULL,
+            used_at TIMESTAMP WITH TIME ZONE NOT NULL,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+        );
+
+CREATE
+    INDEX idx_used_refresh_tokens_family ON
+    used_refresh_tokens(family);
+
+CREATE
+    INDEX idx_used_refresh_tokens_used_at ON
+    used_refresh_tokens(used_at);
+
 -- ******************* TOKEN FAMILY BLACKLIST *******************
 CREATE
     UNLOGGED TABLE

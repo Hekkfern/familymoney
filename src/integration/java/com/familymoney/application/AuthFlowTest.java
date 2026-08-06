@@ -178,4 +178,30 @@ class AuthFlowTest {
         .expectStatus()
         .isUnauthorized();
   }
+
+  @Test
+  void reusing_refresh_token_invalidates_its_family() {
+    final String username = FakeGenerator.username();
+    final String email = FakeGenerator.email();
+    final String password = FakeGenerator.password();
+    flowUtils.registerAndVerifyNewUser(username, email, password);
+    final FlowUtils.TokenPair tokens = flowUtils.loginUser(email, password);
+    final FlowUtils.TokenPair refreshedTokens = flowUtils.refreshTokens(tokens.refreshToken());
+
+    client
+        .post()
+        .uri(AuthControllerUriFactory.getRefreshPath())
+        .body(new RefreshTokenRequestDto(tokens.refreshToken()))
+        .exchange()
+        .expectStatus()
+        .isUnauthorized();
+
+    client
+        .post()
+        .uri(AuthControllerUriFactory.getRefreshPath())
+        .body(new RefreshTokenRequestDto(refreshedTokens.refreshToken()))
+        .exchange()
+        .expectStatus()
+        .isUnauthorized();
+  }
 }

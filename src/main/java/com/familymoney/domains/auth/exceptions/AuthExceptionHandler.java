@@ -51,6 +51,12 @@ public class AuthExceptionHandler extends ResponseEntityExceptionHandler {
     return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, e.getMessage());
   }
 
+  @ExceptionHandler({RefreshTokenReuseDetectedException.class, BlacklistedFamilyException.class})
+  public ProblemDetail handle(final RuntimeException e) {
+    logger.info(e.getMessage());
+    return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "Invalid refresh token");
+  }
+
   @ExceptionHandler(VerificationTokenNotFoundException.class)
   public ProblemDetail handle(VerificationTokenNotFoundException e) {
     logger.info(e.getMessage());

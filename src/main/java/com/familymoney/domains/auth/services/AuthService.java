@@ -4,6 +4,7 @@ import com.familymoney.domains.auth.exceptions.BlacklistedFamilyException;
 import com.familymoney.domains.auth.exceptions.NewEmailVerificationTooSoonException;
 import com.familymoney.domains.auth.exceptions.RefreshTokenInvalidException;
 import com.familymoney.domains.auth.exceptions.RefreshTokenNotFoundException;
+import com.familymoney.domains.auth.exceptions.RefreshTokenReuseDetectedException;
 import com.familymoney.domains.auth.exceptions.UserAlreadyExistsException;
 import com.familymoney.domains.auth.exceptions.UserNotEnabledException;
 import com.familymoney.domains.auth.exceptions.VerificationTokenExpiredException;
@@ -12,14 +13,16 @@ import com.familymoney.domains.auth.repositories.IEmailVerificationRepository;
 import com.familymoney.domains.auth.repositories.IPasswordResetRepository;
 import com.familymoney.domains.auth.repositories.IRefreshTokenRepository;
 import com.familymoney.domains.auth.repositories.ITokenFamilyBlacklistRepository;
+import com.familymoney.domains.auth.repositories.IUsedRefreshTokenRepository;
 import com.familymoney.domains.auth.repositories.dtos.CreateEmailVerificationDto;
 import com.familymoney.domains.auth.repositories.dtos.CreateRefreshTokenDto;
 import com.familymoney.domains.auth.repositories.dtos.CreateTokenFamilyBlacklistDto;
+import com.familymoney.domains.auth.repositories.dtos.CreateUsedRefreshTokenDto;
 import com.familymoney.domains.auth.repositories.dtos.UpdateEmailVerificationTokenDto;
 import com.familymoney.domains.auth.repositories.dtos.UpdateRefreshTokenDto;
 import com.familymoney.domains.auth.repositories.entitites.EmailVerificationEntity;
 import com.familymoney.domains.auth.repositories.entitites.RefreshTokenEntity;
-import com.familymoney.domains.auth.repositories.entitites.TokenFamilyBlacklistEntity;
+import com.familymoney.domains.auth.repositories.entitites.UsedRefreshTokenEntity;
 import com.familymoney.domains.auth.services.data.TokenPair;
 import com.familymoney.domains.auth.types.AccessToken;
 import com.familymoney.domains.auth.types.EmailVerificationToken;
@@ -70,6 +73,7 @@ public class AuthService implements IAuthService {
   private final JwtProperties jwtProperties;
   private final EmailVerificationProperties emailVerificationProperties;
   private final ITokenFamilyBlacklistRepository tokenFamilyBlacklistRepository;
+  private final IUsedRefreshTokenRepository usedRefreshTokenRepository;
 
   @Transactional
   @Override
@@ -149,14 +153,25 @@ public class AuthService implements IAuthService {
     return new TokenPair(accessToken, refreshToken);
   }
 
+  @Transactional(noRollbackFor = RefreshTokenReuseDetectedException.class)
   @Override
   public TokenPair refreshTokens(final RefreshToken refreshToken) {
     log.trace("refreshTokens() started");
     // Find the refresh token in the database
-    final RefreshTokenEntity refreshTokenDb =
-        refreshTokenRepository
-            .findByToken(refreshToken)
-            .orElseThrow(() -> new NoSuchElementException("Refresh token not found"));
+    final Optional<RefreshTokenEntity> refreshTokenDbOptional =
+        refreshTokenRepository.findByToken(refreshToken);
+    if (refreshTokenDbOptional.isEmpty()) {
+      // check if the refresh token has already been used (refresh token reuse detection)
+      final Optional<UsedRefreshTokenEntity> usedRefreshToken =
+          usedRefreshTokenRepository.findByToken(refreshToken);
+      if (usedRefreshToken.isPresent()) {
+        // reuse confirmed. blacklist all the family
+        blacklistFamily(usedRefreshToken.get().family());
+        throw new RefreshTokenReuseDetectedException();
+      }
+      throw new NoSuchElementException("Refresh token not found");
+    }
+    final RefreshTokenEntity refreshTokenDb = refreshTokenDbOptional.get();
     // Check if the refresh token is expired
     if (refreshTokenDb.expiresAt().isExpired(clock)) {
       final String msg = "Expired refresh token";
@@ -177,7 +192,16 @@ public class AuthService implements IAuthService {
       log.info(msg);
       throw new BlacklistedFamilyException(msg);
     }
-    // Generate new tokens
+    // add the token to the list of used refresh tokens
+    final Optional<UsedRefreshTokenEntity> usedRefreshToken =
+        usedRefreshTokenRepository.create(
+            new CreateUsedRefreshTokenDto(
+                refreshTokenDb.token(), refreshTokenDb.family(), Instant.now(clock)));
+    if (usedRefreshToken.isEmpty()) {
+      blacklistFamily(refreshTokenDb.family());
+      throw new RefreshTokenReuseDetectedException();
+    }
+    // generate new tokens
     final AccessToken newAccessToken =
         jwtUtils.generateAccessToken(refreshTokenDb.userId(), refreshTokenDb.family());
     final RefreshToken newRefreshToken = RefreshToken.generate();
@@ -309,18 +333,15 @@ public class AuthService implements IAuthService {
     if (!refreshTokenDeleted) {
       throw new DatabaseExecutionException("Could not delete the refresh token in the database");
     }
-    // Invalidate any existing access token
-    final Optional<TokenFamilyBlacklistEntity> accessTokenBlacklisted =
-        tokenFamilyBlacklistRepository.create(
-            new CreateTokenFamilyBlacklistDto(refreshTokenDb.family()));
-    if (accessTokenBlacklisted.isEmpty()) {
-      throw new DatabaseExecutionException(
-          "Could not blacklist the family of tokens in the database");
-    }
+    blacklistFamily(refreshTokenDb.family());
   }
 
   @Override
   public boolean isFamilyBlacklisted(final TokenFamily family) {
     return tokenFamilyBlacklistRepository.exists(family);
+  }
+
+  private void blacklistFamily(final TokenFamily family) {
+    tokenFamilyBlacklistRepository.create(new CreateTokenFamilyBlacklistDto(family));
   }
 }

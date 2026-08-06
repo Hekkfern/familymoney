@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -16,6 +17,7 @@ import com.familymoney.domains.auth.exceptions.BlacklistedFamilyException;
 import com.familymoney.domains.auth.exceptions.NewEmailVerificationTooSoonException;
 import com.familymoney.domains.auth.exceptions.RefreshTokenInvalidException;
 import com.familymoney.domains.auth.exceptions.RefreshTokenNotFoundException;
+import com.familymoney.domains.auth.exceptions.RefreshTokenReuseDetectedException;
 import com.familymoney.domains.auth.exceptions.UserAlreadyExistsException;
 import com.familymoney.domains.auth.exceptions.UserNotEnabledException;
 import com.familymoney.domains.auth.exceptions.VerificationTokenExpiredException;
@@ -24,14 +26,17 @@ import com.familymoney.domains.auth.repositories.IEmailVerificationRepository;
 import com.familymoney.domains.auth.repositories.IPasswordResetRepository;
 import com.familymoney.domains.auth.repositories.IRefreshTokenRepository;
 import com.familymoney.domains.auth.repositories.ITokenFamilyBlacklistRepository;
+import com.familymoney.domains.auth.repositories.IUsedRefreshTokenRepository;
 import com.familymoney.domains.auth.repositories.dtos.CreateEmailVerificationDto;
 import com.familymoney.domains.auth.repositories.dtos.CreateRefreshTokenDto;
 import com.familymoney.domains.auth.repositories.dtos.CreateTokenFamilyBlacklistDto;
+import com.familymoney.domains.auth.repositories.dtos.CreateUsedRefreshTokenDto;
 import com.familymoney.domains.auth.repositories.dtos.UpdateEmailVerificationTokenDto;
 import com.familymoney.domains.auth.repositories.dtos.UpdateRefreshTokenDto;
 import com.familymoney.domains.auth.repositories.entitites.EmailVerificationEntity;
 import com.familymoney.domains.auth.repositories.entitites.RefreshTokenEntity;
 import com.familymoney.domains.auth.repositories.entitites.TokenFamilyBlacklistEntity;
+import com.familymoney.domains.auth.repositories.entitites.UsedRefreshTokenEntity;
 import com.familymoney.domains.auth.services.data.TokenPair;
 import com.familymoney.domains.auth.types.AccessToken;
 import com.familymoney.domains.auth.types.EmailVerificationToken;
@@ -64,6 +69,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -92,6 +98,7 @@ class AuthServiceTest {
   @Mock private IEmailVerificationRepository emailVerificationRepository;
   @Mock private IPasswordResetRepository passwordResetRepository;
   @Mock private ITokenFamilyBlacklistRepository tokenFamilyBlacklistRepository;
+  @Mock private IUsedRefreshTokenRepository usedRefreshTokenRepository;
   @Mock private JwtUtils jwtUtils;
   @Mock private IRefreshTokenRepository refreshTokenRepository;
 
@@ -389,6 +396,11 @@ class AuthServiceTest {
 
       mockRefreshTokenFindByToken();
       mockRefreshTokenOwner(true);
+      when(usedRefreshTokenRepository.create(any(CreateUsedRefreshTokenDto.class)))
+          .thenReturn(
+              Optional.of(
+                  new UsedRefreshTokenEntity(
+                      RefreshToken.generate(), TokenFamily.generate(), now, now)));
       when(refreshTokenRepository.updateByToken(
               any(RefreshToken.class), any(UpdateRefreshTokenDto.class)))
           .thenReturn(true);
@@ -404,7 +416,12 @@ class AuthServiceTest {
               })
           .doesNotThrowAnyException();
 
-      verify(refreshTokenRepository)
+      final InOrder inOrder = inOrder(usedRefreshTokenRepository, refreshTokenRepository);
+      inOrder
+          .verify(usedRefreshTokenRepository)
+          .create(argThat(data -> data.token().equals(refreshToken)));
+      inOrder
+          .verify(refreshTokenRepository)
           .updateByToken(any(RefreshToken.class), any(UpdateRefreshTokenDto.class));
     }
 
@@ -413,6 +430,8 @@ class AuthServiceTest {
       final RefreshToken refreshToken = RefreshToken.generate();
 
       when(refreshTokenRepository.findByToken(any(RefreshToken.class)))
+          .thenReturn(Optional.empty());
+      when(usedRefreshTokenRepository.findByToken(any(RefreshToken.class)))
           .thenReturn(Optional.empty());
 
       assertThrows(NoSuchElementException.class, () -> authService.refreshTokens(refreshToken));
@@ -424,11 +443,73 @@ class AuthServiceTest {
 
       mockRefreshTokenFindByToken();
       mockRefreshTokenOwner(true);
+      when(usedRefreshTokenRepository.create(any(CreateUsedRefreshTokenDto.class)))
+          .thenReturn(
+              Optional.of(
+                  new UsedRefreshTokenEntity(
+                      RefreshToken.generate(), TokenFamily.generate(), now, now)));
       when(refreshTokenRepository.updateByToken(any(), any())).thenReturn(false);
       when(jwtUtils.generateAccessToken(any(UserId.class), any(TokenFamily.class)))
           .thenReturn(AccessToken.fromString(FakeGenerator.accessToken()));
 
       assertThrows(DatabaseExecutionException.class, () -> authService.refreshTokens(refreshToken));
+    }
+
+    @Test
+    void detects_reuse_when_refresh_token_was_previously_used() {
+      final RefreshToken refreshToken = RefreshToken.generate();
+      final TokenFamily family = TokenFamily.generate();
+      when(refreshTokenRepository.findByToken(refreshToken)).thenReturn(Optional.empty());
+      when(usedRefreshTokenRepository.findByToken(refreshToken))
+          .thenReturn(Optional.of(new UsedRefreshTokenEntity(refreshToken, family, now, now)));
+      when(tokenFamilyBlacklistRepository.create(any(CreateTokenFamilyBlacklistDto.class)))
+          .thenReturn(Optional.of(new TokenFamilyBlacklistEntity(family, now)));
+
+      assertThrows(
+          RefreshTokenReuseDetectedException.class, () -> authService.refreshTokens(refreshToken));
+
+      verify(tokenFamilyBlacklistRepository).create(new CreateTokenFamilyBlacklistDto(family));
+      verify(refreshTokenRepository, never())
+          .updateByToken(any(RefreshToken.class), any(UpdateRefreshTokenDto.class));
+      verify(jwtUtils, never()).generateAccessToken(any(UserId.class), any(TokenFamily.class));
+    }
+
+    @Test
+    void detects_reuse_when_refresh_token_reservation_fails() {
+      final RefreshToken refreshToken = RefreshToken.generate();
+
+      mockRefreshTokenFindByToken();
+      mockRefreshTokenOwner(true);
+      when(usedRefreshTokenRepository.create(any(CreateUsedRefreshTokenDto.class)))
+          .thenReturn(Optional.empty());
+      when(tokenFamilyBlacklistRepository.create(any(CreateTokenFamilyBlacklistDto.class)))
+          .thenAnswer(
+              invocation -> {
+                final CreateTokenFamilyBlacklistDto dto =
+                    invocation.getArgument(0, CreateTokenFamilyBlacklistDto.class);
+                return Optional.of(new TokenFamilyBlacklistEntity(dto.family(), now));
+              });
+
+      assertThrows(
+          RefreshTokenReuseDetectedException.class, () -> authService.refreshTokens(refreshToken));
+
+      verify(refreshTokenRepository, never())
+          .updateByToken(any(RefreshToken.class), any(UpdateRefreshTokenDto.class));
+      verify(jwtUtils, never()).generateAccessToken(any(UserId.class), any(TokenFamily.class));
+    }
+
+    @Test
+    void detects_reuse_when_family_is_already_blacklisted() {
+      final RefreshToken refreshToken = RefreshToken.generate();
+      final TokenFamily family = TokenFamily.generate();
+      when(refreshTokenRepository.findByToken(refreshToken)).thenReturn(Optional.empty());
+      when(usedRefreshTokenRepository.findByToken(refreshToken))
+          .thenReturn(Optional.of(new UsedRefreshTokenEntity(refreshToken, family, now, now)));
+      when(tokenFamilyBlacklistRepository.create(any(CreateTokenFamilyBlacklistDto.class)))
+          .thenReturn(Optional.empty());
+
+      assertThrows(
+          RefreshTokenReuseDetectedException.class, () -> authService.refreshTokens(refreshToken));
     }
 
     @Test
@@ -782,7 +863,7 @@ class AuthServiceTest {
     }
 
     @Test
-    void throws_when_blacklisting_family_token_fails() {
+    void succeeds_when_family_blacklisting_conflicts() {
       final RefreshToken refreshToken = RefreshToken.generate();
 
       mockRefreshTokenFindByToken();
@@ -790,7 +871,7 @@ class AuthServiceTest {
       when(tokenFamilyBlacklistRepository.create(any(CreateTokenFamilyBlacklistDto.class)))
           .thenReturn(Optional.empty());
 
-      assertThrows(DatabaseExecutionException.class, () -> authService.logoutUser(refreshToken));
+      assertThatCode(() -> authService.logoutUser(refreshToken)).doesNotThrowAnyException();
 
       verify(refreshTokenRepository).deleteByToken(any(RefreshToken.class));
       verify(tokenFamilyBlacklistRepository).create(any(CreateTokenFamilyBlacklistDto.class));
