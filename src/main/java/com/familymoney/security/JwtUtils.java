@@ -111,10 +111,8 @@ public class JwtUtils {
 
   public Optional<AccessToken> extractTokenFromHeader(final HttpServletRequest request) {
     final String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
-    log.debug("Authorization Header: {}", bearerToken);
     if (bearerToken != null && bearerToken.startsWith(BEARER_PREFIX)) {
       final String rawToken = Strings.CI.removeStart(bearerToken, BEARER_PREFIX);
-      log.debug("Access Token: {}", rawToken);
       try {
         return Optional.of(AccessToken.fromString(rawToken));
       } catch (final IllegalArgumentException _) {
