@@ -4,6 +4,8 @@ import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE
 
 import com.familymoney.application.utils.FlowUtils;
 import com.familymoney.domains.auth.controllers.dtos.LoginRequestDto;
+import com.familymoney.domains.auth.controllers.dtos.LogoutRequestDto;
+import com.familymoney.domains.auth.controllers.dtos.RefreshTokenRequestDto;
 import com.familymoney.domains.auth.controllers.dtos.RegisterRequestDto;
 import com.familymoney.domains.auth.services.IEmailSenderService;
 import com.familymoney.testutils.AuthControllerUriFactory;
@@ -46,7 +48,7 @@ class AuthFlowTest {
   }
 
   @Test
-  void AuthFlow_register_login_refresh_and_logout_successfully() {
+  void register_login_refresh_and_logout_successfully() {
     // register and verify a new user
     final String username = FakeGenerator.username();
     final String email = FakeGenerator.email();
@@ -66,24 +68,43 @@ class AuthFlowTest {
   }
 
   @Test
-  void AuthFlow_Register_with_existing_email_fails() {
+  void register_with_existing_email_fails() {
     // register and verify a new user
     final String username = FakeGenerator.username();
     final String email = FakeGenerator.email();
     final String password = FakeGenerator.password();
     flowUtils.registerAndVerifyNewUser(username, email, password);
     // register again with the same email
+    final String username2 = FakeGenerator.username();
     client
         .post()
         .uri(AuthControllerUriFactory.getRegisterPath())
-        .body(new RegisterRequestDto(username, email, password))
+        .body(new RegisterRequestDto(username2, email, password))
         .exchange()
         .expectStatus()
         .isEqualTo(HttpStatus.CONFLICT);
   }
 
   @Test
-  void AuthFlow_Login_with_unverified_email_fails() {
+  void register_with_existing_username_fails() {
+    // register and verify a new user
+    final String username = FakeGenerator.username();
+    final String email = FakeGenerator.email();
+    final String password = FakeGenerator.password();
+    flowUtils.registerAndVerifyNewUser(username, email, password);
+    // register again with the same username
+    final String email2 = FakeGenerator.email();
+    client
+        .post()
+        .uri(AuthControllerUriFactory.getRegisterPath())
+        .body(new RegisterRequestDto(username, email2, password))
+        .exchange()
+        .expectStatus()
+        .isEqualTo(HttpStatus.CONFLICT);
+  }
+
+  @Test
+  void login_with_unverified_email_fails() {
     // register a new user but do not verify email
     final String username = FakeGenerator.username();
     final String email = FakeGenerator.email();
@@ -102,6 +123,57 @@ class AuthFlowTest {
         .post()
         .uri(AuthControllerUriFactory.getLoginPath())
         .body(new LoginRequestDto(email, password))
+        .exchange()
+        .expectStatus()
+        .isUnauthorized();
+  }
+
+  @Test
+  void refresh_token_without_login_fails() {
+    client
+        .post()
+        .uri(AuthControllerUriFactory.getRefreshPath())
+        .body(new RefreshTokenRequestDto(FakeGenerator.refreshToken()))
+        .exchange()
+        .expectStatus()
+        .isUnauthorized();
+  }
+
+  @Test
+  void login_without_registering_fails() {
+    client
+        .post()
+        .uri(AuthControllerUriFactory.getLoginPath())
+        .body(new LoginRequestDto(FakeGenerator.email(), FakeGenerator.password()))
+        .exchange()
+        .expectStatus()
+        .isUnauthorized();
+  }
+
+  @Test
+  void logout_without_login_fails() {
+    client
+        .post()
+        .uri(AuthControllerUriFactory.getLogoutPath())
+        .body(new LogoutRequestDto(FakeGenerator.refreshToken()))
+        .exchange()
+        .expectStatus()
+        .isUnauthorized();
+  }
+
+  @Test
+  void refresh_token_after_logging_out_fails() {
+    final String username = FakeGenerator.username();
+    final String email = FakeGenerator.email();
+    final String password = FakeGenerator.password();
+    flowUtils.registerAndVerifyNewUser(username, email, password);
+    final FlowUtils.TokenPair tokens = flowUtils.loginUser(email, password);
+    flowUtils.logoutUser(tokens.refreshToken());
+
+    client
+        .post()
+        .uri(AuthControllerUriFactory.getRefreshPath())
+        .body(new RefreshTokenRequestDto(tokens.refreshToken()))
         .exchange()
         .expectStatus()
         .isUnauthorized();

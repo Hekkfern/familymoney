@@ -2,6 +2,7 @@ package com.familymoney.domains.auth.exceptions;
 
 import com.familymoney.domains.auth.controllers.AuthController;
 import com.familymoney.domains.auth.services.AuthService;
+import java.util.NoSuchElementException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -11,6 +12,12 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 @RestControllerAdvice(assignableTypes = {AuthController.class, AuthService.class})
 public class AuthExceptionHandler extends ResponseEntityExceptionHandler {
+
+  @ExceptionHandler(NoSuchElementException.class)
+  public ProblemDetail handle(NoSuchElementException e) {
+    logger.info(e.getMessage());
+    return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, e.getMessage());
+  }
 
   @ExceptionHandler(BadCredentialsException.class)
   public ProblemDetail handle(BadCredentialsException e) {
