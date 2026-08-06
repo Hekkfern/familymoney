@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -339,6 +340,11 @@ class AuthServiceTest {
       when(passwordEncoder.verify(eq(password.value()), anyString())).thenReturn(false);
 
       assertThrows(BadCredentialsException.class, () -> authService.loginUser(email, password));
+
+      verify(passwordEncoder).verify(eq(password.value()), anyString());
+      verify(passwordEncoder, never()).verifyDummyPassword(anyString());
+      verify(jwtUtils, never()).generateAccessToken(any(UserId.class), any(TokenFamily.class));
+      verify(refreshTokenRepository, never()).create(any(CreateRefreshTokenDto.class));
     }
 
     @Test
@@ -347,8 +353,14 @@ class AuthServiceTest {
       final Password password = Password.fromString(FakeGenerator.password());
 
       when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+      doReturn(false).when(passwordEncoder).verifyDummyPassword(password.value());
 
       assertThrows(BadCredentialsException.class, () -> authService.loginUser(email, password));
+
+      verify(passwordEncoder).verifyDummyPassword(password.value());
+      verify(passwordEncoder, never()).verify(anyString(), anyString());
+      verify(jwtUtils, never()).generateAccessToken(any(UserId.class), any(TokenFamily.class));
+      verify(refreshTokenRepository, never()).create(any(CreateRefreshTokenDto.class));
     }
 
     @Test
@@ -372,8 +384,14 @@ class AuthServiceTest {
       final Password password = Password.fromString(FakeGenerator.password());
 
       mockUserRepositoryFindByEmail(true, false);
+      when(passwordEncoder.verify(eq(password.value()), anyString())).thenReturn(false);
 
       assertThrows(BadCredentialsException.class, () -> authService.loginUser(email, password));
+
+      verify(passwordEncoder).verify(eq(password.value()), anyString());
+      verify(passwordEncoder, never()).verifyDummyPassword(anyString());
+      verify(jwtUtils, never()).generateAccessToken(any(UserId.class), any(TokenFamily.class));
+      verify(refreshTokenRepository, never()).create(any(CreateRefreshTokenDto.class));
     }
 
     @Test
@@ -382,8 +400,14 @@ class AuthServiceTest {
       final Password password = Password.fromString(FakeGenerator.password());
 
       mockUserRepositoryFindByEmail(false, true);
+      when(passwordEncoder.verify(eq(password.value()), anyString())).thenReturn(false);
 
       assertThrows(BadCredentialsException.class, () -> authService.loginUser(email, password));
+
+      verify(passwordEncoder).verify(eq(password.value()), anyString());
+      verify(passwordEncoder, never()).verifyDummyPassword(anyString());
+      verify(jwtUtils, never()).generateAccessToken(any(UserId.class), any(TokenFamily.class));
+      verify(refreshTokenRepository, never()).create(any(CreateRefreshTokenDto.class));
     }
   }
 

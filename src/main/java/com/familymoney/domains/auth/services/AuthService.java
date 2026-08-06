@@ -114,22 +114,19 @@ public class AuthService implements IAuthService {
   @Override
   public TokenPair loginUser(final Email email, final Password password) {
     log.trace("loginUser() started");
-    // Find user by email
-    final UserEntity userDb =
-        userRepository
-            .findByEmail(email)
-            .orElseThrow(() -> new BadCredentialsException("Email doesn't exist"));
-    // Verify that user is enabled
-    if (!userDb.isEnabled()) {
-      throw new BadCredentialsException("User is not enabled");
+    final Optional<UserEntity> userDbOptional = userRepository.findByEmail(email);
+    if (userDbOptional.isEmpty()) {
+      // Prevent account enumeration by matching the BCrypt work performed for existing accounts.
+      passwordEncoder.verifyDummyPassword(password.value());
+      throw new BadCredentialsException("Invalid credentials");
     }
-    // Verify that email is verified
-    if (!userDb.isEmailVerified()) {
-      throw new BadCredentialsException("Email is not verified");
-    }
-    // Verify password
-    if (!passwordEncoder.verify(password.value(), userDb.hashedPassword())) {
-      throw new BadCredentialsException("Wrong password for the given email");
+    final UserEntity userDb = userDbOptional.get();
+    final boolean passwordMatches =
+        passwordEncoder.verify(password.value(), userDb.hashedPassword());
+    final boolean invalidCredentials =
+        !userDb.isEnabled() || !userDb.isEmailVerified() || !passwordMatches;
+    if (invalidCredentials) {
+      throw new BadCredentialsException("Invalid credentials");
     }
     // Generate family ID for the tokens of this session
     final TokenFamily family = TokenFamily.generate();
