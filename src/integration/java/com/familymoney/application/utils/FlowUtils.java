@@ -1,6 +1,7 @@
 package com.familymoney.application.utils;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
 import com.familymoney.domains.auth.controllers.dtos.LoginRequestDto;
@@ -41,7 +42,7 @@ public class FlowUtils {
         .isEmpty();
 
     // get the captured email verification token
-    verify(emailSenderService)
+    verify(emailSenderService, timeout(2000))
         .sendEmailVerificationEmail(any(), any(), verificationTokenCaptor.capture());
     final EmailVerificationToken verificationToken = verificationTokenCaptor.getValue();
 

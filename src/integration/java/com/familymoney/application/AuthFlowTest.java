@@ -1,24 +1,38 @@
 package com.familymoney.application;
 
 import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.after;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.verify;
 
 import com.familymoney.application.utils.FlowUtils;
 import com.familymoney.domains.auth.controllers.dtos.LoginRequestDto;
 import com.familymoney.domains.auth.controllers.dtos.LogoutRequestDto;
 import com.familymoney.domains.auth.controllers.dtos.RefreshTokenRequestDto;
 import com.familymoney.domains.auth.controllers.dtos.RegisterRequestDto;
+import com.familymoney.domains.auth.services.IAuthService;
 import com.familymoney.domains.auth.services.IEmailSenderService;
+import com.familymoney.domains.auth.types.EmailVerificationToken;
+import com.familymoney.domains.users.types.Email;
+import com.familymoney.domains.users.types.Password;
+import com.familymoney.domains.users.types.UserName;
 import com.familymoney.testutils.AuthControllerUriFactory;
 import com.familymoney.testutils.FakeGenerator;
 import java.util.Locale;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.client.RestTestClient;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
@@ -33,6 +47,9 @@ class AuthFlowTest {
   private FlowUtils flowUtils;
 
   @MockitoBean private IEmailSenderService emailSenderService;
+
+  @Autowired private IAuthService authService;
+  @Autowired private PlatformTransactionManager transactionManager;
 
   @Container @ServiceConnection
   private static final PostgreSQLContainer postgresContainer =
@@ -66,6 +83,44 @@ class AuthFlowTest {
 
     // logout
     flowUtils.logoutUser(newRefreshToken);
+  }
+
+  @Test
+  void registration_email_is_delivered_only_after_transaction_commit() {
+    final UserName username = UserName.fromString(FakeGenerator.username());
+    final Email email = Email.fromString(FakeGenerator.email());
+    final Password password = Password.fromString(FakeGenerator.password());
+    final TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+
+    transactionTemplate.executeWithoutResult(
+        status -> {
+          authService.registerUser(username, email, password);
+
+          verify(emailSenderService, never())
+              .sendEmailVerificationEmail(
+                  any(Email.class), any(UserName.class), any(EmailVerificationToken.class));
+        });
+
+    verify(emailSenderService, timeout(2000))
+        .sendEmailVerificationEmail(eq(email), eq(username), any(EmailVerificationToken.class));
+  }
+
+  @Test
+  void registration_email_is_not_delivered_when_transaction_rolls_back() {
+    final UserName username = UserName.fromString(FakeGenerator.username());
+    final Email email = Email.fromString(FakeGenerator.email());
+    final Password password = Password.fromString(FakeGenerator.password());
+    final TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+
+    transactionTemplate.executeWithoutResult(
+        status -> {
+          authService.registerUser(username, email, password);
+          status.setRollbackOnly();
+        });
+
+    verify(emailSenderService, after(500).never())
+        .sendEmailVerificationEmail(
+            any(Email.class), any(UserName.class), any(EmailVerificationToken.class));
   }
 
   @Test

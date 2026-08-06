@@ -19,15 +19,16 @@ public interface IBalanceRepository {
   /**
    * Creates a new balance entry for a specific group and two users.
    *
+   * <p>A new balance is initialized with a default money value of zero, indicating that there are
+   * no outstanding debts between the users at creation time. The entry can then be updated as
+   * transactions occur within the group.
+   *
+   * <p>The {@code user1} and {@code user2} fields are interchangeable: the balance between user1
+   * and user2 is the same balance as the one between user2 and user1.
+   *
    * @param data values to store
    * @return an Optional containing the created BalanceDbo if the creation was successful, or an
    *     empty Optional if the creation failed (e.g., due to invalid input or database constraints)
-   * @implNote When a new balance is created, it is initialized with a default money of zero,
-   *     indicating that there are no outstanding debts between the two users at the time of
-   *     creation. This method ensures that a balance entry is established for the given group and
-   *     user pair, allowing for future updates as transactions occur within the group.
-   * @apiNote user1 and user2 are interchangeable in the context of the balance, meaning that the
-   *     balance between user1 and user2 is the same as the balance between user2 and user1.
    */
   Optional<BalanceEntity> create(CreateBalanceDto data);
 

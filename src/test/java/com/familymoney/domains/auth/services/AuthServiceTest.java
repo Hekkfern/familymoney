@@ -14,6 +14,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.familymoney.domains.auth.events.EmailVerificationRequestedEvent;
 import com.familymoney.domains.auth.exceptions.BlacklistedFamilyException;
 import com.familymoney.domains.auth.exceptions.NewEmailVerificationTooSoonException;
 import com.familymoney.domains.auth.exceptions.RefreshTokenInvalidException;
@@ -69,11 +70,13 @@ import java.util.UUID;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.BadCredentialsException;
 
 @ExtendWith(MockitoExtension.class)
@@ -101,6 +104,7 @@ class AuthServiceTest {
   @Mock private IUsedRefreshTokenRepository usedRefreshTokenRepository;
   @Mock private JwtUtils jwtUtils;
   @Mock private IRefreshTokenRepository refreshTokenRepository;
+  @Mock private ApplicationEventPublisher eventPublisher;
 
   @InjectMocks private AuthService authService;
 
@@ -236,9 +240,24 @@ class AuthServiceTest {
       assertThatCode(() -> authService.registerUser(username, email, password))
           .doesNotThrowAnyException();
 
+      final ArgumentCaptor<CreateEmailVerificationDto> verificationDtoCaptor =
+          ArgumentCaptor.forClass(CreateEmailVerificationDto.class);
+      final ArgumentCaptor<EmailVerificationRequestedEvent> eventCaptor =
+          ArgumentCaptor.forClass(EmailVerificationRequestedEvent.class);
       verify(userRepository).create(any(CreateUserDto.class));
-      verify(emailVerificationRepository).create(any(CreateEmailVerificationDto.class));
+      verify(emailVerificationRepository).create(verificationDtoCaptor.capture());
       verify(permissionsRepository).setRoleForUserId(any(UserId.class), any(Role.class));
+      verify(eventPublisher).publishEvent(eventCaptor.capture());
+      verify(emailSenderService, never())
+          .sendEmailVerificationEmail(
+              any(Email.class), any(UserName.class), any(EmailVerificationToken.class));
+
+      final CreateEmailVerificationDto verificationDto = verificationDtoCaptor.getValue();
+      final EmailVerificationRequestedEvent event = eventCaptor.getValue();
+      assertThat(event.userId()).isEqualTo(verificationDto.userId());
+      assertThat(event.email()).isEqualTo(email);
+      assertThat(event.username()).isEqualTo(username);
+      assertThat(event.verificationToken()).isEqualTo(verificationDto.token());
     }
 
     @Test
@@ -253,6 +272,10 @@ class AuthServiceTest {
           UserAlreadyExistsException.class,
           () -> authService.registerUser(username, email, password));
       verify(userRepository, never()).create(any(CreateUserDto.class));
+      verify(eventPublisher, never()).publishEvent(any(EmailVerificationRequestedEvent.class));
+      verify(emailSenderService, never())
+          .sendEmailVerificationEmail(
+              any(Email.class), any(UserName.class), any(EmailVerificationToken.class));
     }
 
     @Test
@@ -267,6 +290,10 @@ class AuthServiceTest {
       assertThrows(
           DatabaseExecutionException.class,
           () -> authService.registerUser(username, email, password));
+      verify(eventPublisher, never()).publishEvent(any(EmailVerificationRequestedEvent.class));
+      verify(emailSenderService, never())
+          .sendEmailVerificationEmail(
+              any(Email.class), any(UserName.class), any(EmailVerificationToken.class));
     }
 
     @Test
@@ -283,6 +310,10 @@ class AuthServiceTest {
       assertThrows(
           DatabaseExecutionException.class,
           () -> authService.registerUser(username, email, password));
+      verify(eventPublisher, never()).publishEvent(any(EmailVerificationRequestedEvent.class));
+      verify(emailSenderService, never())
+          .sendEmailVerificationEmail(
+              any(Email.class), any(UserName.class), any(EmailVerificationToken.class));
     }
   }
 

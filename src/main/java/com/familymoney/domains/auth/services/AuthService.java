@@ -1,5 +1,6 @@
 package com.familymoney.domains.auth.services;
 
+import com.familymoney.domains.auth.events.EmailVerificationRequestedEvent;
 import com.familymoney.domains.auth.exceptions.BlacklistedFamilyException;
 import com.familymoney.domains.auth.exceptions.NewEmailVerificationTooSoonException;
 import com.familymoney.domains.auth.exceptions.RefreshTokenInvalidException;
@@ -51,6 +52,7 @@ import java.time.Instant;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -73,6 +75,7 @@ public class AuthService implements IAuthService {
   private final EmailVerificationProperties emailVerificationProperties;
   private final ITokenFamilyBlacklistRepository tokenFamilyBlacklistRepository;
   private final IUsedRefreshTokenRepository usedRefreshTokenRepository;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Transactional
   @Override
@@ -104,8 +107,8 @@ public class AuthService implements IAuthService {
             () ->
                 new DatabaseExecutionException(
                     "Could not create email verification token in the database"));
-    // Send verification email asynchronously
-    emailSenderService.sendEmailVerificationEmail(email, username, emailVerificationToken);
+    eventPublisher.publishEvent(
+        new EmailVerificationRequestedEvent(userId, email, username, emailVerificationToken));
     log.trace("registerUser() completed");
   }
 
