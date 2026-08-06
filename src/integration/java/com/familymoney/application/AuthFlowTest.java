@@ -10,6 +10,7 @@ import com.familymoney.domains.auth.controllers.dtos.RegisterRequestDto;
 import com.familymoney.domains.auth.services.IEmailSenderService;
 import com.familymoney.testutils.AuthControllerUriFactory;
 import com.familymoney.testutils.FakeGenerator;
+import java.util.Locale;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -86,6 +87,24 @@ class AuthFlowTest {
   }
 
   @Test
+  void register_with_case_only_variant_email_fails() {
+    final String username = FakeGenerator.username();
+    final String email = FakeGenerator.email();
+    final String password = FakeGenerator.password();
+    flowUtils.registerAndVerifyNewUser(username, email, password);
+
+    client
+        .post()
+        .uri(AuthControllerUriFactory.getRegisterPath())
+        .body(
+            new RegisterRequestDto(
+                FakeGenerator.username(), email.toUpperCase(Locale.ROOT), password))
+        .exchange()
+        .expectStatus()
+        .isEqualTo(HttpStatus.CONFLICT);
+  }
+
+  @Test
   void register_with_existing_username_fails() {
     // register and verify a new user
     final String username = FakeGenerator.username();
@@ -126,6 +145,15 @@ class AuthFlowTest {
         .exchange()
         .expectStatus()
         .isUnauthorized();
+  }
+
+  @Test
+  void login_with_different_case_email_succeeds() {
+    final String username = FakeGenerator.username();
+    final String email = FakeGenerator.email();
+    final String password = FakeGenerator.password();
+    flowUtils.registerAndVerifyNewUser(username, email, password);
+    flowUtils.loginUser(email.toUpperCase(Locale.ROOT), password);
   }
 
   @Test

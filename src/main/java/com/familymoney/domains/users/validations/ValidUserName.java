@@ -1,4 +1,4 @@
-package com.familymoney.domains.users.validation;
+package com.familymoney.domains.users.validations;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;

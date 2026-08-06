@@ -1,4 +1,4 @@
 @NullMarked
-package com.familymoney.domains.users.validation;
+package com.familymoney.domains.auth.validations;
 
 import org.jspecify.annotations.NullMarked;

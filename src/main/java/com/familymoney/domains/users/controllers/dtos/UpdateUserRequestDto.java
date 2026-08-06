@@ -1,8 +1,8 @@
 package com.familymoney.domains.users.controllers.dtos;
 
-import com.familymoney.domains.users.validation.ValidEmail;
-import com.familymoney.domains.users.validation.ValidPassword;
-import com.familymoney.domains.users.validation.ValidUserName;
+import com.familymoney.domains.users.validations.ValidEmail;
+import com.familymoney.domains.users.validations.ValidPassword;
+import com.familymoney.domains.users.validations.ValidUserName;
 import org.jspecify.annotations.Nullable;
 
 public record UpdateUserRequestDto(

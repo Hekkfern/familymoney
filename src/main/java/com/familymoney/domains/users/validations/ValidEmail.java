@@ -1,8 +1,9 @@
-package com.familymoney.domains.auth.validation;
+package com.familymoney.domains.users.validations;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Size;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -13,9 +14,10 @@ import java.lang.annotation.Target;
 @Constraint(validatedBy = {})
 @Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.RECORD_COMPONENT})
 @Retention(RetentionPolicy.RUNTIME)
-@Pattern(regexp = "^[A-Za-z0-9]{32}$")
-public @interface ValidPasswordResetToken {
-  String message() default "Invalid token format";
+@Email(message = "Invalid email format")
+@Size(min = 4, max = 254, message = "Invalid email size")
+public @interface ValidEmail {
+  String message() default "";
 
   Class<?>[] groups() default {};
 

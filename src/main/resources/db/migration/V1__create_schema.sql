@@ -29,7 +29,10 @@ CREATE
         users(
             id UUID PRIMARY KEY,
             username VARCHAR(128) UNIQUE NOT NULL,
-            email VARCHAR(255) UNIQUE NOT NULL,
+            email VARCHAR(254) UNIQUE NOT NULL CHECK(
+                CHAR_LENGTH( BTRIM( email ))> 0
+                AND email = LOWER( email )
+            ),
             hashed_password VARCHAR(255) NOT NULL,
             created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
             updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),

@@ -1,4 +1,4 @@
-package com.familymoney.domains.auth.validation;
+package com.familymoney.domains.auth.validations;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
@@ -13,9 +13,9 @@ import java.lang.annotation.Target;
 @Constraint(validatedBy = {})
 @Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.RECORD_COMPONENT})
 @Retention(RetentionPolicy.RUNTIME)
-@Pattern(regexp = "^[A-Za-z0-9]{64}$", message = "Invalid token format")
-public @interface ValidEmailVerificationToken {
-  String message() default "";
+@Pattern(regexp = "^[A-Za-z0-9_-]++(?:\\\\.[A-Za-z0-9_-]++){2}$")
+public @interface ValidAccessToken {
+  String message() default "Invalid token format";
 
   Class<?>[] groups() default {};
 

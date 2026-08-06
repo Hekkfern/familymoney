@@ -1,4 +1,4 @@
-package com.familymoney.domains.auth.validation;
+package com.familymoney.domains.users.validations;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
@@ -13,8 +13,11 @@ import java.lang.annotation.Target;
 @Constraint(validatedBy = {})
 @Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.RECORD_COMPONENT})
 @Retention(RetentionPolicy.RUNTIME)
-@Pattern(regexp = "^[A-Za-z0-9]{32}$", message = "Invalid token format")
-public @interface ValidRefreshToken {
+@Pattern(
+    regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{12,64}$",
+    message =
+        "Password must be between 12 and 64 characters long, contain at least one uppercase letter, one lowercase letter, one digit, and one special character (@$!%*?&)")
+public @interface ValidPassword {
   String message() default "";
 
   Class<?>[] groups() default {};
