@@ -599,8 +599,7 @@ class AuthServiceTest {
 
     @Test
     void succeeds_when_called_with_valid_email_verification_token() {
-      final EmailVerificationToken emailVerificationToken =
-          EmailVerificationToken.fromString(FakeGenerator.emailVerificationToken());
+      final EmailVerificationToken emailVerificationToken = EmailVerificationToken.generate();
 
       mockEmailVerificationTokenFindByToken();
       when(userRepository.updateById(any(UserId.class), any(UpdateUserDto.class))).thenReturn(true);
@@ -615,8 +614,7 @@ class AuthServiceTest {
 
     @Test
     void throws_when_email_verification_token_doesnt_exist() {
-      final EmailVerificationToken emailVerificationToken =
-          EmailVerificationToken.fromString(FakeGenerator.emailVerificationToken());
+      final EmailVerificationToken emailVerificationToken = EmailVerificationToken.generate();
 
       when(emailVerificationRepository.findByToken(emailVerificationToken))
           .thenReturn(Optional.empty());
@@ -628,8 +626,7 @@ class AuthServiceTest {
 
     @Test
     void throws_when_email_verification_token_is_expired() {
-      final EmailVerificationToken emailVerificationToken =
-          EmailVerificationToken.fromString(FakeGenerator.emailVerificationToken());
+      final EmailVerificationToken emailVerificationToken = EmailVerificationToken.generate();
 
       when(emailVerificationRepository.findByToken(any(EmailVerificationToken.class)))
           .thenAnswer(
@@ -655,8 +652,7 @@ class AuthServiceTest {
 
     @Test
     void throws_when_updating_user_fails() {
-      final EmailVerificationToken emailVerificationToken =
-          EmailVerificationToken.fromString(FakeGenerator.emailVerificationToken());
+      final EmailVerificationToken emailVerificationToken = EmailVerificationToken.generate();
 
       mockEmailVerificationTokenFindByToken();
       when(userRepository.updateById(any(UserId.class), any(UpdateUserDto.class)))
@@ -671,8 +667,7 @@ class AuthServiceTest {
 
     @Test
     void throws_when_deleting_email_verification_token_fails() {
-      final EmailVerificationToken emailVerificationToken =
-          EmailVerificationToken.fromString(FakeGenerator.emailVerificationToken());
+      final EmailVerificationToken emailVerificationToken = EmailVerificationToken.generate();
 
       mockEmailVerificationTokenFindByToken();
       when(userRepository.updateById(any(UserId.class), any(UpdateUserDto.class))).thenReturn(true);

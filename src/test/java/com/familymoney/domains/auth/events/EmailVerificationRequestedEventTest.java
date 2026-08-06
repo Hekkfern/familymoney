@@ -16,8 +16,7 @@ class EmailVerificationRequestedEventTest {
     final UserId userId = UserId.generate();
     final Email email = Email.fromString(FakeGenerator.email());
     final UserName username = UserName.fromString(FakeGenerator.username());
-    final EmailVerificationToken verificationToken =
-        EmailVerificationToken.fromString(FakeGenerator.emailVerificationToken());
+    final EmailVerificationToken verificationToken = EmailVerificationToken.generate();
 
     final EmailVerificationRequestedEvent event =
         new EmailVerificationRequestedEvent(userId, email, username, verificationToken);

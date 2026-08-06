@@ -52,8 +52,7 @@ class EmailSenderServiceTest {
   void sendEmailVerificationEmail_sends_email_successfully() {
     final Email email = Email.fromString(FakeGenerator.email());
     final UserName username = UserName.fromString(FakeGenerator.username());
-    final EmailVerificationToken token =
-        EmailVerificationToken.fromString(FakeGenerator.emailVerificationToken());
+    final EmailVerificationToken token = EmailVerificationToken.generate();
 
     final ArgumentCaptor<MimeMessage> messageCaptor = ArgumentCaptor.forClass(MimeMessage.class);
 

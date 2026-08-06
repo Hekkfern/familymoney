@@ -53,6 +53,6 @@ class DefaultEmailVerificationEventListenerTest {
         UserId.generate(),
         Email.fromString(FakeGenerator.email()),
         UserName.fromString(FakeGenerator.username()),
-        EmailVerificationToken.fromString(FakeGenerator.emailVerificationToken()));
+        EmailVerificationToken.generate());
   }
 }
