@@ -48,7 +48,6 @@ import com.familymoney.security.UserPasswordEncoder;
 import com.familymoney.testutils.UUIDGenerator;
 import java.time.Clock;
 import java.time.Instant;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -166,7 +165,7 @@ public class AuthService implements IAuthService {
         blacklistFamily(usedRefreshToken.get().family());
         throw new RefreshTokenReuseDetectedException();
       }
-      throw new NoSuchElementException("Refresh token not found");
+      throw new RefreshTokenNotFoundException("Refresh token not found");
     }
     final RefreshTokenEntity refreshTokenDb = refreshTokenDbOptional.get();
     // Check if the refresh token is expired

@@ -4,11 +4,11 @@ import com.familymoney.domains.users.controllers.dtos.GetMyUserResponseDto;
 import com.familymoney.domains.users.controllers.dtos.UpdateUserRequestDto;
 import com.familymoney.domains.users.controllers.mappers.GetMyUserResponseMapper;
 import com.familymoney.domains.users.controllers.mappers.UpdateUserRequestMapper;
+import com.familymoney.domains.users.exceptions.UserNotFoundException;
 import com.familymoney.domains.users.services.IUserService;
 import com.familymoney.domains.users.services.data.UserData;
 import com.familymoney.testutils.AuthenticationUtils;
 import com.familymoney.testutils.AuthorizedUser;
-import java.util.NoSuchElementException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,7 +27,7 @@ public class UserController implements IUserController {
         userService
             .getUserData(user.id())
             .orElseThrow(
-                () -> new NoSuchElementException("User not found for id: %s".formatted(user.id())));
+                () -> new UserNotFoundException("User not found for id: %s".formatted(user.id())));
     // Return response
     return GetMyUserResponseMapper.toDto(userData);
   }

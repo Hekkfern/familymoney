@@ -81,16 +81,11 @@ class UserControllerTest {
 
     @Test
     @WithMockUserId(userId = USER_ID)
-    void servererror_when_userid_cannot_be_found() {
+    void notfound_when_userid_cannot_be_found() {
       when(userService.getUserData(any())).thenReturn(Optional.empty());
 
       // Request
-      client
-          .get()
-          .uri(UserControllerUriFactory.getMePath())
-          .exchange()
-          .expectStatus()
-          .is5xxServerError();
+      client.get().uri(UserControllerUriFactory.getMePath()).exchange().expectStatus().isNotFound();
     }
   }
 

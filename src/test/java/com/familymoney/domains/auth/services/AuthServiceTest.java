@@ -64,7 +64,6 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Nested;
@@ -458,7 +457,8 @@ class AuthServiceTest {
       when(usedRefreshTokenRepository.findByToken(any(RefreshToken.class)))
           .thenReturn(Optional.empty());
 
-      assertThrows(NoSuchElementException.class, () -> authService.refreshTokens(refreshToken));
+      assertThrows(
+          RefreshTokenNotFoundException.class, () -> authService.refreshTokens(refreshToken));
     }
 
     @Test

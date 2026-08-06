@@ -5,7 +5,6 @@ import com.familymoney.domains.auth.services.AuthService;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.NoSuchElementException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -25,12 +24,6 @@ public class AuthExceptionHandler extends ResponseEntityExceptionHandler {
   private static final String RATE_LIMIT_RESET_HEADER = "RateLimit-Reset";
 
   private final Clock clock;
-
-  @ExceptionHandler(NoSuchElementException.class)
-  public ProblemDetail handle(NoSuchElementException e) {
-    logger.info(e.getMessage());
-    return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, e.getMessage());
-  }
 
   @ExceptionHandler(BadCredentialsException.class)
   public ProblemDetail handle(BadCredentialsException e) {
