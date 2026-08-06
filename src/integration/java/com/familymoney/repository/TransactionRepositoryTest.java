@@ -5,6 +5,7 @@ import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE
 import com.familymoney.domains.transactions.repositories.TransactionRepository;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jooq.test.autoconfigure.JooqTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
@@ -31,33 +32,38 @@ class TransactionRepositoryTest {
     this.transactionRepository = new TransactionRepository(dslContext);
   }
 
-  // region ITransactionRepository.create()
+  @Nested
+  class Create {
 
-  // TODO
+    // TODO
 
-  // endregion
+  }
 
-  // region ITransactionRepository.updateById()
+  @Nested
+  class UpdateById {
 
-  // TODO
+    // TODO
 
-  // endregion
+  }
 
-  // region ITransactionRepository.deleteById()
+  @Nested
+  class DeleteById {
 
-  // TODO
+    // TODO
 
-  // endregion
+  }
 
-  // region ITransactionRepository.findById()
+  @Nested
+  class FindById {
 
-  // TODO
+    // TODO
 
-  // endregion
+  }
 
-  // region ITransactionRepository.findAllByGroupId()
+  @Nested
+  class FindAllByGroupId {
 
-  // TODO
+    // TODO
 
-  // endregion
+  }
 }

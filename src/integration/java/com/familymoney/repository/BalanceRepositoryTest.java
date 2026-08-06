@@ -24,6 +24,7 @@ import javax.money.Monetary;
 import org.javamoney.moneta.Money;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jooq.test.autoconfigure.JooqTest;
@@ -85,184 +86,185 @@ class BalanceRepositoryTest {
     return balanceId;
   }
 
-  // region IBalanceRepository.create()
+  @Nested
+  class Create {
 
-  @Test
-  void create_persists_balance_record() {
-    final GroupId groupId = insertRandomGroup();
-    final UserId userId1 = insertRandomUser();
-    final UserId userId2 = insertRandomUser();
-    final BalanceId balanceId = BalanceId.generate();
-    final Money money = Money.of(23, "USD");
+    @Test
+    void persists_balance_record() {
+      final GroupId groupId = insertRandomGroup();
+      final UserId userId1 = insertRandomUser();
+      final UserId userId2 = insertRandomUser();
+      final BalanceId balanceId = BalanceId.generate();
+      final Money money = Money.of(23, "USD");
 
-    final Optional<BalanceEntity> balanceOpt =
-        balanceRepository.create(new CreateBalanceDto(balanceId, groupId, userId1, userId2, money));
+      final Optional<BalanceEntity> balanceOpt =
+          balanceRepository.create(
+              new CreateBalanceDto(balanceId, groupId, userId1, userId2, money));
 
-    assertThat(balanceOpt).isPresent();
-    final BalanceEntity balance = balanceOpt.get();
-    assertThat(balance.id()).isEqualTo(balanceId);
-    assertThat(balance.groupId()).isEqualTo(groupId);
-    assertThat(balance.money()).isEqualTo(money);
-    assertThat(balance.user1()).isEqualTo(userId1);
-    assertThat(balance.user2()).isEqualTo(userId2);
+      assertThat(balanceOpt).isPresent();
+      final BalanceEntity balance = balanceOpt.get();
+      assertThat(balance.id()).isEqualTo(balanceId);
+      assertThat(balance.groupId()).isEqualTo(groupId);
+      assertThat(balance.money()).isEqualTo(money);
+      assertThat(balance.user1()).isEqualTo(userId1);
+      assertThat(balance.user2()).isEqualTo(userId2);
+    }
+
+    @Test
+    void throws_when_user_does_not_exist() {
+      final GroupId groupId = insertRandomGroup();
+      final UserId userId1 = insertRandomUser();
+      final UserId userId2 = UserId.generate();
+      final Money money = Money.of(23, "USD");
+
+      final CreateBalanceDto dto =
+          new CreateBalanceDto(BalanceId.generate(), groupId, userId1, userId2, money);
+      assertThatThrownBy(() -> balanceRepository.create(dto))
+          .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void throws_when_it_is_duplicate() {
+      final GroupId groupId = insertRandomGroup();
+      final UserId userId1 = insertRandomUser();
+      final UserId userId2 = insertRandomUser();
+      final Money money = Money.of(23, "USD");
+
+      balanceRepository.create(
+          new CreateBalanceDto(BalanceId.generate(), groupId, userId1, userId2, money));
+
+      final CreateBalanceDto dto =
+          new CreateBalanceDto(BalanceId.generate(), groupId, userId2, userId1, money);
+      assertThatThrownBy(() -> balanceRepository.create(dto))
+          .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void throws_when_users_are_same() {
+      final GroupId groupId = insertRandomGroup();
+      final UserId userId1 = insertRandomUser();
+      final Money money = Money.of(23, "USD");
+
+      final CreateBalanceDto dto =
+          new CreateBalanceDto(BalanceId.generate(), groupId, userId1, userId1, money);
+      assertThatThrownBy(() -> balanceRepository.create(dto))
+          .isInstanceOf(DataIntegrityViolationException.class);
+    }
   }
 
-  @Test
-  void create_throws_when_user_does_not_exist() {
-    final GroupId groupId = insertRandomGroup();
-    final UserId userId1 = insertRandomUser();
-    final UserId userId2 = UserId.generate();
-    final Money money = Money.of(23, "USD");
+  @Nested
+  class FindByGroup {
 
-    final CreateBalanceDto dto =
-        new CreateBalanceDto(BalanceId.generate(), groupId, userId1, userId2, money);
-    assertThatThrownBy(() -> balanceRepository.create(dto))
-        .isInstanceOf(DataIntegrityViolationException.class);
+    @Test
+    void returns_all_balances_in_group() {
+      final GroupId groupId1 = insertRandomGroup();
+      final GroupId groupId2 = insertRandomGroup();
+      final UserId userId1 = insertRandomUser();
+      final UserId userId2 = insertRandomUser();
+      final UserId userId3 = insertRandomUser();
+      final BalanceId balanceGroup1 = insertRandomBalance(groupId1, userId1, userId2);
+      insertRandomBalance(groupId2, userId1, userId3);
+
+      final List<BalanceEntity> balances = balanceRepository.findByGroup(groupId1);
+
+      assertThat(balances)
+          .isNotEmpty()
+          .extracting(BalanceEntity::id)
+          .containsExactlyInAnyOrder(balanceGroup1);
+    }
+
+    @Test
+    void returns_empty_list_when_no_balances_found() {
+      // TODO
+    }
   }
 
-  @Test
-  void create_throws_when_it_is_duplicate() {
-    final GroupId groupId = insertRandomGroup();
-    final UserId userId1 = insertRandomUser();
-    final UserId userId2 = insertRandomUser();
-    final Money money = Money.of(23, "USD");
+  @Nested
+  class FindByUserAndGroup {
 
-    balanceRepository.create(
-        new CreateBalanceDto(BalanceId.generate(), groupId, userId1, userId2, money));
+    @Test
+    void returns_balances_for_user() {
+      final GroupId groupId = insertRandomGroup();
+      final UserId userId1 = insertRandomUser();
+      final UserId userId2 = insertRandomUser();
+      final UserId userId3 = insertRandomUser();
+      final BalanceId balance1 = insertRandomBalance(groupId, userId1, userId2);
+      final BalanceId balance2 = insertRandomBalance(groupId, userId2, userId3);
 
-    final CreateBalanceDto dto =
-        new CreateBalanceDto(BalanceId.generate(), groupId, userId2, userId1, money);
-    assertThatThrownBy(() -> balanceRepository.create(dto))
-        .isInstanceOf(DataIntegrityViolationException.class);
+      final List<BalanceEntity> balancesForUser1 =
+          balanceRepository.findByUserAndGroup(userId1, groupId);
+
+      assertThat(balancesForUser1)
+          .isNotEmpty()
+          .extracting(BalanceEntity::id)
+          .containsExactlyInAnyOrder(balance1);
+    }
+
+    @Test
+    void returns_empty_list_when_no_balances_found() {
+      // TODO
+    }
   }
 
-  @Test
-  void create_throws_when_users_are_same() {
-    final GroupId groupId = insertRandomGroup();
-    final UserId userId1 = insertRandomUser();
-    final Money money = Money.of(23, "USD");
+  @Nested
+  class UpdateById {
 
-    final CreateBalanceDto dto =
-        new CreateBalanceDto(BalanceId.generate(), groupId, userId1, userId1, money);
-    assertThatThrownBy(() -> balanceRepository.create(dto))
-        .isInstanceOf(DataIntegrityViolationException.class);
+    @Test
+    void updates_balance() {
+      final GroupId groupId = insertRandomGroup();
+      final UserId userId1 = insertRandomUser();
+      final UserId userId2 = insertRandomUser();
+      final UserId userId3 = insertRandomUser();
+      final BalanceId balance1 = insertRandomBalance(groupId, userId1, userId2);
+      final Money newMoney = Money.of(15.75, "USD");
+      final UpdateBalanceDto dataToUpdate =
+          UpdateBalanceDto.builder().money(newMoney).user2(userId3).build();
+
+      final boolean updated = balanceRepository.updateById(balance1, dataToUpdate);
+
+      assertThat(updated).isTrue();
+      final BalanceEntity found = balanceRepository.findById(balance1).orElseThrow();
+      assertThat(found.money()).isEqualTo(newMoney);
+      assertThat(found.user2()).isEqualTo(userId3);
+    }
+
+    @Test
+    void throws_when_user_does_not_exist() {
+      final GroupId groupId = insertRandomGroup();
+      final UserId userId1 = insertRandomUser();
+      final UserId userId2 = insertRandomUser();
+      final UserId userId3 = UserId.generate();
+      final BalanceId balance1 = insertRandomBalance(groupId, userId1, userId2);
+      final UpdateBalanceDto dataToUpdate = UpdateBalanceDto.builder().user1(userId3).build();
+
+      assertThatThrownBy(() -> balanceRepository.updateById(balance1, dataToUpdate))
+          .isInstanceOf(DataIntegrityViolationException.class);
+    }
   }
 
-  // endregion
+  @Nested
+  class FindById {
 
-  // region IBalanceRepository.findByGroup()
+    @Test
+    void returns_balance_when_it_exists() {
+      final GroupId groupId = insertRandomGroup();
+      final UserId userId1 = insertRandomUser();
+      final UserId userId2 = insertRandomUser();
+      final BalanceId balance1 = insertRandomBalance(groupId, userId1, userId2);
 
-  @Test
-  void findByGroup_returns_all_balances_in_group() {
-    final GroupId groupId1 = insertRandomGroup();
-    final GroupId groupId2 = insertRandomGroup();
-    final UserId userId1 = insertRandomUser();
-    final UserId userId2 = insertRandomUser();
-    final UserId userId3 = insertRandomUser();
-    final BalanceId balanceGroup1 = insertRandomBalance(groupId1, userId1, userId2);
-    insertRandomBalance(groupId2, userId1, userId3);
+      final Optional<BalanceEntity> balanceFoundOpt = balanceRepository.findById(balance1);
 
-    final List<BalanceEntity> balances = balanceRepository.findByGroup(groupId1);
+      assertThat(balanceFoundOpt).isPresent();
+      final BalanceEntity balanceFound = balanceFoundOpt.get();
+      assertThat(balanceFound.id()).isEqualTo(balance1);
+    }
 
-    assertThat(balances)
-        .isNotEmpty()
-        .extracting(BalanceEntity::id)
-        .containsExactlyInAnyOrder(balanceGroup1);
+    @Test
+    void returns_empty_when_it_does_not_exist() {
+      final Optional<BalanceEntity> found =
+          balanceRepository.findById(BalanceId.fromUuid(UUID.randomUUID()));
+
+      assertThat(found).isEmpty();
+    }
   }
-
-  @Test
-  void findByGroup_returns_empty_list_when_no_balances_found() {
-    // TODO
-  }
-
-  // endregion
-
-  // region IBalanceRepository.findByUserAndGroup()
-
-  @Test
-  void findByUserAndGroup_returns_balances_for_user() {
-    final GroupId groupId = insertRandomGroup();
-    final UserId userId1 = insertRandomUser();
-    final UserId userId2 = insertRandomUser();
-    final UserId userId3 = insertRandomUser();
-    final BalanceId balance1 = insertRandomBalance(groupId, userId1, userId2);
-    final BalanceId balance2 = insertRandomBalance(groupId, userId2, userId3);
-
-    final List<BalanceEntity> balancesForUser1 =
-        balanceRepository.findByUserAndGroup(userId1, groupId);
-
-    assertThat(balancesForUser1)
-        .isNotEmpty()
-        .extracting(BalanceEntity::id)
-        .containsExactlyInAnyOrder(balance1);
-  }
-
-  @Test
-  void findByUserAndGroup_returns_empty_list_when_no_balances_found() {
-    // TODO
-  }
-
-  // endregion
-
-  // region IBalanceRepository.updateById()
-
-  @Test
-  void updateById_updates_balance() {
-    final GroupId groupId = insertRandomGroup();
-    final UserId userId1 = insertRandomUser();
-    final UserId userId2 = insertRandomUser();
-    final UserId userId3 = insertRandomUser();
-    final BalanceId balance1 = insertRandomBalance(groupId, userId1, userId2);
-    final Money newMoney = Money.of(15.75, "USD");
-    final UpdateBalanceDto dataToUpdate =
-        UpdateBalanceDto.builder().money(newMoney).user2(userId3).build();
-
-    final boolean updated = balanceRepository.updateById(balance1, dataToUpdate);
-
-    assertThat(updated).isTrue();
-    final BalanceEntity found = balanceRepository.findById(balance1).orElseThrow();
-    assertThat(found.money()).isEqualTo(newMoney);
-    assertThat(found.user2()).isEqualTo(userId3);
-  }
-
-  @Test
-  void updateById_throws_when_user_does_not_exist() {
-    final GroupId groupId = insertRandomGroup();
-    final UserId userId1 = insertRandomUser();
-    final UserId userId2 = insertRandomUser();
-    final UserId userId3 = UserId.generate();
-    final BalanceId balance1 = insertRandomBalance(groupId, userId1, userId2);
-    final UpdateBalanceDto dataToUpdate = UpdateBalanceDto.builder().user1(userId3).build();
-
-    assertThatThrownBy(() -> balanceRepository.updateById(balance1, dataToUpdate))
-        .isInstanceOf(DataIntegrityViolationException.class);
-  }
-
-  // endregion
-
-  // region IBalanceRepository.findById()
-
-  @Test
-  void findById_returns_balance_when_it_exists() {
-    final GroupId groupId = insertRandomGroup();
-    final UserId userId1 = insertRandomUser();
-    final UserId userId2 = insertRandomUser();
-    final BalanceId balance1 = insertRandomBalance(groupId, userId1, userId2);
-
-    final Optional<BalanceEntity> balanceFoundOpt = balanceRepository.findById(balance1);
-
-    assertThat(balanceFoundOpt).isPresent();
-    final BalanceEntity balanceFound = balanceFoundOpt.get();
-    assertThat(balanceFound.id()).isEqualTo(balance1);
-  }
-
-  @Test
-  void findById_returns_empty_when_it_does_not_exist() {
-    final Optional<BalanceEntity> found =
-        balanceRepository.findById(BalanceId.fromUuid(UUID.randomUUID()));
-
-    assertThat(found).isEmpty();
-  }
-
-  // endregion
 }

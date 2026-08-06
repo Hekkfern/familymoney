@@ -19,6 +19,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jooq.test.autoconfigure.JooqTest;
@@ -62,132 +63,133 @@ class PasswordResetRepositoryTest {
     return userId;
   }
 
-  // region IPasswordResetRepository.create()
+  @Nested
+  class Create {
 
-  @Test
-  void create_persists_password_reset_token_record() {
-    final UserId userId = insertRandomUser();
-    final PasswordResetToken token = PasswordResetToken.generate();
-    final Instant now = Instant.now();
-    final ExpirationTime expiresAt = ExpirationTime.of(now.plusSeconds(3600));
+    @Test
+    void create_persists_password_reset_token_record() {
+      final UserId userId = insertRandomUser();
+      final PasswordResetToken token = PasswordResetToken.generate();
+      final Instant now = Instant.now();
+      final ExpirationTime expiresAt = ExpirationTime.of(now.plusSeconds(3600));
 
-    final Optional<PasswordResetEntity> passwordResetOpt =
-        passwordResetRepository.create(new CreatePasswordResetDto(userId, token, expiresAt));
+      final Optional<PasswordResetEntity> passwordResetOpt =
+          passwordResetRepository.create(new CreatePasswordResetDto(userId, token, expiresAt));
 
-    assertThat(passwordResetOpt).isPresent();
-    final PasswordResetEntity passwordReset = passwordResetOpt.get();
-    assertThat(passwordReset.userId()).isNotNull().isEqualTo(userId);
-    assertThat(passwordReset.token()).isNotNull().isEqualTo(token);
-    assertThat(passwordReset.createdAt())
-        .isNotNull()
-        .isBetween(now.minusSeconds(1), now.plusSeconds(1));
-    assertThat(passwordReset.updatedAt())
-        .isNotNull()
-        .isBetween(now.minusSeconds(1), now.plusSeconds(1));
-    assertThat(passwordReset.expiresAt().value())
-        .isNotNull()
-        .isBetween(expiresAt.value().minusSeconds(1), expiresAt.value().plusSeconds(1));
+      assertThat(passwordResetOpt).isPresent();
+      final PasswordResetEntity passwordReset = passwordResetOpt.get();
+      assertThat(passwordReset.userId()).isNotNull().isEqualTo(userId);
+      assertThat(passwordReset.token()).isNotNull().isEqualTo(token);
+      assertThat(passwordReset.createdAt())
+          .isNotNull()
+          .isBetween(now.minusSeconds(1), now.plusSeconds(1));
+      assertThat(passwordReset.updatedAt())
+          .isNotNull()
+          .isBetween(now.minusSeconds(1), now.plusSeconds(1));
+      assertThat(passwordReset.expiresAt().value())
+          .isNotNull()
+          .isBetween(expiresAt.value().minusSeconds(1), expiresAt.value().plusSeconds(1));
+    }
+
+    @Test
+    void create_throws_when_user_does_not_exist() {
+      final UserId missingUserId = UserId.fromUuid(UUID.randomUUID());
+
+      final CreatePasswordResetDto dto =
+          new CreatePasswordResetDto(
+              missingUserId,
+              PasswordResetToken.generate(),
+              ExpirationTime.of(Instant.now().plusSeconds(300)));
+      assertThatThrownBy(() -> passwordResetRepository.create(dto))
+          .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void create_throws_when_token_is_duplicate() {
+      final UserId userId = insertRandomUser();
+      final PasswordResetToken token = PasswordResetToken.generate();
+      final Instant now = Instant.now();
+
+      databaseCrud.insertPasswordResetToken(
+          userId, token, now, ExpirationTime.of(now.plusSeconds(300)));
+
+      final CreatePasswordResetDto dto2 =
+          new CreatePasswordResetDto(userId, token, ExpirationTime.of(now.plusSeconds(600)));
+      assertThatThrownBy(() -> passwordResetRepository.create(dto2))
+          .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void create_throws_when_user_already_has_an_entry() {
+      final UserId userId = insertRandomUser();
+      final Instant now = Instant.now();
+      databaseCrud.insertPasswordResetToken(
+          userId, PasswordResetToken.generate(), now, ExpirationTime.of(now.plusSeconds(3600)));
+
+      final CreatePasswordResetDto dto =
+          new CreatePasswordResetDto(
+              userId, PasswordResetToken.generate(), ExpirationTime.of(now.plusSeconds(300)));
+      assertThatThrownBy(() -> passwordResetRepository.create(dto))
+          .isInstanceOf(DuplicateKeyException.class);
+    }
   }
 
-  @Test
-  void create_throws_when_user_does_not_exist() {
-    final UserId missingUserId = UserId.fromUuid(UUID.randomUUID());
+  @Nested
+  class FindByToken {
 
-    final CreatePasswordResetDto dto =
-        new CreatePasswordResetDto(
-            missingUserId,
-            PasswordResetToken.generate(),
-            ExpirationTime.of(Instant.now().plusSeconds(300)));
-    assertThatThrownBy(() -> passwordResetRepository.create(dto))
-        .isInstanceOf(DataIntegrityViolationException.class);
+    @Test
+    void findByToken_returns_token_when_exists() {
+      final UserId userId = insertRandomUser();
+      final PasswordResetToken token = PasswordResetToken.generate();
+      final Instant now = Instant.now();
+      final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
+      databaseCrud.insertPasswordResetToken(userId, token, now, expiration);
+
+      final Optional<PasswordResetEntity> entryFoundOpt =
+          passwordResetRepository.findByToken(token);
+
+      assertThat(entryFoundOpt).isPresent();
+      final PasswordResetEntity entryFound = entryFoundOpt.get();
+      assertThat(entryFound.userId()).isEqualTo(userId);
+      assertThat(entryFound.token()).isEqualTo(token);
+      assertThat(entryFound.expiresAt()).isEqualTo(expiration);
+      assertThat(entryFound.createdAt()).isEqualTo(now);
+      assertThat(entryFound.updatedAt()).isEqualTo(now);
+    }
+
+    @Test
+    void findByToken_returns_empty_when_it_does_not_exist() {
+      final Optional<PasswordResetEntity> entryFoundOpt =
+          passwordResetRepository.findByToken(PasswordResetToken.generate());
+
+      assertThat(entryFoundOpt).isEmpty();
+    }
   }
 
-  @Test
-  void create_throws_when_token_is_duplicate() {
-    final UserId userId = insertRandomUser();
-    final PasswordResetToken token = PasswordResetToken.generate();
-    final Instant now = Instant.now();
+  @Nested
+  class DeleteByUserId {
 
-    databaseCrud.insertPasswordResetToken(
-        userId, token, now, ExpirationTime.of(now.plusSeconds(300)));
+    @Test
+    void deleteByUserId_deletes_tokens() {
+      final UserId userId = insertRandomUser();
+      final PasswordResetToken token = PasswordResetToken.generate();
+      final Instant now = Instant.now();
+      databaseCrud.insertPasswordResetToken(
+          userId, token, now, ExpirationTime.of(now.plusSeconds(3600)));
 
-    final CreatePasswordResetDto dto2 =
-        new CreatePasswordResetDto(userId, token, ExpirationTime.of(now.plusSeconds(600)));
-    assertThatThrownBy(() -> passwordResetRepository.create(dto2))
-        .isInstanceOf(DataIntegrityViolationException.class);
+      final boolean deleted = passwordResetRepository.deleteByUserId(userId);
+
+      assertThat(deleted).isTrue();
+      assertThat(passwordResetRepository.findByToken(token)).isEmpty();
+    }
+
+    @Test
+    void deleteByUserId_returns_false_when_missing() {
+      final UserId missingUserId = UserId.fromUuid(UUID.randomUUID());
+
+      final boolean deleted = passwordResetRepository.deleteByUserId(missingUserId);
+
+      assertThat(deleted).isFalse();
+    }
   }
-
-  @Test
-  void create_throws_when_user_already_has_an_entry() {
-    final UserId userId = insertRandomUser();
-    final Instant now = Instant.now();
-    databaseCrud.insertPasswordResetToken(
-        userId, PasswordResetToken.generate(), now, ExpirationTime.of(now.plusSeconds(3600)));
-
-    final CreatePasswordResetDto dto =
-        new CreatePasswordResetDto(
-            userId, PasswordResetToken.generate(), ExpirationTime.of(now.plusSeconds(300)));
-    assertThatThrownBy(() -> passwordResetRepository.create(dto))
-        .isInstanceOf(DuplicateKeyException.class);
-  }
-
-  // endregion
-
-  // region IPasswordResetRepository.findByToken()
-
-  @Test
-  void findByToken_returns_token_when_exists() {
-    final UserId userId = insertRandomUser();
-    final PasswordResetToken token = PasswordResetToken.generate();
-    final Instant now = Instant.now();
-    final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
-    databaseCrud.insertPasswordResetToken(userId, token, now, expiration);
-
-    final Optional<PasswordResetEntity> entryFoundOpt = passwordResetRepository.findByToken(token);
-
-    assertThat(entryFoundOpt).isPresent();
-    final PasswordResetEntity entryFound = entryFoundOpt.get();
-    assertThat(entryFound.userId()).isEqualTo(userId);
-    assertThat(entryFound.token()).isEqualTo(token);
-    assertThat(entryFound.expiresAt()).isEqualTo(expiration);
-    assertThat(entryFound.createdAt()).isEqualTo(now);
-    assertThat(entryFound.updatedAt()).isEqualTo(now);
-  }
-
-  @Test
-  void findByToken_returns_empty_when_it_does_not_exist() {
-    final Optional<PasswordResetEntity> entryFoundOpt =
-        passwordResetRepository.findByToken(PasswordResetToken.generate());
-
-    assertThat(entryFoundOpt).isEmpty();
-  }
-
-  // region
-
-  // region IPasswordResetRepository.deleteByUserId()
-
-  @Test
-  void deleteByUserId_deletes_tokens() {
-    final UserId userId = insertRandomUser();
-    final PasswordResetToken token = PasswordResetToken.generate();
-    final Instant now = Instant.now();
-    databaseCrud.insertPasswordResetToken(
-        userId, token, now, ExpirationTime.of(now.plusSeconds(3600)));
-
-    final boolean deleted = passwordResetRepository.deleteByUserId(userId);
-
-    assertThat(deleted).isTrue();
-    assertThat(passwordResetRepository.findByToken(token)).isEmpty();
-  }
-
-  @Test
-  void deleteByUserId_returns_false_when_missing() {
-    final UserId missingUserId = UserId.fromUuid(UUID.randomUUID());
-
-    final boolean deleted = passwordResetRepository.deleteByUserId(missingUserId);
-
-    assertThat(deleted).isFalse();
-  }
-
-  // endregion
 }

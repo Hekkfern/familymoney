@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -124,7 +125,7 @@ class AuthServiceTest {
                   invocation.getArgument(0, CreateEmailVerificationDto.class);
               return Optional.of(
                   new EmailVerificationEntity(
-                      dto.userId(), dto.token(), now, now, dto.expiresAt()));
+                      dto.userId(), dto.token(), now, now, dto.expiresAt(), now));
             });
   }
 
@@ -139,7 +140,8 @@ class AuthServiceTest {
                       EmailVerificationToken.generate(),
                       now,
                       now,
-                      ExpirationTime.of(now.plusSeconds(3600))));
+                      ExpirationTime.of(now.plusSeconds(3600)),
+                      now));
             });
   }
 
@@ -226,7 +228,8 @@ class AuthServiceTest {
                       emailVerificationToken,
                       now,
                       now,
-                      ExpirationTime.of(now.plusSeconds(3600))));
+                      ExpirationTime.of(now.plusSeconds(3600)),
+                      now));
             });
   }
 
@@ -530,7 +533,8 @@ class AuthServiceTest {
                         evt,
                         now.minusSeconds(3600),
                         now.minusSeconds(3600),
-                        ExpirationTime.of(now.minusSeconds(1))));
+                        ExpirationTime.of(now.minusSeconds(1)),
+                        now.minusSeconds(3600)));
               });
 
       assertThrows(
@@ -590,7 +594,8 @@ class AuthServiceTest {
                       EmailVerificationToken.fromString(FakeGenerator.emailVerificationToken()),
                       now.minusSeconds(3600),
                       now.minusSeconds(3600),
-                      ExpirationTime.of(now.plusSeconds(100)))));
+                      ExpirationTime.of(now.plusSeconds(100)),
+                      now.minusSeconds(3600))));
       when(emailVerificationRepository.updateByUserId(
               any(UserId.class), any(UpdateEmailVerificationTokenDto.class)))
           .thenReturn(true);
@@ -598,7 +603,13 @@ class AuthServiceTest {
       assertThatCode(() -> authService.resendVerificationEmail(email)).doesNotThrowAnyException();
 
       verify(emailVerificationRepository)
-          .updateByUserId(any(UserId.class), any(UpdateEmailVerificationTokenDto.class));
+          .updateByUserId(
+              any(UserId.class),
+              argThat(
+                  dto ->
+                      dto.lastSentAt().equals(now)
+                          && dto.token() != null
+                          && dto.expiresAt() != null));
       verify(emailSenderService)
           .sendEmailVerificationEmail(
               any(Email.class), any(UserName.class), any(EmailVerificationToken.class));
@@ -636,7 +647,8 @@ class AuthServiceTest {
                       EmailVerificationToken.fromString(FakeGenerator.emailVerificationToken()),
                       now.minusSeconds(3600),
                       now.minusSeconds(3600),
-                      ExpirationTime.of(now.plusSeconds(100)))));
+                      ExpirationTime.of(now.plusSeconds(100)),
+                      now.minusSeconds(3600))));
       when(emailVerificationRepository.updateByUserId(
               any(UserId.class), any(UpdateEmailVerificationTokenDto.class)))
           .thenReturn(false);

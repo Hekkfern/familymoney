@@ -15,6 +15,7 @@ import java.time.Instant;
 import java.util.Optional;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jooq.test.autoconfigure.JooqTest;
@@ -57,60 +58,59 @@ class RoleRepositoryTest {
     return userId;
   }
 
-  // region IRoleRepository.getRoleByUserId()
+  @Nested
+  class GetRoleByUserId {
 
-  @Test
-  void getRoleByUserId_returns_empty_when_not_role_assigned() {
-    final UserId userId = insertRandomUser();
+    @Test
+    void returns_empty_when_not_role_assigned() {
+      final UserId userId = insertRandomUser();
 
-    final Optional<Role> role = roleRepository.getRoleByUserId(userId);
+      final Optional<Role> role = roleRepository.getRoleByUserId(userId);
 
-    assertThat(role).isEmpty();
+      assertThat(role).isEmpty();
+    }
+
+    @Test
+    void returns_empty_when_user_missing() {
+      final UserId missingUserId = UserId.generate();
+
+      final Optional<Role> role = roleRepository.getRoleByUserId(missingUserId);
+
+      assertThat(role).isEmpty();
+    }
+
+    @Test
+    void returns_role_when_role_assigned() {
+      final UserId userId = insertRandomUser();
+      final boolean updated = roleRepository.setRoleForUserId(userId, Role.USER);
+      assertThat(updated).isTrue();
+
+      final Optional<Role> role = roleRepository.getRoleByUserId(userId);
+
+      assertThat(role).contains(Role.USER);
+    }
   }
 
-  @Test
-  void getRoleByUserId_returns_empty_when_user_missing() {
-    final UserId missingUserId = UserId.generate();
+  @Nested
+  class SetRoleByUserId {
 
-    final Optional<Role> role = roleRepository.getRoleByUserId(missingUserId);
+    @Test
+    void updates_existing_role() {
+      final UserId userId = insertRandomUser();
+      roleRepository.setRoleForUserId(userId, Role.USER);
 
-    assertThat(role).isEmpty();
+      final boolean updated = roleRepository.setRoleForUserId(userId, Role.ADMIN);
+
+      assertThat(updated).isTrue();
+      assertThat(roleRepository.getRoleByUserId(userId)).contains(Role.ADMIN);
+    }
+
+    @Test
+    void throws_when_user_missing() {
+      final UserId missingUserId = UserId.generate();
+
+      assertThatThrownBy(() -> roleRepository.setRoleForUserId(missingUserId, Role.USER))
+          .isInstanceOf(DataIntegrityViolationException.class);
+    }
   }
-
-  @Test
-  void getRoleForUserId_returns_role_when_role_assigned() {
-    final UserId userId = insertRandomUser();
-    final boolean updated = roleRepository.setRoleForUserId(userId, Role.USER);
-    assertThat(updated).isTrue();
-
-    final Optional<Role> role = roleRepository.getRoleByUserId(userId);
-
-    assertThat(role).contains(Role.USER);
-  }
-
-  // endregion
-
-  // region IRoleRepository.getRoleByUserId()
-
-  @Test
-  void setRoleForUserId_updates_existing_role() {
-    final UserId userId = insertRandomUser();
-    roleRepository.setRoleForUserId(userId, Role.USER);
-
-    final boolean updated = roleRepository.setRoleForUserId(userId, Role.ADMIN);
-
-    assertThat(updated).isTrue();
-    assertThat(roleRepository.getRoleByUserId(userId)).contains(Role.ADMIN);
-  }
-
-  @Test
-  void setRoleForUserId_throws_when_user_missing() {
-    final UserId missingUserId = UserId.generate();
-
-    assertThatThrownBy(() -> roleRepository.setRoleForUserId(missingUserId, Role.USER))
-        .isInstanceOf(DataIntegrityViolationException.class);
-  }
-
-  // endregion
-
 }

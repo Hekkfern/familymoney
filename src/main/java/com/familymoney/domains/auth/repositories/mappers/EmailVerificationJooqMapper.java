@@ -22,6 +22,9 @@ public final class EmailVerificationJooqMapper {
         Objects.requireNonNull(r.get(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.UPDATED_AT));
     final OffsetDateTime expiresAt =
         Objects.requireNonNull(r.get(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.EXPIRES_AT));
+    final OffsetDateTime lastSentAt =
+        Objects.requireNonNull(
+            r.get(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.LAST_SENT_AT));
 
     return new EmailVerificationEntity(
         UserId.fromUuid(r.get(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.USER_ID)),
@@ -29,6 +32,7 @@ public final class EmailVerificationJooqMapper {
             r.get(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN)),
         createdAt.toInstant(),
         updatedAt.toInstant(),
-        ExpirationTime.of(expiresAt));
+        ExpirationTime.of(expiresAt),
+        lastSentAt.toInstant());
   }
 }

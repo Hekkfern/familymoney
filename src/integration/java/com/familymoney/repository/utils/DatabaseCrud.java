@@ -110,10 +110,16 @@ public class DatabaseCrud {
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.USER_ID,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.EXPIRES_AT,
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.LAST_SENT_AT,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.CREATED_AT,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.UPDATED_AT)
         .values(
-            userId.value(), token.value(), expiresAtDateTime, createdAtDateTime, createdAtDateTime)
+            userId.value(),
+            token.value(),
+            expiresAtDateTime,
+            createdAtDateTime,
+            createdAtDateTime,
+            createdAtDateTime)
         .execute();
   }
 

@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jooq.test.autoconfigure.JooqTest;
@@ -68,460 +69,459 @@ class UserRepositoryTest {
     return List.of(userId1, userId2, userId3);
   }
 
-  // region IUserRepository.create()
+  @Nested
+  class Create {
 
-  @Test
-  void create_persists_user_record() {
-    final UserId userId = UserId.generate();
-    final UserName username = UserName.fromString(FakeGenerator.username());
-    final Email email = Email.fromString(FakeGenerator.email());
-    final String passwordHash = "hashed-password";
+    @Test
+    void persists_user_record() {
+      final UserId userId = UserId.generate();
+      final UserName username = UserName.fromString(FakeGenerator.username());
+      final Email email = Email.fromString(FakeGenerator.email());
+      final String passwordHash = "hashed-password";
 
-    final Instant now = Instant.now();
+      final Instant now = Instant.now();
 
-    final Optional<UserEntity> userCreated =
-        userRepository.create(
-            new CreateUserDto(userId, username, email, passwordHash, true, false));
+      final Optional<UserEntity> userCreated =
+          userRepository.create(
+              new CreateUserDto(userId, username, email, passwordHash, true, false));
 
-    assertThat(userCreated).isPresent();
-    final UserEntity user = userCreated.get();
-    assertThat(user.id()).isNotNull().isEqualTo(userId);
-    assertThat(user.username()).isNotNull().isEqualTo(username);
-    assertThat(user.email()).isNotNull().isEqualTo(email);
-    assertThat(user.hashedPassword()).isNotNull().isEqualTo(passwordHash);
-    assertThat(user.createdAt()).isNotNull().isBetween(now.minusSeconds(1), now.plusSeconds(1));
-    assertThat(user.updatedAt()).isNotNull().isBetween(now.minusSeconds(1), now.plusSeconds(1));
-    assertThat(user.isEnabled()).isTrue();
-    assertThat(user.isEmailVerified()).isFalse();
+      assertThat(userCreated).isPresent();
+      final UserEntity user = userCreated.get();
+      assertThat(user.id()).isNotNull().isEqualTo(userId);
+      assertThat(user.username()).isNotNull().isEqualTo(username);
+      assertThat(user.email()).isNotNull().isEqualTo(email);
+      assertThat(user.hashedPassword()).isNotNull().isEqualTo(passwordHash);
+      assertThat(user.createdAt()).isNotNull().isBetween(now.minusSeconds(1), now.plusSeconds(1));
+      assertThat(user.updatedAt()).isNotNull().isBetween(now.minusSeconds(1), now.plusSeconds(1));
+      assertThat(user.isEnabled()).isTrue();
+      assertThat(user.isEmailVerified()).isFalse();
+    }
+
+    @Test
+    void throws_when_email_is_duplicate() {
+      final UserId userId1 = UserId.generate();
+      final UserId userId2 = UserId.generate();
+      final UserName username1 = UserName.fromString(FakeGenerator.username());
+      final UserName username2 = UserName.fromString(FakeGenerator.username());
+      final Email email = Email.fromString(FakeGenerator.email());
+      final String passwordHash = "hashed-password";
+
+      final CreateUserDto dto1 =
+          new CreateUserDto(userId1, username1, email, passwordHash, true, false);
+      userRepository.create(dto1);
+
+      final CreateUserDto dto2 =
+          new CreateUserDto(userId2, username2, email, passwordHash, true, false);
+      assertThatThrownBy(() -> userRepository.create(dto2))
+          .isInstanceOf(DuplicateKeyException.class);
+    }
+
+    @Test
+    void throws_when_username_is_duplicate() {
+      final UserId userId1 = UserId.generate();
+      final UserId userId2 = UserId.generate();
+      final UserName username = UserName.fromString(FakeGenerator.username());
+      final Email email1 = Email.fromString(FakeGenerator.email());
+      final Email email2 = Email.fromString(FakeGenerator.email());
+      final String passwordHash = "hashed-password";
+
+      final CreateUserDto dto1 =
+          new CreateUserDto(userId1, username, email1, passwordHash, true, false);
+      userRepository.create(dto1);
+
+      final CreateUserDto dto2 =
+          new CreateUserDto(userId2, username, email2, passwordHash, true, false);
+      assertThatThrownBy(() -> userRepository.create(dto2))
+          .isInstanceOf(DuplicateKeyException.class);
+    }
   }
 
-  @Test
-  void create_throws_when_email_is_duplicate() {
-    final UserId userId1 = UserId.generate();
-    final UserId userId2 = UserId.generate();
-    final UserName username1 = UserName.fromString(FakeGenerator.username());
-    final UserName username2 = UserName.fromString(FakeGenerator.username());
-    final Email email = Email.fromString(FakeGenerator.email());
-    final String passwordHash = "hashed-password";
+  @Nested
+  class FindById {
 
-    final CreateUserDto dto1 =
-        new CreateUserDto(userId1, username1, email, passwordHash, true, false);
-    userRepository.create(dto1);
+    @Test
+    void returns_user_when_exists() {
+      final UserId userId = UserId.generate();
+      final UserName username = UserName.fromString(FakeGenerator.username());
+      final Email email = Email.fromString(FakeGenerator.email());
+      final Instant now = Instant.now();
+      databaseCrud.insertUser(userId, username, email, "hashed_password", now, false, true);
 
-    final CreateUserDto dto2 =
-        new CreateUserDto(userId2, username2, email, passwordHash, true, false);
-    assertThatThrownBy(() -> userRepository.create(dto2)).isInstanceOf(DuplicateKeyException.class);
+      final Optional<UserEntity> found = userRepository.findById(userId);
+
+      assertThat(found).isPresent();
+      final UserEntity userFound = found.get();
+      assertThat(userFound.id()).isEqualTo(userId);
+      assertThat(userFound.username()).isEqualTo(username);
+      assertThat(userFound.email()).isEqualTo(email);
+      assertThat(userFound.hashedPassword()).isEqualTo("hashed_password");
+      assertThat(userFound.createdAt())
+          .isNotNull()
+          .isBetween(now.minusSeconds(1), now.plusSeconds(1));
+      assertThat(userFound.updatedAt())
+          .isNotNull()
+          .isBetween(now.minusSeconds(1), now.plusSeconds(1));
+      assertThat(userFound.isEnabled()).isTrue();
+      assertThat(userFound.isEmailVerified()).isFalse();
+    }
+
+    @Test
+    void returns_empty_when_missing() {
+      final UserId userId = UserId.generate();
+
+      final Optional<UserEntity> found = userRepository.findById(userId);
+
+      assertThat(found).isEmpty();
+    }
   }
 
-  @Test
-  void create_throws_when_username_is_duplicate() {
-    final UserId userId1 = UserId.generate();
-    final UserId userId2 = UserId.generate();
-    final UserName username = UserName.fromString(FakeGenerator.username());
-    final Email email1 = Email.fromString(FakeGenerator.email());
-    final Email email2 = Email.fromString(FakeGenerator.email());
-    final String passwordHash = "hashed-password";
+  @Nested
+  class FindByEmail {
 
-    final CreateUserDto dto1 =
-        new CreateUserDto(userId1, username, email1, passwordHash, true, false);
-    userRepository.create(dto1);
+    @Test
+    void returns_user_when_exists() {
+      final UserId userId = UserId.generate();
+      final UserName username = UserName.fromString(FakeGenerator.username());
+      final Email email = Email.fromString(FakeGenerator.email());
+      final Instant now = Instant.now();
+      databaseCrud.insertUser(userId, username, email, "hashed_password", now, false, true);
 
-    final CreateUserDto dto2 =
-        new CreateUserDto(userId2, username, email2, passwordHash, true, false);
-    assertThatThrownBy(() -> userRepository.create(dto2)).isInstanceOf(DuplicateKeyException.class);
+      final Optional<UserEntity> found = userRepository.findByEmail(email);
+
+      assertThat(found).isPresent();
+      final UserEntity userFound = found.get();
+      assertThat(userFound.id()).isEqualTo(userId);
+      assertThat(userFound.username()).isEqualTo(username);
+      assertThat(userFound.email()).isEqualTo(email);
+      assertThat(userFound.hashedPassword()).isEqualTo("hashed_password");
+      assertThat(userFound.createdAt())
+          .isNotNull()
+          .isBetween(now.minusSeconds(1), now.plusSeconds(1));
+      assertThat(userFound.updatedAt())
+          .isNotNull()
+          .isBetween(now.minusSeconds(1), now.plusSeconds(1));
+      assertThat(userFound.isEnabled()).isTrue();
+      assertThat(userFound.isEmailVerified()).isFalse();
+    }
+
+    @Test
+    void returns_empty_when_missing() {
+      final Email email = Email.fromString(FakeGenerator.email());
+
+      final Optional<UserEntity> found = userRepository.findByEmail(email);
+
+      assertThat(found).isEmpty();
+    }
   }
 
-  // endregion
+  @Nested
+  class FindByUsername {
 
-  // region IUserRepository.findById()
+    @Test
+    void returns_user_when_exists() {
+      final UserId userId = UserId.generate();
+      final UserName username = UserName.fromString(FakeGenerator.username());
+      final Email email = Email.fromString(FakeGenerator.email());
+      final Instant now = Instant.now();
+      databaseCrud.insertUser(userId, username, email, "hashed_password", now, false, true);
 
-  @Test
-  void findById_returns_user_when_exists() {
-    final UserId userId = UserId.generate();
-    final UserName username = UserName.fromString(FakeGenerator.username());
-    final Email email = Email.fromString(FakeGenerator.email());
-    final Instant now = Instant.now();
-    databaseCrud.insertUser(userId, username, email, "hashed_password", now, false, true);
+      final Optional<UserEntity> found = userRepository.findByUsername(username);
 
-    final Optional<UserEntity> found = userRepository.findById(userId);
+      assertThat(found).isPresent();
+      final UserEntity userFound = found.get();
+      assertThat(userFound.id()).isEqualTo(userId);
+      assertThat(userFound.username()).isEqualTo(username);
+      assertThat(userFound.email()).isEqualTo(email);
+      assertThat(userFound.hashedPassword()).isEqualTo("hashed_password");
+      assertThat(userFound.createdAt())
+          .isNotNull()
+          .isBetween(now.minusSeconds(1), now.plusSeconds(1));
+      assertThat(userFound.updatedAt())
+          .isNotNull()
+          .isBetween(now.minusSeconds(1), now.plusSeconds(1));
+      assertThat(userFound.isEnabled()).isTrue();
+      assertThat(userFound.isEmailVerified()).isFalse();
+    }
 
-    assertThat(found).isPresent();
-    final UserEntity userFound = found.get();
-    assertThat(userFound.id()).isEqualTo(userId);
-    assertThat(userFound.username()).isEqualTo(username);
-    assertThat(userFound.email()).isEqualTo(email);
-    assertThat(userFound.hashedPassword()).isEqualTo("hashed_password");
-    assertThat(userFound.createdAt())
-        .isNotNull()
-        .isBetween(now.minusSeconds(1), now.plusSeconds(1));
-    assertThat(userFound.updatedAt())
-        .isNotNull()
-        .isBetween(now.minusSeconds(1), now.plusSeconds(1));
-    assertThat(userFound.isEnabled()).isTrue();
-    assertThat(userFound.isEmailVerified()).isFalse();
+    @Test
+    void returns_empty_when_missing() {
+      final UserName username = UserName.fromString(FakeGenerator.username());
+
+      final Optional<UserEntity> found = userRepository.findByUsername(username);
+
+      assertThat(found).isEmpty();
+    }
   }
 
-  @Test
-  void findById_returns_empty_when_missing() {
-    final UserId userId = UserId.generate();
+  @Nested
+  class ExistsByEmailOrUsername {
 
-    final Optional<UserEntity> found = userRepository.findById(userId);
+    @Test
+    void returns_true_when_either_matches() {
+      final UserId userId = UserId.generate();
+      final UserName username = UserName.fromString(FakeGenerator.username());
+      final Email email = Email.fromString(FakeGenerator.email());
+      final Instant now = Instant.now();
+      databaseCrud.insertUser(userId, username, email, "hashed_password", now, false, true);
 
-    assertThat(found).isEmpty();
+      assertThat(
+              userRepository.existsByEmailOrUsername(
+                  email, UserName.fromString(FakeGenerator.username())))
+          .isTrue();
+      assertThat(
+              userRepository.existsByEmailOrUsername(
+                  Email.fromString(FakeGenerator.email()), username))
+          .isTrue();
+    }
+
+    @Test
+    void returns_true_when_both_match() {
+      final UserId userId = UserId.generate();
+      final UserName username = UserName.fromString(FakeGenerator.username());
+      final Email email = Email.fromString(FakeGenerator.email());
+      final Instant now = Instant.now();
+      databaseCrud.insertUser(userId, username, email, "hashed_password", now, false, true);
+
+      assertThat(userRepository.existsByEmailOrUsername(email, username)).isTrue();
+    }
+
+    @Test
+    void returns_false_when_none_match() {
+      assertThat(
+              userRepository.existsByEmailOrUsername(
+                  Email.fromString(FakeGenerator.email()),
+                  UserName.fromString(FakeGenerator.username())))
+          .isFalse();
+    }
   }
 
-  // endregion
+  @Nested
+  class ExistsById {
 
-  // region IUserRepository.findByEmail()
+    @Test
+    void returns_true_when_it_exists() {
+      final UserId userId = UserId.generate();
+      final UserName username = UserName.fromString(FakeGenerator.username());
+      final Email email = Email.fromString(FakeGenerator.email());
+      final Instant now = Instant.now();
+      databaseCrud.insertUser(userId, username, email, "hashed_password", now, false, true);
 
-  @Test
-  void findByEmail_returns_user_when_exists() {
-    final UserId userId = UserId.generate();
-    final UserName username = UserName.fromString(FakeGenerator.username());
-    final Email email = Email.fromString(FakeGenerator.email());
-    final Instant now = Instant.now();
-    databaseCrud.insertUser(userId, username, email, "hashed_password", now, false, true);
+      assertThat(userRepository.existsById(userId)).isTrue();
+    }
 
-    final Optional<UserEntity> found = userRepository.findByEmail(email);
-
-    assertThat(found).isPresent();
-    final UserEntity userFound = found.get();
-    assertThat(userFound.id()).isEqualTo(userId);
-    assertThat(userFound.username()).isEqualTo(username);
-    assertThat(userFound.email()).isEqualTo(email);
-    assertThat(userFound.hashedPassword()).isEqualTo("hashed_password");
-    assertThat(userFound.createdAt())
-        .isNotNull()
-        .isBetween(now.minusSeconds(1), now.plusSeconds(1));
-    assertThat(userFound.updatedAt())
-        .isNotNull()
-        .isBetween(now.minusSeconds(1), now.plusSeconds(1));
-    assertThat(userFound.isEnabled()).isTrue();
-    assertThat(userFound.isEmailVerified()).isFalse();
+    @Test
+    void returns_false_when_it_doesnt_exist() {
+      final UserId otherUserId = UserId.generate();
+      assertThat(userRepository.existsById(otherUserId)).isFalse();
+    }
   }
 
-  @Test
-  void findByEmail_returns_empty_when_missing() {
-    final Email email = Email.fromString(FakeGenerator.email());
+  @Nested
+  class UpdateById {
 
-    final Optional<UserEntity> found = userRepository.findByEmail(email);
+    @Test
+    void updates_all_fields_and_returns_true_when_updates_all_fields() {
+      final UserId userId = UserId.generate();
+      final UserName username1 = UserName.fromString(FakeGenerator.username());
+      final UserName username2 = UserName.fromString(FakeGenerator.username());
+      final Email email1 = Email.fromString(FakeGenerator.email());
+      final Email email2 = Email.fromString(FakeGenerator.email());
+      final Instant now = Instant.now();
+      databaseCrud.insertUser(userId, username1, email1, "hashed_password", now, false, true);
 
-    assertThat(found).isEmpty();
+      final UpdateUserDto dataToUpdate =
+          UpdateUserDto.builder()
+              .username(username2)
+              .email(email2)
+              .hashedPassword("updated-hash")
+              .isEmailVerified(true)
+              .isEnabled(false)
+              .build();
+
+      final boolean updated = userRepository.updateById(userId, dataToUpdate);
+
+      assertThat(updated).isTrue();
+      final Optional<UserEntity> found = userRepository.findById(userId);
+      assertThat(found).isPresent();
+      final UserEntity userFound = found.get();
+      assertThat(userFound.id()).isEqualTo(userId);
+      assertThat(userFound.username()).isEqualTo(username2);
+      assertThat(userFound.email()).isEqualTo(email2);
+      assertThat(userFound.hashedPassword()).isEqualTo("updated-hash");
+      assertThat(userFound.createdAt())
+          .isNotNull()
+          .isBetween(now.minusSeconds(1), now.plusSeconds(1));
+      assertThat(userFound.updatedAt())
+          .isNotNull()
+          .isBetween(now.minusSeconds(1), now.plusSeconds(1));
+      assertThat(userFound.isEnabled()).isFalse();
+      assertThat(userFound.isEmailVerified()).isTrue();
+    }
+
+    @Test
+    void updates_some_fields_and_returns_true_when_updates_some_fields() {
+      final UserId userId = UserId.generate();
+      final UserName username1 = UserName.fromString(FakeGenerator.username());
+      final UserName username2 = UserName.fromString(FakeGenerator.username());
+      final Email email = Email.fromString(FakeGenerator.email());
+      final Instant now = Instant.now();
+      databaseCrud.insertUser(userId, username1, email, "hashed_password", now, false, true);
+
+      final UpdateUserDto dataToUpdate = UpdateUserDto.builder().username(username2).build();
+
+      final boolean updated = userRepository.updateById(userId, dataToUpdate);
+
+      assertThat(updated).isTrue();
+      final Optional<UserEntity> found = userRepository.findById(userId);
+      assertThat(found).isPresent();
+      final UserEntity userFound = found.get();
+      assertThat(userFound.id()).isEqualTo(userId);
+      assertThat(userFound.username()).isEqualTo(username2);
+      assertThat(userFound.email()).isEqualTo(email);
+      assertThat(userFound.hashedPassword()).isEqualTo("hashed_password");
+      assertThat(userFound.createdAt())
+          .isNotNull()
+          .isBetween(now.minusSeconds(1), now.plusSeconds(1));
+      assertThat(userFound.updatedAt())
+          .isNotNull()
+          .isBetween(now.minusSeconds(1), now.plusSeconds(1));
+      assertThat(userFound.isEnabled()).isTrue();
+      assertThat(userFound.isEmailVerified()).isFalse();
+    }
+
+    @Test
+    void returns_false_when_userid_not_found() {
+      final UserId userId = UserId.generate();
+
+      final UpdateUserDto updateData =
+          UpdateUserDto.builder().email(Email.fromString(FakeGenerator.email())).build();
+
+      final boolean updated = userRepository.updateById(userId, updateData);
+
+      assertThat(updated).isFalse();
+    }
   }
 
-  // endregion
+  @Nested
+  class DeleteById {
 
-  // region IUserRepository.findByUsername()
+    @Test
+    void returns_true_when_user_exists() {
+      final UserId userId = UserId.generate();
+      final UserName username = UserName.fromString(FakeGenerator.username());
+      final Email email = Email.fromString(FakeGenerator.email());
+      final Instant now = Instant.now();
+      databaseCrud.insertUser(userId, username, email, "hashed_password", now, false, true);
+      assertThat(userRepository.findById(userId)).isPresent();
 
-  @Test
-  void findByUsername_returns_user_when_exists() {
-    final UserId userId = UserId.generate();
-    final UserName username = UserName.fromString(FakeGenerator.username());
-    final Email email = Email.fromString(FakeGenerator.email());
-    final Instant now = Instant.now();
-    databaseCrud.insertUser(userId, username, email, "hashed_password", now, false, true);
+      final boolean deleted = userRepository.deleteById(userId);
 
-    final Optional<UserEntity> found = userRepository.findByUsername(username);
+      assertThat(deleted).isTrue();
+      assertThat(userRepository.findById(userId)).isEmpty();
+    }
 
-    assertThat(found).isPresent();
-    final UserEntity userFound = found.get();
-    assertThat(userFound.id()).isEqualTo(userId);
-    assertThat(userFound.username()).isEqualTo(username);
-    assertThat(userFound.email()).isEqualTo(email);
-    assertThat(userFound.hashedPassword()).isEqualTo("hashed_password");
-    assertThat(userFound.createdAt())
-        .isNotNull()
-        .isBetween(now.minusSeconds(1), now.plusSeconds(1));
-    assertThat(userFound.updatedAt())
-        .isNotNull()
-        .isBetween(now.minusSeconds(1), now.plusSeconds(1));
-    assertThat(userFound.isEnabled()).isTrue();
-    assertThat(userFound.isEmailVerified()).isFalse();
+    @Test
+    void returns_false_when_user_doesnt_exist() {
+      final UserId userId = UserId.generate();
+
+      final boolean deleted = userRepository.deleteById(userId);
+
+      assertThat(deleted).isFalse();
+    }
   }
 
-  @Test
-  void findByUsername_returns_empty_when_missing() {
-    final UserName username = UserName.fromString(FakeGenerator.username());
+  @Nested
+  class GetAll {
 
-    final Optional<UserEntity> found = userRepository.findByUsername(username);
+    @Test
+    void returns_page_with_2_items_when_requests_page_0_with_size_2_and_default_sort() {
+      final List<UserId> userIdsForTesting = insertThreeUsersForTesting();
 
-    assertThat(found).isEmpty();
+      final Page<UserEntity> page = userRepository.getAll(PageRequest.of(0, 2));
+
+      assertThat(page.getTotalElements()).isEqualTo(3);
+      assertThat(page.getNumberOfElements()).isEqualTo(2);
+      final List<UserId> ids = page.getContent().stream().map(UserEntity::id).toList();
+      assertThat(ids.get(0)).isEqualTo(userIdsForTesting.get(2));
+      assertThat(ids.get(1)).isEqualTo(userIdsForTesting.get(1));
+    }
+
+    @Test
+    void returns_page_with_3_items_when_requests_page_0_with_size_4_and_default_sort() {
+      final List<UserId> userIdsForTesting = insertThreeUsersForTesting();
+
+      final Page<UserEntity> page = userRepository.getAll(PageRequest.of(0, 4));
+
+      assertThat(page.getTotalElements()).isEqualTo(3);
+      assertThat(page.getNumberOfElements()).isEqualTo(3);
+      final List<UserId> ids = page.getContent().stream().map(UserEntity::id).toList();
+      assertThat(ids.get(0)).isEqualTo(userIdsForTesting.get(2));
+      assertThat(ids.get(1)).isEqualTo(userIdsForTesting.get(1));
+      assertThat(ids.get(2)).isEqualTo(userIdsForTesting.get(0));
+    }
+
+    @Test
+    void returns_page_with_1_item_when_requests_page_1_with_size_2_and_default_sort() {
+      final List<UserId> userIdsForTesting = insertThreeUsersForTesting();
+
+      final Page<UserEntity> page = userRepository.getAll(PageRequest.of(1, 2));
+
+      assertThat(page.getTotalElements()).isEqualTo(3);
+      assertThat(page.getNumberOfElements()).isEqualTo(1);
+      final List<UserId> ids = page.getContent().stream().map(UserEntity::id).toList();
+      assertThat(ids.getFirst()).isEqualTo(userIdsForTesting.get(0));
+    }
+
+    @Test
+    void returns_empty_page_when_offset_exceeds_total() {
+      insertThreeUsersForTesting();
+
+      final Page<UserEntity> page = userRepository.getAll(PageRequest.of(100, 2));
+
+      assertThat(page.getNumberOfElements()).isZero();
+      assertThat(page.getTotalElements()).isZero();
+    }
+
+    @Test
+    void returns_page_with_2_items_when_requests_page_0_with_size_2_and_order_by_username_asc() {
+      final List<UserId> userIdsForTesting = insertThreeUsersForTesting();
+
+      final Page<UserEntity> page =
+          userRepository.getAll(PageRequest.of(0, 2, Sort.by(Sort.Direction.ASC, "username")));
+
+      assertThat(page.getTotalElements()).isEqualTo(3);
+      assertThat(page.getNumberOfElements()).isEqualTo(2);
+      final List<UserId> ids = page.getContent().stream().map(UserEntity::id).toList();
+      assertThat(ids.get(0)).isEqualTo(userIdsForTesting.get(0));
+      assertThat(ids.get(1)).isEqualTo(userIdsForTesting.get(1));
+    }
+
+    @Test
+    void returns_page_with_2_items_when_requests_page_0_with_size_2_and_order_by_username_desc() {
+      final List<UserId> userIdsForTesting = insertThreeUsersForTesting();
+
+      final Page<UserEntity> page =
+          userRepository.getAll(PageRequest.of(0, 2, Sort.by(Sort.Direction.DESC, "username")));
+
+      assertThat(page.getTotalElements()).isEqualTo(3);
+      assertThat(page.getNumberOfElements()).isEqualTo(2);
+      final List<UserId> ids = page.getContent().stream().map(UserEntity::id).toList();
+      assertThat(ids.get(0)).isEqualTo(userIdsForTesting.get(2));
+      assertThat(ids.get(1)).isEqualTo(userIdsForTesting.get(1));
+    }
+
+    @Test
+    void returns_page_with_2_items_when_requests_page_0_with_size_2_and_order_by_createdAt_asc() {
+      final List<UserId> userIdsForTesting = insertThreeUsersForTesting();
+
+      final Page<UserEntity> page =
+          userRepository.getAll(PageRequest.of(0, 2, Sort.by(Sort.Direction.ASC, "created_at")));
+
+      assertThat(page.getTotalElements()).isEqualTo(3);
+      assertThat(page.getNumberOfElements()).isEqualTo(2);
+      final List<UserId> ids = page.getContent().stream().map(UserEntity::id).toList();
+      assertThat(ids.get(0)).isEqualTo(userIdsForTesting.get(0));
+      assertThat(ids.get(1)).isEqualTo(userIdsForTesting.get(1));
+    }
   }
-
-  // endregion
-
-  // region IUserRepository.existsByEmailOrUsername()
-
-  @Test
-  void existsByEmailOrUsername_returns_true_when_either_matches() {
-    final UserId userId = UserId.generate();
-    final UserName username = UserName.fromString(FakeGenerator.username());
-    final Email email = Email.fromString(FakeGenerator.email());
-    final Instant now = Instant.now();
-    databaseCrud.insertUser(userId, username, email, "hashed_password", now, false, true);
-
-    assertThat(
-            userRepository.existsByEmailOrUsername(
-                email, UserName.fromString(FakeGenerator.username())))
-        .isTrue();
-    assertThat(
-            userRepository.existsByEmailOrUsername(
-                Email.fromString(FakeGenerator.email()), username))
-        .isTrue();
-  }
-
-  @Test
-  void existsByEmailOrUsername_returns_true_when_both_match() {
-    final UserId userId = UserId.generate();
-    final UserName username = UserName.fromString(FakeGenerator.username());
-    final Email email = Email.fromString(FakeGenerator.email());
-    final Instant now = Instant.now();
-    databaseCrud.insertUser(userId, username, email, "hashed_password", now, false, true);
-
-    assertThat(userRepository.existsByEmailOrUsername(email, username)).isTrue();
-  }
-
-  @Test
-  void existsByEmailOrUsername_returns_false_when_none_match() {
-    assertThat(
-            userRepository.existsByEmailOrUsername(
-                Email.fromString(FakeGenerator.email()),
-                UserName.fromString(FakeGenerator.username())))
-        .isFalse();
-  }
-
-  // endregion
-
-  // region IUserRepository.existsById()
-
-  @Test
-  void existsById_returns_true_when_it_exists() {
-    final UserId userId = UserId.generate();
-    final UserName username = UserName.fromString(FakeGenerator.username());
-    final Email email = Email.fromString(FakeGenerator.email());
-    final Instant now = Instant.now();
-    databaseCrud.insertUser(userId, username, email, "hashed_password", now, false, true);
-
-    assertThat(userRepository.existsById(userId)).isTrue();
-  }
-
-  @Test
-  void existsById_returns_false_when_it_doesnt_exist() {
-    final UserId otherUserId = UserId.generate();
-    assertThat(userRepository.existsById(otherUserId)).isFalse();
-  }
-
-  // endregion
-
-  // region IUserRepository.updateById()
-
-  @Test
-  void updateById_updates_all_fields_and_returns_true_when_updates_all_fields() {
-    final UserId userId = UserId.generate();
-    final UserName username1 = UserName.fromString(FakeGenerator.username());
-    final UserName username2 = UserName.fromString(FakeGenerator.username());
-    final Email email1 = Email.fromString(FakeGenerator.email());
-    final Email email2 = Email.fromString(FakeGenerator.email());
-    final Instant now = Instant.now();
-    databaseCrud.insertUser(userId, username1, email1, "hashed_password", now, false, true);
-
-    final UpdateUserDto dataToUpdate =
-        UpdateUserDto.builder()
-            .username(username2)
-            .email(email2)
-            .hashedPassword("updated-hash")
-            .isEmailVerified(true)
-            .isEnabled(false)
-            .build();
-
-    final boolean updated = userRepository.updateById(userId, dataToUpdate);
-
-    assertThat(updated).isTrue();
-    final Optional<UserEntity> found = userRepository.findById(userId);
-    assertThat(found).isPresent();
-    final UserEntity userFound = found.get();
-    assertThat(userFound.id()).isEqualTo(userId);
-    assertThat(userFound.username()).isEqualTo(username2);
-    assertThat(userFound.email()).isEqualTo(email2);
-    assertThat(userFound.hashedPassword()).isEqualTo("updated-hash");
-    assertThat(userFound.createdAt())
-        .isNotNull()
-        .isBetween(now.minusSeconds(1), now.plusSeconds(1));
-    assertThat(userFound.updatedAt())
-        .isNotNull()
-        .isBetween(now.minusSeconds(1), now.plusSeconds(1));
-    assertThat(userFound.isEnabled()).isFalse();
-    assertThat(userFound.isEmailVerified()).isTrue();
-  }
-
-  @Test
-  void updateById_updates_some_fields_and_returns_true_when_updates_some_fields() {
-    final UserId userId = UserId.generate();
-    final UserName username1 = UserName.fromString(FakeGenerator.username());
-    final UserName username2 = UserName.fromString(FakeGenerator.username());
-    final Email email = Email.fromString(FakeGenerator.email());
-    final Instant now = Instant.now();
-    databaseCrud.insertUser(userId, username1, email, "hashed_password", now, false, true);
-
-    final UpdateUserDto dataToUpdate = UpdateUserDto.builder().username(username2).build();
-
-    final boolean updated = userRepository.updateById(userId, dataToUpdate);
-
-    assertThat(updated).isTrue();
-    final Optional<UserEntity> found = userRepository.findById(userId);
-    assertThat(found).isPresent();
-    final UserEntity userFound = found.get();
-    assertThat(userFound.id()).isEqualTo(userId);
-    assertThat(userFound.username()).isEqualTo(username2);
-    assertThat(userFound.email()).isEqualTo(email);
-    assertThat(userFound.hashedPassword()).isEqualTo("hashed_password");
-    assertThat(userFound.createdAt())
-        .isNotNull()
-        .isBetween(now.minusSeconds(1), now.plusSeconds(1));
-    assertThat(userFound.updatedAt())
-        .isNotNull()
-        .isBetween(now.minusSeconds(1), now.plusSeconds(1));
-    assertThat(userFound.isEnabled()).isTrue();
-    assertThat(userFound.isEmailVerified()).isFalse();
-  }
-
-  @Test
-  void updateById_returns_false_when_userid_not_found() {
-    final UserId userId = UserId.generate();
-
-    final UpdateUserDto updateData =
-        UpdateUserDto.builder().email(Email.fromString(FakeGenerator.email())).build();
-
-    final boolean updated = userRepository.updateById(userId, updateData);
-
-    assertThat(updated).isFalse();
-  }
-
-  // endregion
-
-  // region IUserRepository.deleteById()
-
-  @Test
-  void deleteById_returns_true_when_user_exists() {
-    final UserId userId = UserId.generate();
-    final UserName username = UserName.fromString(FakeGenerator.username());
-    final Email email = Email.fromString(FakeGenerator.email());
-    final Instant now = Instant.now();
-    databaseCrud.insertUser(userId, username, email, "hashed_password", now, false, true);
-    assertThat(userRepository.findById(userId)).isPresent();
-
-    final boolean deleted = userRepository.deleteById(userId);
-
-    assertThat(deleted).isTrue();
-    assertThat(userRepository.findById(userId)).isEmpty();
-  }
-
-  @Test
-  void deleteById_returns_false_when_user_doesnt_exist() {
-    final UserId userId = UserId.generate();
-
-    final boolean deleted = userRepository.deleteById(userId);
-
-    assertThat(deleted).isFalse();
-  }
-
-  // endregion
-
-  // region IUserRepository.getAll()
-
-  @Test
-  void getAll_returns_page_with_2_items_when_requests_page_0_with_size_2_and_default_sort() {
-    final List<UserId> userIdsForTesting = insertThreeUsersForTesting();
-
-    final Page<UserEntity> page = userRepository.getAll(PageRequest.of(0, 2));
-
-    assertThat(page.getTotalElements()).isEqualTo(3);
-    assertThat(page.getNumberOfElements()).isEqualTo(2);
-    final List<UserId> ids = page.getContent().stream().map(UserEntity::id).toList();
-    assertThat(ids.get(0)).isEqualTo(userIdsForTesting.get(2));
-    assertThat(ids.get(1)).isEqualTo(userIdsForTesting.get(1));
-  }
-
-  @Test
-  void getAll_returns_page_with_3_items_when_requests_page_0_with_size_4_and_default_sort() {
-    final List<UserId> userIdsForTesting = insertThreeUsersForTesting();
-
-    final Page<UserEntity> page = userRepository.getAll(PageRequest.of(0, 4));
-
-    assertThat(page.getTotalElements()).isEqualTo(3);
-    assertThat(page.getNumberOfElements()).isEqualTo(3);
-    final List<UserId> ids = page.getContent().stream().map(UserEntity::id).toList();
-    assertThat(ids.get(0)).isEqualTo(userIdsForTesting.get(2));
-    assertThat(ids.get(1)).isEqualTo(userIdsForTesting.get(1));
-    assertThat(ids.get(2)).isEqualTo(userIdsForTesting.get(0));
-  }
-
-  @Test
-  void getAll_returns_page_with_1_item_when_requests_page_1_with_size_2_and_default_sort() {
-    final List<UserId> userIdsForTesting = insertThreeUsersForTesting();
-
-    final Page<UserEntity> page = userRepository.getAll(PageRequest.of(1, 2));
-
-    assertThat(page.getTotalElements()).isEqualTo(3);
-    assertThat(page.getNumberOfElements()).isEqualTo(1);
-    final List<UserId> ids = page.getContent().stream().map(UserEntity::id).toList();
-    assertThat(ids.getFirst()).isEqualTo(userIdsForTesting.get(0));
-  }
-
-  @Test
-  void getAll_returns_empty_page_when_offset_exceeds_total() {
-    insertThreeUsersForTesting();
-
-    final Page<UserEntity> page = userRepository.getAll(PageRequest.of(100, 2));
-
-    assertThat(page.getNumberOfElements()).isZero();
-    assertThat(page.getTotalElements()).isZero();
-  }
-
-  @Test
-  void
-      getAll_returns_page_with_2_items_when_requests_page_0_with_size_2_and_order_by_username_asc() {
-    final List<UserId> userIdsForTesting = insertThreeUsersForTesting();
-
-    final Page<UserEntity> page =
-        userRepository.getAll(PageRequest.of(0, 2, Sort.by(Sort.Direction.ASC, "username")));
-
-    assertThat(page.getTotalElements()).isEqualTo(3);
-    assertThat(page.getNumberOfElements()).isEqualTo(2);
-    final List<UserId> ids = page.getContent().stream().map(UserEntity::id).toList();
-    assertThat(ids.get(0)).isEqualTo(userIdsForTesting.get(0));
-    assertThat(ids.get(1)).isEqualTo(userIdsForTesting.get(1));
-  }
-
-  @Test
-  void
-      getAll_returns_page_with_2_items_when_requests_page_0_with_size_2_and_order_by_username_desc() {
-    final List<UserId> userIdsForTesting = insertThreeUsersForTesting();
-
-    final Page<UserEntity> page =
-        userRepository.getAll(PageRequest.of(0, 2, Sort.by(Sort.Direction.DESC, "username")));
-
-    assertThat(page.getTotalElements()).isEqualTo(3);
-    assertThat(page.getNumberOfElements()).isEqualTo(2);
-    final List<UserId> ids = page.getContent().stream().map(UserEntity::id).toList();
-    assertThat(ids.get(0)).isEqualTo(userIdsForTesting.get(2));
-    assertThat(ids.get(1)).isEqualTo(userIdsForTesting.get(1));
-  }
-
-  @Test
-  void
-      getAll_returns_page_with_2_items_when_requests_page_0_with_size_2_and_order_by_createdAt_asc() {
-    final List<UserId> userIdsForTesting = insertThreeUsersForTesting();
-
-    final Page<UserEntity> page =
-        userRepository.getAll(PageRequest.of(0, 2, Sort.by(Sort.Direction.ASC, "created_at")));
-
-    assertThat(page.getTotalElements()).isEqualTo(3);
-    assertThat(page.getNumberOfElements()).isEqualTo(2);
-    final List<UserId> ids = page.getContent().stream().map(UserEntity::id).toList();
-    assertThat(ids.get(0)).isEqualTo(userIdsForTesting.get(0));
-    assertThat(ids.get(1)).isEqualTo(userIdsForTesting.get(1));
-  }
-
-  // endregion
 }

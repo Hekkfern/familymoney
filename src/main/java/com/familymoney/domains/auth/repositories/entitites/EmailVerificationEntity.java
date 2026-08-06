@@ -10,4 +10,5 @@ public record EmailVerificationEntity(
     EmailVerificationToken token,
     Instant createdAt,
     Instant updatedAt,
-    ExpirationTime expiresAt) {}
+    ExpirationTime expiresAt,
+    Instant lastSentAt) {}

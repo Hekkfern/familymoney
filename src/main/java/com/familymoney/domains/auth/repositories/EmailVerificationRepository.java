@@ -7,6 +7,8 @@ import com.familymoney.domains.auth.repositories.mappers.EmailVerificationJooqMa
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.tables.EmailVerificationTokens;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
@@ -31,6 +33,7 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.USER_ID,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.EXPIRES_AT,
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.LAST_SENT_AT,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.CREATED_AT,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.UPDATED_AT)
         .fetchOptional()
@@ -43,6 +46,7 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.USER_ID,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.EXPIRES_AT,
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.LAST_SENT_AT,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.CREATED_AT,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.UPDATED_AT)
         .from(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS)
@@ -57,6 +61,7 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.USER_ID,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.EXPIRES_AT,
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.LAST_SENT_AT,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.CREATED_AT,
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.UPDATED_AT)
         .from(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS)
@@ -67,6 +72,8 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
 
   @Override
   public boolean updateByUserId(final UserId userId, final UpdateEmailVerificationTokenDto data) {
+    final OffsetDateTime lastSentAt =
+        data.lastSentAt() != null ? data.lastSentAt().atOffset(ZoneOffset.UTC) : null;
     final int rowsAffected =
         db.update(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS)
             .set(
@@ -79,6 +86,11 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
                 DSL.coalesce(
                     DSL.val(data.expiresAt() != null ? data.expiresAt().toOffsetDateTime() : null),
                     EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.EXPIRES_AT))
+            .set(
+                EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.LAST_SENT_AT,
+                DSL.coalesce(
+                    DSL.val(lastSentAt),
+                    EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.LAST_SENT_AT))
             .where(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.USER_ID.eq(userId.value()))
             .execute();
     return rowsAffected > 0;

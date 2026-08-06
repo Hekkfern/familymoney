@@ -88,6 +88,7 @@ CREATE
                     CHAR_LENGTH( BTRIM( token ))> 0
                 ),
                 expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+                last_sent_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
                 created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
                 updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
         );

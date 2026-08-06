@@ -251,7 +251,7 @@ public class AuthService implements IAuthService {
             .isBefore(
                 oldEmailVerificationTokenDb
                     .get()
-                    .createdAt()
+                    .lastSentAt()
                     .plus(emailVerificationProperties.waitTime()))) {
       throw new NewEmailVerificationTooSoonException();
     }
@@ -265,6 +265,7 @@ public class AuthService implements IAuthService {
                 .expiresAt(
                     ExpirationTime.of(
                         Instant.now(clock).plus(emailVerificationProperties.tokenDuration())))
+                .lastSentAt(Instant.now(clock))
                 .build());
     if (!emailVerificationTokenUpdated) {
       throw new DatabaseExecutionException(
