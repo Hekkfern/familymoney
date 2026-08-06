@@ -7,6 +7,7 @@ import com.familymoney.domains.auth.exceptions.NewEmailVerificationTooSoonExcept
 import com.familymoney.domains.auth.exceptions.RefreshTokenInvalidException;
 import com.familymoney.domains.auth.exceptions.RefreshTokenNotFoundException;
 import com.familymoney.domains.auth.exceptions.UserAlreadyExistsException;
+import com.familymoney.domains.auth.exceptions.UserNotEnabledException;
 import com.familymoney.domains.auth.exceptions.VerificationTokenExpiredException;
 import com.familymoney.domains.auth.exceptions.VerificationTokenNotFoundException;
 import com.familymoney.domains.auth.repositories.IEmailVerificationRepository;
@@ -163,6 +164,14 @@ public class AuthService implements IAuthService {
       final String msg = "Expired refresh token";
       log.info(msg);
       throw new RefreshTokenInvalidException(msg);
+    }
+    // check if the user is enabled
+    final UserEntity userDb =
+        userRepository
+            .findById(refreshTokenDb.userId())
+            .orElseThrow(() -> new BadCredentialsException("User does not exist"));
+    if (!userDb.isEnabled()) {
+      throw new UserNotEnabledException();
     }
     // Check if the family token is blacklisted
     if (tokenFamilyBlacklistRepository.exists(refreshTokenDb.family())) {

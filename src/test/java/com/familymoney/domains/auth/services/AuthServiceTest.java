@@ -18,6 +18,7 @@ import com.familymoney.domains.auth.exceptions.NewEmailVerificationTooSoonExcept
 import com.familymoney.domains.auth.exceptions.RefreshTokenInvalidException;
 import com.familymoney.domains.auth.exceptions.RefreshTokenNotFoundException;
 import com.familymoney.domains.auth.exceptions.UserAlreadyExistsException;
+import com.familymoney.domains.auth.exceptions.UserNotEnabledException;
 import com.familymoney.domains.auth.exceptions.VerificationTokenExpiredException;
 import com.familymoney.domains.auth.exceptions.VerificationTokenNotFoundException;
 import com.familymoney.domains.auth.repositories.IEmailVerificationRepository;
@@ -195,6 +196,24 @@ class AuthServiceTest {
             });
   }
 
+  private void mockRefreshTokenOwner(final boolean isEnabled) {
+    when(userRepository.findById(any(UserId.class)))
+        .thenAnswer(
+            invocation -> {
+              UserId userId = invocation.getArgument(0, UserId.class);
+              return Optional.of(
+                  new UserEntity(
+                      userId,
+                      UserName.fromString(FakeGenerator.username()),
+                      Email.fromString(FakeGenerator.email()),
+                      "hashed-password",
+                      now,
+                      now,
+                      true,
+                      isEnabled));
+            });
+  }
+
   private void mockEmailVerificationTokenFindByToken() {
     when(emailVerificationRepository.findByToken(any(EmailVerificationToken.class)))
         .thenAnswer(
@@ -368,6 +387,7 @@ class AuthServiceTest {
       final RefreshToken refreshToken = RefreshToken.generate();
 
       mockRefreshTokenFindByToken();
+      mockRefreshTokenOwner(true);
       when(refreshTokenRepository.updateByToken(
               any(RefreshToken.class), any(UpdateRefreshTokenDto.class)))
           .thenReturn(true);
@@ -402,6 +422,7 @@ class AuthServiceTest {
       final RefreshToken refreshToken = RefreshToken.generate();
 
       mockRefreshTokenFindByToken();
+      mockRefreshTokenOwner(true);
       when(refreshTokenRepository.updateByToken(any(), any())).thenReturn(false);
       when(jwtUtils.generateAccessToken(any(UserId.class), any(TokenFamily.class)))
           .thenReturn(AccessToken.fromString(FakeGenerator.accessToken()));
@@ -433,10 +454,25 @@ class AuthServiceTest {
     }
 
     @Test
+    void throws_when_user_is_disabled() {
+      final RefreshToken refreshToken = RefreshToken.generate();
+
+      mockRefreshTokenFindByToken();
+      mockRefreshTokenOwner(false);
+
+      assertThrows(UserNotEnabledException.class, () -> authService.refreshTokens(refreshToken));
+
+      verify(refreshTokenRepository, never())
+          .updateByToken(any(RefreshToken.class), any(UpdateRefreshTokenDto.class));
+      verify(jwtUtils, never()).generateAccessToken(any(UserId.class), any(TokenFamily.class));
+    }
+
+    @Test
     void throws_when_family_is_blacklisted() {
       final RefreshToken refreshToken = RefreshToken.generate();
 
       mockRefreshTokenFindByToken();
+      mockRefreshTokenOwner(true);
       when(tokenFamilyBlacklistRepository.exists(any(TokenFamily.class))).thenReturn(true);
 
       assertThrows(BlacklistedFamilyException.class, () -> authService.refreshTokens(refreshToken));

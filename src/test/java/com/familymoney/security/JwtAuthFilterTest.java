@@ -14,11 +14,15 @@ import com.familymoney.domains.auth.services.IAuthService;
 import com.familymoney.domains.auth.types.AccessToken;
 import com.familymoney.domains.auth.types.TokenFamily;
 import com.familymoney.domains.users.services.IUserService;
+import com.familymoney.domains.users.services.data.UserData;
+import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.Role;
 import com.familymoney.domains.users.types.UserId;
+import com.familymoney.domains.users.types.UserName;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.time.Instant;
 import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,6 +54,16 @@ class JwtAuthFilterTest {
   @AfterEach
   void tearDown() {
     SecurityContextHolder.clearContext();
+  }
+
+  private UserData enabledUser(final UserId userId) {
+    return new UserData(
+        userId,
+        UserName.fromString("enabled-user"),
+        Email.fromString("enabled@example.com"),
+        Instant.EPOCH,
+        true,
+        true);
   }
 
   @Test
@@ -102,7 +116,38 @@ class JwtAuthFilterTest {
     when(jwtUtils.parseAccessToken(any(AccessToken.class)))
         .thenReturn(Optional.of(new JwtTokenContent(userId, family)));
     when(authService.isFamilyBlacklisted(any())).thenReturn(false);
+    when(userService.getUserData(userId)).thenReturn(Optional.of(enabledUser(userId)));
     when(userService.getUserRole(userId)).thenReturn(Optional.empty());
+
+    filter.doFilter(request, response, chain);
+
+    verify(chain).doFilter(request, response);
+    assertNull(SecurityContextHolder.getContext().getAuthentication());
+  }
+
+  @Test
+  void skip_and_no_authenticate_when_valid_token_belongs_to_disabled_user() throws Exception {
+    final UserId userId = UserId.generate();
+    final TokenFamily family = TokenFamily.generate();
+    final HttpServletRequest request = mock(HttpServletRequest.class);
+    final HttpServletResponse response = mock(HttpServletResponse.class);
+    final FilterChain chain = mock(FilterChain.class);
+
+    when(jwtUtils.extractTokenFromHeader(any(HttpServletRequest.class)))
+        .thenReturn(Optional.of(AccessToken.fromString(VALID_JWT_TOKEN)));
+    when(jwtUtils.parseAccessToken(any(AccessToken.class)))
+        .thenReturn(Optional.of(new JwtTokenContent(userId, family)));
+    when(authService.isFamilyBlacklisted(any())).thenReturn(false);
+    when(userService.getUserData(userId))
+        .thenReturn(
+            Optional.of(
+                new UserData(
+                    userId,
+                    UserName.fromString("disabled-user"),
+                    Email.fromString("disabled@example.com"),
+                    Instant.EPOCH,
+                    true,
+                    false)));
 
     filter.doFilter(request, response, chain);
 
@@ -123,6 +168,7 @@ class JwtAuthFilterTest {
     when(jwtUtils.parseAccessToken(any(AccessToken.class)))
         .thenReturn(Optional.of(new JwtTokenContent(userId, family)));
     when(authService.isFamilyBlacklisted(any())).thenReturn(false);
+    when(userService.getUserData(userId)).thenReturn(Optional.of(enabledUser(userId)));
     when(userService.getUserRole(userId)).thenReturn(Optional.of(Role.ADMIN));
 
     filter.doFilter(request, response, chain);

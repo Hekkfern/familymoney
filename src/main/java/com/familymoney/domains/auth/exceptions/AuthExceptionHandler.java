@@ -69,4 +69,10 @@ public class AuthExceptionHandler extends ResponseEntityExceptionHandler {
     logger.info(e.getMessage());
     return ProblemDetail.forStatusAndDetail(HttpStatus.GONE, e.getMessage());
   }
+
+  @ExceptionHandler(UserNotEnabledException.class)
+  public ProblemDetail handle(UserNotEnabledException e) {
+    logger.info(e.getMessage());
+    return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, e.getMessage());
+  }
 }
