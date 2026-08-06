@@ -285,6 +285,7 @@ public class AuthService implements IAuthService {
     // TODO
   }
 
+  @Transactional
   @Override
   public void logoutUser(final RefreshToken refreshToken) {
     // Find the refresh token in the database
