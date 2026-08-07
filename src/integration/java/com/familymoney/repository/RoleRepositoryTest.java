@@ -9,7 +9,7 @@ import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.Role;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.domains.users.types.UserName;
-import com.familymoney.repository.utils.DatabaseCrud;
+import com.familymoney.test_utils.DatabaseCrud;
 import com.familymoney.testutils.FakeGenerator;
 import java.time.Instant;
 import java.util.Optional;

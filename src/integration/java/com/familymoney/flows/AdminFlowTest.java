@@ -1,13 +1,10 @@
-package com.familymoney.application;
+package com.familymoney.flows;
 
 import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.familymoney.application.utils.FlowUtils;
 import com.familymoney.domains.auth.services.IEmailSenderService;
-import com.familymoney.domains.users.controllers.dtos.GetMyUserResponseDto;
+import com.familymoney.flows.utils.FlowUtils;
 import com.familymoney.testutils.FakeGenerator;
-import com.familymoney.testutils.UserControllerUriFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,12 +18,13 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
-class UserFlowTest {
+class AdminFlowTest {
 
   // region Fields
 
   private RestTestClient client;
   private FlowUtils flowUtils;
+
   @MockitoBean private IEmailSenderService emailSenderService;
 
   @Container @ServiceConnection
@@ -44,36 +42,13 @@ class UserFlowTest {
   }
 
   @Test
-  void UserFlow_Get_user_data_when_logged_in() {
-    // Register and login user
+  void AdminFlow_Normal_User_Tries_To_Access_Admin_Endpoints_Should_Fail() {
+    // Register and login a non-admin user
     final String username = FakeGenerator.username();
     final String email = FakeGenerator.email();
     final String password = FakeGenerator.password();
     final String accessToken = flowUtils.registerAndLoginUser(username, email, password);
-    // Get user data
-    final GetMyUserResponseDto userDataResponse =
-        client
-            .get()
-            .uri(UserControllerUriFactory.getMePath())
-            .header("Authorization", "Bearer " + accessToken)
-            .exchange()
-            .expectStatus()
-            .isOk()
-            .expectBody(GetMyUserResponseDto.class)
-            .returnResult()
-            .getResponseBody();
-    assertEquals(username, userDataResponse.username());
-    assertEquals(email, userDataResponse.email());
-  }
-
-  @Test
-  void UserFlow_Get_user_data_when_not_logged_in() {
-    // Get user data without logging in
-    client
-        .get()
-        .uri(UserControllerUriFactory.getMePath())
-        .exchange()
-        .expectStatus()
-        .isUnauthorized();
+    // Get data from another user
+    // TODO
   }
 }

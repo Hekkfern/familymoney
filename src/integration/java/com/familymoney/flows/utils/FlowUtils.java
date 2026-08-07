@@ -1,4 +1,4 @@
-package com.familymoney.application.utils;
+package com.familymoney.flows.utils;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.timeout;

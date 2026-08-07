@@ -1,4 +1,4 @@
-package com.familymoney.repository.utils;
+package com.familymoney.test_utils;
 
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.auth.types.PasswordResetToken;
@@ -229,6 +229,24 @@ public class DatabaseCrud {
             amount.getCurrency().getCurrencyCode(),
             user1.value(),
             user2.value())
+        .execute();
+  }
+
+  public void expireRefreshToken(final RefreshToken refreshToken) {
+    dslContext
+        .update(RefreshTokens.REFRESH_TOKENS)
+        .set(
+            RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,
+            OffsetDateTime.now(ZoneOffset.UTC).minusDays(1))
+        .where(RefreshTokens.REFRESH_TOKENS.TOKEN_HASH.eq(TOKEN_HASHER.hash(refreshToken.value())))
+        .execute();
+  }
+
+  public void enableUser(final UserId userId, final boolean enabled) {
+    dslContext
+        .update(Users.USERS)
+        .set(Users.USERS.IS_ENABLED, enabled)
+        .where(Users.USERS.ID.eq(userId.value()))
         .execute();
   }
 }
