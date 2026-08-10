@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
 @Constraint(validatedBy = {})
 @Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.RECORD_COMPONENT})
 @Retention(RetentionPolicy.RUNTIME)
-@Pattern(regexp = "^[A-Za-z0-9]{32}$")
+@Pattern(regexp = "^[A-Za-z0-9]{64}$")
 public @interface ValidPasswordResetToken {
   String message() default "Invalid token format";
 

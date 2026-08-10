@@ -32,22 +32,18 @@ public class AuthExceptionHandler extends ResponseEntityExceptionHandler {
     return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "Invalid credentials");
   }
 
-  @ExceptionHandler(UserAlreadyExistsException.class)
-  public ProblemDetail handle(UserAlreadyExistsException e) {
+  @ExceptionHandler({UserAlreadyExistsException.class, EmailAlreadyVerifiedException.class})
+  public ProblemDetail handleConflict(final RuntimeException e) {
     logger.info(e.getMessage());
     return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
   }
 
-  @ExceptionHandler(RefreshTokenNotFoundException.class)
-  public ProblemDetail handle(RefreshTokenNotFoundException e) {
-    logger.info(e.getMessage());
-    return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, e.getMessage());
-  }
-
   @ExceptionHandler({
+    RefreshTokenNotFoundException.class,
     RefreshTokenInvalidException.class,
     RefreshTokenReuseDetectedException.class,
-    BlacklistedFamilyException.class
+    BlacklistedFamilyException.class,
+    UserNotEnabledException.class
   })
   public ProblemDetail handle(final RuntimeException e) {
     logger.info(e.getMessage());
@@ -76,12 +72,6 @@ public class AuthExceptionHandler extends ResponseEntityExceptionHandler {
   public ProblemDetail handle(ResetPasswordTokenExpiredException e) {
     logger.info(e.getMessage());
     return ProblemDetail.forStatusAndDetail(HttpStatus.GONE, e.getMessage());
-  }
-
-  @ExceptionHandler(UserNotEnabledException.class)
-  public ProblemDetail handle(UserNotEnabledException e) {
-    logger.info(e.getMessage());
-    return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, e.getMessage());
   }
 
   @ExceptionHandler(NewEmailVerificationTooSoonException.class)

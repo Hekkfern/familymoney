@@ -9,10 +9,22 @@ import static org.mockito.Mockito.when;
 
 import com.familymoney.domains.auth.controllers.mappers.LoginResponseMapper;
 import com.familymoney.domains.auth.controllers.mappers.RefreshResponseMapper;
+import com.familymoney.domains.auth.exceptions.BlacklistedFamilyException;
+import com.familymoney.domains.auth.exceptions.EmailAlreadyVerifiedException;
 import com.familymoney.domains.auth.exceptions.NewEmailVerificationTooSoonException;
+import com.familymoney.domains.auth.exceptions.RefreshTokenInvalidException;
+import com.familymoney.domains.auth.exceptions.RefreshTokenNotFoundException;
+import com.familymoney.domains.auth.exceptions.RefreshTokenReuseDetectedException;
+import com.familymoney.domains.auth.exceptions.ResetPasswordTokenExpiredException;
+import com.familymoney.domains.auth.exceptions.ResetPasswordTokenNotFoundException;
+import com.familymoney.domains.auth.exceptions.UserAlreadyExistsException;
+import com.familymoney.domains.auth.exceptions.UserNotEnabledException;
+import com.familymoney.domains.auth.exceptions.VerificationTokenExpiredException;
+import com.familymoney.domains.auth.exceptions.VerificationTokenNotFoundException;
 import com.familymoney.domains.auth.services.IAuthService;
 import com.familymoney.domains.auth.services.data.TokenPair;
 import com.familymoney.domains.auth.types.AccessToken;
+import com.familymoney.domains.auth.types.PasswordResetToken;
 import com.familymoney.domains.auth.types.RefreshToken;
 import com.familymoney.domains.users.services.IUserService;
 import com.familymoney.security.JwtUtils;
@@ -33,6 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
@@ -92,6 +105,28 @@ class AuthControllerTest {
           .exchange()
           .expectStatus()
           .isOk();
+    }
+
+    @Test
+    void conflict_when_user_identity_already_exists() {
+      doThrow(new UserAlreadyExistsException("User already exists"))
+          .when(authService)
+          .registerUser(any(), any(), any());
+
+      client
+          .post()
+          .uri(AuthControllerUriFactory.getRegisterPath())
+          .body(
+              Map.of(
+                  "username",
+                  FakeGenerator.username(),
+                  "email",
+                  FakeGenerator.email(),
+                  "password",
+                  FakeGenerator.password()))
+          .exchange()
+          .expectStatus()
+          .isEqualTo(409);
     }
 
     @ParameterizedTest
@@ -221,6 +256,20 @@ class AuthControllerTest {
           .isOk();
     }
 
+    @Test
+    void unauthorized_when_credentials_are_rejected() {
+      when(authService.loginUser(any(), any()))
+          .thenThrow(new BadCredentialsException("Account does not exist"));
+
+      client
+          .post()
+          .uri(AuthControllerUriFactory.getLoginPath())
+          .body(Map.of("email", FakeGenerator.email(), "password", FakeGenerator.password()))
+          .exchange()
+          .expectStatus()
+          .isUnauthorized();
+    }
+
     @ParameterizedTest
     @FieldSource("com.familymoney.testutils.TestDataFactory#INVALID_EMAILS")
     @EmptySource
@@ -273,6 +322,13 @@ class AuthControllerTest {
   @Nested
   class VerifyEmail {
 
+    private static Stream<Arguments> provideExpectedFailures() {
+      return Stream.of(
+          Arguments.of(new VerificationTokenNotFoundException("Verification token not found"), 404),
+          Arguments.of(new VerificationTokenExpiredException("Verification token expired"), 410),
+          Arguments.of(new EmailAlreadyVerifiedException("Email already verified"), 409));
+    }
+
     @Test
     void success() {
       doNothing().when(authService).verifyEmail(any());
@@ -283,6 +339,21 @@ class AuthControllerTest {
           .exchange()
           .expectStatus()
           .isOk();
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideExpectedFailures")
+    void returns_expected_status_for_verification_failure(
+        final RuntimeException exception, final int expectedStatus) {
+      doThrow(exception).when(authService).verifyEmail(any());
+
+      client
+          .post()
+          .uri(AuthControllerUriFactory.getVerifyEmailPath())
+          .body(Map.of("token", FakeGenerator.emailVerificationToken()))
+          .exchange()
+          .expectStatus()
+          .isEqualTo(expectedStatus);
     }
 
     @Test
@@ -378,7 +449,76 @@ class AuthControllerTest {
   }
 
   @Nested
+  class ResetPassword {
+
+    private static Stream<Arguments> provideExpectedFailures() {
+      return Stream.of(
+          Arguments.of(
+              new ResetPasswordTokenNotFoundException("Password reset token not found"), 404),
+          Arguments.of(
+              new ResetPasswordTokenExpiredException("Password reset token expired"), 410));
+    }
+
+    @Test
+    void success() {
+      final String token = PasswordResetToken.generate().value();
+
+      client
+          .post()
+          .uri(AuthControllerUriFactory.getResetPasswordPath())
+          .body(Map.of("token", token, "newPassword", FakeGenerator.password()))
+          .exchange()
+          .expectStatus()
+          .isOk();
+
+      verify(authService).resetPassword(any(), any());
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideExpectedFailures")
+    void returns_expected_status_for_reset_failure(
+        final RuntimeException exception, final int expectedStatus) {
+      doThrow(exception).when(authService).resetPassword(any(), any());
+
+      client
+          .post()
+          .uri(AuthControllerUriFactory.getResetPasswordPath())
+          .body(
+              Map.of(
+                  "token",
+                  PasswordResetToken.generate().value(),
+                  "newPassword",
+                  FakeGenerator.password()))
+          .exchange()
+          .expectStatus()
+          .isEqualTo(expectedStatus);
+    }
+
+    @Test
+    void badrequest_when_password_reset_token_has_legacy_length() {
+      client
+          .post()
+          .uri(AuthControllerUriFactory.getResetPasswordPath())
+          .body(Map.of("token", "a".repeat(32), "newPassword", FakeGenerator.password()))
+          .exchange()
+          .expectStatus()
+          .isBadRequest();
+
+      verifyNoInteractions(authService);
+    }
+  }
+
+  @Nested
   class Refresh {
+
+    private static Stream<RuntimeException> provideExpectedFailures() {
+      return Stream.of(
+          new RefreshTokenNotFoundException("Refresh token not found"),
+          new RefreshTokenInvalidException("Refresh token expired"),
+          new RefreshTokenReuseDetectedException(),
+          new BlacklistedFamilyException("Token family is blacklisted"),
+          new UserNotEnabledException());
+    }
 
     @Test
     void success() {
@@ -393,6 +533,20 @@ class AuthControllerTest {
           .exchange()
           .expectStatus()
           .isOk();
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideExpectedFailures")
+    void unauthorized_when_refresh_token_is_rejected(final RuntimeException exception) {
+      when(authService.refreshTokens(any())).thenThrow(exception);
+
+      client
+          .post()
+          .uri(AuthControllerUriFactory.getRefreshPath())
+          .body(Map.of("refreshToken", FakeGenerator.refreshToken()))
+          .exchange()
+          .expectStatus()
+          .isUnauthorized();
     }
 
     @Test
@@ -431,6 +585,21 @@ class AuthControllerTest {
           .exchange()
           .expectStatus()
           .isOk();
+    }
+
+    @Test
+    void unauthorized_when_refresh_token_does_not_exist() {
+      doThrow(new RefreshTokenNotFoundException("Refresh token not found"))
+          .when(authService)
+          .logoutUser(any());
+
+      client
+          .post()
+          .uri(AuthControllerUriFactory.getLogoutPath())
+          .body(Map.of("refreshToken", FakeGenerator.refreshToken()))
+          .exchange()
+          .expectStatus()
+          .isUnauthorized();
     }
 
     @Test
