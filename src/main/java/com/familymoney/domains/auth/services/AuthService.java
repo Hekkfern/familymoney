@@ -53,6 +53,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,6 +62,11 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Slf4j
 public class AuthService implements IAuthService {
+
+  private static final String USER_ALREADY_EXISTS_MESSAGE =
+      "A user with that email or username already exists.";
+  private static final String USERNAME_UNIQUE_CONSTRAINT = "users_username_key";
+  private static final String EMAIL_UNIQUE_CONSTRAINT = "users_email_key";
 
   private final IUserRepository userRepository;
   private final UserPasswordEncoder passwordEncoder;
@@ -81,19 +87,26 @@ public class AuthService implements IAuthService {
   @Override
   public void registerUser(final UserName username, final Email email, final Password password) {
     log.trace("registerUser() started");
-    // Check if user already exists
-    if (userRepository.existsByEmailOrUsername(email, username)) {
-      throw new UserAlreadyExistsException("A user with that email or username already exists.");
-    }
     // Create user
     final UserId userId = UserId.generate();
-    userRepository
-        .create(
-            new CreateUserDto(
-                userId, username, email, passwordEncoder.encode(password.value()), true, false))
-        .orElseThrow(() -> new DatabaseExecutionException("Could not create user in the database"));
+    try {
+      userRepository
+          .create(
+              new CreateUserDto(
+                  userId, username, email, passwordEncoder.encode(password.value()), true, false))
+          .orElseThrow(
+              () -> new DatabaseExecutionException("Could not create user in the database"));
+    } catch (final DuplicateKeyException exception) {
+      if (!isUserIdentityConflict(exception)) {
+        throw new DatabaseExecutionException("Could not create user in the database", exception);
+      }
+      throw new UserAlreadyExistsException(USER_ALREADY_EXISTS_MESSAGE, exception);
+    }
     // Assign user permissions (default role)
-    roleRepository.setRoleForUserId(userId, Role.USER);
+    final boolean defaultRoleAssigned = roleRepository.setRoleForUserId(userId, Role.USER);
+    if (!defaultRoleAssigned) {
+      throw new DatabaseExecutionException("Could not assign the default role to the user");
+    }
     // Generate and save verification token to database
     final EmailVerificationToken emailVerificationToken = EmailVerificationToken.generate();
     emailVerificationRepository
@@ -110,6 +123,17 @@ public class AuthService implements IAuthService {
     eventPublisher.publishEvent(
         new EmailVerificationRequestedEvent(userId, email, username, emailVerificationToken));
     log.trace("registerUser() completed");
+  }
+
+  private static boolean isUserIdentityConflict(final DuplicateKeyException exception) {
+    final String message = exception.getMostSpecificCause().getMessage();
+    if (message == null) {
+      return false;
+    }
+
+    final boolean isUsernameConflict = message.contains(USERNAME_UNIQUE_CONSTRAINT);
+    final boolean isEmailConflict = message.contains(EMAIL_UNIQUE_CONSTRAINT);
+    return isUsernameConflict || isEmailConflict;
   }
 
   @Override

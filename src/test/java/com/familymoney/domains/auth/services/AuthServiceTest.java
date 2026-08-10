@@ -61,6 +61,7 @@ import com.familymoney.properties.JwtProperties;
 import com.familymoney.security.JwtUtils;
 import com.familymoney.security.UserPasswordEncoder;
 import com.familymoney.testutils.FakeGenerator;
+import java.sql.SQLException;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -70,6 +71,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
@@ -77,6 +80,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.authentication.BadCredentialsException;
 
 @ExtendWith(MockitoExtension.class)
@@ -233,8 +237,9 @@ class AuthServiceTest {
       final Email email = Email.fromString(FakeGenerator.email());
       final Password password = Password.fromString(FakeGenerator.password());
 
-      when(userRepository.existsByEmailOrUsername(email, username)).thenReturn(false);
       mockUserRepositoryCreate();
+      when(permissionsRepository.setRoleForUserId(any(UserId.class), eq(Role.USER)))
+          .thenReturn(true);
       mockEmailVerificationRepositoryCreate();
 
       assertThatCode(() -> authService.registerUser(username, email, password))
@@ -260,22 +265,55 @@ class AuthServiceTest {
       assertThat(event.verificationToken()).isEqualTo(verificationDto.token());
     }
 
-    @Test
-    void throws_when_user_already_exists() {
+    @ParameterizedTest
+    @ValueSource(strings = {"users_email_key", "users_username_key"})
+    void throws_when_user_creation_conflicts_on_identity_constraint(
+        final String identityConstraint) {
       final UserName username = UserName.fromString(FakeGenerator.username());
       final Email email = Email.fromString(FakeGenerator.email());
       final Password password = Password.fromString(FakeGenerator.password());
 
-      when(userRepository.existsByEmailOrUsername(email, username)).thenReturn(true);
+      when(userRepository.create(any(CreateUserDto.class)))
+          .thenThrow(
+              new DuplicateKeyException(
+                  "Concurrent duplicate user",
+                  new SQLException(
+                      "duplicate key value violates unique constraint \""
+                          + identityConstraint
+                          + "\"")));
 
       assertThrows(
           UserAlreadyExistsException.class,
           () -> authService.registerUser(username, email, password));
-      verify(userRepository, never()).create(any(CreateUserDto.class));
+
+      verify(permissionsRepository, never()).setRoleForUserId(any(UserId.class), any(Role.class));
+      verify(emailVerificationRepository, never()).create(any(CreateEmailVerificationDto.class));
       verify(eventPublisher, never()).publishEvent(any(EmailVerificationRequestedEvent.class));
       verify(emailSenderService, never())
           .sendEmailVerificationEmail(
               any(Email.class), any(UserName.class), any(EmailVerificationToken.class));
+    }
+
+    @Test
+    void throws_database_exception_when_non_identity_key_conflicts() {
+      final UserName username = UserName.fromString(FakeGenerator.username());
+      final Email email = Email.fromString(FakeGenerator.email());
+      final Password password = Password.fromString(FakeGenerator.password());
+
+      when(userRepository.create(any(CreateUserDto.class)))
+          .thenThrow(
+              new DuplicateKeyException(
+                  "Duplicate generated user ID",
+                  new SQLException(
+                      "duplicate key value violates unique constraint \"users_pkey\"")));
+
+      assertThrows(
+          DatabaseExecutionException.class,
+          () -> authService.registerUser(username, email, password));
+
+      verify(permissionsRepository, never()).setRoleForUserId(any(UserId.class), any(Role.class));
+      verify(emailVerificationRepository, never()).create(any(CreateEmailVerificationDto.class));
+      verify(eventPublisher, never()).publishEvent(any(EmailVerificationRequestedEvent.class));
     }
 
     @Test
@@ -284,7 +322,6 @@ class AuthServiceTest {
       final Email email = Email.fromString(FakeGenerator.email());
       final Password password = Password.fromString(FakeGenerator.password());
 
-      when(userRepository.existsByEmailOrUsername(email, username)).thenReturn(false);
       when(userRepository.create(any(CreateUserDto.class))).thenReturn(Optional.empty());
 
       assertThrows(
@@ -297,13 +334,35 @@ class AuthServiceTest {
     }
 
     @Test
+    void throws_when_default_role_assignment_fails() {
+      final UserName username = UserName.fromString(FakeGenerator.username());
+      final Email email = Email.fromString(FakeGenerator.email());
+      final Password password = Password.fromString(FakeGenerator.password());
+
+      mockUserRepositoryCreate();
+      when(permissionsRepository.setRoleForUserId(any(UserId.class), eq(Role.USER)))
+          .thenReturn(false);
+
+      assertThrows(
+          DatabaseExecutionException.class,
+          () -> authService.registerUser(username, email, password));
+
+      verify(emailVerificationRepository, never()).create(any(CreateEmailVerificationDto.class));
+      verify(eventPublisher, never()).publishEvent(any(EmailVerificationRequestedEvent.class));
+      verify(emailSenderService, never())
+          .sendEmailVerificationEmail(
+              any(Email.class), any(UserName.class), any(EmailVerificationToken.class));
+    }
+
+    @Test
     void fails_when_email_verification_table() {
       final UserName username = UserName.fromString(FakeGenerator.username());
       final Email email = Email.fromString(FakeGenerator.email());
       final Password password = Password.fromString(FakeGenerator.password());
 
-      when(userRepository.existsByEmailOrUsername(email, username)).thenReturn(false);
       mockUserRepositoryCreate();
+      when(permissionsRepository.setRoleForUserId(any(UserId.class), eq(Role.USER)))
+          .thenReturn(true);
       when(emailVerificationRepository.create(any(CreateEmailVerificationDto.class)))
           .thenReturn(Optional.empty());
 
