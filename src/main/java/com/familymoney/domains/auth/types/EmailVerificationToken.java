@@ -8,11 +8,11 @@ public record EmailVerificationToken(String value) {
 
   public EmailVerificationToken {
     if (value.length() != LENGTH) {
-      throw new IllegalArgumentException("Invalid refresh token length");
+      throw new IllegalArgumentException("Invalid email verification token length");
     }
   }
 
-  public static EmailVerificationToken fromString(String value) {
+  public static EmailVerificationToken fromString(final String value) {
     return new EmailVerificationToken(value);
   }
 

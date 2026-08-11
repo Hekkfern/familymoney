@@ -12,7 +12,7 @@ public record RefreshToken(String value) {
     }
   }
 
-  public static RefreshToken fromString(String value) {
+  public static RefreshToken fromString(final String value) {
     return new RefreshToken(value);
   }
 

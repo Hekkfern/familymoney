@@ -130,7 +130,20 @@ spotless {
   }
   sql {
     target("src/main/resources/**/*.sql")
-    dbeaver()
+    prettier(
+      mapOf(
+        "prettier-plugin-sql" to "0.20.0",
+      ),
+    ).config(
+      mapOf(
+        "language" to "postgresql",
+        "keywordCase" to "upper",
+        "dataTypeCase" to "upper",
+        "functionCase" to "upper",
+        "identifierCase" to "lower",
+        "plugins" to listOf("prettier-plugin-sql"),
+      ),
+    )
   }
 }
 

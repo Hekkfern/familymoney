@@ -4,11 +4,11 @@ import java.util.UUID;
 
 public record TokenFamily(UUID value) {
 
-  public static TokenFamily fromString(String value) {
+  public static TokenFamily fromString(final String value) {
     return new TokenFamily(UUID.fromString(value));
   }
 
-  public static TokenFamily fromUuid(UUID value) {
+  public static TokenFamily fromUuid(final UUID value) {
     return new TokenFamily(value);
   }
 

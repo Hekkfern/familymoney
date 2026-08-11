@@ -33,7 +33,7 @@ public record AccessToken(String value) {
    * @param value the token string
    * @return a validated {@link AccessToken}
    */
-  public static AccessToken fromString(String value) {
+  public static AccessToken fromString(final String value) {
     return new AccessToken(value);
   }
 

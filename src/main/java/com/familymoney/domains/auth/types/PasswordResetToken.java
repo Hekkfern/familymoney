@@ -8,11 +8,11 @@ public record PasswordResetToken(String value) {
 
   public PasswordResetToken {
     if (value.length() != LENGTH) {
-      throw new IllegalArgumentException("Invalid refresh token length");
+      throw new IllegalArgumentException("Invalid password reset token length");
     }
   }
 
-  public static PasswordResetToken fromString(String value) {
+  public static PasswordResetToken fromString(final String value) {
     return new PasswordResetToken(value);
   }
 
