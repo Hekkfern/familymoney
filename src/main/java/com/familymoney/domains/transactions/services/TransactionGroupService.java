@@ -34,7 +34,7 @@ import com.familymoney.domains.users.repositories.IUserRepository;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.exceptions.DatabaseExecutionException;
 import com.familymoney.properties.GroupInvitationProperties;
-import com.familymoney.testutils.UUIDGenerator;
+import com.familymoney.utils.UUIDGenerator;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;

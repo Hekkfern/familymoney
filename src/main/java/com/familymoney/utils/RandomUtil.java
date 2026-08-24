@@ -1,4 +1,4 @@
-package com.familymoney.testutils;
+package com.familymoney.utils;
 
 import java.security.SecureRandom;
 

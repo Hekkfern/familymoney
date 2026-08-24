@@ -1,5 +1,7 @@
 package com.familymoney.domains.transactions.repositories;
 
+import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
+
 import com.familymoney.domains.transactions.repositories.dtos.CreateTransactionDto;
 import com.familymoney.domains.transactions.repositories.dtos.UpdateTransactionDto;
 import com.familymoney.domains.transactions.repositories.entitites.TransactionEntity;
@@ -9,7 +11,6 @@ import com.familymoney.domains.transactions.types.TransactionId;
 import com.familymoney.generated.tables.Transactions;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -48,7 +49,7 @@ public class TransactionRepository implements ITransactionRepository {
             data.amount().getCurrency().getCurrencyCode(),
             data.lender().value(),
             data.borrower().value(),
-            OffsetDateTime.ofInstant(data.doneAt(), ZoneOffset.UTC))
+            OffsetDateTime.ofInstant(data.doneAt(), DEFAULT_TIMEZONE_OFFSET))
         .returning(
             Transactions.TRANSACTIONS.ID,
             Transactions.TRANSACTIONS.DESCRIPTION,
@@ -75,7 +76,9 @@ public class TransactionRepository implements ITransactionRepository {
     final UUID fromVal = data.from() != null ? data.from().value() : null;
     final UUID toVal = data.to() != null ? data.to().value() : null;
     final OffsetDateTime doneAtVal =
-        data.doneAt() != null ? OffsetDateTime.ofInstant(data.doneAt(), ZoneOffset.UTC) : null;
+        data.doneAt() != null
+            ? OffsetDateTime.ofInstant(data.doneAt(), DEFAULT_TIMEZONE_OFFSET)
+            : null;
 
     final int rowsAffected =
         db.update(Transactions.TRANSACTIONS)

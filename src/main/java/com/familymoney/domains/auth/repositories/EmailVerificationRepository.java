@@ -1,5 +1,7 @@
 package com.familymoney.domains.auth.repositories;
 
+import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
+
 import com.familymoney.domains.auth.repositories.dtos.CreateEmailVerificationDto;
 import com.familymoney.domains.auth.repositories.dtos.UpdateEmailVerificationTokenDto;
 import com.familymoney.domains.auth.repositories.entitites.EmailVerificationEntity;
@@ -9,7 +11,6 @@ import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.tables.EmailVerificationTokens;
 import com.familymoney.security.IOpaqueTokenHasher;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
@@ -77,7 +78,7 @@ public class EmailVerificationRepository implements IEmailVerificationRepository
   @Override
   public boolean updateByUserId(final UserId userId, final UpdateEmailVerificationTokenDto data) {
     final OffsetDateTime lastSentAt =
-        data.lastSentAt() != null ? data.lastSentAt().atOffset(ZoneOffset.UTC) : null;
+        data.lastSentAt() != null ? data.lastSentAt().atOffset(DEFAULT_TIMEZONE_OFFSET) : null;
     final int rowsAffected =
         db.update(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS)
             .set(

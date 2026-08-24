@@ -1,4 +1,4 @@
-package com.familymoney.testutils;
+package com.familymoney.utils;
 
 import java.util.List;
 import org.springframework.data.domain.Page;

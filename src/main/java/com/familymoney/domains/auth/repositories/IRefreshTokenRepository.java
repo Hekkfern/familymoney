@@ -56,4 +56,11 @@ public interface IRefreshTokenRepository {
    * @return true if at least one record was deleted; false if no matching token exists.
    */
   boolean deleteByToken(RefreshToken token);
+
+  /**
+   * Deletes all refresh tokens belonging to a user.
+   *
+   * @param userId identifier of the user whose refresh tokens are deleted
+   */
+  void deleteByUserId(UserId userId);
 }

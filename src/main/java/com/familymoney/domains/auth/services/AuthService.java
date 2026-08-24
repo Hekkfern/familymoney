@@ -1,11 +1,14 @@
 package com.familymoney.domains.auth.services;
 
 import com.familymoney.domains.auth.events.EmailVerificationRequestedEvent;
+import com.familymoney.domains.auth.events.PasswordResetRequestedEvent;
 import com.familymoney.domains.auth.exceptions.BlacklistedFamilyException;
 import com.familymoney.domains.auth.exceptions.NewEmailVerificationTooSoonException;
 import com.familymoney.domains.auth.exceptions.RefreshTokenInvalidException;
 import com.familymoney.domains.auth.exceptions.RefreshTokenNotFoundException;
 import com.familymoney.domains.auth.exceptions.RefreshTokenReuseDetectedException;
+import com.familymoney.domains.auth.exceptions.ResetPasswordTokenExpiredException;
+import com.familymoney.domains.auth.exceptions.ResetPasswordTokenNotFoundException;
 import com.familymoney.domains.auth.exceptions.UserAlreadyExistsException;
 import com.familymoney.domains.auth.exceptions.UserNotEnabledException;
 import com.familymoney.domains.auth.exceptions.VerificationTokenExpiredException;
@@ -16,12 +19,15 @@ import com.familymoney.domains.auth.repositories.IRefreshTokenRepository;
 import com.familymoney.domains.auth.repositories.ITokenFamilyBlacklistRepository;
 import com.familymoney.domains.auth.repositories.IUsedRefreshTokenRepository;
 import com.familymoney.domains.auth.repositories.dtos.CreateEmailVerificationDto;
+import com.familymoney.domains.auth.repositories.dtos.CreatePasswordResetDto;
 import com.familymoney.domains.auth.repositories.dtos.CreateRefreshTokenDto;
 import com.familymoney.domains.auth.repositories.dtos.CreateTokenFamilyBlacklistDto;
 import com.familymoney.domains.auth.repositories.dtos.CreateUsedRefreshTokenDto;
 import com.familymoney.domains.auth.repositories.dtos.UpdateEmailVerificationTokenDto;
+import com.familymoney.domains.auth.repositories.dtos.UpdatePasswordResetDto;
 import com.familymoney.domains.auth.repositories.dtos.UpdateRefreshTokenDto;
 import com.familymoney.domains.auth.repositories.entitites.EmailVerificationEntity;
+import com.familymoney.domains.auth.repositories.entitites.PasswordResetEntity;
 import com.familymoney.domains.auth.repositories.entitites.RefreshTokenEntity;
 import com.familymoney.domains.auth.repositories.entitites.UsedRefreshTokenEntity;
 import com.familymoney.domains.auth.services.data.TokenPair;
@@ -44,9 +50,10 @@ import com.familymoney.domains.users.types.UserName;
 import com.familymoney.exceptions.DatabaseExecutionException;
 import com.familymoney.properties.EmailVerificationProperties;
 import com.familymoney.properties.JwtProperties;
+import com.familymoney.properties.ResetPasswordProperties;
 import com.familymoney.security.JwtUtils;
 import com.familymoney.security.UserPasswordEncoder;
-import com.familymoney.testutils.UUIDGenerator;
+import com.familymoney.utils.UUIDGenerator;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Optional;
@@ -79,6 +86,7 @@ public class AuthService implements IAuthService {
   private final Clock clock;
   private final JwtProperties jwtProperties;
   private final EmailVerificationProperties emailVerificationProperties;
+  private final ResetPasswordProperties resetPasswordProperties;
   private final ITokenFamilyBlacklistRepository tokenFamilyBlacklistRepository;
   private final IUsedRefreshTokenRepository usedRefreshTokenRepository;
   private final ApplicationEventPublisher eventPublisher;
@@ -319,14 +327,87 @@ public class AuthService implements IAuthService {
         email, userDb.username(), newEmailVerificationToken);
   }
 
+  /**
+   * Starts a password reset for an enabled account without revealing whether the email exists.
+   *
+   * @param email email address associated with the account
+   * @throws DatabaseExecutionException when the password reset token cannot be persisted
+   */
+  @Transactional
   @Override
   public void forgotPassword(final Email email) {
-    // TODO
+    final Optional<UserEntity> userOptional = userRepository.findByEmail(email);
+    if (userOptional.isEmpty() || !userOptional.get().isEnabled()) {
+      return;
+    }
+
+    final UserEntity user = userOptional.get();
+    final Instant now = Instant.now(clock);
+    final Optional<PasswordResetEntity> existingToken =
+        passwordResetRepository.findByUserId(user.id());
+    final boolean requestIsRateLimited =
+        existingToken
+            .map(token -> now.isBefore(token.lastSentAt().plus(resetPasswordProperties.waitTime())))
+            .orElse(false);
+    if (requestIsRateLimited) {
+      return;
+    }
+
+    final PasswordResetToken resetToken = PasswordResetToken.generate();
+    final ExpirationTime expiresAt =
+        ExpirationTime.of(now.plus(resetPasswordProperties.tokenDuration()));
+    if (existingToken.isEmpty()) {
+      passwordResetRepository
+          .create(new CreatePasswordResetDto(user.id(), resetToken, expiresAt, now))
+          .orElseThrow(
+              () -> new DatabaseExecutionException("Could not create password reset token"));
+    } else if (!passwordResetRepository.updateByUserId(
+        user.id(), new UpdatePasswordResetDto(resetToken, expiresAt, now))) {
+      throw new DatabaseExecutionException("Could not update password reset token");
+    }
+
+    eventPublisher.publishEvent(
+        new PasswordResetRequestedEvent(user.id(), user.email(), user.username(), resetToken));
   }
 
+  /**
+   * Resets an account password using a valid, unexpired password reset token.
+   *
+   * @param token password reset token presented by the user
+   * @param newPassword replacement password
+   * @throws ResetPasswordTokenNotFoundException when the token is invalid or already used
+   * @throws ResetPasswordTokenExpiredException when the token has expired
+   * @throws DatabaseExecutionException when the password or token cannot be persisted
+   */
+  @Transactional
   @Override
   public void resetPassword(final PasswordResetToken token, final Password newPassword) {
-    // TODO
+    final Instant now = Instant.now(clock);
+    final PasswordResetEntity resetToken =
+        passwordResetRepository
+            .findByToken(token)
+            .orElseThrow(
+                () -> new ResetPasswordTokenNotFoundException("Password reset token not found"));
+    if (!resetToken.expiresAt().value().isAfter(now)) {
+      throw new ResetPasswordTokenExpiredException("Password reset token expired");
+    }
+
+    final boolean passwordUpdated =
+        userRepository.updateById(
+            resetToken.userId(),
+            UpdateUserDto.builder()
+                .hashedPassword(passwordEncoder.encode(newPassword.value()))
+                .build());
+    if (!passwordUpdated) {
+      throw new DatabaseExecutionException("Could not update the user password in the database");
+    }
+
+    final boolean tokenDeleted = passwordResetRepository.deleteByUserId(resetToken.userId());
+    if (!tokenDeleted) {
+      throw new DatabaseExecutionException("Could not delete password reset token");
+    }
+
+    refreshTokenRepository.deleteByUserId(resetToken.userId());
   }
 
   @Transactional

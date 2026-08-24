@@ -10,7 +10,7 @@ import com.familymoney.domains.users.services.IUserService;
 import com.familymoney.domains.users.services.data.UserData;
 import com.familymoney.domains.users.types.Role;
 import com.familymoney.domains.users.types.UserId;
-import com.familymoney.testutils.PageResponse;
+import com.familymoney.utils.PageResponse;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

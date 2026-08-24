@@ -1,12 +1,13 @@
 package com.familymoney.domains.auth.repositories;
 
+import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
+
 import com.familymoney.domains.auth.repositories.dtos.CreateUsedRefreshTokenDto;
 import com.familymoney.domains.auth.repositories.entitites.UsedRefreshTokenEntity;
 import com.familymoney.domains.auth.repositories.mappers.UsedRefreshTokenJooqMapper;
 import com.familymoney.domains.auth.types.RefreshToken;
 import com.familymoney.generated.tables.UsedRefreshTokens;
 import com.familymoney.security.IOpaqueTokenHasher;
-import java.time.ZoneOffset;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
@@ -29,7 +30,7 @@ public class UsedRefreshTokenRepository implements IUsedRefreshTokenRepository {
         .values(
             tokenHasher.hash(data.token().value()),
             data.family().value(),
-            data.usedAt().atOffset(ZoneOffset.UTC))
+            data.usedAt().atOffset(DEFAULT_TIMEZONE_OFFSET))
         .onConflictDoNothing()
         .returning(
             UsedRefreshTokens.USED_REFRESH_TOKENS.FAMILY,

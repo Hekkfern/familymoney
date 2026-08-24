@@ -53,6 +53,10 @@ familymoney:
   group-invitation:
     invitation-duration: "1h"
     max-num-invitations: 5
+  reset-password:
+    token-duration: "1h"
+    wait-time: "2m"
+    reset-url: "${RESET_PASSWORD_URL:https://miticketdecomida.com/reset-password}"
   mail:
     sender:
       email: "${MAIL_SENDER_FROM_EMAIL}"

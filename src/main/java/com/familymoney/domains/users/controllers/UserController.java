@@ -7,8 +7,8 @@ import com.familymoney.domains.users.controllers.mappers.UpdateUserRequestMapper
 import com.familymoney.domains.users.exceptions.UserNotFoundException;
 import com.familymoney.domains.users.services.IUserService;
 import com.familymoney.domains.users.services.data.UserData;
-import com.familymoney.testutils.AuthenticationUtils;
-import com.familymoney.testutils.AuthorizedUser;
+import com.familymoney.utils.AuthenticationUtils;
+import com.familymoney.utils.AuthorizedUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RestController;
 

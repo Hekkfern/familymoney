@@ -1,6 +1,7 @@
 package com.familymoney.domains.auth.repositories;
 
 import com.familymoney.domains.auth.repositories.dtos.CreatePasswordResetDto;
+import com.familymoney.domains.auth.repositories.dtos.UpdatePasswordResetDto;
 import com.familymoney.domains.auth.repositories.entitites.PasswordResetEntity;
 import com.familymoney.domains.auth.types.PasswordResetToken;
 import com.familymoney.domains.users.types.UserId;
@@ -9,15 +10,20 @@ import java.util.Optional;
 public interface IPasswordResetRepository {
 
   /**
-   * Creates a new password reset record for a specific user with the provided token and expiration
-   * time.
+   * Creates a password reset record.
    *
-   * @param data values to store
-   * @return an {@link Optional} containing the created PasswordResetDbo if the creation was
-   *     successful, or an empty {@link Optional} if the creation failed (e.g., due to invalid input
-   *     or database constraints)
+   * @param data password reset values to persist
+   * @return the persisted password reset record, or empty when it could not be created
    */
   Optional<PasswordResetEntity> create(CreatePasswordResetDto data);
+
+  /**
+   * Finds a password reset record by its user identifier.
+   *
+   * @param userId user identifier associated with the reset token
+   * @return the password reset record, or empty when none exists
+   */
+  Optional<PasswordResetEntity> findByUserId(UserId userId);
 
   /**
    * Retrieves a password reset record based on the provided password reset token.
@@ -27,6 +33,15 @@ public interface IPasswordResetRepository {
    *     found, or an empty {@link Optional} if no matching record exists for the provided token
    */
   Optional<PasswordResetEntity> findByToken(PasswordResetToken token);
+
+  /**
+   * Replaces the token values associated with a user identifier.
+   *
+   * @param userId user identifier associated with the reset token
+   * @param data replacement password reset values
+   * @return {@code true} when a password reset record was updated
+   */
+  boolean updateByUserId(UserId userId, UpdatePasswordResetDto data);
 
   /**
    * Deletes password reset records associated with the specified user ID. This method is typically

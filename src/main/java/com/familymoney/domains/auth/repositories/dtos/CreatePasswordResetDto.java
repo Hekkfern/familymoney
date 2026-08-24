@@ -3,6 +3,7 @@ package com.familymoney.domains.auth.repositories.dtos;
 import com.familymoney.domains.auth.types.ExpirationTime;
 import com.familymoney.domains.auth.types.PasswordResetToken;
 import com.familymoney.domains.users.types.UserId;
+import java.time.Instant;
 
 /**
  * DTO for creating a new password reset record in the database
@@ -11,6 +12,7 @@ import com.familymoney.domains.users.types.UserId;
  * @param token the token associated with the password reset request
  * @param expiresAt the timestamp indicating when the password reset token expires, after which it
  *     should no longer be valid
+ * @param lastSentAt timestamp when the reset email was last requested
  */
 public record CreatePasswordResetDto(
-    UserId userId, PasswordResetToken token, ExpirationTime expiresAt) {}
+    UserId userId, PasswordResetToken token, ExpirationTime expiresAt, Instant lastSentAt) {}

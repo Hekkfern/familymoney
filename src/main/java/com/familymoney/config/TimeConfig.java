@@ -1,5 +1,7 @@
 package com.familymoney.config;
 
+import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
+
 import java.time.ZoneOffset;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,6 +20,6 @@ public class TimeConfig {
 
   @Bean
   public ZoneOffset zone() {
-    return ZoneOffset.UTC;
+    return DEFAULT_TIMEZONE_OFFSET;
   }
 }

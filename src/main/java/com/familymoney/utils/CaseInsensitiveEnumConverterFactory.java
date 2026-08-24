@@ -1,4 +1,4 @@
-package com.familymoney.testutils;
+package com.familymoney.utils;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterFactory;

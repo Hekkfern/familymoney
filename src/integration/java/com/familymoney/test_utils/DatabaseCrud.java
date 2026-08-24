@@ -1,5 +1,7 @@
 package com.familymoney.test_utils;
 
+import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
+
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.auth.types.PasswordResetToken;
 import com.familymoney.domains.auth.types.RefreshToken;
@@ -23,7 +25,6 @@ import com.familymoney.security.IOpaqueTokenHasher;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.UUID;
 import javax.money.CurrencyUnit;
 import lombok.RequiredArgsConstructor;
@@ -45,7 +46,8 @@ public class DatabaseCrud {
       final Instant createdAt,
       final boolean isEmailVerified,
       final boolean isEnabled) {
-    final OffsetDateTime createdAtDateTime = OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC);
+    final OffsetDateTime createdAtDateTime =
+        OffsetDateTime.ofInstant(createdAt, DEFAULT_TIMEZONE_OFFSET);
     dslContext
         .insertInto(Users.USERS)
         .columns(
@@ -76,9 +78,10 @@ public class DatabaseCrud {
       final Instant createdAt,
       final com.familymoney.domains.auth.types.ExpirationTime expiresAt,
       final TokenFamily family) {
-    final OffsetDateTime createdAtDateTime = OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC);
+    final OffsetDateTime createdAtDateTime =
+        OffsetDateTime.ofInstant(createdAt, DEFAULT_TIMEZONE_OFFSET);
     final OffsetDateTime expiresAtDateTime =
-        OffsetDateTime.ofInstant(expiresAt.value(), ZoneOffset.UTC);
+        OffsetDateTime.ofInstant(expiresAt.value(), DEFAULT_TIMEZONE_OFFSET);
     dslContext
         .insertInto(RefreshTokens.REFRESH_TOKENS)
         .columns(
@@ -105,9 +108,10 @@ public class DatabaseCrud {
       final EmailVerificationToken token,
       final Instant createdAt,
       final com.familymoney.domains.auth.types.ExpirationTime expiresAt) {
-    final OffsetDateTime createdAtDateTime = OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC);
+    final OffsetDateTime createdAtDateTime =
+        OffsetDateTime.ofInstant(createdAt, DEFAULT_TIMEZONE_OFFSET);
     final OffsetDateTime expiresAtDateTime =
-        OffsetDateTime.ofInstant(expiresAt.value(), ZoneOffset.UTC);
+        OffsetDateTime.ofInstant(expiresAt.value(), DEFAULT_TIMEZONE_OFFSET);
     dslContext
         .insertInto(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS)
         .columns(
@@ -132,9 +136,10 @@ public class DatabaseCrud {
       final PasswordResetToken token,
       final Instant createdAt,
       final com.familymoney.domains.auth.types.ExpirationTime expiresAt) {
-    final OffsetDateTime createdAtDateTime = OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC);
+    final OffsetDateTime createdAtDateTime =
+        OffsetDateTime.ofInstant(createdAt, DEFAULT_TIMEZONE_OFFSET);
     final OffsetDateTime expiresAtDateTime =
-        OffsetDateTime.ofInstant(expiresAt.value(), ZoneOffset.UTC);
+        OffsetDateTime.ofInstant(expiresAt.value(), DEFAULT_TIMEZONE_OFFSET);
     dslContext
         .insertInto(PasswordResetTokens.PASSWORD_RESET_TOKENS)
         .columns(
@@ -158,7 +163,8 @@ public class DatabaseCrud {
       final String description,
       final CurrencyUnit currency,
       final Instant createdAt) {
-    final OffsetDateTime createdAtDateTime = OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC);
+    final OffsetDateTime createdAtDateTime =
+        OffsetDateTime.ofInstant(createdAt, DEFAULT_TIMEZONE_OFFSET);
     dslContext
         .insertInto(Groups.GROUPS)
         .columns(
@@ -185,9 +191,10 @@ public class DatabaseCrud {
       final GroupInvitationToken token,
       final Instant createdAt,
       final com.familymoney.domains.transactions.types.ExpirationTime expiresAt) {
-    final OffsetDateTime createdAtDateTime = OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC);
+    final OffsetDateTime createdAtDateTime =
+        OffsetDateTime.ofInstant(createdAt, DEFAULT_TIMEZONE_OFFSET);
     final OffsetDateTime expiresAtDateTime =
-        OffsetDateTime.ofInstant(expiresAt.value(), ZoneOffset.UTC);
+        OffsetDateTime.ofInstant(expiresAt.value(), DEFAULT_TIMEZONE_OFFSET);
     dslContext
         .insertInto(GroupInvitations.GROUP_INVITATIONS)
         .columns(
@@ -237,7 +244,7 @@ public class DatabaseCrud {
         .update(RefreshTokens.REFRESH_TOKENS)
         .set(
             RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,
-            OffsetDateTime.now(ZoneOffset.UTC).minusDays(1))
+            OffsetDateTime.now(DEFAULT_TIMEZONE_OFFSET).minusDays(1))
         .where(RefreshTokens.REFRESH_TOKENS.TOKEN_HASH.eq(TOKEN_HASHER.hash(refreshToken.value())))
         .execute();
   }

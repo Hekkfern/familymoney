@@ -3,7 +3,7 @@ package com.familymoney.domains.admin.controllers;
 import com.familymoney.domains.users.controllers.dtos.GetUserResponseDto;
 import com.familymoney.domains.users.controllers.dtos.GetUserRoleResponseDto;
 import com.familymoney.domains.users.controllers.dtos.UpdateUserRequestDto;
-import com.familymoney.testutils.PageResponse;
+import com.familymoney.utils.PageResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

@@ -1,9 +1,10 @@
 package com.familymoney.domains.transactions.types;
 
+import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
+
 import java.time.Clock;
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.Objects;
 
 /** Value object representing an expiration time. */
@@ -68,6 +69,6 @@ public record ExpirationTime(Instant value) {
    * @return the expiration time as an {@link OffsetDateTime} in UTC
    */
   public OffsetDateTime toOffsetDateTime() {
-    return OffsetDateTime.ofInstant(value, ZoneOffset.UTC);
+    return OffsetDateTime.ofInstant(value, DEFAULT_TIMEZONE_OFFSET);
   }
 }

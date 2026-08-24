@@ -80,6 +80,7 @@ CREATE TABLE password_reset_tokens (
   user_id UUID PRIMARY KEY NOT NULL REFERENCES users (id) ON DELETE CASCADE,
   token_hash VARCHAR(255) UNIQUE NOT NULL CHECK (CHAR_LENGTH(BTRIM(token_hash)) > 0),
   expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  last_sent_at TIMESTAMP WITH TIME ZONE NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
@@ -176,7 +177,7 @@ CREATE TABLE transactions (
   currency_code VARCHAR(3) NOT NULL CHECK (currency_code ~ '^[A-Z]{3}$'),
   from_user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
   to_user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-  done_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  done_at TIMESTAMP WITH TIME ZONE NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   CONSTRAINT chk_transactions_from_to_not_equal CHECK (from_user_id <> to_user_id)

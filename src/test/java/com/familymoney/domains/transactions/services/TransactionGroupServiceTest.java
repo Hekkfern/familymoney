@@ -1,5 +1,6 @@
 package com.familymoney.domains.transactions.services;
 
+import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -44,7 +45,6 @@ import com.familymoney.properties.GroupInvitationProperties;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -76,7 +76,7 @@ class TransactionGroupServiceTest {
   @Mock private ITransactionRepository transactionRepository;
   @Mock private IGroupInvitationRepository groupInvitationRepository;
   @Mock private IUserRepository userRepository;
-  @Spy private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
+  @Spy private final Clock clock = Clock.fixed(NOW, DEFAULT_TIMEZONE_OFFSET);
   @Mock private GroupInvitationProperties groupInvitationProperties;
 
   @InjectMocks private TransactionGroupService transactionGroupService;

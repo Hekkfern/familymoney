@@ -22,7 +22,7 @@ parameters, return values, and fields.
 - Avoid comments.
 - Comments could be applied for: cron expressions, Regex patterns, TODOs or given/when/then separation in tests.
 - Use `@Override` annotation when overriding methods.
-- Avoid Objects.*isNull() and Objects.*nonNull() for one or two variables; prefer direct null checks for better
+- Avoid Objects.*isNull () and Objects.*nonNull () for one or two variables; prefer direct null checks for better
 performance.
 - Wrap multiple conditions in a boolean variable for better readability
 - Prefer early returns.
@@ -31,21 +31,26 @@ performance.
 
 ## Documentation
 
-- Use Javadoc for public classes and methods. The Javadoc block should be positioned on top of any annotations.
+- Use Javadoc for public classes and methods. The Javadoc block should be positioned on top of any annotations. It
+should add @param and @return tags for all parameters and return values, respectively. Use @throws tag for exceptions
+thrown by the method.
 - Use English US dialect with a formal, technical style for comments and documentation.
 - Executing `./gradlew javadoc` must report neither warnings nor errors.
 
 ## Coding
 
-- Every implementation class should have a corresponding interface. Implementation
-class names start with `Default` prefix.
+- Every implementation class should have a corresponding interface. Implementation class names start with `Default`
+prefix.
 - Follow the naming conventions: classes in PascalCase, methods and variables in camelCase
 - Ensure proper error handling and logging throughout the codebase
 - Write unit tests for all public methods and ensure high code coverage
-- Code is split by domain in src/main/java/com/familymoney/domains, with clear separation of concerns between layers (
-e.g., controllers, services, repositories)
-- Prefer constructor injection over `@Autowired` for dependency injection. Use Lombok's `@RequiredArgsConstructor` for classes with final fields.
+- Code is split by domain in src/main/java/com/familymoney/domains, with clear separation of concerns between layers
+(e.g., controllers, services, repositories)
+- Prefer constructor injection over `@Autowired` for dependency injection. Use Lombok's `@RequiredArgsConstructor` for
+classes with final fields.
 - Add Lombok's `@Slf4j` annotation to classes that require logging. Use `log` variable for logging.
+- Repository methods should be simple and focused. Avoid complex queries in repository methods; use service layer for
+business logic.
 
 ## Testing
 

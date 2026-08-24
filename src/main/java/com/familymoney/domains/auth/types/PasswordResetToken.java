@@ -1,6 +1,6 @@
 package com.familymoney.domains.auth.types;
 
-import com.familymoney.testutils.RandomUtil;
+import com.familymoney.utils.RandomUtil;
 
 public record PasswordResetToken(String value) {
 

@@ -1,5 +1,6 @@
 package com.familymoney.domains.auth.services;
 
+import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -15,11 +16,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.familymoney.domains.auth.events.EmailVerificationRequestedEvent;
+import com.familymoney.domains.auth.events.PasswordResetRequestedEvent;
 import com.familymoney.domains.auth.exceptions.BlacklistedFamilyException;
 import com.familymoney.domains.auth.exceptions.NewEmailVerificationTooSoonException;
 import com.familymoney.domains.auth.exceptions.RefreshTokenInvalidException;
 import com.familymoney.domains.auth.exceptions.RefreshTokenNotFoundException;
 import com.familymoney.domains.auth.exceptions.RefreshTokenReuseDetectedException;
+import com.familymoney.domains.auth.exceptions.ResetPasswordTokenExpiredException;
+import com.familymoney.domains.auth.exceptions.ResetPasswordTokenNotFoundException;
 import com.familymoney.domains.auth.exceptions.UserAlreadyExistsException;
 import com.familymoney.domains.auth.exceptions.UserNotEnabledException;
 import com.familymoney.domains.auth.exceptions.VerificationTokenExpiredException;
@@ -30,12 +34,15 @@ import com.familymoney.domains.auth.repositories.IRefreshTokenRepository;
 import com.familymoney.domains.auth.repositories.ITokenFamilyBlacklistRepository;
 import com.familymoney.domains.auth.repositories.IUsedRefreshTokenRepository;
 import com.familymoney.domains.auth.repositories.dtos.CreateEmailVerificationDto;
+import com.familymoney.domains.auth.repositories.dtos.CreatePasswordResetDto;
 import com.familymoney.domains.auth.repositories.dtos.CreateRefreshTokenDto;
 import com.familymoney.domains.auth.repositories.dtos.CreateTokenFamilyBlacklistDto;
 import com.familymoney.domains.auth.repositories.dtos.CreateUsedRefreshTokenDto;
 import com.familymoney.domains.auth.repositories.dtos.UpdateEmailVerificationTokenDto;
+import com.familymoney.domains.auth.repositories.dtos.UpdatePasswordResetDto;
 import com.familymoney.domains.auth.repositories.dtos.UpdateRefreshTokenDto;
 import com.familymoney.domains.auth.repositories.entitites.EmailVerificationEntity;
+import com.familymoney.domains.auth.repositories.entitites.PasswordResetEntity;
 import com.familymoney.domains.auth.repositories.entitites.RefreshTokenEntity;
 import com.familymoney.domains.auth.repositories.entitites.TokenFamilyBlacklistEntity;
 import com.familymoney.domains.auth.repositories.entitites.UsedRefreshTokenEntity;
@@ -43,6 +50,7 @@ import com.familymoney.domains.auth.services.data.TokenPair;
 import com.familymoney.domains.auth.types.AccessToken;
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.auth.types.ExpirationTime;
+import com.familymoney.domains.auth.types.PasswordResetToken;
 import com.familymoney.domains.auth.types.RefreshToken;
 import com.familymoney.domains.auth.types.TokenFamily;
 import com.familymoney.domains.users.repositories.IRoleRepository;
@@ -58,6 +66,7 @@ import com.familymoney.domains.users.types.UserName;
 import com.familymoney.exceptions.DatabaseExecutionException;
 import com.familymoney.properties.EmailVerificationProperties;
 import com.familymoney.properties.JwtProperties;
+import com.familymoney.properties.ResetPasswordProperties;
 import com.familymoney.security.JwtUtils;
 import com.familymoney.security.UserPasswordEncoder;
 import com.familymoney.testutils.FakeGenerator;
@@ -65,7 +74,6 @@ import java.sql.SQLException;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Nested;
@@ -92,11 +100,18 @@ class AuthServiceTest {
   @Mock private IRoleRepository permissionsRepository;
   @Mock private IEmailSenderService emailSenderService;
   @Spy private UserPasswordEncoder passwordEncoder;
-  @Spy private final Clock clock = Clock.fixed(now, ZoneOffset.UTC);
+  @Spy private final Clock clock = Clock.fixed(now, DEFAULT_TIMEZONE_OFFSET);
 
   @Spy
   private EmailVerificationProperties emailVerificationProperties =
       new EmailVerificationProperties(Duration.ofHours(1), Duration.ofMinutes(5));
+
+  @Spy
+  private ResetPasswordProperties resetPasswordProperties =
+      new ResetPasswordProperties(
+          Duration.ofHours(1),
+          Duration.ofMinutes(5),
+          java.net.URI.create("https://example.com/reset-password"));
 
   @Spy
   private JwtProperties jwtProperties =
@@ -851,12 +866,181 @@ class AuthServiceTest {
 
   @Nested
   class ForgotPassword {
-    // TODO
+
+    @Test
+    void does_nothing_when_no_user_with_that_email_exists() {
+      final Email email = Email.fromString(FakeGenerator.email());
+      when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+
+      assertThatCode(() -> authService.forgotPassword(email)).doesNotThrowAnyException();
+
+      verify(passwordResetRepository, never()).findByUserId(any(UserId.class));
+      verify(passwordResetRepository, never()).create(any(CreatePasswordResetDto.class));
+      verify(eventPublisher, never()).publishEvent(any(PasswordResetRequestedEvent.class));
+    }
+
+    @Test
+    void does_nothing_when_user_is_disabled() {
+      final Email email = Email.fromString(FakeGenerator.email());
+      mockUserRepositoryFindByEmail(false, true);
+
+      assertThatCode(() -> authService.forgotPassword(email)).doesNotThrowAnyException();
+
+      verify(passwordResetRepository, never()).findByUserId(any(UserId.class));
+      verify(passwordResetRepository, never()).create(any(CreatePasswordResetDto.class));
+      verify(eventPublisher, never()).publishEvent(any(PasswordResetRequestedEvent.class));
+    }
+
+    @Test
+    void issues_a_time_bound_token_and_requests_email_delivery() {
+      final Email email = Email.fromString(FakeGenerator.email());
+      final UserId userId = UserId.generate();
+      final UserName username = UserName.fromString(FakeGenerator.username());
+      when(userRepository.findByEmail(email))
+          .thenReturn(
+              Optional.of(
+                  new UserEntity(
+                      userId, username, email, "hashed-password", now, now, true, true)));
+      when(passwordResetRepository.findByUserId(userId)).thenReturn(Optional.empty());
+      when(passwordResetRepository.create(any(CreatePasswordResetDto.class)))
+          .thenAnswer(
+              invocation -> {
+                final CreatePasswordResetDto data = invocation.getArgument(0);
+                return Optional.of(
+                    new PasswordResetEntity(
+                        data.userId(), now, now, data.expiresAt(), data.lastSentAt()));
+              });
+
+      authService.forgotPassword(email);
+
+      final ArgumentCaptor<CreatePasswordResetDto> resetDtoCaptor =
+          ArgumentCaptor.forClass(CreatePasswordResetDto.class);
+      final ArgumentCaptor<PasswordResetRequestedEvent> eventCaptor =
+          ArgumentCaptor.forClass(PasswordResetRequestedEvent.class);
+      verify(passwordResetRepository).create(resetDtoCaptor.capture());
+      verify(eventPublisher).publishEvent(eventCaptor.capture());
+
+      final CreatePasswordResetDto resetDto = resetDtoCaptor.getValue();
+      final PasswordResetRequestedEvent event = eventCaptor.getValue();
+      assertThat(resetDto.userId()).isEqualTo(userId);
+      assertThat(resetDto.lastSentAt()).isEqualTo(now);
+      assertThat(resetDto.expiresAt().value()).isEqualTo(now.plus(Duration.ofHours(1)));
+      assertThat(event.userId()).isEqualTo(userId);
+      assertThat(event.email()).isEqualTo(email);
+      assertThat(event.username()).isEqualTo(username);
+      assertThat(event.resetToken()).isEqualTo(resetDto.token());
+    }
+
+    @Test
+    void does_nothing_when_the_request_is_rate_limited() {
+      final Email email = Email.fromString(FakeGenerator.email());
+      final UserId userId = UserId.generate();
+      when(userRepository.findByEmail(email))
+          .thenReturn(
+              Optional.of(
+                  new UserEntity(
+                      userId,
+                      UserName.fromString(FakeGenerator.username()),
+                      email,
+                      "hashed-password",
+                      now,
+                      now,
+                      true,
+                      true)));
+      when(passwordResetRepository.findByUserId(userId))
+          .thenReturn(
+              Optional.of(
+                  new PasswordResetEntity(
+                      userId, now, now, ExpirationTime.of(now.plus(Duration.ofHours(1))), now)));
+
+      assertThatCode(() -> authService.forgotPassword(email)).doesNotThrowAnyException();
+
+      verify(passwordResetRepository, never()).create(any(CreatePasswordResetDto.class));
+      verify(passwordResetRepository, never())
+          .updateByUserId(any(UserId.class), any(UpdatePasswordResetDto.class));
+      verify(eventPublisher, never()).publishEvent(any(PasswordResetRequestedEvent.class));
+    }
   }
 
   @Nested
   class ResetPassword {
-    // TODO
+
+    @Test
+    void updates_the_password_consumes_the_token_and_revokes_sessions() {
+      final PasswordResetToken token = PasswordResetToken.generate();
+      final Password newPassword = Password.fromString(FakeGenerator.password());
+      final UserId userId = UserId.generate();
+      when(passwordResetRepository.findByToken(token))
+          .thenReturn(
+              Optional.of(
+                  new PasswordResetEntity(
+                      userId, now, now, ExpirationTime.of(now.plus(Duration.ofHours(1))), now)));
+      when(userRepository.updateById(any(UserId.class), any(UpdateUserDto.class))).thenReturn(true);
+      when(passwordResetRepository.deleteByUserId(userId)).thenReturn(true);
+
+      authService.resetPassword(token, newPassword);
+
+      final ArgumentCaptor<UpdateUserDto> updateCaptor =
+          ArgumentCaptor.forClass(UpdateUserDto.class);
+      verify(userRepository).updateById(eq(userId), updateCaptor.capture());
+      verify(passwordResetRepository).deleteByUserId(userId);
+      verify(refreshTokenRepository).deleteByUserId(userId);
+      assertThat(
+              passwordEncoder.verify(newPassword.value(), updateCaptor.getValue().hashedPassword()))
+          .isTrue();
+    }
+
+    @Test
+    void rejects_an_invalid_or_used_token() {
+      final PasswordResetToken token = PasswordResetToken.generate();
+      when(passwordResetRepository.findByToken(token)).thenReturn(Optional.empty());
+
+      assertThrows(
+          ResetPasswordTokenNotFoundException.class,
+          () -> authService.resetPassword(token, Password.fromString(FakeGenerator.password())));
+
+      verify(userRepository, never()).updateById(any(UserId.class), any(UpdateUserDto.class));
+      verify(refreshTokenRepository, never()).deleteByUserId(any(UserId.class));
+    }
+
+    @Test
+    void rejects_an_expired_token() {
+      final PasswordResetToken token = PasswordResetToken.generate();
+      when(passwordResetRepository.findByToken(token))
+          .thenReturn(
+              Optional.of(
+                  new PasswordResetEntity(
+                      UserId.generate(), now, now, ExpirationTime.of(now.minusSeconds(1)), now)));
+
+      assertThrows(
+          ResetPasswordTokenExpiredException.class,
+          () -> authService.resetPassword(token, Password.fromString(FakeGenerator.password())));
+
+      verify(userRepository, never()).updateById(any(UserId.class), any(UpdateUserDto.class));
+      verify(refreshTokenRepository, never()).deleteByUserId(any(UserId.class));
+    }
+
+    @Test
+    void fails_without_revoking_sessions_when_updating_the_password_fails() {
+      final PasswordResetToken token = PasswordResetToken.generate();
+      when(passwordResetRepository.findByToken(token))
+          .thenReturn(
+              Optional.of(
+                  new PasswordResetEntity(
+                      UserId.generate(),
+                      now,
+                      now,
+                      ExpirationTime.of(now.plus(Duration.ofHours(1))),
+                      now)));
+      when(userRepository.updateById(any(UserId.class), any(UpdateUserDto.class)))
+          .thenReturn(false);
+
+      assertThrows(
+          DatabaseExecutionException.class,
+          () -> authService.resetPassword(token, Password.fromString(FakeGenerator.password())));
+
+      verify(refreshTokenRepository, never()).deleteByUserId(any(UserId.class));
+    }
   }
 
   @Nested

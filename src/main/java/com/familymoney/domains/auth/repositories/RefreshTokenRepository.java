@@ -109,4 +109,11 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
             .execute();
     return rows > 0;
   }
+
+  @Override
+  public void deleteByUserId(final UserId userId) {
+    db.deleteFrom(RefreshTokens.REFRESH_TOKENS)
+        .where(RefreshTokens.REFRESH_TOKENS.USER_ID.eq(userId.value()))
+        .execute();
+  }
 }
