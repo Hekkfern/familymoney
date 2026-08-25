@@ -35,11 +35,11 @@ public final class FakeGenerator {
   }
 
   public static String refreshToken() {
-    return RefreshToken.generate().toString();
+    return RefreshToken.generate().value();
   }
 
   public static String emailVerificationToken() {
-    return EmailVerificationToken.generate().toString();
+    return EmailVerificationToken.generate().value();
   }
 
   public static String groupName() {

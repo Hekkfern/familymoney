@@ -10,6 +10,7 @@ public class AuthControllerUriFactory {
   private static final String VERIFY_EMAIL_PATH = BASE_PATH + "/verify-email";
   private static final String RESEND_VERIFICATION_EMAIL_PATH = VERIFY_EMAIL_PATH + "/resend";
   private static final String RESET_PASSWORD_PATH = BASE_PATH + "/reset-password";
+  private static final String FORGOT_PASSWORD_PATH = BASE_PATH + "/forgot-password";
   private static final String REFRESH_PATH = BASE_PATH + "/refresh";
   private static final String LOGOUT_PATH = BASE_PATH + "/logout";
 
@@ -35,6 +36,10 @@ public class AuthControllerUriFactory {
 
   public static String getResetPasswordPath() {
     return RESET_PASSWORD_PATH;
+  }
+
+  public static String getForgotPasswordPath() {
+    return FORGOT_PASSWORD_PATH;
   }
 
   public static String getRefreshPath() {

@@ -256,4 +256,39 @@ public class DatabaseCrud {
         .where(Users.USERS.ID.eq(userId.value()))
         .execute();
   }
+
+  public void setEmailVerificationTokenLastSentAt(
+      final EmailVerificationToken token, final OffsetDateTime lastSentAt) {
+    dslContext
+        .update(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS)
+        .set(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.LAST_SENT_AT, lastSentAt)
+        .where(
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN_HASH.eq(
+                TOKEN_HASHER.hash(token.value())))
+        .execute();
+  }
+
+  public void expireEmailVerificationToken(final EmailVerificationToken token) {
+    dslContext
+        .update(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS)
+        .set(
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.EXPIRES_AT,
+            OffsetDateTime.now().minusMinutes(1))
+        .where(
+            EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.TOKEN_HASH.eq(
+                TOKEN_HASHER.hash(token.value())))
+        .execute();
+  }
+
+  public void expirePasswordResetToken(final PasswordResetToken token) {
+    dslContext
+        .update(PasswordResetTokens.PASSWORD_RESET_TOKENS)
+        .set(
+            PasswordResetTokens.PASSWORD_RESET_TOKENS.EXPIRES_AT,
+            OffsetDateTime.now().minusMinutes(1))
+        .where(
+            PasswordResetTokens.PASSWORD_RESET_TOKENS.TOKEN_HASH.eq(
+                TOKEN_HASHER.hash(token.value())))
+        .execute();
+  }
 }
