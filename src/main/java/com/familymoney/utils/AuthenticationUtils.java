@@ -21,7 +21,7 @@ public class AuthenticationUtils {
    *
    * @return ID of the currently authenticated user, and their role
    */
-  public static AuthorizedUser getUserIdFromSecurityContext()
+  public static AuthorizedUser getAuthorizedUserFromSecurityContext()
       throws AuthenticationCredentialsNotFoundException {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     if (authentication == null) {

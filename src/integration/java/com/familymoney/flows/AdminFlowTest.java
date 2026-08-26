@@ -42,12 +42,12 @@ class AdminFlowTest {
   }
 
   @Test
-  void AdminFlow_Normal_User_Tries_To_Access_Admin_Endpoints_Should_Fail() {
+  void normal_user_accessing_admin_endpoints_returns_unauthorized() {
     // Register and login a non-admin user
     final String username = FakeGenerator.username();
     final String email = FakeGenerator.email();
     final String password = FakeGenerator.password();
-    final String accessToken = flowUtils.registerAndLoginUser(username, email, password);
+    final FlowUtils.TokenPair tokenPair = flowUtils.registerAndLoginUser(username, email, password);
     // Get data from another user
     // TODO
   }

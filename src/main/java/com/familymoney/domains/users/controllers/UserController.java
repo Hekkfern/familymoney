@@ -21,7 +21,7 @@ public class UserController implements IUserController {
   @Override
   public GetMyUserResponseDto getMyUserInfo() {
     // Get user ID from security context (validated)
-    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     // Fetch user data
     final UserData userData =
         userService
@@ -35,7 +35,7 @@ public class UserController implements IUserController {
   @Override
   public void deleteMyUser() {
     // Get user ID from security context (validated)
-    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     // Delete user
     userService.deleteUser(user.id());
   }
@@ -43,7 +43,7 @@ public class UserController implements IUserController {
   @Override
   public void updateMyUserInfo(final UpdateUserRequestDto request) {
     // Get user ID from security context (validated)
-    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     // Update user
     userService.updateUserInfo(user.id(), UpdateUserRequestMapper.fromDto(request));
   }

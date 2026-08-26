@@ -28,7 +28,7 @@ public class TransactionController implements ITransactionController {
   @Override
   public GetTransactionsResponseDto getGroupTransactions(UUID groupId, Pageable pageable) {
     // Get user ID from security context (validated)
-    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     // Get balances
     final Page<TransactionData> transactionPages =
         transactionGroupService.getGroupTransactions(
@@ -40,7 +40,7 @@ public class TransactionController implements ITransactionController {
   @Override
   public void createTransaction(UUID groupId, CreateTransactionRequestDto request) {
     // Get user ID from security context (validated)
-    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     // Create transaction
     transactionGroupService.createTransactionInGroup(
         GroupId.fromUuid(groupId),
@@ -55,7 +55,7 @@ public class TransactionController implements ITransactionController {
   @Override
   public void updateTransaction(UUID transactionId, UpdateTransactionRequestDto request) {
     // Get user ID from security context (validated)
-    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     // Update transaction
     transactionGroupService.updateTransaction(
         user.id(),
@@ -66,7 +66,7 @@ public class TransactionController implements ITransactionController {
   @Override
   public void deleteTransaction(UUID transactionId) {
     // Get user ID from security context (validated)
-    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     // Delete transaction
     transactionGroupService.deleteTransaction(user.id(), TransactionId.fromUuid(transactionId));
   }

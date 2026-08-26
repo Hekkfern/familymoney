@@ -81,13 +81,13 @@ public class FlowUtils {
    * @param username Name of the account
    * @param email Email address of the user account
    * @param password Password of the user account
-   * @return Access Token for the logged-in user.
+   * @return Access and Refresh Tokens for the logged-in user.
    */
-  public String registerAndLoginUser(
+  public TokenPair registerAndLoginUser(
       final String username, final String email, final String password) {
     registerAndVerifyNewUser(username, email, password);
     final FlowUtils.TokenPair loginResponse = loginUser(email, password);
-    return loginResponse.accessToken();
+    return new TokenPair(loginResponse.accessToken(), loginResponse.refreshToken());
   }
 
   public TokenPair refreshTokens(final String refreshToken) {

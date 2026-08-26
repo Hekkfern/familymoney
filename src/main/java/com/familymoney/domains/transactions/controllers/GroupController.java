@@ -44,7 +44,7 @@ public class GroupController implements IGroupController {
   @Override
   public CreateGroupResponseDto createGroup(final CreateGroupRequestDto request) {
     // Get user ID from security context (validated)
-    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     // Create group
     final GroupId groupId =
         transactionGroupService.createGroup(
@@ -59,7 +59,7 @@ public class GroupController implements IGroupController {
   @Override
   public GetGroupsResponseDto getGroupsOfUser(final Pageable pageable) {
     // Get user ID from security context (validated)
-    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     // Get groups of user
     final Page<GroupData> groupPages = transactionGroupService.getGroupsByUser(user.id(), pageable);
     // Generate response
@@ -71,7 +71,7 @@ public class GroupController implements IGroupController {
   @Override
   public void deleteGroup(UUID groupId) {
     // Get user ID from security context (validated)
-    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     // Delete group
     transactionGroupService.deleteGroup(GroupId.fromUuid(groupId), user.id());
   }
@@ -79,7 +79,7 @@ public class GroupController implements IGroupController {
   @Override
   public GetGroupResponseDto getGroupInfo(UUID groupId) {
     // Get user ID from security context (validated)
-    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     // Get group info
     final GroupData groupData =
         transactionGroupService.getGroupInfo(GroupId.fromUuid(groupId), user.id());
@@ -90,7 +90,7 @@ public class GroupController implements IGroupController {
   @Override
   public void updateGroupInfo(UUID groupId, UpdateGroupRequestDto request) {
     // Get user ID from security context (validated)
-    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     // Update group info
     transactionGroupService.updateGroupInfo(
         GroupId.fromUuid(groupId), user.id(), UpdateGroupRequestMapper.fromDto(request));
@@ -99,7 +99,7 @@ public class GroupController implements IGroupController {
   @Override
   public GetInvitationTokenResponseDto getInvitationToken(UUID groupId) {
     // Get user ID from security context (validated)
-    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     // Get invitation token
     final GroupInvitationToken token =
         transactionGroupService.getInvitationToken(GroupId.fromUuid(groupId), user.id());
@@ -110,7 +110,7 @@ public class GroupController implements IGroupController {
   @Override
   public void enterToGroup(EnterGroupRequestDto request) {
     // Get user ID from security context (validated)
-    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     // Enter to group
     transactionGroupService.enterToGroupWithToken(
         GroupInvitationToken.fromString(request.token()), user.id());
@@ -119,7 +119,7 @@ public class GroupController implements IGroupController {
   @Override
   public GetUsersInGroupResponseDto getUsersInGroup(UUID groupId) {
     // Get user ID from security context (validated)
-    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     // Get users in group
     final List<UserId> users =
         transactionGroupService.getUsersInGroup(GroupId.fromUuid(groupId), user.id());
@@ -130,7 +130,7 @@ public class GroupController implements IGroupController {
   @Override
   public void removeUserInGroup(UUID groupId, RemoveUserRequestDto request) {
     // Get user ID from security context (validated)
-    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     // Remove user from group
     transactionGroupService.removeUserFromGroup(
         GroupId.fromUuid(groupId), user.id(), UserId.fromUuid(request.userId()));
@@ -139,7 +139,7 @@ public class GroupController implements IGroupController {
   @Override
   public GetGroupBalancesResponseDto getGroupBalances(UUID groupId) {
     // Get user ID from security context (validated)
-    final AuthorizedUser user = AuthenticationUtils.getUserIdFromSecurityContext();
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     // Get balances
     final Map<UserId, Money> balances =
         transactionGroupService.getAllGroupBalances(GroupId.fromUuid(groupId), user.id());
