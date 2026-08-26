@@ -16,6 +16,7 @@ import javax.crypto.SecretKey;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.Strings;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -23,7 +24,6 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class JwtUtils {
 
-  private static final String AUTHORIZATION_HEADER = "Authorization";
   private static final String BEARER_PREFIX = "Bearer ";
 
   private final AppProperties appProperties;
@@ -110,7 +110,7 @@ public class JwtUtils {
   }
 
   public Optional<AccessToken> extractTokenFromHeader(final HttpServletRequest request) {
-    final String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
+    final String bearerToken = request.getHeader(HttpHeaders.AUTHORIZATION);
     if (bearerToken != null && bearerToken.startsWith(BEARER_PREFIX)) {
       final String rawToken = Strings.CI.removeStart(bearerToken, BEARER_PREFIX);
       try {

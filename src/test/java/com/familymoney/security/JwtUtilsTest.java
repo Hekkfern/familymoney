@@ -23,6 +23,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpHeaders;
 
 @ExtendWith(MockitoExtension.class)
 class JwtUtilsTest {
@@ -91,7 +92,7 @@ class JwtUtilsTest {
     @Test
     void extractTokenFromHeader_without_authorization_header_returns_empty() {
       final HttpServletRequest request = mock(HttpServletRequest.class);
-      when(request.getHeader("Authorization")).thenReturn(null);
+      when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn(null);
 
       final Optional<AccessToken> tokenOpt = jwtUtils.extractTokenFromHeader(request);
       assertThat(tokenOpt).isEmpty();
@@ -100,7 +101,7 @@ class JwtUtilsTest {
     @Test
     void extractTokenFromHeader_without_bearer_authorization_header_returns_empty() {
       final HttpServletRequest request = mock(HttpServletRequest.class);
-      when(request.getHeader("Authorization")).thenReturn("Basic aaaaaaaa");
+      when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Basic aaaaaaaa");
 
       final Optional<AccessToken> tokenOpt = jwtUtils.extractTokenFromHeader(request);
       assertThat(tokenOpt).isEmpty();
@@ -110,7 +111,7 @@ class JwtUtilsTest {
     void extractTokenFromHeader_with_bearer_authorization_header_returns_token() {
       final String token = FakeGenerator.accessToken();
       final HttpServletRequest request = mock(HttpServletRequest.class);
-      when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
+      when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
 
       final Optional<AccessToken> tokenOpt = jwtUtils.extractTokenFromHeader(request);
       assertThat(tokenOpt).isNotEmpty().contains(AccessToken.fromString(token));
