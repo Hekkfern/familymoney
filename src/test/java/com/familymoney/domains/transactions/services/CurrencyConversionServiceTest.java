@@ -15,7 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class CurrencyConversionServiceTest {
 
-  @InjectMocks private CurrencyConversionService currencyConversionService;
+  @InjectMocks private DefaultCurrencyConversionService currencyConversionService;
 
   @Test
   void convert_same_currency_returns_same_amount() {

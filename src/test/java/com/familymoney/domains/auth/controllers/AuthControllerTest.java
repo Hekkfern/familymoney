@@ -21,12 +21,12 @@ import com.familymoney.domains.auth.exceptions.UserAlreadyExistsException;
 import com.familymoney.domains.auth.exceptions.UserNotEnabledException;
 import com.familymoney.domains.auth.exceptions.VerificationTokenExpiredException;
 import com.familymoney.domains.auth.exceptions.VerificationTokenNotFoundException;
-import com.familymoney.domains.auth.services.IAuthService;
+import com.familymoney.domains.auth.services.AuthService;
 import com.familymoney.domains.auth.services.data.TokenPair;
 import com.familymoney.domains.auth.types.AccessToken;
 import com.familymoney.domains.auth.types.PasswordResetToken;
 import com.familymoney.domains.auth.types.RefreshToken;
-import com.familymoney.domains.users.services.IUserService;
+import com.familymoney.domains.users.services.UserService;
 import com.familymoney.security.JwtUtils;
 import com.familymoney.testutils.AuthControllerUriFactory;
 import com.familymoney.testutils.FakeGenerator;
@@ -49,7 +49,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
-@WebMvcTest(controllers = AuthController.class)
+@WebMvcTest(controllers = DefaultAuthController.class)
 @Import({JwtUtils.class, LoginResponseMapper.class, RefreshResponseMapper.class})
 @AutoConfigureRestTestClient
 class AuthControllerTest {
@@ -60,11 +60,11 @@ class AuthControllerTest {
 
   @Autowired private RestTestClient client;
 
-  @MockitoBean private IAuthService authService;
+  @MockitoBean private AuthService authService;
   @MockitoBean private io.jsonwebtoken.Clock jwtClock;
   @MockitoBean private java.time.Clock clock;
   @MockitoBean private JwtUtils jwtUtils;
-  @MockitoBean private IUserService userService;
+  @MockitoBean private UserService userService;
 
   // endregion
 

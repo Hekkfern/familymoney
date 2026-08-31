@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
-import com.familymoney.domains.users.repositories.IRoleRepository;
-import com.familymoney.domains.users.repositories.IUserRepository;
+import com.familymoney.domains.users.repositories.RoleRepository;
+import com.familymoney.domains.users.repositories.UserRepository;
 import com.familymoney.domains.users.repositories.entitites.UserEntity;
 import com.familymoney.domains.users.services.data.UserData;
 import com.familymoney.domains.users.types.Email;
@@ -29,11 +29,11 @@ class UserServiceTest {
 
   private final Instant now = Instant.parse("2025-01-01T00:00:00Z");
 
-  @Mock private IUserRepository userRepository;
-  @Mock private IRoleRepository roleRepository;
+  @Mock private UserRepository userRepository;
+  @Mock private RoleRepository roleRepository;
   @Spy private UserPasswordEncoder passwordEncoder;
 
-  @InjectMocks private UserService userService;
+  @InjectMocks private DefaultUserService userService;
 
   // region getUserData() tests
 

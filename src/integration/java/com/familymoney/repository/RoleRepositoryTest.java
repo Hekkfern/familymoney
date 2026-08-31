@@ -4,6 +4,7 @@ import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.familymoney.domains.users.repositories.DefaultRoleRepository;
 import com.familymoney.domains.users.repositories.RoleRepository;
 import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.Role;
@@ -40,7 +41,7 @@ class RoleRepositoryTest {
 
   @BeforeEach
   void setUp() {
-    this.roleRepository = new RoleRepository(dslContext);
+    this.roleRepository = new DefaultRoleRepository(dslContext);
     this.databaseCrud = new DatabaseCrud(dslContext);
   }
 

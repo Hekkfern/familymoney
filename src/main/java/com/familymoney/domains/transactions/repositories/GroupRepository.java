@@ -4,177 +4,113 @@ import com.familymoney.domains.transactions.repositories.dtos.CreateGroupDto;
 import com.familymoney.domains.transactions.repositories.dtos.UpdateGroupDto;
 import com.familymoney.domains.transactions.repositories.entitites.GroupEntity;
 import com.familymoney.domains.transactions.repositories.entitites.UserGroupEntity;
-import com.familymoney.domains.transactions.repositories.mappers.GroupJooqMapper;
-import com.familymoney.domains.transactions.repositories.mappers.UserGroupJooqMapper;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.users.types.UserId;
-import com.familymoney.generated.tables.Groups;
-import com.familymoney.generated.tables.UserGroups;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import lombok.RequiredArgsConstructor;
-import org.jooq.DSLContext;
-import org.jooq.impl.DSL;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Repository;
 
-@Repository
-@RequiredArgsConstructor
-public class GroupRepository implements IGroupRepository {
+/**
+ * Repository contract for persistence operations related to transaction groups.
+ *
+ * <p>Implementations are responsible for creating, updating, deleting, and querying groups, as well
+ * as managing group membership and paged lookups for a user's groups.
+ *
+ * <p>Methods return domain entities, primitive success flags, or {@link Optional} values when a
+ * result may be absent.
+ */
+public interface GroupRepository {
 
-  private final DSLContext db;
+  /**
+   * Creates a new transaction group.
+   *
+   * @param data values to persist for the new group
+   * @return an {@link Optional} containing the created {@link GroupEntity} when creation succeeds;
+   *     otherwise an empty {@link Optional}
+   */
+  Optional<GroupEntity> create(CreateGroupDto data);
 
-  @Override
-  public Optional<GroupEntity> create(final CreateGroupDto data) {
-    return db.insertInto(Groups.GROUPS)
-        .columns(
-            Groups.GROUPS.ID,
-            Groups.GROUPS.NAME,
-            Groups.GROUPS.DESCRIPTION,
-            Groups.GROUPS.CURRENCY_CODE)
-        .values(
-            data.id().value(),
-            data.name().value(),
-            data.description().value(),
-            data.currency().getCurrencyCode())
-        .returning(
-            Groups.GROUPS.ID,
-            Groups.GROUPS.NAME,
-            Groups.GROUPS.DESCRIPTION,
-            Groups.GROUPS.CURRENCY_CODE,
-            Groups.GROUPS.CREATED_AT,
-            Groups.GROUPS.UPDATED_AT)
-        .fetchOptional()
-        .map(GroupJooqMapper::toEntity);
-  }
+  /**
+   * Updates a group identified by its ID.
+   *
+   * <p>Only non-null fields in {@code data} should be applied.
+   *
+   * @param id the group identifier
+   * @param data the fields to update
+   * @return {@code true} if the group existed and was updated; {@code false} otherwise
+   */
+  boolean updateById(GroupId id, UpdateGroupDto data);
 
-  @Override
-  public boolean updateById(final GroupId id, final UpdateGroupDto data) {
-    final int rowsAffected =
-        db.update(Groups.GROUPS)
-            .set(
-                Groups.GROUPS.NAME,
-                DSL.coalesce(
-                    DSL.val(data.name() != null ? data.name().value() : null), Groups.GROUPS.NAME))
-            .set(
-                Groups.GROUPS.DESCRIPTION,
-                DSL.coalesce(
-                    DSL.val(data.description() != null ? data.description().value() : null),
-                    Groups.GROUPS.DESCRIPTION))
-            .where(Groups.GROUPS.ID.eq(id.value()))
-            .execute();
-    return rowsAffected > 0;
-  }
+  /**
+   * Deletes a group by its ID.
+   *
+   * @param id the group identifier
+   * @return {@code true} if the group was deleted; {@code false} if it did not exist or the
+   *     deletion failed
+   */
+  boolean deleteById(GroupId id);
 
-  @Override
-  public boolean deleteById(final GroupId id) {
-    final int rowsAffected =
-        db.deleteFrom(Groups.GROUPS).where(Groups.GROUPS.ID.eq(id.value())).execute();
-    return rowsAffected > 0;
-  }
+  /**
+   * Finds the groups that a given user belongs to as a paged result.
+   *
+   * @param userId the user identifier
+   * @param pageable paging information such as page number, size, and sort
+   * @return a page of {@link GroupEntity} objects representing the user's groups; empty if the user
+   *     has no groups
+   */
+  Page<GroupEntity> findByUserId(UserId userId, Pageable pageable);
 
-  @Override
-  public Page<GroupEntity> findByUserId(final UserId userId, final Pageable pageable) {
-    final Long total =
-        db.selectCount()
-            .from(UserGroups.USER_GROUPS)
-            .where(UserGroups.USER_GROUPS.USER_ID.eq(userId.value()))
-            .fetchOne(0, Long.class);
-    final long safeTotal = total != null ? total : 0L;
+  /**
+   * Finds a group by its identifier.
+   *
+   * @param id the group identifier
+   * @return an {@link Optional} containing the {@link GroupEntity} if found; otherwise empty
+   */
+  Optional<GroupEntity> findById(GroupId id);
 
-    final List<GroupEntity> data =
-        db.select(
-                Groups.GROUPS.ID,
-                Groups.GROUPS.NAME,
-                Groups.GROUPS.DESCRIPTION,
-                Groups.GROUPS.CURRENCY_CODE,
-                Groups.GROUPS.CREATED_AT,
-                Groups.GROUPS.UPDATED_AT)
-            .from(UserGroups.USER_GROUPS)
-            .join(Groups.GROUPS)
-            .on(Groups.GROUPS.ID.eq(UserGroups.USER_GROUPS.GROUP_ID))
-            .where(UserGroups.USER_GROUPS.USER_ID.eq(userId.value()))
-            .limit(pageable.getPageSize())
-            .offset(pageable.getOffset())
-            .fetch()
-            .map(GroupJooqMapper::toEntity);
+  /**
+   * Checks whether a group with the given ID exists.
+   *
+   * @param id the group identifier
+   * @return {@code true} if the group exists; otherwise {@code false}
+   */
+  boolean existsById(GroupId id);
 
-    return new PageImpl<>(data, pageable, safeTotal);
-  }
+  /**
+   * Returns the user IDs that are members of the given group.
+   *
+   * @param id the group identifier
+   * @return a list of {@link UserId} values for users in the group; empty if the group has no
+   *     members or does not exist
+   */
+  List<UserId> findUserIdsByGroupId(GroupId id);
 
-  @Override
-  public Optional<GroupEntity> findById(final GroupId id) {
-    return db.select(
-            Groups.GROUPS.ID,
-            Groups.GROUPS.NAME,
-            Groups.GROUPS.DESCRIPTION,
-            Groups.GROUPS.CURRENCY_CODE,
-            Groups.GROUPS.CREATED_AT,
-            Groups.GROUPS.UPDATED_AT)
-        .from(Groups.GROUPS)
-        .where(Groups.GROUPS.ID.eq(id.value()))
-        .fetchOptional()
-        .map(GroupJooqMapper::toEntity);
-  }
+  /**
+   * Checks whether a given user is part of a group.
+   *
+   * @param userId the user identifier
+   * @param groupId the group identifier
+   * @return {@code true} if the user is a member of the group; otherwise {@code false}
+   */
+  boolean isUserInGroup(UserId userId, GroupId groupId);
 
-  @Override
-  public boolean existsById(GroupId id) {
-    return db.fetchExists(
-        db.selectOne().from(Groups.GROUPS).where(Groups.GROUPS.ID.eq(id.value())));
-  }
+  /**
+   * Adds a user to a group.
+   *
+   * @param userId the user identifier
+   * @param groupId the group identifier
+   * @return an {@link Optional} containing the created {@link UserGroupEntity} when the user was
+   *     added successfully; otherwise empty
+   */
+  Optional<UserGroupEntity> addUser(UserId userId, GroupId groupId);
 
-  @Override
-  public List<UserId> findUserIdsByGroupId(final GroupId id) {
-    return db
-        .select(UserGroups.USER_GROUPS.USER_ID)
-        .from(UserGroups.USER_GROUPS)
-        .where(UserGroups.USER_GROUPS.GROUP_ID.eq(id.value()))
-        .fetch()
-        .stream()
-        .map(r -> r.get(UserGroups.USER_GROUPS.USER_ID))
-        .filter(Objects::nonNull)
-        .map(UserId::fromUuid)
-        .toList();
-  }
-
-  @Override
-  public boolean isUserInGroup(final UserId userId, final GroupId groupId) {
-    return db.fetchExists(
-        db.selectOne()
-            .from(UserGroups.USER_GROUPS)
-            .where(
-                UserGroups.USER_GROUPS
-                    .USER_ID
-                    .eq(userId.value())
-                    .and(UserGroups.USER_GROUPS.GROUP_ID.eq(groupId.value()))));
-  }
-
-  @Override
-  public Optional<UserGroupEntity> addUser(UserId userId, GroupId groupId) {
-    return db.insertInto(UserGroups.USER_GROUPS)
-        .columns(UserGroups.USER_GROUPS.USER_ID, UserGroups.USER_GROUPS.GROUP_ID)
-        .values(userId.value(), groupId.value())
-        .returning(
-            UserGroups.USER_GROUPS.USER_ID,
-            UserGroups.USER_GROUPS.GROUP_ID,
-            UserGroups.USER_GROUPS.JOINED_AT)
-        .fetchOptional()
-        .map(UserGroupJooqMapper::toEntity);
-  }
-
-  @Override
-  public boolean deleteUser(UserId userId, GroupId groupId) {
-    final int rowsAffected =
-        db.deleteFrom(UserGroups.USER_GROUPS)
-            .where(
-                UserGroups.USER_GROUPS
-                    .USER_ID
-                    .eq(userId.value())
-                    .and(UserGroups.USER_GROUPS.GROUP_ID.eq(groupId.value())))
-            .execute();
-    return rowsAffected > 0;
-  }
+  /**
+   * Removes a user from a group.
+   *
+   * @param userId the user identifier
+   * @param groupId the group identifier
+   * @return {@code true} if the user membership was removed; otherwise {@code false}
+   */
+  boolean deleteUser(UserId userId, GroupId groupId);
 }

@@ -9,10 +9,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.familymoney.domains.auth.services.IAuthService;
+import com.familymoney.domains.auth.services.AuthService;
 import com.familymoney.domains.auth.types.AccessToken;
 import com.familymoney.domains.auth.types.TokenFamily;
-import com.familymoney.domains.users.services.IUserService;
+import com.familymoney.domains.users.services.UserService;
 import com.familymoney.domains.users.services.data.UserData;
 import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.Role;
@@ -41,8 +41,8 @@ class JwtAuthFilterTest {
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30";
 
   @Mock private JwtUtils jwtUtils;
-  @Mock private IUserService userService;
-  @Mock private IAuthService authService;
+  @Mock private UserService userService;
+  @Mock private AuthService authService;
   @InjectMocks private JwtAuthFilter filter;
 
   @BeforeEach

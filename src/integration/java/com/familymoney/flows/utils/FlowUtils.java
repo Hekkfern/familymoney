@@ -11,7 +11,7 @@ import com.familymoney.domains.auth.controllers.dtos.RefreshResponseDto;
 import com.familymoney.domains.auth.controllers.dtos.RefreshTokenRequestDto;
 import com.familymoney.domains.auth.controllers.dtos.RegisterRequestDto;
 import com.familymoney.domains.auth.controllers.dtos.VerifyEmailRequestDto;
-import com.familymoney.domains.auth.services.IEmailSenderService;
+import com.familymoney.domains.auth.services.EmailSenderService;
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.testutils.AuthControllerUriFactory;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 public class FlowUtils {
 
   private final RestTestClient client;
-  private final IEmailSenderService emailSenderService;
+  private final EmailSenderService emailSenderService;
 
   public void registerAndVerifyNewUser(
       final String username, final String email, final String password) {

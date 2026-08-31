@@ -4,6 +4,7 @@ import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.familymoney.domains.auth.repositories.DefaultRefreshTokenRepository;
 import com.familymoney.domains.auth.repositories.RefreshTokenRepository;
 import com.familymoney.domains.auth.repositories.dtos.CreateRefreshTokenDto;
 import com.familymoney.domains.auth.repositories.dtos.UpdateRefreshTokenDto;
@@ -50,7 +51,7 @@ class RefreshTokenRepositoryTest {
   @BeforeEach
   void setUp() {
     this.refreshTokenRepository =
-        new RefreshTokenRepository(dslContext, new DefaultOpaqueTokenHasher());
+        new DefaultRefreshTokenRepository(dslContext, new DefaultOpaqueTokenHasher());
     this.databaseCrud = new DatabaseCrud(dslContext);
   }
 

@@ -3,42 +3,29 @@ package com.familymoney.domains.users.repositories;
 import com.familymoney.domains.users.types.Role;
 import com.familymoney.domains.users.types.UserId;
 import java.util.Optional;
-import lombok.RequiredArgsConstructor;
-import org.jooq.DSLContext;
-import org.jooq.impl.DSL;
-import org.springframework.stereotype.Repository;
 
-@Repository
-@RequiredArgsConstructor
-public class RoleRepository implements IRoleRepository {
+/** Repository contract for user role persistence and lookup. */
+public interface RoleRepository {
 
-  private final DSLContext db;
+  /**
+   * Retrieve the role assigned to the given user id.
+   *
+   * @param userId the id of the user whose role should be returned. Must not be null.
+   * @return an {@link Optional} containing the {@link Role} if the user has an assigned role;
+   *     otherwise an empty Optional when no mapping exists.
+   */
+  Optional<Role> getRoleByUserId(UserId userId);
 
-  @Override
-  public Optional<Role> getRoleByUserId(final UserId userId) {
-    return db.select(DSL.field("r.name", String.class))
-        .from(DSL.table("users_roles").as("ur"))
-        .join(DSL.table("roles").as("r"))
-        .on(DSL.field("ur.role_id").eq(DSL.field("r.id")))
-        .where(DSL.field("ur.user_id").eq(userId.value()))
-        .fetchOptional()
-        .map(r -> r.get(0, String.class))
-        .map(Role::fromString);
-  }
-
-  @Override
-  public boolean setRoleForUserId(final UserId userId, final Role role) {
-    final String sql =
-        """
-        WITH r AS (
-            SELECT id AS role_id FROM roles WHERE name = ?
-        )
-        INSERT INTO users_roles (user_id, role_id)
-        SELECT ?, r.role_id FROM r
-        ON CONFLICT (user_id) DO UPDATE
-            SET role_id = EXCLUDED.role_id;
-        """;
-    final int rowsAffected = db.query(sql, role.toString(), userId.value()).execute();
-    return rowsAffected > 0;
-  }
+  /**
+   * Assign or update the role for a given user id.
+   *
+   * <p>Typical implementations will insert a new mapping or update an existing one. The method
+   * should be safe to call repeatedly (idempotent for the same role).
+   *
+   * @param userId the id of the user to assign the role to. Must not be null.
+   * @param role the role to assign. Must not be null.
+   * @return {@code true} when the role was inserted or updated successfully; {@code false} when no
+   *     change occurred because of an error.
+   */
+  boolean setRoleForUserId(UserId userId, Role role);
 }

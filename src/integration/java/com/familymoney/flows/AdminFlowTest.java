@@ -2,7 +2,7 @@ package com.familymoney.flows;
 
 import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
 
-import com.familymoney.domains.auth.services.IEmailSenderService;
+import com.familymoney.domains.auth.services.EmailSenderService;
 import com.familymoney.flows.utils.FlowUtils;
 import com.familymoney.testutils.FakeGenerator;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,7 +25,7 @@ class AdminFlowTest {
   private RestTestClient client;
   private FlowUtils flowUtils;
 
-  @MockitoBean private IEmailSenderService emailSenderService;
+  @MockitoBean private EmailSenderService emailSenderService;
 
   @Container @ServiceConnection
   private static final PostgreSQLContainer postgresContainer =

@@ -1,7 +1,7 @@
 package com.familymoney.domains.auth.events;
 
 /** Listener contract for email-verification delivery events. */
-public interface IEmailVerificationEventListener {
+public interface EmailVerificationEventListener {
 
   /**
    * Delivers the email requested by a committed registration event.

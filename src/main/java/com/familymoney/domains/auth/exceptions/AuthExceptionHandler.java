@@ -1,6 +1,6 @@
 package com.familymoney.domains.auth.exceptions;
 
-import com.familymoney.domains.auth.controllers.AuthController;
+import com.familymoney.domains.auth.controllers.DefaultAuthController;
 import com.familymoney.domains.auth.services.AuthService;
 import java.time.Clock;
 import java.time.Duration;
@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-@RestControllerAdvice(assignableTypes = {AuthController.class, AuthService.class})
+@RestControllerAdvice(assignableTypes = {DefaultAuthController.class, AuthService.class})
 @RequiredArgsConstructor
 public class AuthExceptionHandler extends ResponseEntityExceptionHandler {
 

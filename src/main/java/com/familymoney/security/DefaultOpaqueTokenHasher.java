@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 /** SHA-256 implementation for hashing opaque bearer tokens at rest. */
 @Component
-public class DefaultOpaqueTokenHasher implements IOpaqueTokenHasher {
+public class DefaultOpaqueTokenHasher implements OpaqueTokenHasher {
 
   private static final String ALGORITHM = "SHA-256";
 

@@ -1,7 +1,7 @@
 package com.familymoney.domains.auth.events;
 
 /** Listener contract for password-reset email delivery events. */
-public interface IPasswordResetEventListener {
+public interface PasswordResetEventListener {
 
   /**
    * Delivers the email requested by a committed password-reset event.

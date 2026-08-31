@@ -3,203 +3,100 @@ package com.familymoney.domains.users.repositories;
 import com.familymoney.domains.users.repositories.dtos.CreateUserDto;
 import com.familymoney.domains.users.repositories.dtos.UpdateUserDto;
 import com.familymoney.domains.users.repositories.entitites.UserEntity;
-import com.familymoney.domains.users.repositories.mappers.UserJooqMapper;
 import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.domains.users.types.UserName;
-import com.familymoney.generated.tables.Users;
-import java.util.List;
 import java.util.Optional;
-import lombok.RequiredArgsConstructor;
-import org.jooq.DSLContext;
-import org.jooq.Field;
-import org.jooq.Record;
-import org.jooq.Result;
-import org.jooq.SortField;
-import org.jooq.impl.DSL;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Repository;
 
-@Repository
-@RequiredArgsConstructor
-public class UserRepository implements IUserRepository {
+/**
+ * Repository contract for user persistence operations.
+ *
+ * <p>Implementations are responsible for CRUD operations and queries related to application users.
+ * Methods use domain-specific DTOs (Dbo) and value objects for strong typing.
+ */
+public interface UserRepository {
 
-  private final DSLContext db;
+  /**
+   * Store a new user.
+   *
+   * @param data values to store.
+   * @return an {@link Optional} containing the created {@link UserEntity} when successful; empty
+   *     Optional if the creation failed (e.g., uniqueness violation).
+   */
+  Optional<UserEntity> create(CreateUserDto data);
 
-  @Override
-  public Optional<UserEntity> create(final CreateUserDto data) {
+  /**
+   * Find a user by its identifier.
+   *
+   * @param id the identifier of the user to find. Must not be null.
+   * @return an {@link Optional} containing the {@link UserEntity} if a user with the id exists,
+   *     otherwise an empty Optional.
+   */
+  Optional<UserEntity> findById(UserId id);
 
-    return db.insertInto(Users.USERS)
-        .columns(
-            Users.USERS.ID,
-            Users.USERS.USERNAME,
-            Users.USERS.EMAIL,
-            Users.USERS.HASHED_PASSWORD,
-            Users.USERS.IS_EMAIL_VERIFIED,
-            Users.USERS.IS_ENABLED)
-        .values(
-            data.id().value(),
-            data.username().value(),
-            data.email().value(),
-            data.passwordHash(),
-            data.isEmailVerified(),
-            data.isEnabled())
-        .returning(
-            Users.USERS.ID,
-            Users.USERS.USERNAME,
-            Users.USERS.EMAIL,
-            Users.USERS.HASHED_PASSWORD,
-            Users.USERS.CREATED_AT,
-            Users.USERS.UPDATED_AT,
-            Users.USERS.IS_EMAIL_VERIFIED,
-            Users.USERS.IS_ENABLED)
-        .fetchOptional()
-        .map(UserJooqMapper::toEntity);
-  }
+  /**
+   * Find a user by its email address.
+   *
+   * @param email the email address to search for. Must not be null.
+   * @return an {@link Optional} containing the {@link UserEntity} if found, otherwise empty.
+   */
+  Optional<UserEntity> findByEmail(Email email);
 
-  @Override
-  public Optional<UserEntity> findById(final UserId id) {
-    return db.select(
-            Users.USERS.ID,
-            Users.USERS.USERNAME,
-            Users.USERS.EMAIL,
-            Users.USERS.HASHED_PASSWORD,
-            Users.USERS.CREATED_AT,
-            Users.USERS.UPDATED_AT,
-            Users.USERS.IS_EMAIL_VERIFIED,
-            Users.USERS.IS_ENABLED)
-        .from(Users.USERS)
-        .where(Users.USERS.ID.eq(id.value()))
-        .fetchOptional()
-        .map(UserJooqMapper::toEntity);
-  }
+  /**
+   * Find a user by its username.
+   *
+   * @param username the username to search for. Must not be null.
+   * @return an {@link Optional} containing the {@link UserEntity} if found, otherwise empty.
+   */
+  Optional<UserEntity> findByUsername(UserName username);
 
-  @Override
-  public Optional<UserEntity> findByEmail(final Email email) {
-    return db.select(
-            Users.USERS.ID,
-            Users.USERS.USERNAME,
-            Users.USERS.EMAIL,
-            Users.USERS.HASHED_PASSWORD,
-            Users.USERS.CREATED_AT,
-            Users.USERS.UPDATED_AT,
-            Users.USERS.IS_EMAIL_VERIFIED,
-            Users.USERS.IS_ENABLED)
-        .from(Users.USERS)
-        .where(Users.USERS.EMAIL.eq(email.value()))
-        .fetchOptional()
-        .map(UserJooqMapper::toEntity);
-  }
+  /**
+   * Check whether any user exists with the given email or username.
+   *
+   * <p>Typical implementations use this to guard uniqueness before creation or update. Note that
+   * there may still be a race condition: callers should handle uniqueness constraint violations
+   * from the database in addition to using this check.
+   *
+   * @param email the email to check for. Must not be null.
+   * @param username the username to check for. Must not be null.
+   * @return true if a record with the given email or username exists, false otherwise.
+   */
+  boolean existsByEmailOrUsername(Email email, UserName username);
 
-  @Override
-  public Optional<UserEntity> findByUsername(final UserName username) {
-    return db.select(
-            Users.USERS.ID,
-            Users.USERS.USERNAME,
-            Users.USERS.EMAIL,
-            Users.USERS.HASHED_PASSWORD,
-            Users.USERS.CREATED_AT,
-            Users.USERS.UPDATED_AT,
-            Users.USERS.IS_EMAIL_VERIFIED,
-            Users.USERS.IS_ENABLED)
-        .from(Users.USERS)
-        .where(Users.USERS.USERNAME.eq(username.value()))
-        .fetchOptional()
-        .map(UserJooqMapper::toEntity);
-  }
+  /**
+   * Check whether a user exists by its id.
+   *
+   * @param id the id to check for. Must not be null.
+   * @return true if a user with the provided id exists, false otherwise.
+   */
+  boolean existsById(UserId id);
 
-  @Override
-  public boolean existsByEmailOrUsername(final Email email, final UserName username) {
-    return db.fetchExists(
-        db.selectOne()
-            .from(Users.USERS)
-            .where(
-                Users.USERS.EMAIL.eq(email.value()).or(Users.USERS.USERNAME.eq(username.value()))));
-  }
+  /**
+   * Update one or more fields of a user identified by its id.
+   *
+   * @param id the id of the user to update. Must not be null.
+   * @param data a {@link UpdateUserDto} containing fields to change. Must not be null. Only
+   *     non-null fields will be applied.
+   * @return true if the update affected an existing record, false otherwise.
+   */
+  boolean updateById(UserId id, UpdateUserDto data);
 
-  @Override
-  public boolean existsById(UserId id) {
-    return db.fetchExists(db.selectOne().from(Users.USERS).where(Users.USERS.ID.eq(id.value())));
-  }
+  /**
+   * Delete a user by its id.
+   *
+   * @param id the id of the user to delete. Must not be null.
+   * @return true if a record was deleted, false if no matching record existed.
+   */
+  boolean deleteById(UserId id);
 
-  @Override
-  public boolean updateById(final UserId id, final UpdateUserDto data) {
-    final int rowsAffected =
-        db.update(Users.USERS)
-            .set(
-                Users.USERS.USERNAME,
-                DSL.coalesce(
-                    DSL.val(data.username() != null ? data.username().value() : null),
-                    Users.USERS.USERNAME))
-            .set(
-                Users.USERS.EMAIL,
-                DSL.coalesce(
-                    DSL.val(data.email() != null ? data.email().value() : null), Users.USERS.EMAIL))
-            .set(
-                Users.USERS.HASHED_PASSWORD,
-                DSL.coalesce(
-                    DSL.val(data.hashedPassword() != null ? data.hashedPassword() : null),
-                    Users.USERS.HASHED_PASSWORD))
-            .set(
-                Users.USERS.IS_EMAIL_VERIFIED,
-                DSL.coalesce(DSL.val(data.isEmailVerified()), Users.USERS.IS_EMAIL_VERIFIED))
-            .set(
-                Users.USERS.IS_ENABLED,
-                DSL.coalesce(DSL.val(data.isEnabled()), Users.USERS.IS_ENABLED))
-            .where(Users.USERS.ID.eq(id.value()))
-            .execute();
-    return rowsAffected > 0;
-  }
-
-  @Override
-  public boolean deleteById(final UserId id) {
-    final int rowsAffected =
-        db.deleteFrom(Users.USERS).where(Users.USERS.ID.eq(id.value())).execute();
-    return rowsAffected > 0;
-  }
-
-  @Override
-  public Page<UserEntity> getAll(final Pageable pageable) {
-    final Field<Integer> totalField = DSL.count().over().as("total_count");
-
-    final List<SortField<?>> orderFields =
-        pageable.getSort().stream()
-            .map(
-                order -> {
-                  Field<?> field = Users.USERS.field(order.getProperty());
-                  if (field == null) {
-                    throw new IllegalArgumentException(
-                        "Unknown sort field: " + order.getProperty());
-                  }
-                  return order.isAscending() ? field.asc() : field.desc();
-                })
-            .toList();
-
-    final List<SortField<?>> effectiveOrder =
-        orderFields.isEmpty() ? List.of(Users.USERS.CREATED_AT.desc()) : orderFields;
-
-    final Result<? extends Record> records =
-        db.select(
-                Users.USERS.ID,
-                Users.USERS.USERNAME,
-                Users.USERS.EMAIL,
-                Users.USERS.HASHED_PASSWORD,
-                Users.USERS.CREATED_AT,
-                Users.USERS.UPDATED_AT,
-                Users.USERS.IS_EMAIL_VERIFIED,
-                Users.USERS.IS_ENABLED,
-                totalField)
-            .from(Users.USERS)
-            .orderBy(effectiveOrder)
-            .limit(pageable.getPageSize())
-            .offset(pageable.getOffset())
-            .fetch();
-
-    final long total = records.isEmpty() ? 0L : records.getFirst().get("total_count", Long.class);
-    final List<UserEntity> data = records.map(UserJooqMapper::toEntity);
-
-    return new PageImpl<>(data, pageable, total);
-  }
+  /**
+   * Retrieve a paginated list of users.
+   *
+   * @param pageable paging information (page number, size, sort). Must not be null.
+   * @return a {@link Page} of {@link UserEntity} containing the users for the requested page. If no
+   *     users exist, the page will be empty.
+   */
+  Page<UserEntity> getAll(Pageable pageable);
 }

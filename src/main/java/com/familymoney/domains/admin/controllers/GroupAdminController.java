@@ -6,43 +6,50 @@ import com.familymoney.domains.transactions.controllers.dtos.GetGroupsResponseDt
 import com.familymoney.domains.transactions.controllers.dtos.GetUsersInGroupResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.RemoveUserInGroupRequestDto;
 import com.familymoney.domains.transactions.controllers.dtos.UpdateGroupRequestDto;
-import org.springframework.data.domain.Pageable;
-
+import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
+import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 
-public class GroupAdminController implements IGroupAdminController {
-  @Override
-  public GetGroupsResponseDto getGroupsOfUser(UUID userId, Pageable pageable) {
-    return null;
-  }
+@RequestMapping("admin/groups")
+public interface GroupAdminController {
 
-  @Override
-  public void deleteGroup(UUID groupId) {
+  @Operation(summary = "Get the list of groups where the selected user is a member")
+  @GetMapping(path = "groups/users/{userId}", version = "1")
+  GetGroupsResponseDto getGroupsOfUser(@PathVariable @NotNull UUID userId, Pageable pageable);
 
-  }
+  @Operation(summary = "Delete a group")
+  @DeleteMapping(path = "groups/{groupId}", version = "1")
+  void deleteGroup(@PathVariable @NotNull UUID groupId);
 
-  @Override
-  public GetGroupResponseDto getGroupInfo(UUID groupId) {
-    return null;
-  }
+  @Operation(summary = "Get information about a specific group")
+  @GetMapping(path = "groups/{groupId}", version = "1")
+  GetGroupResponseDto getGroupInfo(@PathVariable @NotNull UUID groupId);
 
-  @Override
-  public void updateGroupInfo(UUID groupId, UpdateGroupRequestDto request) {
+  @Operation(summary = "Update information of a specific group")
+  @PatchMapping(path = "groups/{groupId}", version = "1")
+  void updateGroupInfo(
+      @PathVariable @NotNull UUID groupId, @RequestBody @Valid UpdateGroupRequestDto request);
 
-  }
+  @Operation(summary = "Add a user to a specific group")
+  @PostMapping(path = "groups/{groupId}/users", version = "1")
+  void addUserToGroup(
+      @PathVariable @NotNull UUID groupId, @RequestBody @Valid AddUserToGroupRequestDto request);
 
-  @Override
-  public void addUserToGroup(UUID groupId, AddUserToGroupRequestDto request) {
+  @Operation(summary = "Remove a user from a specific group")
+  @DeleteMapping(path = "groups/{groupId}/users", version = "1")
+  void removeUserInGroup(
+      @PathVariable @NotNull UUID groupId, @RequestBody @Valid RemoveUserInGroupRequestDto request);
 
-  }
-
-  @Override
-  public void removeUserInGroup(UUID groupId, RemoveUserInGroupRequestDto request) {
-
-  }
-
-  @Override
-  public GetUsersInGroupResponseDto getUsersInGroup(UUID groupId) {
-    return null;
-  }
+  @Operation(summary = "Get the list of users in a specific group")
+  @GetMapping(path = "groups/{groupId}/users", version = "1")
+  GetUsersInGroupResponseDto getUsersInGroup(@PathVariable @NotNull UUID groupId);
 }

@@ -2,6 +2,7 @@ package com.familymoney.repository;
 
 import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
 
+import com.familymoney.domains.transactions.repositories.DefaultTransactionRepository;
 import com.familymoney.domains.transactions.repositories.TransactionRepository;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +30,7 @@ class TransactionRepositoryTest {
 
   @BeforeEach
   void setUp() {
-    this.transactionRepository = new TransactionRepository(dslContext);
+    this.transactionRepository = new DefaultTransactionRepository(dslContext);
   }
 
   @Nested

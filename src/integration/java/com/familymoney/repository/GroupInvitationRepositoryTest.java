@@ -4,6 +4,7 @@ import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.familymoney.domains.transactions.repositories.DefaultGroupInvitationRepository;
 import com.familymoney.domains.transactions.repositories.GroupInvitationRepository;
 import com.familymoney.domains.transactions.repositories.dtos.CreateGroupInvitationDto;
 import com.familymoney.domains.transactions.repositories.entitites.GroupInvitationEntity;
@@ -50,7 +51,7 @@ class GroupInvitationRepositoryTest {
   @BeforeEach
   void setUp() {
     this.groupInvitationRepository =
-        new GroupInvitationRepository(dslContext, new DefaultOpaqueTokenHasher());
+        new DefaultGroupInvitationRepository(dslContext, new DefaultOpaqueTokenHasher());
     this.databaseCrud = new DatabaseCrud(dslContext);
   }
 

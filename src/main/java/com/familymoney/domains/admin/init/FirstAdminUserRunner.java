@@ -1,6 +1,6 @@
 package com.familymoney.domains.admin.init;
 
-import com.familymoney.domains.users.services.IUserService;
+import com.familymoney.domains.users.services.UserService;
 import com.familymoney.properties.AdminProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class FirstAdminUserRunner implements ApplicationRunner {
 
-  private final IUserService userService;
+  private final UserService userService;
   private final AdminProperties adminProperties;
 
   @Override

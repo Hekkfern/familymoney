@@ -28,11 +28,11 @@ import com.familymoney.domains.auth.exceptions.UserAlreadyExistsException;
 import com.familymoney.domains.auth.exceptions.UserNotEnabledException;
 import com.familymoney.domains.auth.exceptions.VerificationTokenExpiredException;
 import com.familymoney.domains.auth.exceptions.VerificationTokenNotFoundException;
-import com.familymoney.domains.auth.repositories.IEmailVerificationRepository;
-import com.familymoney.domains.auth.repositories.IPasswordResetRepository;
-import com.familymoney.domains.auth.repositories.IRefreshTokenRepository;
-import com.familymoney.domains.auth.repositories.ITokenFamilyBlacklistRepository;
-import com.familymoney.domains.auth.repositories.IUsedRefreshTokenRepository;
+import com.familymoney.domains.auth.repositories.EmailVerificationRepository;
+import com.familymoney.domains.auth.repositories.PasswordResetRepository;
+import com.familymoney.domains.auth.repositories.RefreshTokenRepository;
+import com.familymoney.domains.auth.repositories.TokenFamilyBlacklistRepository;
+import com.familymoney.domains.auth.repositories.UsedRefreshTokenRepository;
 import com.familymoney.domains.auth.repositories.dtos.CreateEmailVerificationDto;
 import com.familymoney.domains.auth.repositories.dtos.CreatePasswordResetDto;
 import com.familymoney.domains.auth.repositories.dtos.CreateRefreshTokenDto;
@@ -53,8 +53,8 @@ import com.familymoney.domains.auth.types.ExpirationTime;
 import com.familymoney.domains.auth.types.PasswordResetToken;
 import com.familymoney.domains.auth.types.RefreshToken;
 import com.familymoney.domains.auth.types.TokenFamily;
-import com.familymoney.domains.users.repositories.IRoleRepository;
-import com.familymoney.domains.users.repositories.IUserRepository;
+import com.familymoney.domains.users.repositories.RoleRepository;
+import com.familymoney.domains.users.repositories.UserRepository;
 import com.familymoney.domains.users.repositories.dtos.CreateUserDto;
 import com.familymoney.domains.users.repositories.dtos.UpdateUserDto;
 import com.familymoney.domains.users.repositories.entitites.UserEntity;
@@ -96,9 +96,9 @@ class AuthServiceTest {
 
   private final Instant now = Instant.parse("2025-01-01T00:00:00Z");
 
-  @Mock private IUserRepository userRepository;
-  @Mock private IRoleRepository permissionsRepository;
-  @Mock private IEmailSenderService emailSenderService;
+  @Mock private UserRepository userRepository;
+  @Mock private RoleRepository permissionsRepository;
+  @Mock private EmailSenderService emailSenderService;
   @Spy private UserPasswordEncoder passwordEncoder;
   @Spy private final Clock clock = Clock.fixed(now, DEFAULT_TIMEZONE_OFFSET);
 
@@ -117,15 +117,15 @@ class AuthServiceTest {
   private JwtProperties jwtProperties =
       new JwtProperties("kdsfgsdajkhgfjhak", Duration.ofMinutes(5), Duration.ofHours(24));
 
-  @Mock private IEmailVerificationRepository emailVerificationRepository;
-  @Mock private IPasswordResetRepository passwordResetRepository;
-  @Mock private ITokenFamilyBlacklistRepository tokenFamilyBlacklistRepository;
-  @Mock private IUsedRefreshTokenRepository usedRefreshTokenRepository;
+  @Mock private EmailVerificationRepository emailVerificationRepository;
+  @Mock private PasswordResetRepository passwordResetRepository;
+  @Mock private TokenFamilyBlacklistRepository tokenFamilyBlacklistRepository;
+  @Mock private UsedRefreshTokenRepository usedRefreshTokenRepository;
   @Mock private JwtUtils jwtUtils;
-  @Mock private IRefreshTokenRepository refreshTokenRepository;
+  @Mock private RefreshTokenRepository refreshTokenRepository;
   @Mock private ApplicationEventPublisher eventPublisher;
 
-  @InjectMocks private AuthService authService;
+  @InjectMocks private DefaultAuthService authService;
 
   private void mockUserRepositoryCreate() {
     when(userRepository.create(any(CreateUserDto.class)))

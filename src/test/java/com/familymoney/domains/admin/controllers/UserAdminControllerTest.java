@@ -6,7 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import com.familymoney.domains.users.controllers.dtos.GetUserResponseDto;
-import com.familymoney.domains.users.services.IUserService;
+import com.familymoney.domains.users.services.UserService;
 import com.familymoney.domains.users.services.data.UserData;
 import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.Role;
@@ -44,7 +44,7 @@ class UserAdminControllerTest {
 
   @Autowired private RestTestClient client;
 
-  @MockitoBean private IUserService userService;
+  @MockitoBean private UserService userService;
   @MockitoBean private Clock clock;
 
   @BeforeEach

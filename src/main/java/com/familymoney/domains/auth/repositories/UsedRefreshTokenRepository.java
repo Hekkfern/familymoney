@@ -1,54 +1,26 @@
 package com.familymoney.domains.auth.repositories;
 
-import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
-
 import com.familymoney.domains.auth.repositories.dtos.CreateUsedRefreshTokenDto;
 import com.familymoney.domains.auth.repositories.entitites.UsedRefreshTokenEntity;
-import com.familymoney.domains.auth.repositories.mappers.UsedRefreshTokenJooqMapper;
 import com.familymoney.domains.auth.types.RefreshToken;
-import com.familymoney.generated.tables.UsedRefreshTokens;
-import com.familymoney.security.IOpaqueTokenHasher;
 import java.util.Optional;
-import lombok.RequiredArgsConstructor;
-import org.jooq.DSLContext;
-import org.springframework.stereotype.Repository;
 
-@Repository
-@RequiredArgsConstructor
-public class UsedRefreshTokenRepository implements IUsedRefreshTokenRepository {
+/** Repository contract for storing refresh tokens that have been consumed by rotation. */
+public interface UsedRefreshTokenRepository {
 
-  private final DSLContext db;
-  private final IOpaqueTokenHasher tokenHasher;
+  /**
+   * Persist a consumed refresh token unless it has already been recorded.
+   *
+   * @param data the data to store.
+   * @return the persisted token record, or empty when the token was already present.
+   */
+  Optional<UsedRefreshTokenEntity> create(CreateUsedRefreshTokenDto data);
 
-  @Override
-  public Optional<UsedRefreshTokenEntity> create(final CreateUsedRefreshTokenDto data) {
-    return db.insertInto(UsedRefreshTokens.USED_REFRESH_TOKENS)
-        .columns(
-            UsedRefreshTokens.USED_REFRESH_TOKENS.TOKEN_HASH,
-            UsedRefreshTokens.USED_REFRESH_TOKENS.FAMILY,
-            UsedRefreshTokens.USED_REFRESH_TOKENS.USED_AT)
-        .values(
-            tokenHasher.hash(data.token().value()),
-            data.family().value(),
-            data.usedAt().atOffset(DEFAULT_TIMEZONE_OFFSET))
-        .onConflictDoNothing()
-        .returning(
-            UsedRefreshTokens.USED_REFRESH_TOKENS.FAMILY,
-            UsedRefreshTokens.USED_REFRESH_TOKENS.USED_AT,
-            UsedRefreshTokens.USED_REFRESH_TOKENS.CREATED_AT)
-        .fetchOptional()
-        .map(UsedRefreshTokenJooqMapper::toEntity);
-  }
-
-  @Override
-  public Optional<UsedRefreshTokenEntity> findByToken(final RefreshToken token) {
-    return db.select(
-            UsedRefreshTokens.USED_REFRESH_TOKENS.FAMILY,
-            UsedRefreshTokens.USED_REFRESH_TOKENS.USED_AT,
-            UsedRefreshTokens.USED_REFRESH_TOKENS.CREATED_AT)
-        .from(UsedRefreshTokens.USED_REFRESH_TOKENS)
-        .where(UsedRefreshTokens.USED_REFRESH_TOKENS.TOKEN_HASH.eq(tokenHasher.hash(token.value())))
-        .fetchOptional()
-        .map(UsedRefreshTokenJooqMapper::toEntity);
-  }
+  /**
+   * Find a consumed refresh token by its value.
+   *
+   * @param token the consumed refresh token to find.
+   * @return the consumed token record when it exists, or empty otherwise.
+   */
+  Optional<UsedRefreshTokenEntity> findByToken(RefreshToken token);
 }

@@ -15,10 +15,10 @@ import com.familymoney.domains.transactions.exceptions.MaximumGroupInvitationsRe
 import com.familymoney.domains.transactions.exceptions.TransactionGroupNotFoundException;
 import com.familymoney.domains.transactions.exceptions.TransactionNotFoundException;
 import com.familymoney.domains.transactions.exceptions.UserIsNotMemberOfGroupException;
-import com.familymoney.domains.transactions.repositories.IBalanceRepository;
-import com.familymoney.domains.transactions.repositories.IGroupInvitationRepository;
-import com.familymoney.domains.transactions.repositories.IGroupRepository;
-import com.familymoney.domains.transactions.repositories.ITransactionRepository;
+import com.familymoney.domains.transactions.repositories.BalanceRepository;
+import com.familymoney.domains.transactions.repositories.GroupInvitationRepository;
+import com.familymoney.domains.transactions.repositories.GroupRepository;
+import com.familymoney.domains.transactions.repositories.TransactionRepository;
 import com.familymoney.domains.transactions.repositories.dtos.CreateGroupDto;
 import com.familymoney.domains.transactions.repositories.dtos.CreateGroupInvitationDto;
 import com.familymoney.domains.transactions.repositories.entitites.BalanceEntity;
@@ -38,7 +38,7 @@ import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import com.familymoney.domains.transactions.types.GroupName;
 import com.familymoney.domains.transactions.types.TransactionId;
 import com.familymoney.domains.users.exceptions.UserNotFoundException;
-import com.familymoney.domains.users.repositories.IUserRepository;
+import com.familymoney.domains.users.repositories.UserRepository;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.exceptions.DatabaseExecutionException;
 import com.familymoney.properties.GroupInvitationProperties;
@@ -71,15 +71,15 @@ class TransactionGroupServiceTest {
   private static final Instant NOW = Instant.parse("2025-01-01T00:00:00Z");
   private static final CurrencyUnit CURRENCY_USD = Monetary.getCurrency("USD");
 
-  @Mock private IGroupRepository groupRepository;
-  @Mock private IBalanceRepository balanceRepository;
-  @Mock private ITransactionRepository transactionRepository;
-  @Mock private IGroupInvitationRepository groupInvitationRepository;
-  @Mock private IUserRepository userRepository;
+  @Mock private GroupRepository groupRepository;
+  @Mock private BalanceRepository balanceRepository;
+  @Mock private TransactionRepository transactionRepository;
+  @Mock private GroupInvitationRepository groupInvitationRepository;
+  @Mock private UserRepository userRepository;
   @Spy private final Clock clock = Clock.fixed(NOW, DEFAULT_TIMEZONE_OFFSET);
   @Mock private GroupInvitationProperties groupInvitationProperties;
 
-  @InjectMocks private TransactionGroupService transactionGroupService;
+  @InjectMocks private DefaultTransactionGroupService transactionGroupService;
 
   // Helpers to build DB objects
   private GroupEntity groupDbo(GroupId id) {

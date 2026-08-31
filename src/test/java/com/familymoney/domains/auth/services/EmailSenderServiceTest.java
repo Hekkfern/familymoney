@@ -52,7 +52,7 @@ class EmailSenderServiceTest {
           Duration.ofMinutes(2),
           URI.create("https://example.com/reset-password"));
 
-  @InjectMocks private EmailSenderService emailSenderService;
+  @InjectMocks private DefaultEmailSenderService emailSenderService;
 
   @BeforeEach
   void setup() {

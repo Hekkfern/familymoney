@@ -2,7 +2,7 @@ package com.familymoney.domains.transactions.controllers;
 
 import static org.mockito.Mockito.when;
 
-import com.familymoney.domains.users.services.IUserService;
+import com.familymoney.domains.users.services.UserService;
 import java.time.Clock;
 import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +29,7 @@ class GroupControllerTest {
 
   @Autowired private RestTestClient client;
 
-  @MockitoBean private IUserService userService;
+  @MockitoBean private UserService userService;
   @MockitoBean private Clock clock;
 
   @BeforeEach

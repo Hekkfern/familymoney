@@ -2,80 +2,45 @@ package com.familymoney.domains.transactions.repositories;
 
 import com.familymoney.domains.transactions.repositories.dtos.CreateGroupInvitationDto;
 import com.familymoney.domains.transactions.repositories.entitites.GroupInvitationEntity;
-import com.familymoney.domains.transactions.repositories.mappers.GroupInvitationJooqMapper;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import com.familymoney.domains.users.types.UserId;
-import com.familymoney.generated.tables.GroupInvitations;
-import com.familymoney.security.IOpaqueTokenHasher;
 import java.util.Optional;
-import lombok.RequiredArgsConstructor;
-import org.jooq.DSLContext;
-import org.springframework.stereotype.Repository;
 
-@Repository
-@RequiredArgsConstructor
-public class GroupInvitationRepository implements IGroupInvitationRepository {
+public interface GroupInvitationRepository {
 
-  private final DSLContext db;
-  private final IOpaqueTokenHasher tokenHasher;
+  /**
+   * Creates a new group invitation record.
+   *
+   * @param data values to persist for the invitation
+   * @return an {@link Optional} containing the created {@link GroupInvitationEntity} when the
+   *     insert succeeds; otherwise an empty {@link Optional}
+   */
+  Optional<GroupInvitationEntity> create(CreateGroupInvitationDto data);
 
-  @Override
-  public Optional<GroupInvitationEntity> create(final CreateGroupInvitationDto data) {
-    return db.insertInto(GroupInvitations.GROUP_INVITATIONS)
-        .columns(
-            GroupInvitations.GROUP_INVITATIONS.ID,
-            GroupInvitations.GROUP_INVITATIONS.GROUP_ID,
-            GroupInvitations.GROUP_INVITATIONS.USER_ID,
-            GroupInvitations.GROUP_INVITATIONS.TOKEN_HASH,
-            GroupInvitations.GROUP_INVITATIONS.EXPIRES_AT)
-        .values(
-            data.id(),
-            data.groupId().value(),
-            data.userId().value(),
-            tokenHasher.hash(data.token().value()),
-            data.expiresAt().toOffsetDateTime())
-        .returning(
-            GroupInvitations.GROUP_INVITATIONS.ID,
-            GroupInvitations.GROUP_INVITATIONS.GROUP_ID,
-            GroupInvitations.GROUP_INVITATIONS.USER_ID,
-            GroupInvitations.GROUP_INVITATIONS.CREATED_AT,
-            GroupInvitations.GROUP_INVITATIONS.EXPIRES_AT)
-        .fetchOptional()
-        .map(GroupInvitationJooqMapper::toEntity);
-  }
+  /**
+   * Finds a group invitation by its token.
+   *
+   * @param token the unique invitation token
+   * @return an {@link Optional} containing the matching {@link GroupInvitationEntity} when found;
+   *     otherwise an empty {@link Optional}
+   */
+  Optional<GroupInvitationEntity> findByToken(GroupInvitationToken token);
 
-  @Override
-  public Optional<GroupInvitationEntity> findByToken(final GroupInvitationToken token) {
-    return db.select(
-            GroupInvitations.GROUP_INVITATIONS.ID,
-            GroupInvitations.GROUP_INVITATIONS.GROUP_ID,
-            GroupInvitations.GROUP_INVITATIONS.USER_ID,
-            GroupInvitations.GROUP_INVITATIONS.CREATED_AT,
-            GroupInvitations.GROUP_INVITATIONS.EXPIRES_AT)
-        .from(GroupInvitations.GROUP_INVITATIONS)
-        .where(GroupInvitations.GROUP_INVITATIONS.TOKEN_HASH.eq(tokenHasher.hash(token.value())))
-        .fetchOptional()
-        .map(GroupInvitationJooqMapper::toEntity);
-  }
+  /**
+   * Deletes a group invitation by its token.
+   *
+   * @param token the unique invitation token
+   * @return {@code true} if a matching invitation was deleted; otherwise {@code false}
+   */
+  boolean deleteByToken(GroupInvitationToken token);
 
-  @Override
-  public boolean deleteByToken(GroupInvitationToken token) {
-    final int rowsAffected =
-        db.deleteFrom(GroupInvitations.GROUP_INVITATIONS)
-            .where(
-                GroupInvitations.GROUP_INVITATIONS.TOKEN_HASH.eq(tokenHasher.hash(token.value())))
-            .execute();
-    return rowsAffected > 0;
-  }
-
-  @Override
-  public long countByGroupIdAndUserId(final GroupId groupId, final UserId userId) {
-    return db.fetchCount(
-        GroupInvitations.GROUP_INVITATIONS,
-        GroupInvitations.GROUP_INVITATIONS
-            .GROUP_ID
-            .eq(groupId.value())
-            .and(GroupInvitations.GROUP_INVITATIONS.USER_ID.eq(userId.value())));
-  }
+  /**
+   * Counts invitations for the given group and user pair.
+   *
+   * @param groupId the group identifier
+   * @param userId the user identifier
+   * @return the number of invitation records that match the provided group and user IDs
+   */
+  long countByGroupIdAndUserId(GroupId groupId, UserId userId);
 }

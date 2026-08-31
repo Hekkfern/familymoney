@@ -3,74 +3,56 @@ package com.familymoney.domains.admin.controllers;
 import com.familymoney.domains.users.controllers.dtos.GetUserResponseDto;
 import com.familymoney.domains.users.controllers.dtos.GetUserRoleResponseDto;
 import com.familymoney.domains.users.controllers.dtos.UpdateUserRequestDto;
-import com.familymoney.domains.users.controllers.mappers.GetUserResponseMapper;
-import com.familymoney.domains.users.controllers.mappers.UpdateUserRequestMapper;
-import com.familymoney.domains.users.exceptions.UserNotFoundException;
-import com.familymoney.domains.users.services.IUserService;
-import com.familymoney.domains.users.services.data.UserData;
-import com.familymoney.domains.users.types.Role;
-import com.familymoney.domains.users.types.UserId;
 import com.familymoney.utils.PageResponse;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
-@RestController
-@RequiredArgsConstructor
-public class UserAdminController implements IUserAdminController {
+@RequestMapping("admin/users")
+public interface UserAdminController {
 
-  private final IUserService userService;
+  @GetMapping(path = "{userId}", version = "1")
+  GetUserResponseDto getUserInfo(@PathVariable @NotNull UUID userId);
 
-  @Override
-  public GetUserResponseDto getUserInfo(UUID userId) {
-    // Fetch user data
-    final UserData userData =
-        userService
-            .getUserData(UserId.fromUuid(userId))
-            .orElseThrow(() -> new UserNotFoundException("User not found"));
-    // Return response
-    return GetUserResponseMapper.toDto(userData);
+  enum SortField {
+    CREATED_AT,
+    USERNAME,
+    EMAIL
   }
 
-  @Override
-  public PageResponse<GetUserResponseDto> getUsersInfo(
-      final int page, final int size, final SortField sort, final Sort.Direction direction) {
-    final Sort stableSort =
-        Sort.by(direction, sort.toString().toLowerCase()).and(Sort.by(Sort.Direction.ASC, "id"));
-    final Pageable pageable = PageRequest.of(page, size, stableSort);
-    final Page<UserData> userDataPages = userService.getUsers(pageable);
-    return PageResponse.from(userDataPages.map(GetUserResponseMapper::toDto));
-  }
+  @GetMapping(path = "", version = "1")
+  PageResponse<GetUserResponseDto> getUsersInfo(
+      @RequestParam(defaultValue = "0") @Min(0) @Max(10_000) int page,
+      @RequestParam(defaultValue = "25") @Min(20) @Max(100) int size,
+      @RequestParam(defaultValue = "CREATED_AT") SortField sort,
+      @RequestParam(defaultValue = "DESC") Sort.Direction direction);
 
-  @Override
-  public void enableUser(final UUID userId, boolean enabled) {
-    userService.enableUser(UserId.fromUuid(userId), enabled);
-  }
+  @GetMapping(path = "total", version = "1")
+  @PutMapping(path = "{userId}/enable", version = "1")
+  void enableUser(@PathVariable @NotNull UUID userId, @RequestParam boolean enabled);
 
-  @Override
-  public void deleteUser(final UUID userId) {
-    userService.deleteUser(UserId.fromUuid(userId));
-  }
+  @DeleteMapping(path = "{userId}", version = "1")
+  void deleteUser(@PathVariable @NotNull UUID userId);
 
-  @Override
-  public void updateUserInfo(final UUID userId, final UpdateUserRequestDto request) {
-    userService.updateUserInfo(UserId.fromUuid(userId), UpdateUserRequestMapper.fromDto(request));
-  }
+  @PatchMapping(path = "{userId}", version = "1")
+  void updateUserInfo(
+      @PathVariable @NotNull UUID userId, @RequestBody @Valid UpdateUserRequestDto request);
 
-  @Override
-  public void setUserRole(final UUID userId, final String role) {
-    userService.setUserRole(UserId.fromUuid(userId), Role.fromString(role));
-  }
+  @PutMapping(path = "{userId}/role", version = "1")
+  void setUserRole(@PathVariable @NotNull UUID userId, @RequestBody @NotBlank String role);
 
-  @Override
-  public GetUserRoleResponseDto getUserRole(final UUID userId) {
-    return userService
-        .getUserRole(UserId.fromUuid(userId))
-        .map(GetUserRoleResponseDto::new)
-        .orElseThrow(() -> new UserNotFoundException("User not found"));
-  }
+  @GetMapping(path = "{userId}/role", version = "1")
+  GetUserRoleResponseDto getUserRole(@PathVariable @NotNull UUID userId);
 }

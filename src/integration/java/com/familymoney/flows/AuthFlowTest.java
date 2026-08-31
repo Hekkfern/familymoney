@@ -15,15 +15,13 @@ import com.familymoney.domains.auth.controllers.dtos.RefreshTokenRequestDto;
 import com.familymoney.domains.auth.controllers.dtos.RegisterRequestDto;
 import com.familymoney.domains.auth.controllers.dtos.ResetPasswordRequestDto;
 import com.familymoney.domains.auth.controllers.dtos.VerifyEmailRequestDto;
-import com.familymoney.domains.auth.services.IEmailSenderService;
+import com.familymoney.domains.auth.services.EmailSenderService;
 import com.familymoney.domains.auth.types.AccessToken;
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.auth.types.PasswordResetToken;
 import com.familymoney.domains.auth.types.RefreshToken;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.flows.utils.FlowUtils;
-import com.familymoney.security.DefaultOpaqueTokenHasher;
-import com.familymoney.security.IOpaqueTokenHasher;
 import com.familymoney.security.JwtUtils;
 import com.familymoney.test_utils.DatabaseCrud;
 import com.familymoney.testutils.AuthControllerUriFactory;
@@ -53,13 +51,11 @@ class AuthFlowTest {
 
   // region Fields
 
-  private static final IOpaqueTokenHasher TOKEN_HASHER = new DefaultOpaqueTokenHasher();
-
   private RestTestClient client;
   private FlowUtils flowUtils;
   private DatabaseCrud databaseCrud;
 
-  @MockitoBean private IEmailSenderService emailSenderService;
+  @MockitoBean private EmailSenderService emailSenderService;
   @Autowired private DSLContext dslContext;
   @Autowired private JwtUtils jwtUtils;
 

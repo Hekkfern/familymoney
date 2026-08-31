@@ -1,8 +1,8 @@
 package com.familymoney.security;
 
-import com.familymoney.domains.auth.services.IAuthService;
+import com.familymoney.domains.auth.services.AuthService;
 import com.familymoney.domains.auth.types.AccessToken;
-import com.familymoney.domains.users.services.IUserService;
+import com.familymoney.domains.users.services.UserService;
 import com.familymoney.domains.users.services.data.UserData;
 import com.familymoney.domains.users.types.Role;
 import com.familymoney.domains.users.types.UserId;
@@ -30,8 +30,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
   private static final String ROLE_PREFIX = "ROLE_";
 
   private final JwtUtils jwtUtils;
-  private final IUserService userService;
-  private final IAuthService authService;
+  private final UserService userService;
+  private final AuthService authService;
 
   @Override
   protected void doFilterInternal(

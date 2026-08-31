@@ -1,6 +1,6 @@
 package com.familymoney.domains.auth.events;
 
-import com.familymoney.domains.auth.services.IEmailSenderService;
+import com.familymoney.domains.auth.services.EmailSenderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -12,9 +12,9 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class DefaultPasswordResetEventListener implements IPasswordResetEventListener {
+public class DefaultPasswordResetEventListener implements PasswordResetEventListener {
 
-  private final IEmailSenderService emailSenderService;
+  private final EmailSenderService emailSenderService;
 
   @Async
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)

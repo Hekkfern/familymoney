@@ -4,6 +4,7 @@ import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.familymoney.domains.transactions.repositories.DefaultGroupRepository;
 import com.familymoney.domains.transactions.repositories.GroupRepository;
 import com.familymoney.domains.transactions.repositories.dtos.CreateGroupDto;
 import com.familymoney.domains.transactions.repositories.dtos.UpdateGroupDto;
@@ -53,7 +54,7 @@ class GroupRepositoryTest {
 
   @BeforeEach
   void setUp() {
-    this.groupRepository = new GroupRepository(dslContext);
+    this.groupRepository = new DefaultGroupRepository(dslContext);
     this.databaseCrud = new DatabaseCrud(dslContext);
   }
 

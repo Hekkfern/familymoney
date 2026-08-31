@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.familymoney.domains.transactions.repositories.BalanceRepository;
+import com.familymoney.domains.transactions.repositories.DefaultBalanceRepository;
 import com.familymoney.domains.transactions.repositories.dtos.CreateBalanceDto;
 import com.familymoney.domains.transactions.repositories.dtos.UpdateBalanceDto;
 import com.familymoney.domains.transactions.repositories.entitites.BalanceEntity;
@@ -49,7 +50,7 @@ class BalanceRepositoryTest {
 
   @BeforeEach
   void setUp() {
-    this.balanceRepository = new BalanceRepository(dslContext);
+    this.balanceRepository = new DefaultBalanceRepository(dslContext);
     this.databaseCrud = new DatabaseCrud(dslContext);
   }
 

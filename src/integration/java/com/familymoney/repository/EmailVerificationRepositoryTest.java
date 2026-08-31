@@ -4,6 +4,7 @@ import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.familymoney.domains.auth.repositories.DefaultEmailVerificationRepository;
 import com.familymoney.domains.auth.repositories.EmailVerificationRepository;
 import com.familymoney.domains.auth.repositories.dtos.CreateEmailVerificationDto;
 import com.familymoney.domains.auth.repositories.dtos.UpdateEmailVerificationTokenDto;
@@ -48,7 +49,7 @@ class EmailVerificationRepositoryTest {
   @BeforeEach
   void setUp() {
     this.emailVerificationRepository =
-        new EmailVerificationRepository(dslContext, new DefaultOpaqueTokenHasher());
+        new DefaultEmailVerificationRepository(dslContext, new DefaultOpaqueTokenHasher());
     this.databaseCrud = new DatabaseCrud(dslContext);
   }
 

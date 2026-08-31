@@ -21,7 +21,7 @@ import com.familymoney.generated.tables.PasswordResetTokens;
 import com.familymoney.generated.tables.RefreshTokens;
 import com.familymoney.generated.tables.Users;
 import com.familymoney.security.DefaultOpaqueTokenHasher;
-import com.familymoney.security.IOpaqueTokenHasher;
+import com.familymoney.security.OpaqueTokenHasher;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -34,7 +34,7 @@ import org.jooq.DSLContext;
 @RequiredArgsConstructor
 public class DatabaseCrud {
 
-  private static final IOpaqueTokenHasher TOKEN_HASHER = new DefaultOpaqueTokenHasher();
+  private static final OpaqueTokenHasher TOKEN_HASHER = new DefaultOpaqueTokenHasher();
 
   private final DSLContext dslContext;
 

@@ -4,6 +4,7 @@ import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.familymoney.domains.users.repositories.DefaultUserRepository;
 import com.familymoney.domains.users.repositories.UserRepository;
 import com.familymoney.domains.users.repositories.dtos.CreateUserDto;
 import com.familymoney.domains.users.repositories.dtos.UpdateUserDto;
@@ -48,7 +49,7 @@ class UserRepositoryTest {
 
   @BeforeEach
   void setUp() {
-    this.userRepository = new UserRepository(dslContext);
+    this.userRepository = new DefaultUserRepository(dslContext);
     this.databaseCrud = new DatabaseCrud(dslContext);
   }
 

@@ -3,6 +3,7 @@ package com.familymoney.repository;
 import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.familymoney.domains.auth.repositories.DefaultPasswordResetRepository;
 import com.familymoney.domains.auth.repositories.PasswordResetRepository;
 import com.familymoney.domains.auth.repositories.dtos.CreatePasswordResetDto;
 import com.familymoney.domains.auth.repositories.dtos.UpdatePasswordResetDto;
@@ -45,7 +46,7 @@ class PasswordResetRepositoryTest {
   @BeforeEach
   void setUp() {
     passwordResetRepository =
-        new PasswordResetRepository(dslContext, new DefaultOpaqueTokenHasher());
+        new DefaultPasswordResetRepository(dslContext, new DefaultOpaqueTokenHasher());
     databaseCrud = new DatabaseCrud(dslContext);
   }
 

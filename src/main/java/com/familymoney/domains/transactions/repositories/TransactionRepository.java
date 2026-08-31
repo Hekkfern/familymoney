@@ -1,164 +1,74 @@
 package com.familymoney.domains.transactions.repositories;
 
-import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
-
 import com.familymoney.domains.transactions.repositories.dtos.CreateTransactionDto;
 import com.familymoney.domains.transactions.repositories.dtos.UpdateTransactionDto;
 import com.familymoney.domains.transactions.repositories.entitites.TransactionEntity;
-import com.familymoney.domains.transactions.repositories.mappers.TransactionJooqMapper;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.TransactionId;
-import com.familymoney.generated.tables.Transactions;
-import java.math.BigDecimal;
-import java.time.OffsetDateTime;
-import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
-import lombok.RequiredArgsConstructor;
-import org.jooq.DSLContext;
-import org.jooq.impl.DSL;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Repository;
 
-@Repository
-@RequiredArgsConstructor
-public class TransactionRepository implements ITransactionRepository {
+/**
+ * Repository interface that defines persistence operations for transactions.
+ *
+ * <p>Implementations of this interface are responsible for creating, updating and deleting
+ * transactions, resolving transaction details, and paging queries for transactions associated with
+ * a group.
+ *
+ * <p>All methods return Domain-specific DB objects (Dbo) or primitives that indicate success.
+ * Optional is used for methods that may not find or create a resource.
+ */
+public interface TransactionRepository {
 
-  private final DSLContext db;
+  /**
+   * Creates a new transaction record with the provided details.
+   *
+   * @param data values to store
+   * @return an {@link Optional} containing the created TransactionDbo if the creation was
+   *     successful, or an empty {@link Optional} if the creation failed (e.g., due to invalid input
+   *     or database constraints).
+   */
+  Optional<TransactionEntity> create(CreateTransactionDto data);
 
-  @Override
-  public Optional<TransactionEntity> create(final CreateTransactionDto data) {
+  /**
+   * Updates the transaction record identified by the given TransactionId with the provided data.
+   * Only non-null fields of {@code data} should be applied.
+   *
+   * @param id the identifier of the transaction to be updated
+   * @param data the data containing the updated information for the transaction. Non-null fields in
+   *     the {@link UpdateTransactionDto} will be used to update the corresponding fields in the
+   *     transaction record.
+   * @return true if the transaction was updated (record existed and changes were applied), false
+   *     otherwise.
+   */
+  boolean updateById(TransactionId id, UpdateTransactionDto data);
 
-    return db.insertInto(Transactions.TRANSACTIONS)
-        .columns(
-            Transactions.TRANSACTIONS.ID,
-            Transactions.TRANSACTIONS.DESCRIPTION,
-            Transactions.TRANSACTIONS.GROUP_ID,
-            Transactions.TRANSACTIONS.AMOUNT,
-            Transactions.TRANSACTIONS.CURRENCY_CODE,
-            Transactions.TRANSACTIONS.FROM_USER_ID,
-            Transactions.TRANSACTIONS.TO_USER_ID,
-            Transactions.TRANSACTIONS.DONE_AT)
-        .values(
-            data.id().value(),
-            data.description().value(),
-            data.groupId().value(),
-            data.amount().getNumber().numberValue(java.math.BigDecimal.class),
-            data.amount().getCurrency().getCurrencyCode(),
-            data.lender().value(),
-            data.borrower().value(),
-            OffsetDateTime.ofInstant(data.doneAt(), DEFAULT_TIMEZONE_OFFSET))
-        .returning(
-            Transactions.TRANSACTIONS.ID,
-            Transactions.TRANSACTIONS.DESCRIPTION,
-            Transactions.TRANSACTIONS.GROUP_ID,
-            Transactions.TRANSACTIONS.CURRENCY_CODE,
-            Transactions.TRANSACTIONS.FROM_USER_ID,
-            Transactions.TRANSACTIONS.TO_USER_ID,
-            Transactions.TRANSACTIONS.DONE_AT,
-            Transactions.TRANSACTIONS.CREATED_AT,
-            Transactions.TRANSACTIONS.UPDATED_AT)
-        .fetchOptional()
-        .map(TransactionJooqMapper::toEntity);
-  }
+  /**
+   * Deletes the transaction record identified by the given TransactionId.
+   *
+   * @param id the identifier of the transaction to be deleted
+   * @return true if the transaction was deleted (record existed and was removed), false if no
+   *     transaction with the given id existed or the deletion failed.
+   */
+  boolean deleteById(TransactionId id);
 
-  @Override
-  public boolean updateById(final TransactionId id, final UpdateTransactionDto data) {
-    final BigDecimal amountVal =
-        data.amount() != null
-            ? data.amount().getNumber().numberValue(java.math.BigDecimal.class)
-            : null;
-    final String currencyVal =
-        data.amount() != null ? data.amount().getCurrency().getCurrencyCode() : null;
-    final String descriptionVal = data.description() != null ? data.description().value() : null;
-    final UUID fromVal = data.from() != null ? data.from().value() : null;
-    final UUID toVal = data.to() != null ? data.to().value() : null;
-    final OffsetDateTime doneAtVal =
-        data.doneAt() != null
-            ? OffsetDateTime.ofInstant(data.doneAt(), DEFAULT_TIMEZONE_OFFSET)
-            : null;
+  /**
+   * Retrieves a transaction record by its unique identifier.
+   *
+   * @param id the identifier of the transaction to retrieve
+   * @return an {@link Optional} containing the TransactionDbo if found, otherwise empty.
+   */
+  Optional<TransactionEntity> findById(TransactionId id);
 
-    final int rowsAffected =
-        db.update(Transactions.TRANSACTIONS)
-            .set(
-                Transactions.TRANSACTIONS.AMOUNT,
-                DSL.coalesce(DSL.val(amountVal), Transactions.TRANSACTIONS.AMOUNT))
-            .set(
-                Transactions.TRANSACTIONS.CURRENCY_CODE,
-                DSL.coalesce(DSL.val(currencyVal), Transactions.TRANSACTIONS.CURRENCY_CODE))
-            .set(
-                Transactions.TRANSACTIONS.DESCRIPTION,
-                DSL.coalesce(DSL.val(descriptionVal), Transactions.TRANSACTIONS.DESCRIPTION))
-            .set(
-                Transactions.TRANSACTIONS.FROM_USER_ID,
-                DSL.coalesce(DSL.val(fromVal), Transactions.TRANSACTIONS.FROM_USER_ID))
-            .set(
-                Transactions.TRANSACTIONS.TO_USER_ID,
-                DSL.coalesce(DSL.val(toVal), Transactions.TRANSACTIONS.TO_USER_ID))
-            .set(
-                Transactions.TRANSACTIONS.DONE_AT,
-                DSL.coalesce(DSL.val(doneAtVal), Transactions.TRANSACTIONS.DONE_AT))
-            .where(Transactions.TRANSACTIONS.ID.eq(id.value()))
-            .execute();
-    return rowsAffected > 0;
-  }
-
-  @Override
-  public boolean deleteById(final TransactionId id) {
-    final int rowsAffected =
-        db.deleteFrom(Transactions.TRANSACTIONS)
-            .where(Transactions.TRANSACTIONS.ID.eq(id.value()))
-            .execute();
-    return rowsAffected > 0;
-  }
-
-  @Override
-  public Optional<TransactionEntity> findById(final TransactionId id) {
-    return db.select(
-            Transactions.TRANSACTIONS.ID,
-            Transactions.TRANSACTIONS.DESCRIPTION,
-            Transactions.TRANSACTIONS.GROUP_ID,
-            Transactions.TRANSACTIONS.CURRENCY_CODE,
-            Transactions.TRANSACTIONS.FROM_USER_ID,
-            Transactions.TRANSACTIONS.TO_USER_ID,
-            Transactions.TRANSACTIONS.DONE_AT,
-            Transactions.TRANSACTIONS.CREATED_AT,
-            Transactions.TRANSACTIONS.UPDATED_AT)
-        .from(Transactions.TRANSACTIONS)
-        .where(Transactions.TRANSACTIONS.ID.eq(id.value()))
-        .fetchOptional()
-        .map(TransactionJooqMapper::toEntity);
-  }
-
-  @Override
-  public Page<TransactionEntity> findAllByGroupId(final GroupId groupId, final Pageable pageable) {
-    final Long total =
-        db.selectCount()
-            .from(Transactions.TRANSACTIONS)
-            .where(Transactions.TRANSACTIONS.GROUP_ID.eq(groupId.value()))
-            .fetchOne(0, Long.class);
-    final long safeTotal = total != null ? total : 0L;
-
-    final List<TransactionEntity> data =
-        db.select(
-                Transactions.TRANSACTIONS.ID,
-                Transactions.TRANSACTIONS.DESCRIPTION,
-                Transactions.TRANSACTIONS.GROUP_ID,
-                Transactions.TRANSACTIONS.CURRENCY_CODE,
-                Transactions.TRANSACTIONS.FROM_USER_ID,
-                Transactions.TRANSACTIONS.TO_USER_ID,
-                Transactions.TRANSACTIONS.DONE_AT,
-                Transactions.TRANSACTIONS.CREATED_AT,
-                Transactions.TRANSACTIONS.UPDATED_AT)
-            .from(Transactions.TRANSACTIONS)
-            .where(Transactions.TRANSACTIONS.GROUP_ID.eq(groupId.value()))
-            .limit(pageable.getPageSize())
-            .offset(pageable.getOffset())
-            .fetch()
-            .map(TransactionJooqMapper::toEntity);
-
-    return new PageImpl<>(data, pageable, safeTotal);
-  }
+  /**
+   * Retrieves a paginated list of transactions associated with a specific group.
+   *
+   * @param groupId the identifier of the group for which to retrieve transactions
+   * @param pageable paging information (page number, size, sort).
+   * @return a page of TransactionDbo objects representing transactions associated with the
+   *     specified group. If no transactions are found for the group, the returned page will be
+   *     empty.
+   */
+  Page<TransactionEntity> findAllByGroupId(GroupId groupId, Pageable pageable);
 }

@@ -1,7 +1,7 @@
 package com.familymoney.security;
 
 /** Hashes opaque bearer tokens before they are persisted or used in persistence lookups. */
-public interface IOpaqueTokenHasher {
+public interface OpaqueTokenHasher {
 
   /**
    * Returns the lowercase hexadecimal SHA-256 digest of an opaque token.

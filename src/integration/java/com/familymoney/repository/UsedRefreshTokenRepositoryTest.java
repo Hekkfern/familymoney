@@ -3,6 +3,7 @@ package com.familymoney.repository;
 import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.familymoney.domains.auth.repositories.DefaultUsedRefreshTokenRepository;
 import com.familymoney.domains.auth.repositories.UsedRefreshTokenRepository;
 import com.familymoney.domains.auth.repositories.dtos.CreateUsedRefreshTokenDto;
 import com.familymoney.domains.auth.repositories.entitites.UsedRefreshTokenEntity;
@@ -38,7 +39,7 @@ class UsedRefreshTokenRepositoryTest {
   @BeforeEach
   void setUp() {
     this.usedRefreshTokenRepository =
-        new UsedRefreshTokenRepository(dslContext, new DefaultOpaqueTokenHasher());
+        new DefaultUsedRefreshTokenRepository(dslContext, new DefaultOpaqueTokenHasher());
   }
 
   @Nested
