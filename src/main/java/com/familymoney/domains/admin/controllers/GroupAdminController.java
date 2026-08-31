@@ -23,33 +23,33 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public interface GroupAdminController {
 
   @Operation(summary = "Get the list of groups where the selected user is a member")
-  @GetMapping(path = "groups/users/{userId}", version = "1")
+  @GetMapping(path = "users/{userId}", version = "1")
   GetGroupsResponseDto getGroupsOfUser(@PathVariable @NotNull UUID userId, Pageable pageable);
 
   @Operation(summary = "Delete a group")
-  @DeleteMapping(path = "groups/{groupId}", version = "1")
+  @DeleteMapping(path = "{groupId}", version = "1")
   void deleteGroup(@PathVariable @NotNull UUID groupId);
 
   @Operation(summary = "Get information about a specific group")
-  @GetMapping(path = "groups/{groupId}", version = "1")
+  @GetMapping(path = "{groupId}", version = "1")
   GetGroupResponseDto getGroupInfo(@PathVariable @NotNull UUID groupId);
 
   @Operation(summary = "Update information of a specific group")
-  @PatchMapping(path = "groups/{groupId}", version = "1")
+  @PatchMapping(path = "{groupId}", version = "1")
   void updateGroupInfo(
       @PathVariable @NotNull UUID groupId, @RequestBody @Valid UpdateGroupRequestDto request);
 
   @Operation(summary = "Add a user to a specific group")
-  @PostMapping(path = "groups/{groupId}/users", version = "1")
+  @PostMapping(path = "{groupId}/users", version = "1")
   void addUserToGroup(
       @PathVariable @NotNull UUID groupId, @RequestBody @Valid AddUserToGroupRequestDto request);
 
   @Operation(summary = "Remove a user from a specific group")
-  @DeleteMapping(path = "groups/{groupId}/users", version = "1")
+  @DeleteMapping(path = "{groupId}/users", version = "1")
   void removeUserInGroup(
       @PathVariable @NotNull UUID groupId, @RequestBody @Valid RemoveUserInGroupRequestDto request);
 
   @Operation(summary = "Get the list of users in a specific group")
-  @GetMapping(path = "groups/{groupId}/users", version = "1")
+  @GetMapping(path = "{groupId}/users", version = "1")
   GetUsersInGroupResponseDto getUsersInGroup(@PathVariable @NotNull UUID groupId);
 }

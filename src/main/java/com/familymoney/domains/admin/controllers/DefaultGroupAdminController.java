@@ -7,9 +7,18 @@ import com.familymoney.domains.transactions.controllers.dtos.GetUsersInGroupResp
 import com.familymoney.domains.transactions.controllers.dtos.RemoveUserInGroupRequestDto;
 import com.familymoney.domains.transactions.controllers.dtos.UpdateGroupRequestDto;
 import java.util.UUID;
-import org.springframework.data.domain.Pageable;
 
+import com.familymoney.domains.transactions.services.TransactionGroupService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequiredArgsConstructor
 public class DefaultGroupAdminController implements GroupAdminController {
+
+  private final TransactionGroupService transactionGroupService;
+
   @Override
   public GetGroupsResponseDto getGroupsOfUser(UUID userId, Pageable pageable) {
     return null;
