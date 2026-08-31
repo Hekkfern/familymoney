@@ -1,15 +1,12 @@
-package com.familymoney.domains.transactions.controllers;
+package com.familymoney.domains.admin.controllers;
 
-import com.familymoney.domains.transactions.controllers.dtos.CreateGroupRequestDto;
-import com.familymoney.domains.transactions.controllers.dtos.CreateGroupResponseDto;
-import com.familymoney.domains.transactions.controllers.dtos.EnterGroupRequestDto;
-import com.familymoney.domains.transactions.controllers.dtos.GetGroupBalancesResponseDto;
+import com.familymoney.domains.admin.controllers.dtos.AddUserToGroupRequestDto;
 import com.familymoney.domains.transactions.controllers.dtos.GetGroupResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.GetGroupsResponseDto;
-import com.familymoney.domains.transactions.controllers.dtos.GetInvitationTokenResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.GetUsersInGroupResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.RemoveUserInGroupRequestDto;
 import com.familymoney.domains.transactions.controllers.dtos.UpdateGroupRequestDto;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
@@ -22,38 +19,37 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-@RequestMapping
-public interface IGroupController {
+@RequestMapping("admin/groups")
+public interface IGroupAdminController {
 
-  @PostMapping(path = "groups", version = "1")
-  CreateGroupResponseDto createGroup(@RequestBody @Valid CreateGroupRequestDto request);
+  @Operation(summary = "Get the list of groups where the selected user is a member")
+  @GetMapping(path = "groups/users/{userId}", version = "1")
+  GetGroupsResponseDto getGroupsOfUser(@PathVariable @NotNull UUID userId, Pageable pageable);
 
-  @GetMapping(path = "groups", version = "1")
-  GetGroupsResponseDto getGroupsOfUser(Pageable pageable);
-
+  @Operation(summary = "Delete a group")
   @DeleteMapping(path = "groups/{groupId}", version = "1")
   void deleteGroup(@PathVariable @NotNull UUID groupId);
 
+  @Operation(summary = "Get information about a specific group")
   @GetMapping(path = "groups/{groupId}", version = "1")
   GetGroupResponseDto getGroupInfo(@PathVariable @NotNull UUID groupId);
 
+  @Operation(summary = "Update information of a specific group")
   @PatchMapping(path = "groups/{groupId}", version = "1")
   void updateGroupInfo(
       @PathVariable @NotNull UUID groupId, @RequestBody @Valid UpdateGroupRequestDto request);
 
-  @GetMapping(path = "groups/{groupId}/invitation", version = "1")
-  GetInvitationTokenResponseDto getInvitationToken(@PathVariable @NotNull UUID groupId);
+  @Operation(summary = "Add a user to a specific group")
+  @PostMapping(path = "groups/{groupId}/users", version = "1")
+  void addUserToGroup(
+      @PathVariable @NotNull UUID groupId, @RequestBody @Valid AddUserToGroupRequestDto request);
 
-  @PostMapping(path = "groups/invitation", version = "1")
-  void enterToGroup(@RequestBody @Valid EnterGroupRequestDto request);
-
-  @GetMapping(path = "groups/{groupId}/users", version = "1")
-  GetUsersInGroupResponseDto getUsersInGroup(@PathVariable @NotNull UUID groupId);
-
+  @Operation(summary = "Remove a user from a specific group")
   @DeleteMapping(path = "groups/{groupId}/users", version = "1")
   void removeUserInGroup(
-      @PathVariable @NotNull UUID groupId, @RequestBody @Valid RemoveUserInGroupRequestDto request);
+    @PathVariable @NotNull UUID groupId, @RequestBody @Valid RemoveUserInGroupRequestDto request);
 
-  @GetMapping(path = "groups/{groupId}/balances", version = "1")
-  GetGroupBalancesResponseDto getGroupBalances(@PathVariable @NotNull UUID groupId);
+  @Operation(summary = "Get the list of users in a specific group")
+  @GetMapping(path = "groups/{groupId}/users", version = "1")
+  GetUsersInGroupResponseDto getUsersInGroup(@PathVariable @NotNull UUID groupId);
 }

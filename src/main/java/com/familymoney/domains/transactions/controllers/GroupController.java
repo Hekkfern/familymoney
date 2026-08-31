@@ -8,7 +8,7 @@ import com.familymoney.domains.transactions.controllers.dtos.GetGroupResponseDto
 import com.familymoney.domains.transactions.controllers.dtos.GetGroupsResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.GetInvitationTokenResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.GetUsersInGroupResponseDto;
-import com.familymoney.domains.transactions.controllers.dtos.RemoveUserRequestDto;
+import com.familymoney.domains.transactions.controllers.dtos.RemoveUserInGroupRequestDto;
 import com.familymoney.domains.transactions.controllers.dtos.UpdateGroupRequestDto;
 import com.familymoney.domains.transactions.controllers.mappers.CreateGroupResponseMapper;
 import com.familymoney.domains.transactions.controllers.mappers.GetGroupBalancesResponseMapper;
@@ -128,7 +128,7 @@ public class GroupController implements IGroupController {
   }
 
   @Override
-  public void removeUserInGroup(UUID groupId, RemoveUserRequestDto request) {
+  public void removeUserInGroup(UUID groupId, RemoveUserInGroupRequestDto request) {
     // Get user ID from security context (validated)
     final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     // Remove user from group
