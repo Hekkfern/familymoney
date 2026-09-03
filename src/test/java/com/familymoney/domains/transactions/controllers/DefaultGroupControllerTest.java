@@ -299,12 +299,12 @@ class DefaultGroupControllerTest {
     @Test
     void bad_request_when_group_name_is_invalid() {
       client
-        .patch()
-        .uri(GroupControllerUriFactory.getGroupPath(GroupId.generate().toString()))
-        .body(Map.of("name", "a".repeat(100)))
-        .exchange()
-        .expectStatus()
-        .isBadRequest();
+          .patch()
+          .uri(GroupControllerUriFactory.getGroupPath(GroupId.generate().toString()))
+          .body(Map.of("name", "a".repeat(100)))
+          .exchange()
+          .expectStatus()
+          .isBadRequest();
 
       verifyNoInteractions(transactionGroupService);
     }
@@ -320,6 +320,20 @@ class DefaultGroupControllerTest {
           .isBadRequest();
 
       verifyNoInteractions(transactionGroupService);
+    }
+
+    @Test
+    @WithMockUserId(userId = USER_ID)
+    void updates_description_when_description_is_blank() {
+      client
+          .patch()
+          .uri(GroupControllerUriFactory.getGroupPath(GroupId.generate().toString()))
+          .body(Map.of("description", "  "))
+          .exchange()
+          .expectStatus()
+          .isOk();
+
+      verify(transactionGroupService).updateGroupInfo(any(), any(), any());
     }
   }
 

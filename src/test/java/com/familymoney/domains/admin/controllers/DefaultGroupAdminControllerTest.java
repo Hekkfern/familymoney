@@ -280,7 +280,8 @@ class DefaultGroupAdminControllerTest {
       client
           .patch()
           .uri(GroupAdminControllerUriFactory.getGroupPath(groupId.toString()))
-          .body(Map.of("description", FakeGenerator.description()))
+          .body(
+              Map.of("name", FakeGenerator.groupName(), "description", FakeGenerator.description()))
           .exchange()
           .expectStatus()
           .isOk();
@@ -309,9 +310,9 @@ class DefaultGroupAdminControllerTest {
           .body(Map.of("description", "  "))
           .exchange()
           .expectStatus()
-          .isBadRequest();
+          .isOk();
 
-      verifyNoInteractions(transactionGroupAdminService);
+      verify(transactionGroupAdminService).updateGroupInfo(any(), any());
     }
 
     @Test
