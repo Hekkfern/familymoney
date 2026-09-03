@@ -1,6 +1,7 @@
 package com.familymoney.domains.transactions.services;
 
 import com.familymoney.domains.transactions.exceptions.GroupInvitationInvalidException;
+import com.familymoney.domains.transactions.exceptions.GroupOwnerNotFoundException;
 import com.familymoney.domains.transactions.exceptions.MaximumGroupInvitationsReachedException;
 import com.familymoney.domains.transactions.exceptions.TransactionNotFoundException;
 import com.familymoney.domains.transactions.repositories.BalanceRepository;
@@ -38,6 +39,7 @@ import javax.money.CurrencyUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.javamoney.moneta.Money;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -64,10 +66,14 @@ public class DefaultTransactionGroupService implements TransactionGroupService {
       final CurrencyUnit currency,
       final UserId createdBy) {
     final GroupId groupId = groupOperations.createGroup(name, description, currency);
-    groupRepository
-        .addUser(createdBy, groupId)
-        .orElseThrow(
-            () -> new DatabaseExecutionException("Unable to assign owner to the new group"));
+    try {
+      groupRepository
+          .addUser(createdBy, groupId)
+          .orElseThrow(
+              () -> new DatabaseExecutionException("Unable to assign owner to the new group"));
+    } catch (final DataIntegrityViolationException e) {
+      throw new GroupOwnerNotFoundException("User does not exist");
+    }
     return groupId;
   }
 

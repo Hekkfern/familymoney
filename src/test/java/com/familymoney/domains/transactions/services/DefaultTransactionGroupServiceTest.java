@@ -12,6 +12,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.familymoney.domains.transactions.exceptions.GroupInvitationInvalidException;
+import com.familymoney.domains.transactions.exceptions.GroupOwnerNotFoundException;
 import com.familymoney.domains.transactions.exceptions.MaximumGroupInvitationsReachedException;
 import com.familymoney.domains.transactions.exceptions.TransactionGroupNotFoundException;
 import com.familymoney.domains.transactions.exceptions.TransactionNotFoundException;
@@ -60,6 +61,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -181,6 +183,20 @@ class DefaultTransactionGroupServiceTest {
               () -> transactionGroupService.createGroup(groupName, desc, CURRENCY_USD, userId))
           .isInstanceOf(DatabaseExecutionException.class)
           .hasMessageContaining("Unable to assign owner to the new group");
+    }
+
+    @Test
+    void throws_user_not_found_when_addUser_fails_due_to_user_deleted_concurrently() {
+      when(groupOperations.createGroup(any(), any(), any())).thenReturn(GroupId.generate());
+      when(groupRepository.addUser(any(UserId.class), any(GroupId.class)))
+          .thenThrow(new DataIntegrityViolationException("FK violation"));
+
+      final GroupName groupName = GroupName.fromString("n");
+      final Description desc = Description.of("d");
+      final UserId userId = UserId.generate();
+      assertThatThrownBy(
+              () -> transactionGroupService.createGroup(groupName, desc, CURRENCY_USD, userId))
+          .isInstanceOf(GroupOwnerNotFoundException.class);
     }
   }
 

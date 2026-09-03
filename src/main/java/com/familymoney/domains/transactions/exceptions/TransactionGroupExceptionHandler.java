@@ -22,4 +22,10 @@ public class TransactionGroupExceptionHandler extends ResponseEntityExceptionHan
     logger.info(e.getMessage());
     return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
   }
+
+  @ExceptionHandler(GroupOwnerNotFoundException.class)
+  public ProblemDetail handleGroupOwnerNotFoundException(GroupOwnerNotFoundException e) {
+    logger.info(e.getMessage());
+    return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+  }
 }
