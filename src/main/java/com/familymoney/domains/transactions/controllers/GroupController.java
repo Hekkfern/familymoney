@@ -8,7 +8,6 @@ import com.familymoney.domains.transactions.controllers.dtos.GetGroupResponseDto
 import com.familymoney.domains.transactions.controllers.dtos.GetGroupsResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.GetInvitationTokenResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.GetUsersInGroupResponseDto;
-import com.familymoney.domains.transactions.controllers.dtos.RemoveUserInGroupRequestDto;
 import com.familymoney.domains.transactions.controllers.dtos.UpdateGroupRequestDto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -50,9 +49,8 @@ public interface GroupController {
   @GetMapping(path = "{groupId}/users", version = "1")
   GetUsersInGroupResponseDto getUsersInGroup(@PathVariable @NotNull UUID groupId);
 
-  @DeleteMapping(path = "{groupId}/users", version = "1")
-  void removeUserInGroup(
-      @PathVariable @NotNull UUID groupId, @RequestBody @Valid RemoveUserInGroupRequestDto request);
+  @DeleteMapping(path = "{groupId}/users/{userId}", version = "1")
+  void removeUserFromGroup(@PathVariable @NotNull UUID groupId, @PathVariable @NotNull UUID userId);
 
   @GetMapping(path = "{groupId}/balances", version = "1")
   GetGroupBalancesResponseDto getGroupBalances(@PathVariable @NotNull UUID groupId);

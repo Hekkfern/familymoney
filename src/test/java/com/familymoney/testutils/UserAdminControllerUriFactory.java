@@ -2,7 +2,7 @@ package com.familymoney.testutils;
 
 import com.familymoney.domains.users.types.UserId;
 
-public class AdminControllerUriFactory {
+public class UserAdminControllerUriFactory {
 
   // region Constants
 

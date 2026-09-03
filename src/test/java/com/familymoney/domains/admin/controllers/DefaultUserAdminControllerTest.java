@@ -12,8 +12,9 @@ import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.Role;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.domains.users.types.UserName;
-import com.familymoney.testutils.AdminControllerUriFactory;
+import com.familymoney.security.JwtAuthFilter;
 import com.familymoney.testutils.FakeGenerator;
+import com.familymoney.testutils.UserAdminControllerUriFactory;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Optional;
@@ -33,12 +34,10 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 @WebMvcTest(
     controllers = UserAdminController.class,
     excludeFilters =
-        @ComponentScan.Filter(
-            type = FilterType.ASSIGNABLE_TYPE,
-            classes = com.familymoney.security.JwtAuthFilter.class))
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = JwtAuthFilter.class))
 @AutoConfigureMockMvc(addFilters = false)
 @AutoConfigureRestTestClient
-class UserAdminControllerTest {
+class DefaultUserAdminControllerTest {
 
   private final Instant now = Instant.parse("2025-01-01T00:00:00Z");
 
@@ -67,7 +66,7 @@ class UserAdminControllerTest {
       final GetUserResponseDto data =
           client
               .get()
-              .uri(AdminControllerUriFactory.getUserPath(userId))
+              .uri(UserAdminControllerUriFactory.getUserPath(userId))
               .exchange()
               .expectStatus()
               .isOk()

@@ -1,6 +1,7 @@
 package com.familymoney.domains.transactions.controllers.dtos;
 
 import com.familymoney.domains.transactions.validations.DifferentFromTo;
+import com.familymoney.domains.transactions.validations.ValidDescription;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import java.time.Instant;
@@ -11,7 +12,7 @@ import org.jspecify.annotations.Nullable;
 @DifferentFromTo
 public record UpdateTransactionRequestDto(
     @NotNull UUID id,
-    @Nullable String description,
+    @Nullable @ValidDescription String description,
     @Nullable UUID from,
     @Nullable UUID to,
     @Nullable Money amount,

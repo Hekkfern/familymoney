@@ -92,7 +92,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.authentication.BadCredentialsException;
 
 @ExtendWith(MockitoExtension.class)
-class AuthServiceTest {
+class DefaultAuthServiceTest {
 
   private final Instant now = Instant.parse("2025-01-01T00:00:00Z");
 

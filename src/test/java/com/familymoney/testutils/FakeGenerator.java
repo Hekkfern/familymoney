@@ -45,4 +45,8 @@ public final class FakeGenerator {
   public static String groupName() {
     return random.next(10, LOWER_CHARACTERS);
   }
+
+  public static String description() {
+    return random.next(10, LOWER_CHARACTERS);
+  }
 }

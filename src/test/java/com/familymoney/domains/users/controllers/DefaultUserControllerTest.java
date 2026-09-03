@@ -37,7 +37,7 @@ import org.springframework.test.web.servlet.client.RestTestClient;
             classes = com.familymoney.security.JwtAuthFilter.class))
 @AutoConfigureMockMvc(addFilters = false)
 @AutoConfigureRestTestClient
-class UserControllerTest {
+class DefaultUserControllerTest {
 
   private final Instant now = Instant.parse("2025-01-01T00:00:00Z");
   private static final String USER_ID = "019d52d0-d1b8-7d2d-ba2d-39007c0dda4f";

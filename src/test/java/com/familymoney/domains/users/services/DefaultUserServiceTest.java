@@ -25,7 +25,7 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class UserServiceTest {
+class DefaultUserServiceTest {
 
   private final Instant now = Instant.parse("2025-01-01T00:00:00Z");
 

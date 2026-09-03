@@ -8,7 +8,6 @@ import com.familymoney.domains.transactions.controllers.dtos.GetGroupResponseDto
 import com.familymoney.domains.transactions.controllers.dtos.GetGroupsResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.GetInvitationTokenResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.GetUsersInGroupResponseDto;
-import com.familymoney.domains.transactions.controllers.dtos.RemoveUserInGroupRequestDto;
 import com.familymoney.domains.transactions.controllers.dtos.UpdateGroupRequestDto;
 import com.familymoney.domains.transactions.controllers.mappers.CreateGroupResponseMapper;
 import com.familymoney.domains.transactions.controllers.mappers.GetGroupBalancesResponseMapper;
@@ -63,9 +62,8 @@ public class DefaultGroupController implements GroupController {
     // Get groups of user
     final Page<GroupData> groupPages = transactionGroupService.getGroupsByUser(user.id(), pageable);
     // Generate response
-    return GetGroupsResponseDto.builder()
-        .groups(groupPages.getContent().stream().map(GetGroupResponseMapper::toDto).toList())
-        .build();
+    return new GetGroupsResponseDto(
+        groupPages.getContent().stream().map(GetGroupResponseMapper::toDto).toList());
   }
 
   @Override
@@ -128,12 +126,12 @@ public class DefaultGroupController implements GroupController {
   }
 
   @Override
-  public void removeUserInGroup(UUID groupId, RemoveUserInGroupRequestDto request) {
+  public void removeUserFromGroup(UUID groupId, UUID userId) {
     // Get user ID from security context (validated)
     final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     // Remove user from group
     transactionGroupService.removeUserFromGroup(
-        GroupId.fromUuid(groupId), user.id(), UserId.fromUuid(request.userId()));
+        GroupId.fromUuid(groupId), user.id(), UserId.fromUuid(userId));
   }
 
   @Override

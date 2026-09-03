@@ -9,6 +9,9 @@ public class ValidCurrencyCodeValidator implements ConstraintValidator<ValidCurr
 
   @Override
   public boolean isValid(String value, ConstraintValidatorContext context) {
+    if (value == null) {
+      return true;
+    }
     boolean containsIsoCode = false;
 
     Set<Currency> currencies = Currency.getAvailableCurrencies();

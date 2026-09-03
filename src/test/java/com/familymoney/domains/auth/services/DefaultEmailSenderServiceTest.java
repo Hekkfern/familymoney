@@ -33,7 +33,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
 @ExtendWith(MockitoExtension.class)
-class EmailSenderServiceTest {
+class DefaultEmailSenderServiceTest {
 
   @Mock private JavaMailSender javaMailSender;
 

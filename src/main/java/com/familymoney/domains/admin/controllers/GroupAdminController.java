@@ -1,10 +1,10 @@
 package com.familymoney.domains.admin.controllers;
 
-import com.familymoney.domains.admin.controllers.dtos.AddUserToGroupRequestDto;
+import com.familymoney.domains.transactions.controllers.dtos.CreateGroupRequestDto;
+import com.familymoney.domains.transactions.controllers.dtos.CreateGroupResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.GetGroupResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.GetGroupsResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.GetUsersInGroupResponseDto;
-import com.familymoney.domains.transactions.controllers.dtos.RemoveUserInGroupRequestDto;
 import com.familymoney.domains.transactions.controllers.dtos.UpdateGroupRequestDto;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -21,6 +21,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @RequestMapping("admin/groups")
 public interface GroupAdminController {
+
+  @Operation(summary = "Create a new transaction group")
+  @PostMapping(path = "", version = "1")
+  CreateGroupResponseDto createGroup(@RequestBody @Valid CreateGroupRequestDto request);
 
   @Operation(summary = "Get the list of groups where the selected user is a member")
   @GetMapping(path = "users/{userId}", version = "1")
@@ -40,14 +44,12 @@ public interface GroupAdminController {
       @PathVariable @NotNull UUID groupId, @RequestBody @Valid UpdateGroupRequestDto request);
 
   @Operation(summary = "Add a user to a specific group")
-  @PostMapping(path = "{groupId}/users", version = "1")
-  void addUserToGroup(
-      @PathVariable @NotNull UUID groupId, @RequestBody @Valid AddUserToGroupRequestDto request);
+  @PostMapping(path = "{groupId}/users/{userId}", version = "1")
+  void addUserToGroup(@PathVariable @NotNull UUID groupId, @PathVariable @NotNull UUID userId);
 
   @Operation(summary = "Remove a user from a specific group")
-  @DeleteMapping(path = "{groupId}/users", version = "1")
-  void removeUserInGroup(
-      @PathVariable @NotNull UUID groupId, @RequestBody @Valid RemoveUserInGroupRequestDto request);
+  @DeleteMapping(path = "{groupId}/users/{userId}", version = "1")
+  void removeUserFromGroup(@PathVariable @NotNull UUID groupId, @PathVariable @NotNull UUID userId);
 
   @Operation(summary = "Get the list of users in a specific group")
   @GetMapping(path = "{groupId}/users", version = "1")
