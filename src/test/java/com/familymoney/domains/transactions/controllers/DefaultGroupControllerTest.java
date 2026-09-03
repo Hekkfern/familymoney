@@ -79,13 +79,14 @@ class DefaultGroupControllerTest {
   }
 
   @Nested
-  class CreateGroup {
+  class CreateGroupAndAddCreatorAsMember {
 
     @Test
     @WithMockUserId(userId = USER_ID)
     void creates_group() {
       final GroupId groupId = GroupId.generate();
-      when(transactionGroupService.createGroup(any(), any(), any(), any())).thenReturn(groupId);
+      when(transactionGroupService.createGroupAndAddCreatorAsMember(any(), any(), any(), any()))
+          .thenReturn(groupId);
 
       final CreateGroupResponseDto response =
           client
@@ -140,7 +141,7 @@ class DefaultGroupControllerTest {
     @Test
     @WithMockUserId(userId = USER_ID)
     void internal_server_error_when_service_fails() {
-      when(transactionGroupService.createGroup(any(), any(), any(), any()))
+      when(transactionGroupService.createGroupAndAddCreatorAsMember(any(), any(), any(), any()))
           .thenThrow(new DatabaseExecutionException("database unavailable"));
 
       client

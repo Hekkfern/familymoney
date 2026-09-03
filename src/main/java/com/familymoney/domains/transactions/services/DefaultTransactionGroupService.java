@@ -59,8 +59,13 @@ public class DefaultTransactionGroupService implements TransactionGroupService {
   private final GroupInvitationProperties groupInvitationProperties;
 
   @Override
+  public GroupId createGroup(GroupName name, Description description, CurrencyUnit currency) {
+    return groupOperations.createGroup(name, description, currency);
+  }
+
+  @Override
   @Transactional
-  public GroupId createGroup(
+  public GroupId createGroupAndAddCreatorAsMember(
       final GroupName name,
       final Description description,
       final CurrencyUnit currency,
@@ -85,7 +90,14 @@ public class DefaultTransactionGroupService implements TransactionGroupService {
   }
 
   @Override
+  public void deleteGroupAsAdmin(GroupId groupId) {
+    groupOperations.checkIfGroupExists(groupId);
+    groupOperations.deleteGroup(groupId);
+  }
+
+  @Override
   public Page<GroupData> getGroupsByUser(final UserId userId, final Pageable pageable) {
+    groupOperations.checkIfUserExists(userId);
     return groupOperations.getGroupsByUser(userId, pageable);
   }
 
@@ -97,10 +109,22 @@ public class DefaultTransactionGroupService implements TransactionGroupService {
   }
 
   @Override
+  public GroupData getGroupInfoAsAdmin(GroupId groupId) {
+    groupOperations.checkIfGroupExists(groupId);
+    return groupOperations.getGroupInfo(groupId);
+  }
+
+  @Override
   public void updateGroupInfo(
       final GroupId groupId, final UserId userId, final UpdateGroupData data) {
     groupOperations.checkIfGroupExists(groupId);
     groupOperations.checkIfUserIsInGroup(userId, groupId);
+    groupOperations.updateGroupInfo(groupId, data);
+  }
+
+  @Override
+  public void updateGroupInfoAsAdmin(GroupId groupId, UpdateGroupData data) {
+    groupOperations.checkIfGroupExists(groupId);
     groupOperations.updateGroupInfo(groupId, data);
   }
 
@@ -145,10 +169,32 @@ public class DefaultTransactionGroupService implements TransactionGroupService {
   }
 
   @Override
+  public List<UserId> getUsersInGroupAsAdmin(GroupId groupId) {
+    groupOperations.checkIfGroupExists(groupId);
+    return groupOperations.getUsersInGroup(groupId);
+  }
+
+  @Override
+  public void addUserToGroupAsAdmin(GroupId groupId, UserId userIdToAdd) {
+    groupOperations.checkIfGroupExists(groupId);
+    groupOperations.checkIfUserExists(userIdToAdd);
+    groupRepository
+        .addUser(userIdToAdd, groupId)
+        .orElseThrow(() -> new DatabaseExecutionException("Unable to add user to group"));
+  }
+
+  @Override
   public void removeUserFromGroup(
       final GroupId groupId, final UserId userId, final UserId userIdToRemove) {
     groupOperations.checkIfGroupExists(groupId);
     groupOperations.checkIfUserIsInGroup(userId, groupId);
+    groupOperations.removeUserFromGroup(groupId, userIdToRemove);
+  }
+
+  @Override
+  public void removeUserFromGroupAsAdmin(GroupId groupId, UserId userIdToRemove) {
+    groupOperations.checkIfGroupExists(groupId);
+    groupOperations.checkIfUserExists(userIdToRemove);
     groupOperations.removeUserFromGroup(groupId, userIdToRemove);
   }
 

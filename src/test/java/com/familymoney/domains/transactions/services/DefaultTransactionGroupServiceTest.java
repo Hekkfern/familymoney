@@ -138,7 +138,7 @@ class DefaultTransactionGroupServiceTest {
   }
 
   @Nested
-  class CreateGroup {
+  class CreateGroupAndAddCreatorAsMember {
 
     @Test
     void returns_id_when_repository_succeeds() {
@@ -150,7 +150,9 @@ class DefaultTransactionGroupServiceTest {
       mockAddUserToGroupRepository();
 
       assertThatCode(
-              () -> transactionGroupService.createGroup(groupName, desc, CURRENCY_USD, createdBy))
+              () ->
+                  transactionGroupService.createGroupAndAddCreatorAsMember(
+                      groupName, desc, CURRENCY_USD, createdBy))
           .doesNotThrowAnyException();
 
       verify(groupRepository).addUser(createdBy, groupId);
@@ -165,7 +167,9 @@ class DefaultTransactionGroupServiceTest {
       final Description desc = Description.of("d");
       final UserId userId = UserId.generate();
       assertThatThrownBy(
-              () -> transactionGroupService.createGroup(groupName, desc, CURRENCY_USD, userId))
+              () ->
+                  transactionGroupService.createGroupAndAddCreatorAsMember(
+                      groupName, desc, CURRENCY_USD, userId))
           .isInstanceOf(DatabaseExecutionException.class)
           .hasMessageContaining("Unable to create group");
     }
@@ -180,7 +184,9 @@ class DefaultTransactionGroupServiceTest {
       final Description desc = Description.of("d");
       final UserId userId = UserId.generate();
       assertThatThrownBy(
-              () -> transactionGroupService.createGroup(groupName, desc, CURRENCY_USD, userId))
+              () ->
+                  transactionGroupService.createGroupAndAddCreatorAsMember(
+                      groupName, desc, CURRENCY_USD, userId))
           .isInstanceOf(DatabaseExecutionException.class)
           .hasMessageContaining("Unable to assign owner to the new group");
     }
@@ -195,7 +201,9 @@ class DefaultTransactionGroupServiceTest {
       final Description desc = Description.of("d");
       final UserId userId = UserId.generate();
       assertThatThrownBy(
-              () -> transactionGroupService.createGroup(groupName, desc, CURRENCY_USD, userId))
+              () ->
+                  transactionGroupService.createGroupAndAddCreatorAsMember(
+                      groupName, desc, CURRENCY_USD, userId))
           .isInstanceOf(GroupOwnerNotFoundException.class);
     }
   }
@@ -207,8 +215,6 @@ class DefaultTransactionGroupServiceTest {
     void deletes_group_when_group_exists_and_user_is_member_of_the_group() {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
-      when(groupRepository.existsById(gid)).thenReturn(true);
-      when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
 
       transactionGroupService.deleteGroup(gid, user);
 
@@ -219,7 +225,9 @@ class DefaultTransactionGroupServiceTest {
     void throws_when_when_group_doesnt_exist() {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
-      when(groupRepository.existsById(gid)).thenReturn(false);
+      doThrow(new TransactionGroupNotFoundException("Group not found"))
+          .when(groupOperations)
+          .checkIfGroupExists(gid);
 
       assertThatThrownBy(() -> transactionGroupService.deleteGroup(gid, user))
           .isInstanceOf(TransactionGroupNotFoundException.class);
@@ -229,8 +237,9 @@ class DefaultTransactionGroupServiceTest {
     void throws_when_when_group_exists_and_user_is_not_member_of_the_group() {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
-      when(groupRepository.existsById(gid)).thenReturn(true);
-      when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
+      doThrow(new UserIsNotMemberOfGroupException("User is not a member of the group"))
+          .when(groupOperations)
+          .checkIfUserIsInGroup(user, gid);
 
       assertThatThrownBy(() -> transactionGroupService.deleteGroup(gid, user))
           .isInstanceOf(UserIsNotMemberOfGroupException.class);
@@ -263,8 +272,6 @@ class DefaultTransactionGroupServiceTest {
     void returns_data_when_group_exists_and_user_is_member_of_the_group() {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
-      when(groupRepository.existsById(gid)).thenReturn(true);
-      when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
       when(groupOperations.getGroupInfo(gid)).thenReturn(GroupDataMapper.fromDbo(groupDbo(gid)));
 
       final GroupData data = transactionGroupService.getGroupInfo(gid, user);
@@ -277,8 +284,9 @@ class DefaultTransactionGroupServiceTest {
     void throws_when_group_exists_and_user_is_not_member_of_the_group() {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
-      when(groupRepository.existsById(gid)).thenReturn(true);
-      when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
+      doThrow(new UserIsNotMemberOfGroupException("User is not a member of the group"))
+          .when(groupOperations)
+          .checkIfUserIsInGroup(user, gid);
 
       assertThatThrownBy(() -> transactionGroupService.getGroupInfo(gid, user))
           .isInstanceOf(UserIsNotMemberOfGroupException.class);
@@ -288,7 +296,9 @@ class DefaultTransactionGroupServiceTest {
     void throws_when_group_doesnt_exist() {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
-      when(groupRepository.existsById(gid)).thenReturn(false);
+      doThrow(new TransactionGroupNotFoundException("Group not found"))
+          .when(groupOperations)
+          .checkIfGroupExists(gid);
 
       assertThatThrownBy(() -> transactionGroupService.getGroupInfo(gid, user))
           .isInstanceOf(TransactionGroupNotFoundException.class);
@@ -302,8 +312,6 @@ class DefaultTransactionGroupServiceTest {
     void calls_repository_when_user_is_member_of_the_group() {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
-      when(groupRepository.existsById(gid)).thenReturn(true);
-      when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
 
       final UpdateGroupData data = new UpdateGroupData(null, Description.of("new"));
       transactionGroupService.updateGroupInfo(gid, user, data);
@@ -315,8 +323,9 @@ class DefaultTransactionGroupServiceTest {
     void throws_when_user_is_not_member_of_the_group() {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
-      when(groupRepository.existsById(gid)).thenReturn(true);
-      when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
+      doThrow(new UserIsNotMemberOfGroupException("User is not a member of the group"))
+          .when(groupOperations)
+          .checkIfUserIsInGroup(user, gid);
 
       final UpdateGroupData data = new UpdateGroupData(null, Description.of("new"));
       assertThatThrownBy(() -> transactionGroupService.updateGroupInfo(gid, user, data))
@@ -327,7 +336,9 @@ class DefaultTransactionGroupServiceTest {
     void throws_when_group_doesnt_exist() {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
-      when(groupRepository.existsById(gid)).thenReturn(false);
+      doThrow(new TransactionGroupNotFoundException("Group not found"))
+          .when(groupOperations)
+          .checkIfGroupExists(gid);
 
       final UpdateGroupData data = new UpdateGroupData(null, Description.of("new"));
       assertThatThrownBy(() -> transactionGroupService.updateGroupInfo(gid, user, data))
@@ -350,8 +361,6 @@ class DefaultTransactionGroupServiceTest {
     void returns_token_when_created() {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
-      when(groupRepository.existsById(gid)).thenReturn(true);
-      when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
       mockCreateInGroupInvitationRepository();
 
       assertThatCode(() -> transactionGroupService.getInvitationToken(gid, user))
@@ -364,8 +373,9 @@ class DefaultTransactionGroupServiceTest {
     void throws_when_user_is_not_member_of_the_group() {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
-      when(groupRepository.existsById(gid)).thenReturn(true);
-      when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
+      doThrow(new UserIsNotMemberOfGroupException("User is not a member of the group"))
+          .when(groupOperations)
+          .checkIfUserIsInGroup(user, gid);
 
       assertThatThrownBy(() -> transactionGroupService.getInvitationToken(gid, user))
           .isInstanceOf(UserIsNotMemberOfGroupException.class);
@@ -375,8 +385,6 @@ class DefaultTransactionGroupServiceTest {
     void throws_when_create_fails() {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
-      when(groupRepository.existsById(gid)).thenReturn(true);
-      when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
       when(groupInvitationRepository.create(any(CreateGroupInvitationDto.class)))
           .thenReturn(Optional.empty());
 
@@ -388,7 +396,9 @@ class DefaultTransactionGroupServiceTest {
     void throws_when_group_doesnt_exist() {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
-      when(groupRepository.existsById(gid)).thenReturn(false);
+      doThrow(new TransactionGroupNotFoundException("Group not found"))
+          .when(groupOperations)
+          .checkIfGroupExists(gid);
 
       assertThatThrownBy(() -> transactionGroupService.getInvitationToken(gid, user))
           .isInstanceOf(TransactionGroupNotFoundException.class);
@@ -398,8 +408,6 @@ class DefaultTransactionGroupServiceTest {
     void throws_when_maximum_number_of_invitations_reached() {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
-      when(groupRepository.existsById(gid)).thenReturn(true);
-      when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
       when(groupInvitationRepository.countByGroupIdAndUserId(gid, user)).thenReturn(20L);
 
       assertThatThrownBy(() -> transactionGroupService.getInvitationToken(gid, user))
@@ -456,8 +464,6 @@ class DefaultTransactionGroupServiceTest {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
       final UserId other = UserId.generate();
-      when(groupRepository.existsById(gid)).thenReturn(true);
-      when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
       when(groupOperations.getUsersInGroup(gid)).thenReturn(List.of(user, other));
 
       final List<UserId> users = transactionGroupService.getUsersInGroup(gid, user);
@@ -469,8 +475,9 @@ class DefaultTransactionGroupServiceTest {
     void throws_when_group_exists_but_user_is_not_member_of_the_group() {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
-      when(groupRepository.existsById(gid)).thenReturn(true);
-      when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
+      doThrow(new UserIsNotMemberOfGroupException("User is not a member of the group"))
+          .when(groupOperations)
+          .checkIfUserIsInGroup(user, gid);
 
       assertThatThrownBy(() -> transactionGroupService.getUsersInGroup(gid, user))
           .isInstanceOf(UserIsNotMemberOfGroupException.class);
@@ -480,7 +487,9 @@ class DefaultTransactionGroupServiceTest {
     void throws_when_group_doesnt_exist() {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
-      when(groupRepository.existsById(gid)).thenReturn(false);
+      doThrow(new TransactionGroupNotFoundException("Group not found"))
+          .when(groupOperations)
+          .checkIfGroupExists(gid);
 
       assertThatThrownBy(() -> transactionGroupService.getUsersInGroup(gid, user))
           .isInstanceOf(TransactionGroupNotFoundException.class);
@@ -495,8 +504,6 @@ class DefaultTransactionGroupServiceTest {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
       final UserId toRemove = UserId.generate();
-      when(groupRepository.existsById(gid)).thenReturn(true);
-      when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
       assertThatCode(() -> transactionGroupService.removeUserFromGroup(gid, user, toRemove))
           .doesNotThrowAnyException();
 
@@ -508,8 +515,9 @@ class DefaultTransactionGroupServiceTest {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
       final UserId toRemove = UserId.generate();
-      when(groupRepository.existsById(gid)).thenReturn(true);
-      when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
+      doThrow(new UserIsNotMemberOfGroupException("User is not a member of the group"))
+          .when(groupOperations)
+          .checkIfUserIsInGroup(user, gid);
 
       assertThatThrownBy(() -> transactionGroupService.removeUserFromGroup(gid, user, toRemove))
           .isInstanceOf(UserIsNotMemberOfGroupException.class);
@@ -520,7 +528,9 @@ class DefaultTransactionGroupServiceTest {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
       final UserId toRemove = UserId.generate();
-      when(groupRepository.existsById(gid)).thenReturn(false);
+      doThrow(new TransactionGroupNotFoundException("Group not found"))
+          .when(groupOperations)
+          .checkIfGroupExists(gid);
 
       assertThatThrownBy(() -> transactionGroupService.removeUserFromGroup(gid, user, toRemove))
           .isInstanceOf(TransactionGroupNotFoundException.class);
@@ -531,8 +541,6 @@ class DefaultTransactionGroupServiceTest {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
       final UserId toRemove = UserId.generate();
-      when(groupRepository.existsById(gid)).thenReturn(true);
-      when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
       doThrow(new UserNotFoundException("User not found"))
           .when(groupOperations)
           .removeUserFromGroup(gid, toRemove);
@@ -550,8 +558,6 @@ class DefaultTransactionGroupServiceTest {
       final GroupId gid = GroupId.generate();
       final UserId userA = UserId.generate();
       final UserId userB = UserId.generate();
-      when(groupRepository.existsById(gid)).thenReturn(true);
-      when(groupRepository.isUserInGroup(userA, gid)).thenReturn(true);
       final BalanceEntity b = balanceDbo(BalanceId.generate(), gid, userA, userB);
       when(balanceRepository.findByGroup(gid)).thenReturn(List.of(b));
 
@@ -565,8 +571,9 @@ class DefaultTransactionGroupServiceTest {
     void throws_when_group_exists_and_user_is_not_member_of_the_group() {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
-      when(groupRepository.existsById(gid)).thenReturn(true);
-      when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
+      doThrow(new UserIsNotMemberOfGroupException("User is not a member of the group"))
+          .when(groupOperations)
+          .checkIfUserIsInGroup(user, gid);
 
       assertThatThrownBy(() -> transactionGroupService.getAllGroupBalances(gid, user))
           .isInstanceOf(UserIsNotMemberOfGroupException.class);
@@ -576,7 +583,9 @@ class DefaultTransactionGroupServiceTest {
     void throws_when_group_doesnt_exist() {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
-      when(groupRepository.existsById(gid)).thenReturn(false);
+      doThrow(new TransactionGroupNotFoundException("Group not found"))
+          .when(groupOperations)
+          .checkIfGroupExists(gid);
 
       assertThatThrownBy(() -> transactionGroupService.getAllGroupBalances(gid, user))
           .isInstanceOf(TransactionGroupNotFoundException.class);
@@ -590,8 +599,6 @@ class DefaultTransactionGroupServiceTest {
     void returns_mapped_page_when_user_is_member_of_the_group() {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
-      when(groupRepository.existsById(gid)).thenReturn(true);
-      when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
       final TransactionEntity tx = transactionDbo(TransactionId.generate(), gid);
       Pageable p = PageRequest.of(0, 10);
       when(transactionRepository.findAllByGroupId(gid, p)).thenReturn(new PageImpl<>(List.of(tx)));
@@ -607,8 +614,9 @@ class DefaultTransactionGroupServiceTest {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
       Pageable p = PageRequest.of(0, 10);
-      when(groupRepository.existsById(gid)).thenReturn(true);
-      when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
+      doThrow(new UserIsNotMemberOfGroupException("User is not a member of the group"))
+          .when(groupOperations)
+          .checkIfUserIsInGroup(user, gid);
 
       assertThatThrownBy(() -> transactionGroupService.getGroupTransactions(gid, user, p))
           .isInstanceOf(UserIsNotMemberOfGroupException.class);
@@ -619,7 +627,9 @@ class DefaultTransactionGroupServiceTest {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
       Pageable p = PageRequest.of(0, 10);
-      when(groupRepository.existsById(gid)).thenReturn(false);
+      doThrow(new TransactionGroupNotFoundException("Group not found"))
+          .when(groupOperations)
+          .checkIfGroupExists(gid);
 
       assertThatThrownBy(() -> transactionGroupService.getGroupTransactions(gid, user, p))
           .isInstanceOf(TransactionGroupNotFoundException.class);
@@ -633,8 +643,6 @@ class DefaultTransactionGroupServiceTest {
     void calls_repository_when_user_is_member_of_the_group() {
       final GroupId gid = GroupId.generate();
       final UserId creator = UserId.generate();
-      when(groupRepository.existsById(gid)).thenReturn(true);
-      when(groupRepository.isUserInGroup(creator, gid)).thenReturn(true);
 
       transactionGroupService.createTransactionInGroup(
           gid,
@@ -652,8 +660,9 @@ class DefaultTransactionGroupServiceTest {
     void throws_when_creator_is_not_member_of_the_group() {
       final GroupId gid = GroupId.generate();
       final UserId creator = UserId.generate();
-      when(groupRepository.existsById(gid)).thenReturn(true);
-      when(groupRepository.isUserInGroup(creator, gid)).thenReturn(false);
+      doThrow(new UserIsNotMemberOfGroupException("User is not a member of the group"))
+          .when(groupOperations)
+          .checkIfUserIsInGroup(creator, gid);
 
       final Description description = Description.of("d");
       final UserId user1 = UserId.generate();
@@ -670,7 +679,9 @@ class DefaultTransactionGroupServiceTest {
     void throws_when_group_doesnt_exist() {
       final GroupId gid = GroupId.generate();
       final UserId creator = UserId.generate();
-      when(groupRepository.existsById(gid)).thenReturn(false);
+      doThrow(new TransactionGroupNotFoundException("Group not found"))
+          .when(groupOperations)
+          .checkIfGroupExists(gid);
 
       final Description description = Description.of("d");
       final UserId user1 = UserId.generate();
@@ -694,7 +705,6 @@ class DefaultTransactionGroupServiceTest {
       final TransactionEntity tx = transactionDbo(txId, gid);
       final UserId user = UserId.generate();
       when(transactionRepository.findById(txId)).thenReturn(Optional.of(tx));
-      when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
 
       transactionGroupService.updateTransaction(
           user, txId, new UpdateTransactionData(Description.of("x"), null, null, null, null));
@@ -708,10 +718,8 @@ class DefaultTransactionGroupServiceTest {
       final UserId user = UserId.generate();
       when(transactionRepository.findById(txId)).thenReturn(Optional.empty());
 
-      assertThatThrownBy(
-              () ->
-                  transactionGroupService.updateTransaction(
-                      user, txId, new UpdateTransactionData(null, null, null, null, null)))
+      final UpdateTransactionData data = new UpdateTransactionData(null, null, null, null, null);
+      assertThatThrownBy(() -> transactionGroupService.updateTransaction(user, txId, data))
           .isInstanceOf(TransactionNotFoundException.class);
     }
 
@@ -722,7 +730,9 @@ class DefaultTransactionGroupServiceTest {
       final TransactionEntity tx = transactionDbo(txId, gid);
       final UserId user = UserId.generate();
       when(transactionRepository.findById(txId)).thenReturn(Optional.of(tx));
-      when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
+      doThrow(new UserIsNotMemberOfGroupException("User is not a member of the group"))
+          .when(groupOperations)
+          .checkIfUserIsInGroup(user, gid);
 
       final UpdateTransactionData data = new UpdateTransactionData(null, null, null, null, null);
       assertThatThrownBy(() -> transactionGroupService.updateTransaction(user, txId, data))
@@ -740,7 +750,6 @@ class DefaultTransactionGroupServiceTest {
       final TransactionEntity tx = transactionDbo(txId, gid);
       final UserId user = UserId.generate();
       when(transactionRepository.findById(txId)).thenReturn(Optional.of(tx));
-      when(groupRepository.isUserInGroup(user, gid)).thenReturn(true);
 
       transactionGroupService.deleteTransaction(user, txId);
 
@@ -764,10 +773,54 @@ class DefaultTransactionGroupServiceTest {
       final TransactionEntity tx = transactionDbo(txId, gid);
       final UserId user = UserId.generate();
       when(transactionRepository.findById(txId)).thenReturn(Optional.of(tx));
-      when(groupRepository.isUserInGroup(user, gid)).thenReturn(false);
+      doThrow(new UserIsNotMemberOfGroupException("User is not a member of the group"))
+          .when(groupOperations)
+          .checkIfUserIsInGroup(user, gid);
 
       assertThatThrownBy(() -> transactionGroupService.deleteTransaction(user, txId))
           .isInstanceOf(UserIsNotMemberOfGroupException.class);
+    }
+  }
+
+  @Nested
+  class AddUserToGroupAsAdmin {
+
+    @Test
+    void adds_existing_user_to_existing_group() {
+      final GroupId groupId = GroupId.generate();
+      final UserId userId = UserId.generate();
+      when(groupRepository.addUser(userId, groupId))
+          .thenReturn(Optional.of(new UserGroupEntity(userId, groupId, Instant.now())));
+
+      transactionGroupService.addUserToGroupAsAdmin(groupId, userId);
+
+      verify(groupOperations).checkIfGroupExists(groupId);
+      verify(groupOperations).checkIfUserExists(userId);
+      verify(groupRepository).addUser(userId, groupId);
+    }
+
+    @Test
+    void throws_when_group_does_not_exist() {
+      final GroupId groupId = GroupId.generate();
+      final UserId userId = UserId.generate();
+      doThrow(new TransactionGroupNotFoundException("Group not found"))
+          .when(groupOperations)
+          .checkIfGroupExists(groupId);
+
+      assertThatThrownBy(() -> transactionGroupService.addUserToGroupAsAdmin(groupId, userId))
+          .isInstanceOf(TransactionGroupNotFoundException.class);
+    }
+
+    @Test
+    void throws_when_user_does_not_exist() {
+      final GroupId groupId = GroupId.generate();
+      final UserId userId = UserId.generate();
+      doThrow(new UserNotFoundException("User not found"))
+          .when(groupOperations)
+          .checkIfUserExists(userId);
+
+      assertThatThrownBy(() -> transactionGroupService.addUserToGroupAsAdmin(groupId, userId))
+          .isInstanceOf(UserNotFoundException.class);
     }
   }
 }

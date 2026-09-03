@@ -6,11 +6,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.familymoney.domains.admin.services.TransactionGroupAdminService;
 import com.familymoney.domains.transactions.controllers.dtos.CreateGroupResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.GetGroupResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.GetGroupsResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.GetUsersInGroupResponseDto;
+import com.familymoney.domains.transactions.services.TransactionGroupService;
 import com.familymoney.domains.transactions.services.data.GroupData;
 import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.GroupId;
@@ -47,7 +47,7 @@ class DefaultGroupAdminControllerTest {
   private static final Instant NOW = Instant.parse("2025-01-01T00:00:00Z");
 
   @Autowired private RestTestClient client;
-  @MockitoBean private TransactionGroupAdminService transactionGroupAdminService;
+  @MockitoBean private TransactionGroupService transactionGroupService;
   @MockitoBean private Clock clock;
 
   private GroupData groupData(final GroupId groupId) {
@@ -65,7 +65,7 @@ class DefaultGroupAdminControllerTest {
     @Test
     void creates_group() {
       final GroupId groupId = GroupId.generate();
-      when(transactionGroupAdminService.createGroup(any(), any(), any())).thenReturn(groupId);
+      when(transactionGroupService.createGroup(any(), any(), any())).thenReturn(groupId);
 
       final CreateGroupResponseDto response =
           client
@@ -100,7 +100,7 @@ class DefaultGroupAdminControllerTest {
           .expectStatus()
           .isBadRequest();
 
-      verifyNoInteractions(transactionGroupAdminService);
+      verifyNoInteractions(transactionGroupService);
     }
 
     @Test
@@ -120,7 +120,7 @@ class DefaultGroupAdminControllerTest {
           .expectStatus()
           .isBadRequest();
 
-      verifyNoInteractions(transactionGroupAdminService);
+      verifyNoInteractions(transactionGroupService);
     }
 
     @Test
@@ -140,7 +140,7 @@ class DefaultGroupAdminControllerTest {
           .expectStatus()
           .isBadRequest();
 
-      verifyNoInteractions(transactionGroupAdminService);
+      verifyNoInteractions(transactionGroupService);
     }
 
     @Test
@@ -160,7 +160,7 @@ class DefaultGroupAdminControllerTest {
           .expectStatus()
           .isBadRequest();
 
-      verifyNoInteractions(transactionGroupAdminService);
+      verifyNoInteractions(transactionGroupService);
     }
   }
 
@@ -171,7 +171,7 @@ class DefaultGroupAdminControllerTest {
     void returns_groups_for_user() {
       final UserId userId = UserId.generate();
       final GroupData group = groupData(GroupId.generate());
-      when(transactionGroupAdminService.getGroupsByUser(any(), any()))
+      when(transactionGroupService.getGroupsByUser(any(), any()))
           .thenReturn(new PageImpl<>(List.of(group)));
 
       final GetGroupsResponseDto response =
@@ -199,7 +199,7 @@ class DefaultGroupAdminControllerTest {
           .expectStatus()
           .isBadRequest();
 
-      verifyNoInteractions(transactionGroupAdminService);
+      verifyNoInteractions(transactionGroupService);
     }
   }
 
@@ -217,7 +217,7 @@ class DefaultGroupAdminControllerTest {
           .expectStatus()
           .isOk();
 
-      verify(transactionGroupAdminService).deleteGroup(groupId);
+      verify(transactionGroupService).deleteGroupAsAdmin(groupId);
     }
 
     @Test
@@ -229,7 +229,7 @@ class DefaultGroupAdminControllerTest {
           .expectStatus()
           .isBadRequest();
 
-      verifyNoInteractions(transactionGroupAdminService);
+      verifyNoInteractions(transactionGroupService);
     }
   }
 
@@ -239,7 +239,7 @@ class DefaultGroupAdminControllerTest {
     @Test
     void returns_group_information() {
       final GroupData group = groupData(GroupId.generate());
-      when(transactionGroupAdminService.getGroupInfo(group.id())).thenReturn(group);
+      when(transactionGroupService.getGroupInfoAsAdmin(group.id())).thenReturn(group);
 
       final GetGroupResponseDto response =
           client
@@ -266,7 +266,7 @@ class DefaultGroupAdminControllerTest {
           .expectStatus()
           .isBadRequest();
 
-      verifyNoInteractions(transactionGroupAdminService);
+      verifyNoInteractions(transactionGroupService);
     }
   }
 
@@ -286,7 +286,7 @@ class DefaultGroupAdminControllerTest {
           .expectStatus()
           .isOk();
 
-      verify(transactionGroupAdminService).updateGroupInfo(any(), any());
+      verify(transactionGroupService).updateGroupInfoAsAdmin(any(), any());
     }
 
     @Test
@@ -299,7 +299,7 @@ class DefaultGroupAdminControllerTest {
           .expectStatus()
           .isBadRequest();
 
-      verifyNoInteractions(transactionGroupAdminService);
+      verifyNoInteractions(transactionGroupService);
     }
 
     @Test
@@ -312,7 +312,7 @@ class DefaultGroupAdminControllerTest {
           .expectStatus()
           .isOk();
 
-      verify(transactionGroupAdminService).updateGroupInfo(any(), any());
+      verify(transactionGroupService).updateGroupInfoAsAdmin(any(), any());
     }
 
     @Test
@@ -325,7 +325,7 @@ class DefaultGroupAdminControllerTest {
           .expectStatus()
           .isBadRequest();
 
-      verifyNoInteractions(transactionGroupAdminService);
+      verifyNoInteractions(transactionGroupService);
     }
   }
 
@@ -346,7 +346,7 @@ class DefaultGroupAdminControllerTest {
           .expectStatus()
           .isOk();
 
-      verify(transactionGroupAdminService).addUserToGroup(groupId, userId);
+      verify(transactionGroupService).addUserToGroupAsAdmin(groupId, userId);
     }
 
     @Test
@@ -360,7 +360,7 @@ class DefaultGroupAdminControllerTest {
           .expectStatus()
           .isBadRequest();
 
-      verifyNoInteractions(transactionGroupAdminService);
+      verifyNoInteractions(transactionGroupService);
     }
 
     @Test
@@ -374,7 +374,7 @@ class DefaultGroupAdminControllerTest {
           .expectStatus()
           .isBadRequest();
 
-      verifyNoInteractions(transactionGroupAdminService);
+      verifyNoInteractions(transactionGroupService);
     }
   }
 
@@ -395,7 +395,7 @@ class DefaultGroupAdminControllerTest {
           .expectStatus()
           .isOk();
 
-      verify(transactionGroupAdminService).removeUserFromGroup(groupId, userId);
+      verify(transactionGroupService).removeUserFromGroupAsAdmin(groupId, userId);
     }
 
     @Test
@@ -409,7 +409,7 @@ class DefaultGroupAdminControllerTest {
           .expectStatus()
           .isBadRequest();
 
-      verifyNoInteractions(transactionGroupAdminService);
+      verifyNoInteractions(transactionGroupService);
     }
 
     @Test
@@ -423,7 +423,7 @@ class DefaultGroupAdminControllerTest {
           .expectStatus()
           .isBadRequest();
 
-      verifyNoInteractions(transactionGroupAdminService);
+      verifyNoInteractions(transactionGroupService);
     }
   }
 
@@ -434,7 +434,7 @@ class DefaultGroupAdminControllerTest {
     void returns_users_in_group() {
       final GroupId groupId = GroupId.generate();
       final List<UserId> users = List.of(UserId.generate(), UserId.generate());
-      when(transactionGroupAdminService.getUsersInGroup(groupId)).thenReturn(users);
+      when(transactionGroupService.getUsersInGroupAsAdmin(groupId)).thenReturn(users);
 
       final GetUsersInGroupResponseDto response =
           client
@@ -461,7 +461,7 @@ class DefaultGroupAdminControllerTest {
           .expectStatus()
           .isBadRequest();
 
-      verifyNoInteractions(transactionGroupAdminService);
+      verifyNoInteractions(transactionGroupService);
     }
   }
 }

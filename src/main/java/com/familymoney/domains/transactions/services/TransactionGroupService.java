@@ -26,6 +26,16 @@ import org.springframework.data.domain.Pageable;
 public interface TransactionGroupService {
 
   /**
+   * Creates a transaction group, without users.
+   *
+   * @param name the group name
+   * @param description the group description
+   * @param currency the currency for group transactions
+   * @return the identifier of the created group
+   */
+  GroupId createGroup(GroupName name, Description description, CurrencyUnit currency);
+
+  /**
    * Create a new group, and adds the creating user as member of the group
    *
    * @param name Name of the group to display to users
@@ -35,11 +45,11 @@ public interface TransactionGroupService {
    * @return Identifier of the newly created group
    * @throws DatabaseExecutionException if any database operation fails
    */
-  GroupId createGroup(
+  GroupId createGroupAndAddCreatorAsMember(
       GroupName name, Description description, CurrencyUnit currency, UserId createdBy);
 
   /**
-   * Delete a group
+   * Delete a group where the selected user is a member. Only members of the group can delete it.
    *
    * @param groupId Identifier of the group to delete
    * @param userId Identifier of the user attempting to delete the group
@@ -47,6 +57,13 @@ public interface TransactionGroupService {
    * @throws UserIsNotMemberOfGroupException if the user is not a member of the group
    */
   void deleteGroup(GroupId groupId, UserId userId);
+
+  /**
+   * Deletes a transaction group as an administrator.
+   *
+   * @param groupId the identifier of the group to delete
+   */
+  void deleteGroupAsAdmin(GroupId groupId);
 
   /**
    * Get a paginated list of groups the user is a member of
@@ -58,7 +75,8 @@ public interface TransactionGroupService {
   Page<GroupData> getGroupsByUser(UserId userId, Pageable pageable);
 
   /**
-   * Get information about a specific group
+   * Get information about a specific group where the selected user is a member. Only members of the
+   * group can view it.
    *
    * @param groupId Identifier of the group to retrieve information about
    * @param user Identifier of the user requesting the information
@@ -69,7 +87,16 @@ public interface TransactionGroupService {
   GroupData getGroupInfo(GroupId groupId, UserId user);
 
   /**
-   * Update one or more fields of a group's information.
+   * Gets transaction group information as an administrator.
+   *
+   * @param groupId the identifier of the group
+   * @return the transaction group data
+   */
+  GroupData getGroupInfoAsAdmin(GroupId groupId);
+
+  /**
+   * Update one or more fields of a group's information where the selected user is a member. Only
+   * members of the group can update it.
    *
    * @param groupId Identifier of the group to modify
    * @param userId Identifier of the user requesting the information
@@ -78,6 +105,14 @@ public interface TransactionGroupService {
    * @throws UserIsNotMemberOfGroupException if the user is not a member of the group
    */
   void updateGroupInfo(GroupId groupId, UserId userId, UpdateGroupData data);
+
+  /**
+   * Updates transaction group information as an administrator.
+   *
+   * @param groupId the identifier of the group to update
+   * @param data the group data to update
+   */
+  void updateGroupInfoAsAdmin(GroupId groupId, UpdateGroupData data);
 
   /**
    * Generate an invitation token for a group
@@ -100,7 +135,8 @@ public interface TransactionGroupService {
   void enterToGroupWithToken(GroupInvitationToken groupInvitationToken, UserId userId);
 
   /**
-   * Get the list of users in a group
+   * Get the list of users in a group where the selected user is a member. Only members of the group
+   * can view it.
    *
    * @param groupId Identifier of the group
    * @param userId Identifier of the user requesting the list
@@ -111,7 +147,24 @@ public interface TransactionGroupService {
   List<UserId> getUsersInGroup(GroupId groupId, UserId userId);
 
   /**
-   * Remove a user from a group
+   * Gets the users in a transaction group as an administrator.
+   *
+   * @param groupId the identifier of the group
+   * @return the identifiers of the users in the group
+   */
+  List<UserId> getUsersInGroupAsAdmin(GroupId groupId);
+
+  /**
+   * Adds a user to a transaction group as an administrator.
+   *
+   * @param groupId the identifier of the group
+   * @param userIdToAdd the identifier of the user to add
+   */
+  void addUserToGroupAsAdmin(GroupId groupId, UserId userIdToAdd);
+
+  /**
+   * Remove a user from a group where the selected user is a member. Only members of the group can
+   * remove it.
    *
    * @param groupId Identifier of the group
    * @param userId Identifier of the user requesting the removal
@@ -120,6 +173,14 @@ public interface TransactionGroupService {
    * @throws UserIsNotMemberOfGroupException if the user is not a member of the group
    */
   void removeUserFromGroup(GroupId groupId, UserId userId, UserId userIdToRemove);
+
+  /**
+   * Removes a user from a transaction group as an administrator.
+   *
+   * @param groupId the identifier of the group
+   * @param userIdToRemove the identifier of the user to remove
+   */
+  void removeUserFromGroupAsAdmin(GroupId groupId, UserId userIdToRemove);
 
   /**
    * Get the balance between all users in a group

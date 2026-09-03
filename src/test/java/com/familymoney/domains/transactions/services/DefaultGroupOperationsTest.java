@@ -1,12 +1,14 @@
 package com.familymoney.domains.transactions.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.familymoney.domains.transactions.exceptions.TransactionGroupNotFoundException;
+import com.familymoney.domains.transactions.exceptions.UserIsNotMemberOfGroupException;
 import com.familymoney.domains.transactions.repositories.GroupRepository;
 import com.familymoney.domains.transactions.repositories.dtos.CreateGroupDto;
 import com.familymoney.domains.transactions.repositories.entitites.GroupEntity;
@@ -89,11 +91,22 @@ class DefaultGroupOperationsTest {
     @Test
     void deletes_existing_group() {
       final GroupId groupId = GroupId.generate();
-      when(groupRepository.existsById(groupId)).thenReturn(true);
 
       groupOperations.deleteGroup(groupId);
 
       verify(groupRepository).deleteById(groupId);
+    }
+  }
+
+  @Nested
+  class CheckIfGroupExists {
+
+    @Test
+    void does_not_throw_when_group_exists() {
+      final GroupId groupId = GroupId.generate();
+      when(groupRepository.existsById(groupId)).thenReturn(true);
+
+      assertThatCode(() -> groupOperations.checkIfGroupExists(groupId)).doesNotThrowAnyException();
     }
 
     @Test
@@ -101,7 +114,7 @@ class DefaultGroupOperationsTest {
       final GroupId groupId = GroupId.generate();
       when(groupRepository.existsById(groupId)).thenReturn(false);
 
-      assertThatThrownBy(() -> groupOperations.deleteGroup(groupId))
+      assertThatThrownBy(() -> groupOperations.checkIfGroupExists(groupId))
           .isInstanceOf(TransactionGroupNotFoundException.class);
     }
   }
@@ -129,7 +142,6 @@ class DefaultGroupOperationsTest {
     @Test
     void returns_existing_group() {
       final GroupId groupId = GroupId.generate();
-      when(groupRepository.existsById(groupId)).thenReturn(true);
       when(groupRepository.findById(groupId)).thenReturn(Optional.of(groupEntity(groupId)));
 
       assertThat(groupOperations.getGroupInfo(groupId).id()).isEqualTo(groupId);
@@ -143,7 +155,6 @@ class DefaultGroupOperationsTest {
     void updates_existing_group() {
       final GroupId groupId = GroupId.generate();
       final UpdateGroupData data = new UpdateGroupData(null, Description.of("updated"));
-      when(groupRepository.existsById(groupId)).thenReturn(true);
 
       groupOperations.updateGroupInfo(groupId, data);
 
@@ -158,7 +169,6 @@ class DefaultGroupOperationsTest {
     void returns_group_members() {
       final GroupId groupId = GroupId.generate();
       final List<UserId> users = List.of(UserId.generate());
-      when(groupRepository.existsById(groupId)).thenReturn(true);
       when(groupRepository.findUserIdsByGroupId(groupId)).thenReturn(users);
 
       assertThat(groupOperations.getUsersInGroup(groupId)).isEqualTo(users);
@@ -172,23 +182,55 @@ class DefaultGroupOperationsTest {
     void removes_existing_user_from_existing_group() {
       final GroupId groupId = GroupId.generate();
       final UserId userId = UserId.generate();
-      when(groupRepository.existsById(groupId)).thenReturn(true);
-      when(userRepository.existsById(userId)).thenReturn(true);
 
       groupOperations.removeUserFromGroup(groupId, userId);
 
       verify(groupRepository).deleteUser(userId, groupId);
     }
+  }
+
+  @Nested
+  class CheckIfUserExists {
+
+    @Test
+    void does_not_throw_when_user_exists() {
+      final UserId userId = UserId.generate();
+      when(userRepository.existsById(userId)).thenReturn(true);
+
+      assertThatCode(() -> groupOperations.checkIfUserExists(userId)).doesNotThrowAnyException();
+    }
 
     @Test
     void throws_when_user_does_not_exist() {
-      final GroupId groupId = GroupId.generate();
       final UserId userId = UserId.generate();
-      when(groupRepository.existsById(groupId)).thenReturn(true);
       when(userRepository.existsById(userId)).thenReturn(false);
 
-      assertThatThrownBy(() -> groupOperations.removeUserFromGroup(groupId, userId))
+      assertThatThrownBy(() -> groupOperations.checkIfUserExists(userId))
           .isInstanceOf(UserNotFoundException.class);
+    }
+  }
+
+  @Nested
+  class CheckIfUserIsInGroup {
+
+    @Test
+    void does_not_throw_when_user_is_in_group() {
+      final GroupId groupId = GroupId.generate();
+      final UserId userId = UserId.generate();
+      when(groupRepository.isUserInGroup(userId, groupId)).thenReturn(true);
+
+      assertThatCode(() -> groupOperations.checkIfUserIsInGroup(userId, groupId))
+          .doesNotThrowAnyException();
+    }
+
+    @Test
+    void throws_when_user_is_not_in_group() {
+      final GroupId groupId = GroupId.generate();
+      final UserId userId = UserId.generate();
+      when(groupRepository.isUserInGroup(userId, groupId)).thenReturn(false);
+
+      assertThatThrownBy(() -> groupOperations.checkIfUserIsInGroup(userId, groupId))
+          .isInstanceOf(UserIsNotMemberOfGroupException.class);
     }
   }
 }

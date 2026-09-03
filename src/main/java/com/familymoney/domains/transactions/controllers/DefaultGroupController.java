@@ -46,7 +46,7 @@ public class DefaultGroupController implements GroupController {
     final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     // Create group
     final GroupId groupId =
-        transactionGroupService.createGroup(
+        transactionGroupService.createGroupAndAddCreatorAsMember(
             GroupName.fromString(request.name()),
             Description.of(request.description().trim()),
             Monetary.getCurrency(request.currencyCode()),
