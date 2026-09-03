@@ -1,7 +1,5 @@
 package com.familymoney.testutils;
 
-import com.familymoney.domains.users.types.UserId;
-
 public class UserAdminControllerUriFactory {
 
   // region Constants
@@ -13,7 +11,7 @@ public class UserAdminControllerUriFactory {
 
   // region Public Methods
 
-  public static String getUserPath(UserId userId) {
+  public static String getUserPath(final String userId) {
     return String.format(USER_PATH, userId);
   }
 

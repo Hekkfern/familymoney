@@ -66,7 +66,7 @@ class DefaultUserAdminControllerTest {
       final GetUserResponseDto data =
           client
               .get()
-              .uri(UserAdminControllerUriFactory.getUserPath(userId))
+              .uri(UserAdminControllerUriFactory.getUserPath(userId.toString()))
               .exchange()
               .expectStatus()
               .isOk()
