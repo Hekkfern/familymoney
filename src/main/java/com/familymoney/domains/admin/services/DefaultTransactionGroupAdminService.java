@@ -7,7 +7,6 @@ import com.familymoney.domains.transactions.services.data.UpdateGroupData;
 import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupName;
-import com.familymoney.domains.users.repositories.UserRepository;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.exceptions.DatabaseExecutionException;
 import java.util.List;
@@ -26,7 +25,6 @@ public class DefaultTransactionGroupAdminService implements TransactionGroupAdmi
 
   private final GroupOperations groupOperations;
   private final GroupRepository groupRepository;
-  private final UserRepository userRepository;
 
   @Override
   public GroupId createGroup(
@@ -36,26 +34,31 @@ public class DefaultTransactionGroupAdminService implements TransactionGroupAdmi
 
   @Override
   public void deleteGroup(final GroupId groupId) {
+    groupOperations.checkIfGroupExists(groupId);
     groupOperations.deleteGroup(groupId);
   }
 
   @Override
   public Page<GroupData> getGroupsByUser(final UserId userId, final Pageable pageable) {
+    groupOperations.checkIfUserExists(userId);
     return groupOperations.getGroupsByUser(userId, pageable);
   }
 
   @Override
   public GroupData getGroupInfo(final GroupId groupId) {
+    groupOperations.checkIfGroupExists(groupId);
     return groupOperations.getGroupInfo(groupId);
   }
 
   @Override
   public void updateGroupInfo(final GroupId groupId, final UpdateGroupData data) {
+    groupOperations.checkIfGroupExists(groupId);
     groupOperations.updateGroupInfo(groupId, data);
   }
 
   @Override
   public List<UserId> getUsersInGroup(final GroupId groupId) {
+    groupOperations.checkIfGroupExists(groupId);
     return groupOperations.getUsersInGroup(groupId);
   }
 
@@ -70,6 +73,8 @@ public class DefaultTransactionGroupAdminService implements TransactionGroupAdmi
 
   @Override
   public void removeUserFromGroup(final GroupId groupId, final UserId userIdToRemove) {
+    groupOperations.checkIfGroupExists(groupId);
+    groupOperations.checkIfUserExists(userIdToRemove);
     groupOperations.removeUserFromGroup(groupId, userIdToRemove);
   }
 }

@@ -44,7 +44,6 @@ public class DefaultGroupOperations implements GroupOperations {
 
   @Override
   public void deleteGroup(final GroupId groupId) {
-    checkIfGroupExists(groupId);
     groupRepository.deleteById(groupId);
   }
 
@@ -55,7 +54,6 @@ public class DefaultGroupOperations implements GroupOperations {
 
   @Override
   public GroupData getGroupInfo(final GroupId groupId) {
-    checkIfGroupExists(groupId);
     return groupRepository
         .findById(groupId)
         .map(GroupDataMapper::fromDbo)
@@ -67,20 +65,16 @@ public class DefaultGroupOperations implements GroupOperations {
 
   @Override
   public void updateGroupInfo(final GroupId groupId, final UpdateGroupData data) {
-    checkIfGroupExists(groupId);
     groupRepository.updateById(groupId, UpdateGroupDataMapper.toDbo(data));
   }
 
   @Override
   public List<UserId> getUsersInGroup(final GroupId groupId) {
-    checkIfGroupExists(groupId);
     return groupRepository.findUserIdsByGroupId(groupId);
   }
 
   @Override
   public void removeUserFromGroup(final GroupId groupId, final UserId userId) {
-    checkIfGroupExists(groupId);
-    checkIfUserExists(userId);
     groupRepository.deleteUser(userId, groupId);
   }
 
