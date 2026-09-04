@@ -54,7 +54,7 @@ springboot-dependencymanagement = { id = "io.spring.dependency-management", vers
 jooq = { id = "dev.monosoul.jooq-docker", version.ref = "jooq-plugin" }
 lombok = { id = "io.freefair.lombok", version.ref = "lombok-plugin" }
 integrationtest = { id = "com.coditory.integration-test", version.ref = "integrationtest" }
-versions = { id = "com.github.ben-manes.versions", version.ref = "versions-plugin" }
+versions = { id = "io.github.ben-manes.versions", version.ref = "versions-plugin" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 release = { id = "io.github.simonhauck.release", version.ref = "release-plugin" }
 
