@@ -30,7 +30,6 @@ public class DefaultTransactionRepository implements TransactionRepository {
 
   @Override
   public Optional<TransactionEntity> create(final CreateTransactionDto data) {
-
     return db.insertInto(Transactions.TRANSACTIONS)
         .columns(
             Transactions.TRANSACTIONS.ID,
@@ -138,6 +137,7 @@ public class DefaultTransactionRepository implements TransactionRepository {
         db.selectCount()
             .from(Transactions.TRANSACTIONS)
             .where(Transactions.TRANSACTIONS.GROUP_ID.eq(groupId.value()))
+            .orderBy(Transactions.TRANSACTIONS.ID.asc())
             .fetchOne(0, Long.class);
     final long safeTotal = total != null ? total : 0L;
 

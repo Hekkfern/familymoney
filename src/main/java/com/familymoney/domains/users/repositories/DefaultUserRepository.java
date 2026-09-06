@@ -30,7 +30,6 @@ public class DefaultUserRepository implements UserRepository {
 
   @Override
   public Optional<UserEntity> create(final CreateUserDto data) {
-
     return db.insertInto(Users.USERS)
         .columns(
             Users.USERS.ID,
