@@ -67,6 +67,7 @@ public class DefaultGroupService implements GroupService {
   }
 
   @Override
+  @Transactional
   public void deleteGroup(final GroupId groupId, final UserId userId) {
     groupOperations.checkIfGroupExists(groupId);
     groupOperations.checkIfUserIsInGroup(userId, groupId);
@@ -74,18 +75,21 @@ public class DefaultGroupService implements GroupService {
   }
 
   @Override
+  @Transactional
   public void deleteGroupAsAdmin(final GroupId groupId) {
     groupOperations.checkIfGroupExists(groupId);
     groupOperations.deleteGroup(groupId);
   }
 
   @Override
+  @Transactional
   public Page<GroupData> getGroupsByUser(final UserId userId, final Pageable pageable) {
     groupOperations.checkIfUserExists(userId);
     return groupOperations.getGroupsByUser(userId, pageable);
   }
 
   @Override
+  @Transactional
   public GroupData getGroupInfo(final GroupId groupId, final UserId userId) {
     groupOperations.checkIfGroupExists(groupId);
     groupOperations.checkIfUserIsInGroup(userId, groupId);
@@ -93,12 +97,14 @@ public class DefaultGroupService implements GroupService {
   }
 
   @Override
+  @Transactional
   public GroupData getGroupInfoAsAdmin(final GroupId groupId) {
     groupOperations.checkIfGroupExists(groupId);
     return groupOperations.getGroupInfo(groupId);
   }
 
   @Override
+  @Transactional
   public void updateGroupInfo(
       final GroupId groupId, final UserId userId, final UpdateGroupData data) {
     groupOperations.checkIfGroupExists(groupId);
@@ -107,12 +113,14 @@ public class DefaultGroupService implements GroupService {
   }
 
   @Override
+  @Transactional
   public void updateGroupInfoAsAdmin(final GroupId groupId, final UpdateGroupData data) {
     groupOperations.checkIfGroupExists(groupId);
     groupOperations.updateGroupInfo(groupId, data);
   }
 
   @Override
+  @Transactional
   public GroupInvitationToken getInvitationToken(final GroupId groupId, final UserId userId) {
     groupOperations.checkIfGroupExists(groupId);
     groupOperations.checkIfUserIsInGroup(userId, groupId);
@@ -146,6 +154,7 @@ public class DefaultGroupService implements GroupService {
   }
 
   @Override
+  @Transactional
   public List<UserId> getUsersInGroup(final GroupId groupId, final UserId userId) {
     groupOperations.checkIfGroupExists(groupId);
     groupOperations.checkIfUserIsInGroup(userId, groupId);
@@ -153,12 +162,14 @@ public class DefaultGroupService implements GroupService {
   }
 
   @Override
+  @Transactional
   public List<UserId> getUsersInGroupAsAdmin(final GroupId groupId) {
     groupOperations.checkIfGroupExists(groupId);
     return groupOperations.getUsersInGroup(groupId);
   }
 
   @Override
+  @Transactional
   public void addUserToGroupAsAdmin(final GroupId groupId, final UserId userIdToAdd) {
     groupOperations.checkIfGroupExists(groupId);
     groupOperations.checkIfUserExists(userIdToAdd);
@@ -168,6 +179,7 @@ public class DefaultGroupService implements GroupService {
   }
 
   @Override
+  @Transactional
   public void removeUserFromGroup(
       final GroupId groupId, final UserId userId, final UserId userIdToRemove) {
     groupOperations.checkIfGroupExists(groupId);
@@ -176,6 +188,7 @@ public class DefaultGroupService implements GroupService {
   }
 
   @Override
+  @Transactional
   public void removeUserFromGroupAsAdmin(final GroupId groupId, final UserId userIdToRemove) {
     groupOperations.checkIfGroupExists(groupId);
     groupOperations.checkIfUserExists(userIdToRemove);

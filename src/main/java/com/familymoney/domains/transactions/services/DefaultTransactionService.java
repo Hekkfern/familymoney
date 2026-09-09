@@ -23,6 +23,7 @@ import org.javamoney.moneta.Money;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +34,7 @@ public class DefaultTransactionService implements TransactionService {
   private final GroupOperations groupOperations;
 
   @Override
+  @Transactional
   public Map<UserId, Money> getAllGroupBalances(final GroupId groupId, final UserId userId) {
     groupOperations.checkIfGroupExists(groupId);
     groupOperations.checkIfUserIsInGroup(userId, groupId);
@@ -52,6 +54,7 @@ public class DefaultTransactionService implements TransactionService {
   }
 
   @Override
+  @Transactional
   public Page<TransactionData> getGroupTransactions(
       final GroupId groupId, final UserId userId, final Pageable pageable) {
     groupOperations.checkIfGroupExists(groupId);
@@ -62,13 +65,17 @@ public class DefaultTransactionService implements TransactionService {
   }
 
   @Override
+  @Transactional
   public Page<TransactionData> getGroupTransactionsAsAdmin(
       final GroupId groupId, final Pageable pageable) {
-    // TODO
-    return null;
+    groupOperations.checkIfGroupExists(groupId);
+    final Page<TransactionEntity> transactionsDb =
+        transactionRepository.findAllByGroupId(groupId, pageable);
+    return transactionsDb.map(TransactionDataMapper::fromDbo);
   }
 
   @Override
+  @Transactional
   public void createTransactionInGroup(
       final GroupId groupId,
       final Description description,
@@ -85,6 +92,7 @@ public class DefaultTransactionService implements TransactionService {
   }
 
   @Override
+  @Transactional
   public void createTransactionInGroupAsAdmin(
       final GroupId groupId,
       final Description description,
@@ -92,10 +100,14 @@ public class DefaultTransactionService implements TransactionService {
       final UserId to,
       final Money amount,
       final Instant doneAt) {
-    // TODO
+    groupOperations.checkIfGroupExists(groupId);
+    final TransactionId transactionId = TransactionId.generate();
+    transactionRepository.create(
+        new CreateTransactionDto(transactionId, description, groupId, amount, from, to, doneAt));
   }
 
   @Override
+  @Transactional
   public void updateTransaction(
       final UserId userId, final TransactionId transactionId, final UpdateTransactionData data) {
     var transactionDb =
@@ -109,12 +121,13 @@ public class DefaultTransactionService implements TransactionService {
   @Override
   public void updateTransactionAsAdmin(
       final TransactionId transactionId, final UpdateTransactionData data) {
-    // TODO
+    transactionRepository.updateById(transactionId, UpdateTransactionDataMapper.toDbo(data));
   }
 
   @Override
+  @Transactional
   public void deleteTransaction(final UserId userId, final TransactionId transactionId) {
-    var transactionDb =
+    final TransactionEntity transactionDb =
         transactionRepository
             .findById(transactionId)
             .orElseThrow(() -> new TransactionNotFoundException("Transaction not found"));
@@ -124,6 +137,6 @@ public class DefaultTransactionService implements TransactionService {
 
   @Override
   public void deleteTransactionAsAdmin(final TransactionId transactionId) {
-    // TODO
+    transactionRepository.deleteById(transactionId);
   }
 }
