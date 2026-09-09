@@ -14,7 +14,7 @@ import com.familymoney.domains.transactions.controllers.dtos.GetInvitationTokenR
 import com.familymoney.domains.transactions.controllers.dtos.GetUsersInGroupResponseDto;
 import com.familymoney.domains.transactions.exceptions.GroupInvitationInvalidException;
 import com.familymoney.domains.transactions.exceptions.UserIsNotMemberOfGroupException;
-import com.familymoney.domains.transactions.services.TransactionGroupService;
+import com.familymoney.domains.transactions.services.GroupService;
 import com.familymoney.domains.transactions.services.data.GroupData;
 import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.GroupId;
@@ -27,13 +27,11 @@ import com.familymoney.security.JwtAuthFilter;
 import com.familymoney.testutils.FakeGenerator;
 import com.familymoney.testutils.GroupControllerUriFactory;
 import com.familymoney.testutils.WithMockUserId;
-import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import javax.money.Monetary;
-import org.javamoney.moneta.Money;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -60,7 +58,7 @@ class DefaultGroupControllerTest {
   private static final String VALID_TOKEN = "a".repeat(64);
 
   @Autowired private RestTestClient client;
-  @MockitoBean private TransactionGroupService transactionGroupService;
+  @MockitoBean private GroupService groupService;
   @MockitoBean private UserService userService;
   @MockitoBean private Clock clock;
 
@@ -85,7 +83,7 @@ class DefaultGroupControllerTest {
     @WithMockUserId(userId = USER_ID)
     void creates_group() {
       final GroupId groupId = GroupId.generate();
-      when(transactionGroupService.createGroupAndAddCreatorAsMember(any(), any(), any(), any()))
+      when(groupService.createGroupAndAddCreatorAsMember(any(), any(), any(), any()))
           .thenReturn(groupId);
 
       final CreateGroupResponseDto response =
@@ -118,7 +116,7 @@ class DefaultGroupControllerTest {
           .expectStatus()
           .isBadRequest();
 
-      verifyNoInteractions(transactionGroupService);
+      verifyNoInteractions(groupService);
     }
 
     @Test
@@ -135,13 +133,13 @@ class DefaultGroupControllerTest {
           .expectStatus()
           .isBadRequest();
 
-      verifyNoInteractions(transactionGroupService);
+      verifyNoInteractions(groupService);
     }
 
     @Test
     @WithMockUserId(userId = USER_ID)
     void internal_server_error_when_service_fails() {
-      when(transactionGroupService.createGroupAndAddCreatorAsMember(any(), any(), any(), any()))
+      when(groupService.createGroupAndAddCreatorAsMember(any(), any(), any(), any()))
           .thenThrow(new DatabaseExecutionException("database unavailable"));
 
       client
@@ -165,8 +163,7 @@ class DefaultGroupControllerTest {
     @WithMockUserId(userId = USER_ID)
     void returns_groups_for_user() {
       final GroupData group = groupData(GroupId.generate());
-      when(transactionGroupService.getGroupsByUser(any(), any()))
-          .thenReturn(new PageImpl<>(List.of(group)));
+      when(groupService.getGroupsByUser(any(), any())).thenReturn(new PageImpl<>(List.of(group)));
 
       final GetGroupsResponseDto response =
           client
@@ -199,7 +196,7 @@ class DefaultGroupControllerTest {
           .expectStatus()
           .isOk();
 
-      verify(transactionGroupService).deleteGroup(any(), any());
+      verify(groupService).deleteGroup(any(), any());
     }
 
     @Test
@@ -211,14 +208,14 @@ class DefaultGroupControllerTest {
           .expectStatus()
           .isBadRequest();
 
-      verifyNoInteractions(transactionGroupService);
+      verifyNoInteractions(groupService);
     }
 
     @Test
     @WithMockUserId(userId = USER_ID)
     void unauthorized_when_delete_service_rejects_user() {
       doThrow(new UserIsNotMemberOfGroupException("not a member"))
-          .when(transactionGroupService)
+          .when(groupService)
           .deleteGroup(any(), any());
 
       client
@@ -237,7 +234,7 @@ class DefaultGroupControllerTest {
     @WithMockUserId(userId = USER_ID)
     void returns_group_information() {
       final GroupData group = groupData(GroupId.generate());
-      when(transactionGroupService.getGroupInfo(any(), any())).thenReturn(group);
+      when(groupService.getGroupInfo(any(), any())).thenReturn(group);
 
       final GetGroupResponseDto response =
           client
@@ -263,7 +260,7 @@ class DefaultGroupControllerTest {
           .expectStatus()
           .isBadRequest();
 
-      verifyNoInteractions(transactionGroupService);
+      verifyNoInteractions(groupService);
     }
   }
 
@@ -281,7 +278,7 @@ class DefaultGroupControllerTest {
           .expectStatus()
           .isOk();
 
-      verify(transactionGroupService).updateGroupInfo(any(), any(), any());
+      verify(groupService).updateGroupInfo(any(), any(), any());
     }
 
     @Test
@@ -294,7 +291,7 @@ class DefaultGroupControllerTest {
           .expectStatus()
           .isBadRequest();
 
-      verifyNoInteractions(transactionGroupService);
+      verifyNoInteractions(groupService);
     }
 
     @Test
@@ -307,7 +304,7 @@ class DefaultGroupControllerTest {
           .expectStatus()
           .isBadRequest();
 
-      verifyNoInteractions(transactionGroupService);
+      verifyNoInteractions(groupService);
     }
 
     @Test
@@ -320,7 +317,7 @@ class DefaultGroupControllerTest {
           .expectStatus()
           .isBadRequest();
 
-      verifyNoInteractions(transactionGroupService);
+      verifyNoInteractions(groupService);
     }
 
     @Test
@@ -334,7 +331,7 @@ class DefaultGroupControllerTest {
           .expectStatus()
           .isOk();
 
-      verify(transactionGroupService).updateGroupInfo(any(), any(), any());
+      verify(groupService).updateGroupInfo(any(), any(), any());
     }
   }
 
@@ -344,7 +341,7 @@ class DefaultGroupControllerTest {
     @Test
     @WithMockUserId(userId = USER_ID)
     void returns_invitation_token() {
-      when(transactionGroupService.getInvitationToken(any(), any()))
+      when(groupService.getInvitationToken(any(), any()))
           .thenReturn(GroupInvitationToken.fromString(VALID_TOKEN));
 
       final GetInvitationTokenResponseDto response =
@@ -371,7 +368,7 @@ class DefaultGroupControllerTest {
           .expectStatus()
           .isBadRequest();
 
-      verifyNoInteractions(transactionGroupService);
+      verifyNoInteractions(groupService);
     }
   }
 
@@ -389,7 +386,7 @@ class DefaultGroupControllerTest {
           .expectStatus()
           .isOk();
 
-      verify(transactionGroupService).enterToGroupWithToken(any(), any());
+      verify(groupService).enterToGroupWithToken(any(), any());
     }
 
     @Test
@@ -402,14 +399,14 @@ class DefaultGroupControllerTest {
           .expectStatus()
           .isBadRequest();
 
-      verifyNoInteractions(transactionGroupService);
+      verifyNoInteractions(groupService);
     }
 
     @Test
     @WithMockUserId(userId = USER_ID)
     void not_found_when_service_rejects_token() {
       doThrow(new GroupInvitationInvalidException("expired"))
-          .when(transactionGroupService)
+          .when(groupService)
           .enterToGroupWithToken(any(), any());
 
       client
@@ -429,7 +426,7 @@ class DefaultGroupControllerTest {
     @WithMockUserId(userId = USER_ID)
     void returns_users_in_group() {
       final List<UserId> users = List.of(UserId.generate(), UserId.generate());
-      when(transactionGroupService.getUsersInGroup(any(), any())).thenReturn(users);
+      when(groupService.getUsersInGroup(any(), any())).thenReturn(users);
 
       final GetUsersInGroupResponseDto response =
           client
@@ -456,7 +453,7 @@ class DefaultGroupControllerTest {
           .expectStatus()
           .isBadRequest();
 
-      verifyNoInteractions(transactionGroupService);
+      verifyNoInteractions(groupService);
     }
   }
 
@@ -475,7 +472,7 @@ class DefaultGroupControllerTest {
           .expectStatus()
           .isOk();
 
-      verify(transactionGroupService).removeUserFromGroup(any(), any(), any());
+      verify(groupService).removeUserFromGroup(any(), any(), any());
     }
 
     @Test
@@ -489,7 +486,7 @@ class DefaultGroupControllerTest {
           .expectStatus()
           .isBadRequest();
 
-      verifyNoInteractions(transactionGroupService);
+      verifyNoInteractions(groupService);
     }
 
     @Test
@@ -503,38 +500,7 @@ class DefaultGroupControllerTest {
           .expectStatus()
           .isBadRequest();
 
-      verifyNoInteractions(transactionGroupService);
-    }
-  }
-
-  @Nested
-  class GroupBalances {
-
-    @Test
-    @WithMockUserId(userId = USER_ID)
-    void returns_group_balances() {
-      when(transactionGroupService.getAllGroupBalances(any(), any()))
-          .thenReturn(
-              Map.of(UserId.generate(), Money.of(BigDecimal.TEN, Monetary.getCurrency("USD"))));
-
-      client
-          .get()
-          .uri(GroupControllerUriFactory.getBalancesPath(GroupId.generate().toString()))
-          .exchange()
-          .expectStatus()
-          .isOk();
-    }
-
-    @Test
-    void bad_request_when_group_id_is_invalid_for_balances() {
-      client
-          .get()
-          .uri(GroupControllerUriFactory.getBalancesPath("invalid"))
-          .exchange()
-          .expectStatus()
-          .isBadRequest();
-
-      verifyNoInteractions(transactionGroupService);
+      verifyNoInteractions(groupService);
     }
   }
 }

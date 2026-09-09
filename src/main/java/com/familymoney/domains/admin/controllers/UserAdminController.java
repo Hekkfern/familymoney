@@ -39,7 +39,6 @@ public interface UserAdminController {
       @RequestParam(defaultValue = "CREATED_AT") SortField sort,
       @RequestParam(defaultValue = "DESC") Sort.Direction direction);
 
-  @GetMapping(path = "total", version = "1")
   @PutMapping(path = "{userId}/enable", version = "1")
   void enableUser(@PathVariable @NotNull UUID userId, @RequestParam boolean enabled);
 

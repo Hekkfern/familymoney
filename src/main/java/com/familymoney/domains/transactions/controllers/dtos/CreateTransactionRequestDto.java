@@ -1,6 +1,7 @@
 package com.familymoney.domains.transactions.controllers.dtos;
 
 import com.familymoney.domains.transactions.validations.DifferentFromTo;
+import com.familymoney.domains.transactions.validations.NotNegativeMoney;
 import com.familymoney.domains.transactions.validations.ValidDescription;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
@@ -13,5 +14,5 @@ public record CreateTransactionRequestDto(
     @NotNull @ValidDescription String description,
     @NotNull UUID from,
     @NotNull UUID to,
-    @NotNull Money amount,
+    @NotNull @NotNegativeMoney Money amount,
     @NotNull @Past Instant doneAt) {}

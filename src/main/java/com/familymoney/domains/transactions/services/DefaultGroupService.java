@@ -3,28 +3,17 @@ package com.familymoney.domains.transactions.services;
 import com.familymoney.domains.transactions.exceptions.GroupInvitationInvalidException;
 import com.familymoney.domains.transactions.exceptions.GroupOwnerNotFoundException;
 import com.familymoney.domains.transactions.exceptions.MaximumGroupInvitationsReachedException;
-import com.familymoney.domains.transactions.exceptions.TransactionNotFoundException;
-import com.familymoney.domains.transactions.repositories.BalanceRepository;
 import com.familymoney.domains.transactions.repositories.GroupInvitationRepository;
 import com.familymoney.domains.transactions.repositories.GroupRepository;
-import com.familymoney.domains.transactions.repositories.TransactionRepository;
 import com.familymoney.domains.transactions.repositories.dtos.CreateGroupInvitationDto;
-import com.familymoney.domains.transactions.repositories.dtos.CreateTransactionDto;
-import com.familymoney.domains.transactions.repositories.entitites.BalanceEntity;
 import com.familymoney.domains.transactions.repositories.entitites.GroupInvitationEntity;
-import com.familymoney.domains.transactions.repositories.entitites.TransactionEntity;
 import com.familymoney.domains.transactions.services.data.GroupData;
-import com.familymoney.domains.transactions.services.data.TransactionData;
 import com.familymoney.domains.transactions.services.data.UpdateGroupData;
-import com.familymoney.domains.transactions.services.data.UpdateTransactionData;
-import com.familymoney.domains.transactions.services.mappers.TransactionDataMapper;
-import com.familymoney.domains.transactions.services.mappers.UpdateTransactionDataMapper;
 import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.ExpirationTime;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import com.familymoney.domains.transactions.types.GroupName;
-import com.familymoney.domains.transactions.types.TransactionId;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.exceptions.DatabaseExecutionException;
 import com.familymoney.properties.GroupInvitationProperties;
@@ -32,13 +21,10 @@ import com.familymoney.utils.UUIDGenerator;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import javax.money.CurrencyUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.javamoney.moneta.Money;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -48,11 +34,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class DefaultTransactionGroupService implements TransactionGroupService {
+public class DefaultGroupService implements GroupService {
 
   private final GroupRepository groupRepository;
-  private final BalanceRepository balanceRepository;
-  private final TransactionRepository transactionRepository;
   private final GroupInvitationRepository groupInvitationRepository;
   private final GroupOperations groupOperations;
   private final Clock clock;
@@ -90,7 +74,7 @@ public class DefaultTransactionGroupService implements TransactionGroupService {
   }
 
   @Override
-  public void deleteGroupAsAdmin(GroupId groupId) {
+  public void deleteGroupAsAdmin(final GroupId groupId) {
     groupOperations.checkIfGroupExists(groupId);
     groupOperations.deleteGroup(groupId);
   }
@@ -109,7 +93,7 @@ public class DefaultTransactionGroupService implements TransactionGroupService {
   }
 
   @Override
-  public GroupData getGroupInfoAsAdmin(GroupId groupId) {
+  public GroupData getGroupInfoAsAdmin(final GroupId groupId) {
     groupOperations.checkIfGroupExists(groupId);
     return groupOperations.getGroupInfo(groupId);
   }
@@ -123,7 +107,7 @@ public class DefaultTransactionGroupService implements TransactionGroupService {
   }
 
   @Override
-  public void updateGroupInfoAsAdmin(GroupId groupId, UpdateGroupData data) {
+  public void updateGroupInfoAsAdmin(final GroupId groupId, final UpdateGroupData data) {
     groupOperations.checkIfGroupExists(groupId);
     groupOperations.updateGroupInfo(groupId, data);
   }
@@ -169,13 +153,13 @@ public class DefaultTransactionGroupService implements TransactionGroupService {
   }
 
   @Override
-  public List<UserId> getUsersInGroupAsAdmin(GroupId groupId) {
+  public List<UserId> getUsersInGroupAsAdmin(final GroupId groupId) {
     groupOperations.checkIfGroupExists(groupId);
     return groupOperations.getUsersInGroup(groupId);
   }
 
   @Override
-  public void addUserToGroupAsAdmin(GroupId groupId, UserId userIdToAdd) {
+  public void addUserToGroupAsAdmin(final GroupId groupId, final UserId userIdToAdd) {
     groupOperations.checkIfGroupExists(groupId);
     groupOperations.checkIfUserExists(userIdToAdd);
     groupRepository
@@ -192,69 +176,9 @@ public class DefaultTransactionGroupService implements TransactionGroupService {
   }
 
   @Override
-  public void removeUserFromGroupAsAdmin(GroupId groupId, UserId userIdToRemove) {
+  public void removeUserFromGroupAsAdmin(final GroupId groupId, final UserId userIdToRemove) {
     groupOperations.checkIfGroupExists(groupId);
     groupOperations.checkIfUserExists(userIdToRemove);
     groupOperations.removeUserFromGroup(groupId, userIdToRemove);
-  }
-
-  @Override
-  public Map<UserId, Money> getAllGroupBalances(final GroupId groupId, final UserId userId) {
-    groupOperations.checkIfGroupExists(groupId);
-    groupOperations.checkIfUserIsInGroup(userId, groupId);
-    final List<BalanceEntity> balancesDb = balanceRepository.findByGroup(groupId);
-    return balancesDb.stream()
-        .collect(
-            Collectors.toMap(
-                b -> b.user1().equals(userId) ? b.user2() : b.user1(),
-                BalanceEntity::money,
-                (existing, replacement) -> existing));
-  }
-
-  @Override
-  public Page<TransactionData> getGroupTransactions(
-      final GroupId groupId, final UserId userId, final Pageable pageable) {
-    groupOperations.checkIfGroupExists(groupId);
-    groupOperations.checkIfUserIsInGroup(userId, groupId);
-    final Page<TransactionEntity> transactionsDb =
-        transactionRepository.findAllByGroupId(groupId, pageable);
-    return transactionsDb.map(TransactionDataMapper::fromDbo);
-  }
-
-  @Override
-  public void createTransactionInGroup(
-      final GroupId groupId,
-      final Description description,
-      final UserId from,
-      final UserId to,
-      final Money amount,
-      final Instant doneAt,
-      final UserId createdBy) {
-    groupOperations.checkIfGroupExists(groupId);
-    groupOperations.checkIfUserIsInGroup(createdBy, groupId);
-    final TransactionId transactionId = TransactionId.generate();
-    transactionRepository.create(
-        new CreateTransactionDto(transactionId, description, groupId, amount, from, to, doneAt));
-  }
-
-  @Override
-  public void updateTransaction(
-      final UserId userId, final TransactionId transactionId, final UpdateTransactionData data) {
-    var transactionDb =
-        transactionRepository
-            .findById(transactionId)
-            .orElseThrow(() -> new TransactionNotFoundException("Transaction not found"));
-    groupOperations.checkIfUserIsInGroup(userId, transactionDb.groupId());
-    transactionRepository.updateById(transactionId, UpdateTransactionDataMapper.toDbo(data));
-  }
-
-  @Override
-  public void deleteTransaction(final UserId userId, final TransactionId transactionId) {
-    var transactionDb =
-        transactionRepository
-            .findById(transactionId)
-            .orElseThrow(() -> new TransactionNotFoundException("Transaction not found"));
-    groupOperations.checkIfUserIsInGroup(userId, transactionDb.groupId());
-    transactionRepository.deleteById(transactionId);
   }
 }

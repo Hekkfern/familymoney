@@ -3,7 +3,6 @@ package com.familymoney.domains.transactions.controllers;
 import com.familymoney.domains.transactions.controllers.dtos.CreateGroupRequestDto;
 import com.familymoney.domains.transactions.controllers.dtos.CreateGroupResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.EnterGroupRequestDto;
-import com.familymoney.domains.transactions.controllers.dtos.GetGroupBalancesResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.GetGroupResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.GetGroupsResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.GetInvitationTokenResponseDto;
@@ -51,7 +50,4 @@ public interface GroupController {
 
   @DeleteMapping(path = "{groupId}/users/{userId}", version = "1")
   void removeUserFromGroup(@PathVariable @NotNull UUID groupId, @PathVariable @NotNull UUID userId);
-
-  @GetMapping(path = "{groupId}/balances", version = "1")
-  GetGroupBalancesResponseDto getGroupBalances(@PathVariable @NotNull UUID groupId);
 }

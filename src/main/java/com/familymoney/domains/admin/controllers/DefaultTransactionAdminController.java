@@ -1,4 +1,4 @@
-package com.familymoney.domains.transactions.controllers;
+package com.familymoney.domains.admin.controllers;
 
 import com.familymoney.domains.transactions.controllers.dtos.CreateTransactionRequestDto;
 import com.familymoney.domains.transactions.controllers.dtos.GetGroupBalancesResponseDto;
@@ -13,65 +13,60 @@ import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.TransactionId;
 import com.familymoney.domains.users.types.UserId;
-import com.familymoney.utils.AuthenticationUtils;
-import com.familymoney.utils.AuthorizedUser;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.javamoney.moneta.Money;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Controller;
 
-@RestController
+@Controller
 @RequiredArgsConstructor
-public class DefaultTransactionController implements TransactionController {
+public class DefaultTransactionAdminController implements TransactionAdminController {
 
   private final TransactionService transactionService;
 
   @Override
   public GetGroupBalancesResponseDto getGroupBalances(final UUID groupId) {
-    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     final Map<UserId, Money> balances =
-        transactionService.getAllGroupBalances(GroupId.fromUuid(groupId), user.id());
+        transactionService.getAllGroupBalancesAsAdmin(GroupId.fromUuid(groupId));
     return GetGroupBalancesResponseMapper.toDto(balances);
+  }
+
+  @Override
+  public void forceSyncBalances(final UUID groupId) {
+    // TODO
   }
 
   @Override
   public GetTransactionsResponseDto getGroupTransactions(
       final UUID groupId, final Pageable pageable) {
-    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     final Page<TransactionData> transactionPages =
-        transactionService.getGroupTransactions(GroupId.fromUuid(groupId), user.id(), pageable);
+        transactionService.getGroupTransactionsAsAdmin(GroupId.fromUuid(groupId), pageable);
     return GetGroupTransactionsResponseMapper.toDto(transactionPages);
   }
 
   @Override
   public void createTransaction(final UUID groupId, final CreateTransactionRequestDto request) {
-    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
-    transactionService.createTransactionInGroup(
+    transactionService.createTransactionInGroupAsAdmin(
         GroupId.fromUuid(groupId),
         Description.of(request.description()),
         UserId.fromUuid(request.from()),
         UserId.fromUuid(request.to()),
         request.amount(),
-        request.doneAt(),
-        user.id());
+        request.doneAt());
   }
 
   @Override
   public void updateTransaction(
       final UUID transactionId, final UpdateTransactionRequestDto request) {
-    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
-    transactionService.updateTransaction(
-        user.id(),
-        TransactionId.fromUuid(transactionId),
-        UpdateTransactionRequestMapper.fromDto(request));
+    transactionService.updateTransactionAsAdmin(
+        TransactionId.fromUuid(transactionId), UpdateTransactionRequestMapper.fromDto(request));
   }
 
   @Override
   public void deleteTransaction(final UUID transactionId) {
-    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
-    transactionService.deleteTransaction(user.id(), TransactionId.fromUuid(transactionId));
+    transactionService.deleteTransactionAsAdmin(TransactionId.fromUuid(transactionId));
   }
 }

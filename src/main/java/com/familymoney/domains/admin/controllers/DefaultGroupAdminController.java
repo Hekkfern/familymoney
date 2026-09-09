@@ -10,7 +10,7 @@ import com.familymoney.domains.transactions.controllers.mappers.CreateGroupRespo
 import com.familymoney.domains.transactions.controllers.mappers.GetGroupResponseMapper;
 import com.familymoney.domains.transactions.controllers.mappers.GetUsersInGroupResponseMapper;
 import com.familymoney.domains.transactions.controllers.mappers.UpdateGroupRequestMapper;
-import com.familymoney.domains.transactions.services.TransactionGroupService;
+import com.familymoney.domains.transactions.services.GroupService;
 import com.familymoney.domains.transactions.services.data.GroupData;
 import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.GroupId;
@@ -28,12 +28,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class DefaultGroupAdminController implements GroupAdminController {
 
-  private final TransactionGroupService transactionGroupService;
+  private final GroupService groupService;
 
   @Override
   public CreateGroupResponseDto createGroup(CreateGroupRequestDto request) {
     final GroupId groupId =
-        transactionGroupService.createGroup(
+        groupService.createGroup(
             GroupName.fromString(request.name()),
             Description.of(request.description().trim()),
             Monetary.getCurrency(request.currencyCode()));
@@ -43,45 +43,41 @@ public class DefaultGroupAdminController implements GroupAdminController {
   @Override
   public GetGroupsResponseDto getGroupsOfUser(UUID userId, Pageable pageable) {
     final Page<GroupData> groupPages =
-        transactionGroupService.getGroupsByUser(UserId.fromUuid(userId), pageable);
+        groupService.getGroupsByUser(UserId.fromUuid(userId), pageable);
     return new GetGroupsResponseDto(
         groupPages.getContent().stream().map(GetGroupResponseMapper::toDto).toList());
   }
 
   @Override
   public void deleteGroup(UUID groupId) {
-    transactionGroupService.deleteGroupAsAdmin(GroupId.fromUuid(groupId));
+    groupService.deleteGroupAsAdmin(GroupId.fromUuid(groupId));
   }
 
   @Override
   public GetGroupResponseDto getGroupInfo(UUID groupId) {
-    final GroupData groupData =
-        transactionGroupService.getGroupInfoAsAdmin(GroupId.fromUuid(groupId));
+    final GroupData groupData = groupService.getGroupInfoAsAdmin(GroupId.fromUuid(groupId));
     return GetGroupResponseMapper.toDto(groupData);
   }
 
   @Override
   public void updateGroupInfo(UUID groupId, UpdateGroupRequestDto request) {
-    transactionGroupService.updateGroupInfoAsAdmin(
+    groupService.updateGroupInfoAsAdmin(
         GroupId.fromUuid(groupId), UpdateGroupRequestMapper.fromDto(request));
   }
 
   @Override
   public void addUserToGroup(UUID groupId, UUID userId) {
-    transactionGroupService.addUserToGroupAsAdmin(
-        GroupId.fromUuid(groupId), UserId.fromUuid(userId));
+    groupService.addUserToGroupAsAdmin(GroupId.fromUuid(groupId), UserId.fromUuid(userId));
   }
 
   @Override
   public void removeUserFromGroup(UUID groupId, UUID userId) {
-    transactionGroupService.removeUserFromGroupAsAdmin(
-        GroupId.fromUuid(groupId), UserId.fromUuid(userId));
+    groupService.removeUserFromGroupAsAdmin(GroupId.fromUuid(groupId), UserId.fromUuid(userId));
   }
 
   @Override
   public GetUsersInGroupResponseDto getUsersInGroup(UUID groupId) {
-    final List<UserId> users =
-        transactionGroupService.getUsersInGroupAsAdmin(GroupId.fromUuid(groupId));
+    final List<UserId> users = groupService.getUsersInGroupAsAdmin(GroupId.fromUuid(groupId));
     return GetUsersInGroupResponseMapper.toDto(users);
   }
 }
