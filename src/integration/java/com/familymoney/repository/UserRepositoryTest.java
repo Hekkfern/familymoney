@@ -480,7 +480,7 @@ class UserRepositoryTest {
       final Page<UserEntity> page = userRepository.getAll(PageRequest.of(100, 2));
 
       assertThat(page.getNumberOfElements()).isZero();
-      assertThat(page.getTotalElements()).isZero();
+      assertThat(page.getTotalElements()).isEqualTo(3);
     }
 
     @Test

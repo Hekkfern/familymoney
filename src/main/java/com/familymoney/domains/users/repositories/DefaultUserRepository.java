@@ -13,8 +13,6 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.jooq.Field;
-import org.jooq.Record;
-import org.jooq.Result;
 import org.jooq.SortField;
 import org.jooq.impl.DSL;
 import org.springframework.data.domain.Page;
@@ -161,7 +159,8 @@ public class DefaultUserRepository implements UserRepository {
 
   @Override
   public Page<UserEntity> getAll(final Pageable pageable) {
-    final Field<Integer> totalField = DSL.count().over().as("total_count");
+    final Long total = db.selectCount().from(Users.USERS).fetchOne(0, Long.class);
+    final long safeTotal = total != null ? total : 0L;
 
     final List<SortField<?>> orderFields =
         pageable.getSort().stream()
@@ -179,7 +178,7 @@ public class DefaultUserRepository implements UserRepository {
     final List<SortField<?>> effectiveOrder =
         orderFields.isEmpty() ? List.of(Users.USERS.CREATED_AT.desc()) : orderFields;
 
-    final Result<? extends Record> records =
+    final List<UserEntity> data =
         db.select(
                 Users.USERS.ID,
                 Users.USERS.USERNAME,
@@ -188,17 +187,14 @@ public class DefaultUserRepository implements UserRepository {
                 Users.USERS.CREATED_AT,
                 Users.USERS.UPDATED_AT,
                 Users.USERS.IS_EMAIL_VERIFIED,
-                Users.USERS.IS_ENABLED,
-                totalField)
+                Users.USERS.IS_ENABLED)
             .from(Users.USERS)
             .orderBy(effectiveOrder)
             .limit(pageable.getPageSize())
             .offset(pageable.getOffset())
-            .fetch();
+            .fetch()
+            .map(UserJooqMapper::toEntity);
 
-    final long total = records.isEmpty() ? 0L : records.getFirst().get("total_count", Long.class);
-    final List<UserEntity> data = records.map(UserJooqMapper::toEntity);
-
-    return new PageImpl<>(data, pageable, total);
+    return new PageImpl<>(data, pageable, safeTotal);
   }
 }

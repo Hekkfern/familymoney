@@ -16,6 +16,8 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
+import org.jooq.Field;
+import org.jooq.SortField;
 import org.jooq.impl.DSL;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -137,9 +139,24 @@ public class DefaultTransactionRepository implements TransactionRepository {
         db.selectCount()
             .from(Transactions.TRANSACTIONS)
             .where(Transactions.TRANSACTIONS.GROUP_ID.eq(groupId.value()))
-            .orderBy(Transactions.TRANSACTIONS.ID.asc())
             .fetchOne(0, Long.class);
     final long safeTotal = total != null ? total : 0L;
+
+    final List<SortField<?>> orderFields =
+        pageable.getSort().stream()
+            .map(
+                order -> {
+                  Field<?> field = Transactions.TRANSACTIONS.field(order.getProperty());
+                  if (field == null) {
+                    throw new IllegalArgumentException(
+                        "Unknown sort field: " + order.getProperty());
+                  }
+                  return order.isAscending() ? field.asc() : field.desc();
+                })
+            .toList();
+
+    final List<SortField<?>> effectiveOrder =
+        orderFields.isEmpty() ? List.of(Transactions.TRANSACTIONS.DONE_AT.desc()) : orderFields;
 
     final List<TransactionEntity> data =
         db.select(
@@ -154,6 +171,7 @@ public class DefaultTransactionRepository implements TransactionRepository {
                 Transactions.TRANSACTIONS.UPDATED_AT)
             .from(Transactions.TRANSACTIONS)
             .where(Transactions.TRANSACTIONS.GROUP_ID.eq(groupId.value()))
+            .orderBy(effectiveOrder)
             .limit(pageable.getPageSize())
             .offset(pageable.getOffset())
             .fetch()

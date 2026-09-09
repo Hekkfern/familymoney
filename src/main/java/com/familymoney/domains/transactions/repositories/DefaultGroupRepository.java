@@ -15,6 +15,8 @@ import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
+import org.jooq.Field;
+import org.jooq.SortField;
 import org.jooq.impl.DSL;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -85,6 +87,22 @@ public class DefaultGroupRepository implements GroupRepository {
             .fetchOne(0, Long.class);
     final long safeTotal = total != null ? total : 0L;
 
+    final List<SortField<?>> orderFields =
+        pageable.getSort().stream()
+            .map(
+                order -> {
+                  Field<?> field = Groups.GROUPS.field(order.getProperty());
+                  if (field == null) {
+                    throw new IllegalArgumentException(
+                        "Unknown sort field: " + order.getProperty());
+                  }
+                  return order.isAscending() ? field.asc() : field.desc();
+                })
+            .toList();
+
+    final List<SortField<?>> effectiveOrder =
+        orderFields.isEmpty() ? List.of(Groups.GROUPS.CREATED_AT.desc()) : orderFields;
+
     final List<GroupEntity> data =
         db.select(
                 Groups.GROUPS.ID,
@@ -97,7 +115,7 @@ public class DefaultGroupRepository implements GroupRepository {
             .join(Groups.GROUPS)
             .on(Groups.GROUPS.ID.eq(UserGroups.USER_GROUPS.GROUP_ID))
             .where(UserGroups.USER_GROUPS.USER_ID.eq(userId.value()))
-            .orderBy(Groups.GROUPS.CREATED_AT.desc())
+            .orderBy(effectiveOrder)
             .limit(pageable.getPageSize())
             .offset(pageable.getOffset())
             .fetch()
