@@ -46,6 +46,9 @@ dependencies {
   implementation(libs.moneta)
   implementation("org.jooq:jooq:${JOOQ_VERSION}")
   implementation(libs.uuidcreator)
+  implementation(libs.shedlock)
+  implementation(libs.shedlock)
+  implementation(libs.shedlock.provider.jooq)
 
   runtimeOnly("org.postgresql:postgresql")
   runtimeOnly(libs.jjwt.impl)
