@@ -1,6 +1,5 @@
 package com.familymoney.domains.transactions.controllers.mappers;
 
-import com.familymoney.domains.transactions.controllers.dtos.GetInvitationTokenResponseDto;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
 
 public final class GetInvitationTokenResponseMapper {

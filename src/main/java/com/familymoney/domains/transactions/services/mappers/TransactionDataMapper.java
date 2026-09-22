@@ -1,6 +1,6 @@
 package com.familymoney.domains.transactions.services.mappers;
 
-import com.familymoney.domains.transactions.repositories.entitites.TransactionEntity;
+import com.familymoney.domains.transactions.repositories.entitites.ExpenseEntity;
 import com.familymoney.domains.transactions.services.data.TransactionData;
 
 public final class TransactionDataMapper {
@@ -9,7 +9,7 @@ public final class TransactionDataMapper {
     /* This utility class should not be instantiated */
   }
 
-  public static TransactionData fromDbo(TransactionEntity entity) {
+  public static TransactionData fromDbo(ExpenseEntity entity) {
     return new TransactionData(
         entity.id(),
         entity.description(),

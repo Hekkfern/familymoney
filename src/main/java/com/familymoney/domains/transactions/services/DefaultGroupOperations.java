@@ -23,7 +23,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-/** Default implementation of shared transaction group operations. */
+/** Default implementation of shares transaction group operations. */
 @Service
 @RequiredArgsConstructor
 @Slf4j

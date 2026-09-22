@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import com.familymoney.domains.users.controllers.dtos.GetUserResponseDto;
+import com.familymoney.domains.users.controllers.dtos.UserDto;
 import com.familymoney.domains.users.services.UserService;
 import com.familymoney.domains.users.services.data.UserData;
 import com.familymoney.domains.users.types.Email;
@@ -63,14 +63,14 @@ class DefaultUserAdminControllerTest {
           .thenReturn(Optional.of(new UserData(userId, username, email, now, true, true)));
       when(userService.getUserRole(any())).thenReturn(Optional.of(Role.ADMIN));
 
-      final GetUserResponseDto data =
+      final UserDto data =
           client
               .get()
               .uri(UserAdminControllerUriFactory.getUserPath(userId.toString()))
               .exchange()
               .expectStatus()
               .isOk()
-              .expectBody(GetUserResponseDto.class)
+              .expectBody(UserDto.class)
               .returnResult()
               .getResponseBody();
       assertNotNull(data);

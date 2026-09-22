@@ -1,16 +1,16 @@
 package com.familymoney.domains.transactions.validations;
 
-import com.familymoney.domains.transactions.controllers.dtos.CreateTransactionRequestDto;
+import com.familymoney.domains.transactions.controllers.dtos.CreateExpenseRequestDto;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import java.util.Objects;
 import java.util.UUID;
 
 public class DifferentFromToValidator
-    implements ConstraintValidator<DifferentFromTo, CreateTransactionRequestDto> {
+    implements ConstraintValidator<DifferentFromTo, CreateExpenseRequestDto> {
 
   @Override
-  public boolean isValid(CreateTransactionRequestDto dto, ConstraintValidatorContext context) {
+  public boolean isValid(CreateExpenseRequestDto dto, ConstraintValidatorContext context) {
     if (dto == null) return true; // other constraints handle null
     final UUID from = dto.from();
     final UUID to = dto.to();

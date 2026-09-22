@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import com.familymoney.domains.users.controllers.dtos.GetMyUserResponseDto;
 import com.familymoney.domains.users.services.UserService;
 import com.familymoney.domains.users.services.data.UserData;
 import com.familymoney.domains.users.types.Email;

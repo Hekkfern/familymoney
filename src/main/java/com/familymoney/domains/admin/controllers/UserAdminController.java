@@ -1,8 +1,8 @@
 package com.familymoney.domains.admin.controllers;
 
-import com.familymoney.domains.users.controllers.dtos.GetUserResponseDto;
 import com.familymoney.domains.users.controllers.dtos.GetUserRoleResponseDto;
 import com.familymoney.domains.users.controllers.dtos.UpdateUserRequestDto;
+import com.familymoney.domains.users.controllers.dtos.UserDto;
 import com.familymoney.utils.PageResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface UserAdminController {
 
   @GetMapping(path = "{userId}", version = "1")
-  GetUserResponseDto getUserInfo(@PathVariable @NotNull UUID userId);
+  UserDto getUserInfo(@PathVariable @NotNull UUID userId);
 
   enum SortField {
     CREATED_AT,
@@ -33,7 +33,7 @@ public interface UserAdminController {
   }
 
   @GetMapping(path = "", version = "1")
-  PageResponse<GetUserResponseDto> getUsersInfo(
+  PageResponse<UserDto> getUsersInfo(
       @RequestParam(defaultValue = "0") @Min(0) @Max(10_000) int page,
       @RequestParam(defaultValue = "25") @Min(20) @Max(100) int size,
       @RequestParam(defaultValue = "CREATED_AT") SortField sort,

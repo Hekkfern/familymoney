@@ -1,18 +1,16 @@
 package com.familymoney.domains.transactions.services;
 
 import com.familymoney.domains.transactions.exceptions.TransactionNotFoundException;
-import com.familymoney.domains.transactions.repositories.BalanceRepository;
-import com.familymoney.domains.transactions.repositories.TransactionRepository;
-import com.familymoney.domains.transactions.repositories.dtos.CreateTransactionDto;
+import com.familymoney.domains.transactions.repositories.dtos.CreateExpenseDto;
 import com.familymoney.domains.transactions.repositories.entitites.BalanceEntity;
-import com.familymoney.domains.transactions.repositories.entitites.TransactionEntity;
+import com.familymoney.domains.transactions.repositories.entitites.ExpenseEntity;
 import com.familymoney.domains.transactions.services.data.TransactionData;
 import com.familymoney.domains.transactions.services.data.UpdateTransactionData;
 import com.familymoney.domains.transactions.services.mappers.TransactionDataMapper;
 import com.familymoney.domains.transactions.services.mappers.UpdateTransactionDataMapper;
 import com.familymoney.domains.transactions.types.Description;
+import com.familymoney.domains.transactions.types.ExpenseId;
 import com.familymoney.domains.transactions.types.GroupId;
-import com.familymoney.domains.transactions.types.TransactionId;
 import com.familymoney.domains.users.types.UserId;
 import java.time.Instant;
 import java.util.List;
@@ -59,7 +57,7 @@ public class DefaultTransactionService implements TransactionService {
       final GroupId groupId, final UserId userId, final Pageable pageable) {
     groupOperations.checkIfGroupExists(groupId);
     groupOperations.checkIfUserIsInGroup(userId, groupId);
-    final Page<TransactionEntity> transactionsDb =
+    final Page<ExpenseEntity> transactionsDb =
         transactionRepository.findAllByGroupId(groupId, pageable);
     return transactionsDb.map(TransactionDataMapper::fromDbo);
   }
@@ -69,7 +67,7 @@ public class DefaultTransactionService implements TransactionService {
   public Page<TransactionData> getGroupTransactionsAsAdmin(
       final GroupId groupId, final Pageable pageable) {
     groupOperations.checkIfGroupExists(groupId);
-    final Page<TransactionEntity> transactionsDb =
+    final Page<ExpenseEntity> transactionsDb =
         transactionRepository.findAllByGroupId(groupId, pageable);
     return transactionsDb.map(TransactionDataMapper::fromDbo);
   }
@@ -86,9 +84,9 @@ public class DefaultTransactionService implements TransactionService {
       final UserId createdBy) {
     groupOperations.checkIfGroupExists(groupId);
     groupOperations.checkIfUserIsInGroup(createdBy, groupId);
-    final TransactionId transactionId = TransactionId.generate();
+    final ExpenseId expenseId = ExpenseId.generate();
     transactionRepository.create(
-        new CreateTransactionDto(transactionId, description, groupId, amount, from, to, doneAt));
+        new CreateExpenseDto(expenseId, description, groupId, amount, from, to, doneAt));
   }
 
   @Override
@@ -101,42 +99,42 @@ public class DefaultTransactionService implements TransactionService {
       final Money amount,
       final Instant doneAt) {
     groupOperations.checkIfGroupExists(groupId);
-    final TransactionId transactionId = TransactionId.generate();
+    final ExpenseId expenseId = ExpenseId.generate();
     transactionRepository.create(
-        new CreateTransactionDto(transactionId, description, groupId, amount, from, to, doneAt));
+        new CreateExpenseDto(expenseId, description, groupId, amount, from, to, doneAt));
   }
 
   @Override
   @Transactional
   public void updateTransaction(
-      final UserId userId, final TransactionId transactionId, final UpdateTransactionData data) {
+      final UserId userId, final ExpenseId expenseId, final UpdateTransactionData data) {
     var transactionDb =
         transactionRepository
-            .findById(transactionId)
+            .findById(expenseId)
             .orElseThrow(() -> new TransactionNotFoundException("Transaction not found"));
     groupOperations.checkIfUserIsInGroup(userId, transactionDb.groupId());
-    transactionRepository.updateById(transactionId, UpdateTransactionDataMapper.toDbo(data));
+    transactionRepository.updateById(expenseId, UpdateTransactionDataMapper.toDbo(data));
   }
 
   @Override
   public void updateTransactionAsAdmin(
-      final TransactionId transactionId, final UpdateTransactionData data) {
-    transactionRepository.updateById(transactionId, UpdateTransactionDataMapper.toDbo(data));
+      final ExpenseId expenseId, final UpdateTransactionData data) {
+    transactionRepository.updateById(expenseId, UpdateTransactionDataMapper.toDbo(data));
   }
 
   @Override
   @Transactional
-  public void deleteTransaction(final UserId userId, final TransactionId transactionId) {
-    final TransactionEntity transactionDb =
+  public void deleteTransaction(final UserId userId, final ExpenseId expenseId) {
+    final ExpenseEntity transactionDb =
         transactionRepository
-            .findById(transactionId)
+            .findById(expenseId)
             .orElseThrow(() -> new TransactionNotFoundException("Transaction not found"));
     groupOperations.checkIfUserIsInGroup(userId, transactionDb.groupId());
-    transactionRepository.deleteById(transactionId);
+    transactionRepository.deleteById(expenseId);
   }
 
   @Override
-  public void deleteTransactionAsAdmin(final TransactionId transactionId) {
-    transactionRepository.deleteById(transactionId);
+  public void deleteTransactionAsAdmin(final ExpenseId expenseId) {
+    transactionRepository.deleteById(expenseId);
   }
 }

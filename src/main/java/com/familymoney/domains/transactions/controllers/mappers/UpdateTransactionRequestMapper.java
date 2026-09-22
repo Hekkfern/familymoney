@@ -1,6 +1,6 @@
 package com.familymoney.domains.transactions.controllers.mappers;
 
-import com.familymoney.domains.transactions.controllers.dtos.UpdateTransactionRequestDto;
+import com.familymoney.domains.transactions.controllers.dtos.UpdateExpenseRequestDto;
 import com.familymoney.domains.transactions.services.data.UpdateTransactionData;
 import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.users.types.UserId;
@@ -11,7 +11,7 @@ public final class UpdateTransactionRequestMapper {
     /* this class is not intended to be instantiated */
   }
 
-  public static UpdateTransactionData fromDto(final UpdateTransactionRequestDto dto) {
+  public static UpdateTransactionData fromDto(final UpdateExpenseRequestDto dto) {
     return new UpdateTransactionData(
         dto.description() != null ? Description.of(dto.description()) : null,
         dto.from() != null ? UserId.fromUuid(dto.from()) : null,

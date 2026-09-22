@@ -1,7 +1,7 @@
 package com.familymoney.domains.users.controllers;
 
-import com.familymoney.domains.users.controllers.dtos.GetMyUserResponseDto;
 import com.familymoney.domains.users.controllers.dtos.UpdateUserRequestDto;
+import com.familymoney.domains.users.controllers.dtos.UserDto;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public interface UserController {
 
   @GetMapping(path = "me", version = "1")
-  GetMyUserResponseDto getMyUserInfo();
+  UserDto getMyUserInfo();
 
   @DeleteMapping(path = "me", version = "1")
   void deleteMyUser();

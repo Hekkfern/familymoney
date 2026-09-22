@@ -2,13 +2,11 @@ package com.familymoney.domains.admin.controllers;
 
 import com.familymoney.domains.transactions.controllers.dtos.CreateGroupRequestDto;
 import com.familymoney.domains.transactions.controllers.dtos.CreateGroupResponseDto;
-import com.familymoney.domains.transactions.controllers.dtos.GetGroupResponseDto;
-import com.familymoney.domains.transactions.controllers.dtos.GetGroupsResponseDto;
-import com.familymoney.domains.transactions.controllers.dtos.GetUsersInGroupResponseDto;
+import com.familymoney.domains.transactions.controllers.dtos.GroupDto;
 import com.familymoney.domains.transactions.controllers.dtos.UpdateGroupRequestDto;
 import com.familymoney.domains.transactions.controllers.mappers.CreateGroupResponseMapper;
-import com.familymoney.domains.transactions.controllers.mappers.GetGroupResponseMapper;
 import com.familymoney.domains.transactions.controllers.mappers.GetUsersInGroupResponseMapper;
+import com.familymoney.domains.transactions.controllers.mappers.GroupDtoMapper;
 import com.familymoney.domains.transactions.controllers.mappers.UpdateGroupRequestMapper;
 import com.familymoney.domains.transactions.services.GroupService;
 import com.familymoney.domains.transactions.services.data.GroupData;
@@ -45,7 +43,7 @@ public class DefaultGroupAdminController implements GroupAdminController {
     final Page<GroupData> groupPages =
         groupService.getGroupsByUser(UserId.fromUuid(userId), pageable);
     return new GetGroupsResponseDto(
-        groupPages.getContent().stream().map(GetGroupResponseMapper::toDto).toList());
+        groupPages.getContent().stream().map(GroupDtoMapper::toDto).toList());
   }
 
   @Override
@@ -54,9 +52,9 @@ public class DefaultGroupAdminController implements GroupAdminController {
   }
 
   @Override
-  public GetGroupResponseDto getGroupInfo(UUID groupId) {
+  public GroupDto getGroupInfo(UUID groupId) {
     final GroupData groupData = groupService.getGroupInfoAsAdmin(GroupId.fromUuid(groupId));
-    return GetGroupResponseMapper.toDto(groupData);
+    return GroupDtoMapper.toDto(groupData);
   }
 
   @Override

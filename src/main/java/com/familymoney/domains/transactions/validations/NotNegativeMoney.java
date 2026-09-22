@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
 @Constraint(validatedBy = NotNegativeMoneyValidator.class)
 @Documented
 public @interface NotNegativeMoney {
-  String message() default "Money amount must be zero or positive";
+  String message() default "Money amount must be zero or a positive number";
 
   Class<?>[] groups() default {};
 

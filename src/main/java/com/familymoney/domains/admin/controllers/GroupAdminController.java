@@ -2,15 +2,15 @@ package com.familymoney.domains.admin.controllers;
 
 import com.familymoney.domains.transactions.controllers.dtos.CreateGroupRequestDto;
 import com.familymoney.domains.transactions.controllers.dtos.CreateGroupResponseDto;
-import com.familymoney.domains.transactions.controllers.dtos.GetGroupResponseDto;
-import com.familymoney.domains.transactions.controllers.dtos.GetGroupsResponseDto;
-import com.familymoney.domains.transactions.controllers.dtos.GetUsersInGroupResponseDto;
+import com.familymoney.domains.transactions.controllers.dtos.GroupDto;
 import com.familymoney.domains.transactions.controllers.dtos.UpdateGroupRequestDto;
+import com.familymoney.utils.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
-import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RequestMapping("admin/groups")
 public interface GroupAdminController {
@@ -28,7 +29,10 @@ public interface GroupAdminController {
 
   @Operation(summary = "Get the list of groups where the selected user is a member")
   @GetMapping(path = "users/{userId}", version = "1")
-  GetGroupsResponseDto getGroupsOfUser(@PathVariable @NotNull UUID userId, Pageable pageable);
+  PageResponse<GroupDto> getGroupsOfUser(
+      @PathVariable @NotNull UUID userId,
+      @RequestParam(defaultValue = "0") @Min(0) @Max(100) int page,
+      @RequestParam(defaultValue = "20") @Min(20) @Max(100) int size);
 
   @Operation(summary = "Delete a group")
   @DeleteMapping(path = "{groupId}", version = "1")
@@ -36,7 +40,7 @@ public interface GroupAdminController {
 
   @Operation(summary = "Get information about a specific group")
   @GetMapping(path = "{groupId}", version = "1")
-  GetGroupResponseDto getGroupInfo(@PathVariable @NotNull UUID groupId);
+  GroupDto getGroupInfo(@PathVariable @NotNull UUID groupId);
 
   @Operation(summary = "Update information of a specific group")
   @PatchMapping(path = "{groupId}", version = "1")
@@ -54,4 +58,14 @@ public interface GroupAdminController {
   @Operation(summary = "Get the list of users in a specific group")
   @GetMapping(path = "{groupId}/users", version = "1")
   GetUsersInGroupResponseDto getUsersInGroup(@PathVariable @NotNull UUID groupId);
+
+  @GetMapping(path = "{groupId}/balances", version = "1")
+  GetGroupBalancesResponseDto getGroupBalances(@PathVariable @NotNull UUID groupId);
+
+  @Operation(summary = "Recalculates the balances of all the expenses in the group")
+  @PostMapping(path = "{groupId}", version = "1")
+  void forceSyncBalances(@PathVariable @NotNull UUID groupId);
+
+  @GetMapping(path = "{groupId}/transactions", version = "1")
+  GetGroupTransactionsResponseDto getGroupTransactions(@PathVariable @NotNull UUID groupId);
 }

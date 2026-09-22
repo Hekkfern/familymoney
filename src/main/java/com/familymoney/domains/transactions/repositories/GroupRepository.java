@@ -3,7 +3,6 @@ package com.familymoney.domains.transactions.repositories;
 import com.familymoney.domains.transactions.repositories.dtos.CreateGroupDto;
 import com.familymoney.domains.transactions.repositories.dtos.UpdateGroupDto;
 import com.familymoney.domains.transactions.repositories.entitites.GroupEntity;
-import com.familymoney.domains.transactions.repositories.entitites.UserGroupEntity;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.users.types.UserId;
 import java.util.List;
@@ -25,11 +24,9 @@ public interface GroupRepository {
   /**
    * Creates a new transaction group.
    *
-   * @param data values to persist for the new group
-   * @return an {@link Optional} containing the created {@link GroupEntity} when creation succeeds;
-   *     otherwise an empty {@link Optional}
+   * @param dto values to persist for the new group
    */
-  Optional<GroupEntity> create(CreateGroupDto data);
+  void create(CreateGroupDto dto);
 
   /**
    * Updates a group identified by its ID.
@@ -37,19 +34,16 @@ public interface GroupRepository {
    * <p>Only non-null fields in {@code data} should be applied.
    *
    * @param id the group identifier
-   * @param data the fields to update
-   * @return {@code true} if the group existed and was updated; {@code false} otherwise
+   * @param dto the fields to update
    */
-  boolean updateById(GroupId id, UpdateGroupDto data);
+  void updateById(GroupId id, UpdateGroupDto dto);
 
   /**
    * Deletes a group by its ID.
    *
    * @param id the group identifier
-   * @return {@code true} if the group was deleted; {@code false} if it did not exist or the
-   *     deletion failed
    */
-  boolean deleteById(GroupId id);
+  void deleteById(GroupId id);
 
   /**
    * Finds the groups that a given user belongs to as a paged result.
@@ -100,17 +94,14 @@ public interface GroupRepository {
    *
    * @param userId the user identifier
    * @param groupId the group identifier
-   * @return an {@link Optional} containing the created {@link UserGroupEntity} when the user was
-   *     added successfully; otherwise empty
    */
-  Optional<UserGroupEntity> addUser(UserId userId, GroupId groupId);
+  void addUser(UserId userId, GroupId groupId);
 
   /**
    * Removes a user from a group.
    *
    * @param userId the user identifier
    * @param groupId the group identifier
-   * @return {@code true} if the user membership was removed; otherwise {@code false}
    */
-  boolean deleteUser(UserId userId, GroupId groupId);
+  void deleteUser(UserId userId, GroupId groupId);
 }

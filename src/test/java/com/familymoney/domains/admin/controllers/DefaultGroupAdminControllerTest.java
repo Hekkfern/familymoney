@@ -7,9 +7,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.familymoney.domains.transactions.controllers.dtos.CreateGroupResponseDto;
-import com.familymoney.domains.transactions.controllers.dtos.GetGroupResponseDto;
-import com.familymoney.domains.transactions.controllers.dtos.GetGroupsResponseDto;
-import com.familymoney.domains.transactions.controllers.dtos.GetUsersInGroupResponseDto;
+import com.familymoney.domains.transactions.controllers.dtos.GroupDto;
 import com.familymoney.domains.transactions.services.GroupService;
 import com.familymoney.domains.transactions.services.data.GroupData;
 import com.familymoney.domains.transactions.types.Description;
@@ -240,14 +238,14 @@ class DefaultGroupAdminControllerTest {
       final GroupData group = groupData(GroupId.generate());
       when(groupService.getGroupInfoAsAdmin(group.id())).thenReturn(group);
 
-      final GetGroupResponseDto response =
+      final GroupDto response =
           client
               .get()
               .uri(GroupAdminControllerUriFactory.getGroupPath(group.id().toString()))
               .exchange()
               .expectStatus()
               .isOk()
-              .expectBody(GetGroupResponseDto.class)
+              .expectBody(GroupDto.class)
               .returnResult()
               .getResponseBody();
 

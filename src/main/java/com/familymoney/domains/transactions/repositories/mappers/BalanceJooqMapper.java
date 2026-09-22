@@ -4,7 +4,7 @@ import com.familymoney.domains.transactions.repositories.entitites.BalanceEntity
 import com.familymoney.domains.transactions.types.BalanceId;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.users.types.UserId;
-import com.familymoney.generated.tables.Balances;
+import com.familymoney.generated.tables.GroupBalances;
 import javax.money.Monetary;
 import org.javamoney.moneta.Money;
 import org.jooq.Record;
@@ -15,14 +15,14 @@ public final class BalanceJooqMapper {
     /* this class is not intended to be instantiated */
   }
 
-  public static BalanceEntity toEntity(final Record r) {
+  public static BalanceEntity toEntity(final Record record) {
     return new BalanceEntity(
-        BalanceId.fromString(String.valueOf(r.get(Balances.BALANCES.ID))),
-        GroupId.fromString(String.valueOf(r.get(Balances.BALANCES.GROUP_ID))),
+        BalanceId.fromUuid(record.get(GroupBalances.GROUP_BALANCES.ID)),
+        GroupId.fromUuid(record.get(GroupBalances.GROUP_BALANCES.GROUP_ID)),
         Money.of(
-            r.get(Balances.BALANCES.AMOUNT),
-            Monetary.getCurrency(r.get(Balances.BALANCES.CURRENCY_CODE))),
-        UserId.fromString(String.valueOf(r.get(Balances.BALANCES.USER_ID_1))),
-        UserId.fromString(String.valueOf(r.get(Balances.BALANCES.USER_ID_2))));
+            record.get(GroupBalances.GROUP_BALANCES.AMOUNT),
+            Monetary.getCurrency(record.get(GroupBalances.GROUP_BALANCES.CURRENCY_CODE))),
+        UserId.fromUuid(record.get(GroupBalances.GROUP_BALANCES.USER_ID_1)),
+        UserId.fromUuid(record.get(GroupBalances.GROUP_BALANCES.USER_ID_2)));
   }
 }

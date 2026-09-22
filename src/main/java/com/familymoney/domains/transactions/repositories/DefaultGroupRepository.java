@@ -3,7 +3,6 @@ package com.familymoney.domains.transactions.repositories;
 import com.familymoney.domains.transactions.repositories.dtos.CreateGroupDto;
 import com.familymoney.domains.transactions.repositories.dtos.UpdateGroupDto;
 import com.familymoney.domains.transactions.repositories.entitites.GroupEntity;
-import com.familymoney.domains.transactions.repositories.entitites.UserGroupEntity;
 import com.familymoney.domains.transactions.repositories.mappers.GroupJooqMapper;
 import com.familymoney.domains.transactions.repositories.mappers.UserGroupJooqMapper;
 import com.familymoney.domains.transactions.types.GroupId;
@@ -30,7 +29,7 @@ public class DefaultGroupRepository implements GroupRepository {
   private final DSLContext db;
 
   @Override
-  public Optional<GroupEntity> create(final CreateGroupDto data) {
+  public void create(final CreateGroupDto dto) {
     return db.insertInto(Groups.GROUPS)
         .columns(
             Groups.GROUPS.ID,
@@ -38,10 +37,10 @@ public class DefaultGroupRepository implements GroupRepository {
             Groups.GROUPS.DESCRIPTION,
             Groups.GROUPS.CURRENCY_CODE)
         .values(
-            data.id().value(),
-            data.name().value(),
-            data.description().value(),
-            data.currency().getCurrencyCode())
+            dto.id().value(),
+            dto.name().value(),
+            dto.description().value(),
+            dto.currency().getCurrencyCode())
         .returning(
             Groups.GROUPS.ID,
             Groups.GROUPS.NAME,
@@ -54,17 +53,17 @@ public class DefaultGroupRepository implements GroupRepository {
   }
 
   @Override
-  public boolean updateById(final GroupId id, final UpdateGroupDto data) {
+  public void updateById(final GroupId id, final UpdateGroupDto dto) {
     final int rowsAffected =
         db.update(Groups.GROUPS)
             .set(
                 Groups.GROUPS.NAME,
                 DSL.coalesce(
-                    DSL.val(data.name() != null ? data.name().value() : null), Groups.GROUPS.NAME))
+                    DSL.val(dto.name() != null ? dto.name().value() : null), Groups.GROUPS.NAME))
             .set(
                 Groups.GROUPS.DESCRIPTION,
                 DSL.coalesce(
-                    DSL.val(data.description() != null ? data.description().value() : null),
+                    DSL.val(dto.description() != null ? dto.description().value() : null),
                     Groups.GROUPS.DESCRIPTION))
             .where(Groups.GROUPS.ID.eq(id.value()))
             .execute();
@@ -72,7 +71,7 @@ public class DefaultGroupRepository implements GroupRepository {
   }
 
   @Override
-  public boolean deleteById(final GroupId id) {
+  public void deleteById(final GroupId id) {
     final int rowsAffected =
         db.deleteFrom(Groups.GROUPS).where(Groups.GROUPS.ID.eq(id.value())).execute();
     return rowsAffected > 0;
@@ -173,7 +172,7 @@ public class DefaultGroupRepository implements GroupRepository {
   }
 
   @Override
-  public Optional<UserGroupEntity> addUser(UserId userId, GroupId groupId) {
+  public void addUser(UserId userId, GroupId groupId) {
     return db.insertInto(UserGroups.USER_GROUPS)
         .columns(UserGroups.USER_GROUPS.USER_ID, UserGroups.USER_GROUPS.GROUP_ID)
         .values(userId.value(), groupId.value())
@@ -186,7 +185,7 @@ public class DefaultGroupRepository implements GroupRepository {
   }
 
   @Override
-  public boolean deleteUser(UserId userId, GroupId groupId) {
+  public void deleteUser(UserId userId, GroupId groupId) {
     final int rowsAffected =
         db.deleteFrom(UserGroups.USER_GROUPS)
             .where(

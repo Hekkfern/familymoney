@@ -3,19 +3,22 @@ package com.familymoney.domains.transactions.repositories;
 import com.familymoney.domains.transactions.repositories.dtos.CreateBalanceDto;
 import com.familymoney.domains.transactions.repositories.dtos.UpdateBalanceDto;
 import com.familymoney.domains.transactions.repositories.entitites.BalanceEntity;
+import com.familymoney.domains.transactions.repositories.exceptions.CreateBalanceException;
+import com.familymoney.domains.transactions.repositories.exceptions.UpdateBalanceException;
 import com.familymoney.domains.transactions.repositories.mappers.BalanceJooqMapper;
 import com.familymoney.domains.transactions.types.BalanceId;
 import com.familymoney.domains.transactions.types.GroupId;
-import com.familymoney.domains.users.types.UserId;
-import com.familymoney.generated.tables.Balances;
+import com.familymoney.generated.tables.GroupBalances;
 import java.math.BigDecimal;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
-import org.jooq.impl.DSL;
+import org.jooq.Field;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 @RequiredArgsConstructor
@@ -23,112 +26,75 @@ public class DefaultBalanceRepository implements BalanceRepository {
 
   private final DSLContext db;
 
+  @Transactional
   @Override
-  public Optional<BalanceEntity> create(final CreateBalanceDto data) {
-    return db.insertInto(Balances.BALANCES)
-        .columns(
-            Balances.BALANCES.ID,
-            Balances.BALANCES.GROUP_ID,
-            Balances.BALANCES.AMOUNT,
-            Balances.BALANCES.CURRENCY_CODE,
-            Balances.BALANCES.USER_ID_1,
-            Balances.BALANCES.USER_ID_2)
-        .values(
-            data.id().value(),
-            data.groupId().value(),
-            data.amount().getNumber().numberValue(BigDecimal.class),
-            data.amount().getCurrency().getCurrencyCode(),
-            data.user1().value(),
-            data.user2().value())
-        .returning(
-            Balances.BALANCES.ID,
-            Balances.BALANCES.GROUP_ID,
-            Balances.BALANCES.AMOUNT,
-            Balances.BALANCES.CURRENCY_CODE,
-            Balances.BALANCES.USER_ID_1,
-            Balances.BALANCES.USER_ID_2)
-        .fetchOptional()
-        .map(BalanceJooqMapper::toEntity);
-  }
-
-  @Override
-  public List<BalanceEntity> findByGroup(GroupId groupId) {
-    return db.select(
-            Balances.BALANCES.ID,
-            Balances.BALANCES.GROUP_ID,
-            Balances.BALANCES.AMOUNT,
-            Balances.BALANCES.CURRENCY_CODE,
-            Balances.BALANCES.USER_ID_1,
-            Balances.BALANCES.USER_ID_2)
-        .from(Balances.BALANCES)
-        .where(Balances.BALANCES.GROUP_ID.eq(groupId.value()))
-        .fetch()
-        .map(BalanceJooqMapper::toEntity);
-  }
-
-  @Override
-  public List<BalanceEntity> findByUserAndGroup(final UserId userId, final GroupId groupId) {
-    return db.select(
-            Balances.BALANCES.ID,
-            Balances.BALANCES.GROUP_ID,
-            Balances.BALANCES.AMOUNT,
-            Balances.BALANCES.CURRENCY_CODE,
-            Balances.BALANCES.USER_ID_1,
-            Balances.BALANCES.USER_ID_2)
-        .from(Balances.BALANCES)
-        .where(
-            Balances.BALANCES
-                .GROUP_ID
-                .eq(groupId.value())
-                .and(
-                    Balances.BALANCES
-                        .USER_ID_1
-                        .eq(userId.value())
-                        .or(Balances.BALANCES.USER_ID_2.eq(userId.value()))))
-        .fetch()
-        .map(BalanceJooqMapper::toEntity);
-  }
-
-  @Override
-  public boolean updateById(final BalanceId id, final UpdateBalanceDto data) {
-    final BigDecimal amountValue =
-        data.money() != null ? data.money().getNumber().numberValue(BigDecimal.class) : null;
-    final String currencyValue =
-        data.money() != null ? data.money().getCurrency().getCurrencyCode() : null;
-    final UUID user1Value = data.user1() != null ? data.user1().value() : null;
-    final UUID user2Value = data.user2() != null ? data.user2().value() : null;
-
-    int rowsAffected =
-        db.update(Balances.BALANCES)
-            .set(
-                Balances.BALANCES.AMOUNT,
-                DSL.coalesce(DSL.val(amountValue), Balances.BALANCES.AMOUNT))
-            .set(
-                Balances.BALANCES.CURRENCY_CODE,
-                DSL.coalesce(DSL.val(currencyValue), Balances.BALANCES.CURRENCY_CODE))
-            .set(
-                Balances.BALANCES.USER_ID_1,
-                DSL.coalesce(DSL.val(user1Value), Balances.BALANCES.USER_ID_1))
-            .set(
-                Balances.BALANCES.USER_ID_2,
-                DSL.coalesce(DSL.val(user2Value), Balances.BALANCES.USER_ID_2))
-            .where(Balances.BALANCES.ID.eq(id.value()))
+  public void create(final CreateBalanceDto data) {
+    final int balancesCreated =
+        db.insertInto(GroupBalances.GROUP_BALANCES)
+            .columns(
+                GroupBalances.GROUP_BALANCES.ID,
+                GroupBalances.GROUP_BALANCES.GROUP_ID,
+                GroupBalances.GROUP_BALANCES.AMOUNT,
+                GroupBalances.GROUP_BALANCES.CURRENCY_CODE,
+                GroupBalances.GROUP_BALANCES.USER_ID_1,
+                GroupBalances.GROUP_BALANCES.USER_ID_2)
+            .values(
+                data.id().value(),
+                data.groupId().value(),
+                data.amount().getNumber().numberValue(BigDecimal.class),
+                data.amount().getCurrency().getCurrencyCode(),
+                data.user1().value(),
+                data.user2().value())
             .execute();
-    return rowsAffected > 0;
+    if (balancesCreated != 1) {
+      throw new CreateBalanceException(
+          "Could not create payment with ID: %s".formatted(data.id().value()));
+    }
+  }
+
+  @Transactional
+  @Override
+  public void updateById(final BalanceId id, final UpdateBalanceDto dto) {
+    if (dto.isEmpty()) {
+      return;
+    }
+
+    final Map<Field<?>, Object> values = new LinkedHashMap<>();
+    if (dto.money() != null) {
+      values.put(
+          GroupBalances.GROUP_BALANCES.AMOUNT,
+          dto.money().getNumber().numberValue(BigDecimal.class));
+      values.put(
+          GroupBalances.GROUP_BALANCES.CURRENCY_CODE, dto.money().getCurrency().getCurrencyCode());
+    }
+    if (dto.user1() != null) {
+      values.put(GroupBalances.GROUP_BALANCES.USER_ID_1, dto.user1().value());
+    }
+    if (dto.user2() != null) {
+      values.put(GroupBalances.GROUP_BALANCES.USER_ID_2, dto.user2().value());
+    }
+
+    final int updatedRows =
+        db.update(GroupBalances.GROUP_BALANCES)
+            .set(values)
+            .where(GroupBalances.GROUP_BALANCES.ID.eq(id.value()))
+            .execute();
+    if (updatedRows != 1) {
+      throw new UpdateBalanceException("Could not update balance ID: %s".formatted(id.value()));
+    }
   }
 
   @Override
   public Optional<BalanceEntity> findById(final BalanceId id) {
-    return db.select(
-            Balances.BALANCES.ID,
-            Balances.BALANCES.GROUP_ID,
-            Balances.BALANCES.AMOUNT,
-            Balances.BALANCES.CURRENCY_CODE,
-            Balances.BALANCES.USER_ID_1,
-            Balances.BALANCES.USER_ID_2)
-        .from(Balances.BALANCES)
-        .where(Balances.BALANCES.ID.eq(id.value()))
-        .fetchOptional()
-        .map(BalanceJooqMapper::toEntity);
+    return db.selectFrom(GroupBalances.GROUP_BALANCES)
+        .where(GroupBalances.GROUP_BALANCES.ID.eq(id.value()))
+        .fetchOptional(BalanceJooqMapper::toEntity);
+  }
+
+  @Override
+  public List<BalanceEntity> findByGroupId(final GroupId groupId) {
+    return db.selectFrom(GroupBalances.GROUP_BALANCES)
+        .where(GroupBalances.GROUP_BALANCES.GROUP_ID.eq(groupId.value()))
+        .fetch(BalanceJooqMapper::toEntity);
   }
 }

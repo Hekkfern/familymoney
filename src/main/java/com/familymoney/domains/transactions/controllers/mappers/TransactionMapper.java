@@ -1,6 +1,6 @@
 package com.familymoney.domains.transactions.controllers.mappers;
 
-import com.familymoney.domains.transactions.controllers.dtos.TransactionDto;
+import com.familymoney.domains.transactions.controllers.dtos.ExpenseDto;
 import com.familymoney.domains.transactions.services.data.TransactionData;
 
 public final class TransactionMapper {
@@ -9,8 +9,8 @@ public final class TransactionMapper {
     /* this class is not intended to be instantiated */
   }
 
-  public static TransactionDto toDto(final TransactionData data) {
-    return new TransactionDto(
+  public static ExpenseDto toDto(final TransactionData data) {
+    return new ExpenseDto(
         data.id().value(),
         data.from().value(),
         data.to().value(),

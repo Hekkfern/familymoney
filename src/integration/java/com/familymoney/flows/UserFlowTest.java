@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.familymoney.domains.auth.controllers.dtos.LoginRequestDto;
 import com.familymoney.domains.auth.services.EmailSenderService;
-import com.familymoney.domains.users.controllers.dtos.GetMyUserResponseDto;
 import com.familymoney.domains.users.controllers.dtos.UpdateUserRequestDto;
 import com.familymoney.flows.utils.FlowUtils;
 import com.familymoney.testutils.AuthControllerUriFactory;

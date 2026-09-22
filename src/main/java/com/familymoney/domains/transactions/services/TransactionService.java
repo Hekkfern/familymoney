@@ -6,8 +6,8 @@ import com.familymoney.domains.transactions.exceptions.UserIsNotMemberOfGroupExc
 import com.familymoney.domains.transactions.services.data.TransactionData;
 import com.familymoney.domains.transactions.services.data.UpdateTransactionData;
 import com.familymoney.domains.transactions.types.Description;
+import com.familymoney.domains.transactions.types.ExpenseId;
 import com.familymoney.domains.transactions.types.GroupId;
-import com.familymoney.domains.transactions.types.TransactionId;
 import com.familymoney.domains.users.types.UserId;
 import java.time.Instant;
 import java.util.Map;
@@ -38,24 +38,24 @@ public interface TransactionService {
   Map<UserId, Money> getAllGroupBalancesAsAdmin(GroupId groupId);
 
   /**
-   * Get a paginated list of individual transactions in a group, ordered by most recent first
+   * Get a paginated list of individual expenses in a group, ordered by most recent first
    *
    * @param groupId Identifier of the group
    * @param userId Identifier of the user requesting the balances
    * @param pageable Pagination information
-   * @return Paginated list of transactions
+   * @return Paginated list of expenses
    * @throws TransactionGroupNotFoundException if the group does not exist
    * @throws UserIsNotMemberOfGroupException if the user is not a member of the group
    */
   Page<TransactionData> getGroupTransactions(GroupId groupId, UserId userId, Pageable pageable);
 
   /**
-   * Get a paginated list of individual transactions in a group as an administrator, ordered by most
+   * Get a paginated list of individual expenses in a group as an administrator, ordered by most
    * recent first
    *
    * @param groupId Identifier of the group
    * @param pageable Pagination information
-   * @return Paginated list of transactions
+   * @return Paginated list of expenses
    * @throws TransactionGroupNotFoundException if the group does not exist
    */
   Page<TransactionData> getGroupTransactionsAsAdmin(GroupId groupId, Pageable pageable);
@@ -103,38 +103,38 @@ public interface TransactionService {
    * updated.
    *
    * @param userId Identifier of the user requesting the update
-   * @param transactionId Identifier of the transaction to update
+   * @param expenseId Identifier of the transaction to update
    * @param data Data to update. Only non-null fields will be updated
    * @throws TransactionNotFoundException if the transaction does not exist
    * @throws UserIsNotMemberOfGroupException if the user is not a member of the group
    */
-  void updateTransaction(UserId userId, TransactionId transactionId, UpdateTransactionData data);
+  void updateTransaction(UserId userId, ExpenseId expenseId, UpdateTransactionData data);
 
   /**
    * Update one or more fields of a transaction as an administrator. Only non-null fields in the
    * data parameter will be updated.
    *
-   * @param transactionId Identifier of the transaction to update
+   * @param expenseId Identifier of the transaction to update
    * @param data Data to update. Only non-null fields will be updated
    * @throws TransactionNotFoundException if the transaction does not exist
    */
-  void updateTransactionAsAdmin(TransactionId transactionId, UpdateTransactionData data);
+  void updateTransactionAsAdmin(ExpenseId expenseId, UpdateTransactionData data);
 
   /**
    * Delete a transaction
    *
    * @param userId Identifier of the user requesting the deletion
-   * @param transactionId Identifier of the transaction to delete
+   * @param expenseId Identifier of the transaction to delete
    * @throws TransactionNotFoundException if the transaction does not exist
    * @throws UserIsNotMemberOfGroupException if the user is not a member of the group
    */
-  void deleteTransaction(UserId userId, TransactionId transactionId);
+  void deleteTransaction(UserId userId, ExpenseId expenseId);
 
   /**
    * Delete a transaction as an administrator.
    *
-   * @param transactionId Identifier of the transaction to delete
+   * @param expenseId Identifier of the transaction to delete
    * @throws TransactionNotFoundException if the transaction does not exist
    */
-  void deleteTransactionAsAdmin(TransactionId transactionId);
+  void deleteTransactionAsAdmin(ExpenseId expenseId);
 }

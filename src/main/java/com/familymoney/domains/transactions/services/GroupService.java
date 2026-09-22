@@ -23,7 +23,7 @@ public interface GroupService {
    *
    * @param name the group name
    * @param description the group description
-   * @param currency the currency for group transactions
+   * @param currency the currency for group expenses
    * @return the identifier of the created group
    */
   GroupId createGroup(GroupName name, Description description, CurrencyUnit currency);

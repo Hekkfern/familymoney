@@ -1,14 +1,14 @@
 package com.familymoney.domains.transactions.services.data;
 
 import com.familymoney.domains.transactions.types.Description;
+import com.familymoney.domains.transactions.types.ExpenseId;
 import com.familymoney.domains.transactions.types.GroupId;
-import com.familymoney.domains.transactions.types.TransactionId;
 import com.familymoney.domains.users.types.UserId;
 import java.time.Instant;
 import org.javamoney.moneta.Money;
 
 public record TransactionData(
-    TransactionId id,
+    ExpenseId id,
     Description description,
     GroupId groupId,
     Money amount,
