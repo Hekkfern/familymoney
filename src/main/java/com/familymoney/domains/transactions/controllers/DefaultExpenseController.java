@@ -4,6 +4,7 @@ import com.familymoney.domains.transactions.controllers.dtos.CreateExpenseReques
 import com.familymoney.domains.transactions.controllers.dtos.ExpenseDto;
 import com.familymoney.domains.transactions.controllers.dtos.UpdateExpenseRequestDto;
 import com.familymoney.utils.PageResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,7 +19,8 @@ public class DefaultExpenseController implements ExpenseController {
   }
 
   @Override
-  public void createExpense(final UUID groupId, final CreateExpenseRequestDto request) {}
+  public void createExpense(final String idempotencyKey,
+      final UUID groupId, final CreateExpenseRequestDto request, HttpServletRequest httpRequest) {}
 
   @Override
   public ExpenseDto getExpense(final UUID expenseId) {

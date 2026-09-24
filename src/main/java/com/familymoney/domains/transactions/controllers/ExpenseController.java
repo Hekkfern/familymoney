@@ -2,11 +2,16 @@ package com.familymoney.domains.transactions.controllers;
 
 import static com.familymoney.utils.CustomHttp.IDEMPOTENCY_KEY_HEADER;
 
+import com.familymoney.domains.idempotency.exceptions.IdempotencyConflictException;
 import com.familymoney.domains.transactions.controllers.dtos.CreateExpenseRequestDto;
 import com.familymoney.domains.transactions.controllers.dtos.ExpenseDto;
 import com.familymoney.domains.transactions.controllers.dtos.UpdateExpenseRequestDto;
+import com.familymoney.domains.transactions.exceptions.TransactionGroupNotFoundException;
+import com.familymoney.domains.transactions.exceptions.TransactionNotFoundException;
+import com.familymoney.domains.transactions.exceptions.UserIsNotMemberOfGroupException;
 import com.familymoney.utils.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -27,12 +32,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface ExpenseController {
 
   /**
-   * Retrieves expenses for a group.
+   * Retrieves a page of expenses recorded for a group, ordered by completion time, most recent
+   * first. The authenticated user must be a member of the group.
    *
    * @param groupId the group identifier
-   * @param page the zero-based page index
-   * @param size the maximum number of expenses to return
-   * @return a page of expenses
+   * @param page the zero-based index of the page to retrieve
+   * @param size the maximum number of expenses to include in the page, between 20 and 100
+   * @return a page of expenses for the group
+   * @throws TransactionGroupNotFoundException if no group with the given ID exists
+   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the
+   *     group
    */
   @Operation(summary = "Get the expenses for a group")
   @GetMapping(path = "groups/{groupId}/expenses", version = "1")
@@ -42,33 +51,47 @@ public interface ExpenseController {
       @RequestParam(defaultValue = "20") @Min(20) @Max(100) int size);
 
   /**
-   * Creates an expense in a group.
+   * Creates an expense in a group. The authenticated user must be a member of the group.
    *
+   * @param idempotencyKey a client-supplied key that allows the request to be safely retried
+   *     without creating a duplicate expense
    * @param groupId the group identifier
    * @param request the expense creation details
+   * @throws TransactionGroupNotFoundException if no group with the given ID exists
+   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the
+   *     group
+   * @throws IdempotencyConflictException if the idempotency key was already used with a
+   *     different request body
    */
   @Operation(summary = "Create an expense in a group")
   @PostMapping(path = "groups/{groupId}/expenses", version = "1")
   void createExpense(
       @RequestHeader(IDEMPOTENCY_KEY_HEADER) String idempotencyKey,
       @PathVariable @NotNull UUID groupId,
-      @RequestBody @Valid CreateExpenseRequestDto request);
+      @RequestBody @Valid CreateExpenseRequestDto request,
+      HttpServletRequest httpRequest);
 
   /**
-   * Retrieves an expense.
+   * Retrieves a single expense. The authenticated user must be a member of the expense's group.
    *
    * @param expenseId the expense identifier
    * @return the expense
+   * @throws TransactionNotFoundException if no expense with the given ID exists
+   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the
+   *     expense's group
    */
   @Operation(summary = "Get a specific expense")
   @GetMapping(path = "expenses/{expenseId}", version = "1")
   ExpenseDto getExpense(@PathVariable @NotNull UUID expenseId);
 
   /**
-   * Updates an expense.
+   * Updates an expense. The authenticated user must be a member of the expense's group.
    *
    * @param expenseId the expense identifier
-   * @param request the expense updates
+   * @param request the expense fields to update
+   * @throws TransactionNotFoundException if no expense with the given ID exists
+   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the
+   *     expense's group
    */
   @Operation(summary = "Update a specific expense")
   @PatchMapping(path = "expenses/{expenseId}", version = "1")
@@ -76,9 +99,12 @@ public interface ExpenseController {
       @PathVariable @NotNull UUID expenseId, @RequestBody @Valid UpdateExpenseRequestDto request);
 
   /**
-   * Deletes an expense.
+   * Deletes an expense. The authenticated user must be a member of the expense's group.
    *
    * @param expenseId the expense identifier
+   * @throws TransactionNotFoundException if no expense with the given ID exists
+   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the
+   *     expense's group
    */
   @Operation(summary = "Delete an expense")
   @DeleteMapping(path = "expenses/{expenseId}", version = "1")

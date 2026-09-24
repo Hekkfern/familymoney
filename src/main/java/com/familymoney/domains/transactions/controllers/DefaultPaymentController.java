@@ -4,6 +4,7 @@ import com.familymoney.domains.transactions.controllers.dtos.CreatePaymentReques
 import com.familymoney.domains.transactions.controllers.dtos.PaymentDto;
 import com.familymoney.domains.transactions.controllers.dtos.UpdatePaymentRequestDto;
 import com.familymoney.utils.PageResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,7 +19,11 @@ public class DefaultPaymentController implements PaymentController {
   }
 
   @Override
-  public void createPayment(final UUID groupId, final CreatePaymentRequestDto request) {}
+  public void createPayment(
+      final String idempotencyKey,
+      final UUID groupId,
+      final CreatePaymentRequestDto request,
+      HttpServletRequest httpRequest) {}
 
   @Override
   public PaymentDto getPayment(final UUID paymentId) {
