@@ -11,6 +11,7 @@ import com.familymoney.domains.transactions.repositories.exceptions.UpdatePaymen
 import com.familymoney.domains.transactions.repositories.mappers.PaymentJooqMapper;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.PaymentId;
+import com.familymoney.generated.tables.Groups;
 import com.familymoney.generated.tables.Payments;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -19,9 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.javamoney.moneta.Money;
 import org.jooq.DSLContext;
 import org.jooq.Field;
-import org.jooq.Record2;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -34,8 +35,16 @@ public class DefaultPaymentRepository implements PaymentRepository {
 
   private final DSLContext db;
 
+  @Transactional
   @Override
   public void create(final CreatePaymentDto dto) {
+    final String currencyCode = fetchGroupCurrencyCode(dto.groupId());
+    if (!currencyCode.equals(dto.amount().getCurrency().getCurrencyCode())) {
+      throw new CreatePaymentException(
+          "Payment in Group '%s' must use currency: %s"
+              .formatted(dto.groupId().value(), currencyCode));
+    }
+
     final int paymentsCreated =
         db.insertInto(Payments.PAYMENTS)
             .columns(
@@ -65,12 +74,15 @@ public class DefaultPaymentRepository implements PaymentRepository {
     }
   }
 
+  @Transactional
   @Override
   public void updateById(final PaymentId id, final UpdatePaymentDto dto) {
     if (dto.isEmpty()) {
       return;
     }
-    validatePaymentParties(id, dto);
+    if (dto.amount() != null) {
+      validatePaymentCurrency(id, dto.amount());
+    }
 
     final Map<Field<?>, Object> values = new LinkedHashMap<>();
     if (dto.description() != null) {
@@ -138,29 +150,30 @@ public class DefaultPaymentRepository implements PaymentRepository {
     return new PageImpl<>(data, pageable, safeTotal);
   }
 
-  private void validatePaymentParties(final PaymentId id, final UpdatePaymentDto data) {
-    if (data.creditor() == null && data.debitor() == null) {
-      return;
-    }
-    final Optional<Record2<java.util.UUID, java.util.UUID>> paymentParties =
-        db.select(Payments.PAYMENTS.CREDITOR, Payments.PAYMENTS.DEBITOR)
+  private String fetchGroupCurrencyCode(final GroupId groupId) {
+    return db.select(Groups.GROUPS.CURRENCY_CODE)
+        .from(Groups.GROUPS)
+        .where(Groups.GROUPS.ID.eq(groupId.value()))
+        .fetchOptional(Groups.GROUPS.CURRENCY_CODE)
+        .orElseThrow(
+            () ->
+                new CreatePaymentException(
+                    "Could not find group with ID: %s".formatted(groupId.value())));
+  }
+
+  private void validatePaymentCurrency(final PaymentId id, final Money amount) {
+    final String currencyCode =
+        db.select(Payments.PAYMENTS.CURRENCY_CODE)
             .from(Payments.PAYMENTS)
             .where(Payments.PAYMENTS.ID.eq(id.value()))
-            .fetchOptional();
-    if (paymentParties.isEmpty()) {
-      throw new UpdatePaymentException("Could not find payment with ID: %s".formatted(id.value()));
-    }
-    final Record2<java.util.UUID, java.util.UUID> currentParties = paymentParties.get();
-    final java.util.UUID creditor =
-        data.creditor() != null
-            ? data.creditor().value()
-            : currentParties.get(Payments.PAYMENTS.CREDITOR);
-    final java.util.UUID debitor =
-        data.debitor() != null
-            ? data.debitor().value()
-            : currentParties.get(Payments.PAYMENTS.DEBITOR);
-    if (creditor.equals(debitor)) {
-      throw new UpdatePaymentException("Payment creditor and debitor must be different");
+            .fetchOptional(Payments.PAYMENTS.CURRENCY_CODE)
+            .orElseThrow(
+                () ->
+                    new UpdatePaymentException(
+                        "Could not find payment with ID: %s".formatted(id.value())));
+    if (!currencyCode.equals(amount.getCurrency().getCurrencyCode())) {
+      throw new UpdatePaymentException(
+          "Payment %s must use currency: %s".formatted(id.value(), currencyCode));
     }
   }
 }

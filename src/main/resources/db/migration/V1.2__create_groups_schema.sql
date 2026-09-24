@@ -8,7 +8,7 @@ CREATE TABLE groups (
   name VARCHAR(64) NOT NULL CHECK (CHAR_LENGTH(BTRIM(name)) > 0),
   description description NOT NULL,
   currency_code currency_code NOT NULL,
-  created_by UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+  created_by UUID NOT NULL REFERENCES users (id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -31,7 +31,7 @@ CREATE TABLE group_invitations (
   group_id UUID NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
   token_hash VARCHAR(255) UNIQUE NOT NULL CHECK (CHAR_LENGTH(BTRIM(token_hash)) > 0),
-  created_by UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+  created_by UUID NOT NULL REFERENCES users (id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   expires_at TIMESTAMPTZ NOT NULL
 );

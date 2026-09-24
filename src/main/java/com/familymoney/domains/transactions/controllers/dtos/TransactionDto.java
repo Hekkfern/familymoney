@@ -1,3 +1,5 @@
 package com.familymoney.domains.transactions.controllers.dtos;
 
-public record TransactionDto(TransactionType type) {}
+import java.util.UUID;
+
+public record TransactionDto(TransactionType type, UUID id) {}

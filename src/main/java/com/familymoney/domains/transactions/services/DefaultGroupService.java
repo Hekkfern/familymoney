@@ -6,9 +6,13 @@ import com.familymoney.domains.transactions.exceptions.MaximumGroupInvitationsRe
 import com.familymoney.domains.transactions.repositories.GroupInvitationRepository;
 import com.familymoney.domains.transactions.repositories.GroupRepository;
 import com.familymoney.domains.transactions.repositories.dtos.CreateGroupInvitationDto;
+import com.familymoney.domains.transactions.repositories.entitites.BalanceEntity;
+import com.familymoney.domains.transactions.repositories.entitites.ExpenseEntity;
 import com.familymoney.domains.transactions.repositories.entitites.GroupInvitationEntity;
 import com.familymoney.domains.transactions.services.data.GroupData;
+import com.familymoney.domains.transactions.services.data.TransactionData;
 import com.familymoney.domains.transactions.services.data.UpdateGroupData;
+import com.familymoney.domains.transactions.services.mappers.TransactionDataMapper;
 import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.ExpirationTime;
 import com.familymoney.domains.transactions.types.GroupId;
@@ -21,10 +25,13 @@ import com.familymoney.utils.UUIDGenerator;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import javax.money.CurrencyUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.javamoney.moneta.Money;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -193,5 +200,46 @@ public class DefaultGroupService implements GroupService {
     groupOperations.checkIfGroupExists(groupId);
     groupOperations.checkIfUserExists(userIdToRemove);
     groupOperations.removeUserFromGroup(groupId, userIdToRemove);
+  }
+
+  @Override
+  @Transactional
+  public Map<UserId, Money> getAllGroupBalances(final GroupId groupId, final UserId userId) {
+    groupOperations.checkIfGroupExists(groupId);
+    groupOperations.checkIfUserIsInGroup(userId, groupId);
+    final List<BalanceEntity> balancesDb = balanceRepository.findByGroup(groupId);
+    return balancesDb.stream()
+        .collect(
+            Collectors.toMap(
+                b -> b.user1().equals(userId) ? b.user2() : b.user1(),
+                BalanceEntity::money,
+                (existing, replacement) -> existing));
+  }
+
+  @Override
+  public Map<UserId, Money> getAllGroupBalancesAsAdmin(final GroupId groupId) {
+    // TODO
+    return Map.of();
+  }
+
+  @Override
+  @Transactional
+  public Page<TransactionData> getGroupTransactions(
+      final GroupId groupId, final UserId userId, final Pageable pageable) {
+    groupOperations.checkIfGroupExists(groupId);
+    groupOperations.checkIfUserIsInGroup(userId, groupId);
+    final Page<ExpenseEntity> transactionsDb =
+        transactionRepository.findAllByGroupId(groupId, pageable);
+    return transactionsDb.map(TransactionDataMapper::fromDbo);
+  }
+
+  @Override
+  @Transactional
+  public Page<TransactionData> getGroupTransactionsAsAdmin(
+      final GroupId groupId, final Pageable pageable) {
+    groupOperations.checkIfGroupExists(groupId);
+    final Page<ExpenseEntity> transactionsDb =
+        transactionRepository.findAllByGroupId(groupId, pageable);
+    return transactionsDb.map(TransactionDataMapper::fromDbo);
   }
 }

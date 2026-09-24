@@ -10,9 +10,9 @@ import com.familymoney.domains.transactions.controllers.dtos.GroupDto;
 import com.familymoney.domains.transactions.controllers.dtos.InvitationTokenDto;
 import com.familymoney.domains.transactions.controllers.dtos.TransactionDto;
 import com.familymoney.domains.transactions.controllers.dtos.UpdateGroupRequestDto;
-import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.utils.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -43,7 +43,8 @@ public interface GroupController {
   @PostMapping(path = "", version = "1")
   CreateGroupResponseDto createGroup(
       @RequestHeader(IDEMPOTENCY_KEY_HEADER) String idempotencyKey,
-      @RequestBody @Valid CreateGroupRequestDto request);
+      @RequestBody @Valid CreateGroupRequestDto request,
+      HttpServletRequest httpRequest);
 
   /**
    * Retrieves the ID of the groups where the authenticated user is a member.
@@ -52,7 +53,7 @@ public interface GroupController {
    */
   @Operation(summary = "Retrieves the ID of the groups where the authenticated user is a member")
   @GetMapping(path = "", version = "1")
-  List<GroupId> getGroupsForUser();
+  List<UUID> getGroupsForUser();
 
   /**
    * Deletes a group where the authenticated user is a member.
@@ -136,7 +137,7 @@ public interface GroupController {
    */
   @Operation(summary = "Get the balances for a group where the authenticated user is a member")
   @GetMapping(path = "groups/{groupId}/balances", version = "1")
-  BalanceDto getGroupBalances(@PathVariable @NotNull UUID groupId);
+  List<BalanceDto> getGroupBalances(@PathVariable @NotNull UUID groupId);
 
   /**
    * Retrieves the transactions (expenses and payments) for a group where the authenticated user is

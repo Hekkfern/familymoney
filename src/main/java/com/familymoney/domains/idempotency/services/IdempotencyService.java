@@ -1,15 +1,21 @@
 package com.familymoney.domains.idempotency.services;
 
-import com.familymoney.domains.idempotency.repositories.entitites.IdempotencyEntry;
 import com.familymoney.domains.idempotency.types.IdempotencyKey;
 import com.familymoney.domains.users.types.UserId;
-import java.util.Optional;
+import com.fasterxml.jackson.databind.JavaType;
+import jakarta.servlet.http.HttpServletRequest;
+import java.util.function.Supplier;
+import org.jspecify.annotations.Nullable;
+import org.springframework.http.HttpStatus;
 
 public interface IdempotencyService {
 
-  boolean reserve(UserId userId, IdempotencyKey key, byte[] requestHash);
-
-  void complete(UserId userId, IdempotencyKey key, int responseHttpStatus, String responseBody);
-
-  Optional<IdempotencyEntry> findByKey(UserId userId, IdempotencyKey key);
+  <T> T runWithIdempotency(
+      IdempotencyKey idempotencyKey,
+      UserId userId,
+      HttpServletRequest httpRequest,
+      @Nullable Object requestBody,
+      JavaType responseType,
+      HttpStatus successStatus,
+      Supplier<T> action);
 }

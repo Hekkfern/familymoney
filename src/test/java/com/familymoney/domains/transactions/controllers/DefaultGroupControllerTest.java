@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.familymoney.domains.idempotency.services.IdempotencyService;
 import com.familymoney.domains.transactions.controllers.dtos.CreateGroupResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.GroupDto;
 import com.familymoney.domains.transactions.exceptions.GroupInvitationInvalidException;
@@ -28,6 +29,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import javax.money.Monetary;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -51,11 +53,13 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 class DefaultGroupControllerTest {
 
   private static final String USER_ID = "019d52d0-d1b8-7d2d-ba2d-39007c0dda4f";
+  private static final String IDEMPOTENCY_KEY = "019d52d0-d1b8-7d2d-ba2d-39007c0dda4e";
   private static final Instant NOW = Instant.parse("2025-01-01T00:00:00Z");
   private static final String VALID_TOKEN = "a".repeat(64);
 
   @Autowired private RestTestClient client;
   @MockitoBean private GroupService groupService;
+  @MockitoBean private IdempotencyService idempotencyService;
   @MockitoBean private UserService userService;
   @MockitoBean private Clock clock;
 
@@ -73,6 +77,11 @@ class DefaultGroupControllerTest {
         NOW);
   }
 
+  private void executeIdempotentAction() {
+    when(idempotencyService.runWithIdempotency(any(), any(), any(), any(), any(), any(), any()))
+        .thenAnswer(invocation -> ((Supplier<?>) invocation.getArgument(6)).get());
+  }
+
   @Nested
   class CreateGroupAndAddCreatorAsMember {
 
@@ -82,11 +91,13 @@ class DefaultGroupControllerTest {
       final GroupId groupId = GroupId.generate();
       when(groupService.createGroupAndAddCreatorAsMember(any(), any(), any(), any()))
           .thenReturn(groupId);
+      executeIdempotentAction();
 
       final CreateGroupResponseDto response =
           client
               .post()
               .uri(GroupControllerUriFactory.getGroupsPath())
+              .header("Idempotency-Key", IDEMPOTENCY_KEY)
               .body(
                   Map.of(
                       "name", FakeGenerator.groupName(),
@@ -101,6 +112,7 @@ class DefaultGroupControllerTest {
 
       assertThat(response).isNotNull();
       assertThat(response.id()).isEqualTo(groupId.value());
+      verify(groupService).createGroupAndAddCreatorAsMember(any(), any(), any(), any());
     }
 
     @Test
@@ -108,6 +120,7 @@ class DefaultGroupControllerTest {
       client
           .post()
           .uri(GroupControllerUriFactory.getGroupsPath())
+          .header("Idempotency-Key", IDEMPOTENCY_KEY)
           .body(Map.of())
           .exchange()
           .expectStatus()
@@ -121,6 +134,7 @@ class DefaultGroupControllerTest {
       client
           .post()
           .uri(GroupControllerUriFactory.getGroupsPath())
+          .header("Idempotency-Key", IDEMPOTENCY_KEY)
           .body(
               Map.of(
                   "name", "invalid@name",
@@ -138,10 +152,12 @@ class DefaultGroupControllerTest {
     void internal_server_error_when_service_fails() {
       when(groupService.createGroupAndAddCreatorAsMember(any(), any(), any(), any()))
           .thenThrow(new DatabaseExecutionException("database unavailable"));
+      executeIdempotentAction();
 
       client
           .post()
           .uri(GroupControllerUriFactory.getGroupsPath())
+          .header("Idempotency-Key", IDEMPOTENCY_KEY)
           .body(
               Map.of(
                   "name", FakeGenerator.groupName(),

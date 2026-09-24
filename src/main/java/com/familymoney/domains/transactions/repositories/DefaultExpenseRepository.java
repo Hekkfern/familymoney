@@ -17,6 +17,7 @@ import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.tables.ExpensePayments;
 import com.familymoney.generated.tables.ExpenseShares;
 import com.familymoney.generated.tables.Expenses;
+import com.familymoney.generated.tables.Groups;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -42,6 +43,15 @@ public class DefaultExpenseRepository implements ExpenseRepository {
   @Transactional
   @Override
   public void create(final CreateExpenseDto dto) {
+    final String groupCurrencyCode = fetchGroupCurrencyCode(dto.groupId());
+    final String expenseCurrencyCode =
+        dto.payers().values().stream().findFirst().orElseThrow().getCurrency().getCurrencyCode();
+    if (!groupCurrencyCode.equals(expenseCurrencyCode)) {
+      throw new CreateExpenseException(
+          "Expense in Group '%s' must use currency: %s"
+              .formatted(dto.groupId().value(), groupCurrencyCode));
+    }
+
     final int expensesCreated =
         db.insertInto(Expenses.EXPENSES)
             .columns(
@@ -55,12 +65,7 @@ public class DefaultExpenseRepository implements ExpenseRepository {
                 dto.id().value(),
                 dto.description().value(),
                 dto.groupId().value(),
-                dto.payers().entrySet().stream()
-                    .findFirst()
-                    .get()
-                    .getValue()
-                    .getCurrency()
-                    .getCurrencyCode(),
+                expenseCurrencyCode,
                 OffsetDateTime.ofInstant(dto.doneAt(), DEFAULT_TIMEZONE_OFFSET),
                 dto.createdBy().value())
             .execute();
@@ -138,6 +143,17 @@ public class DefaultExpenseRepository implements ExpenseRepository {
     if (!expenseFieldsChanged && (sharesChanged || paymentsChanged)) {
       touchUpdatedAt(id);
     }
+  }
+
+  private String fetchGroupCurrencyCode(final GroupId groupId) {
+    return db.select(Groups.GROUPS.CURRENCY_CODE)
+        .from(Groups.GROUPS)
+        .where(Groups.GROUPS.ID.eq(groupId.value()))
+        .fetchOptional(Groups.GROUPS.CURRENCY_CODE)
+        .orElseThrow(
+            () ->
+                new CreateExpenseException(
+                    "Could not find group with ID: %s".formatted(groupId.value())));
   }
 
   private String lockAndGetCurrencyCode(final ExpenseId id) {

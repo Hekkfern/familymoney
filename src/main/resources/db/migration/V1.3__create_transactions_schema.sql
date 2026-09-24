@@ -62,7 +62,7 @@ CREATE TABLE payments (
   done_at TIMESTAMPTZ NOT NULL,
   created_by UUID NOT NULL REFERENCES users (id), -- the user who created the payment. for auditing purposes.
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), -- the time when the payment was created. for auditing purposes.
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW() -- the time when the payment was last updated. for auditing purposes.
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), -- the time when the payment was last updated. for auditing purposes.
   CHECK (creditor <> debitor)
 );
 
