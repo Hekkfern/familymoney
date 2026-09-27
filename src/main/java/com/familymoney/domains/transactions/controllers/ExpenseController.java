@@ -40,8 +40,7 @@ public interface ExpenseController {
    * @param size the maximum number of expenses to include in the page, between 20 and 100
    * @return a page of expenses for the group
    * @throws TransactionGroupNotFoundException if no group with the given ID exists
-   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the
-   *     group
+   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the group
    */
   @Operation(summary = "Get the expenses for a group")
   @GetMapping(path = "groups/{groupId}/expenses", version = "1")
@@ -58,10 +57,9 @@ public interface ExpenseController {
    * @param groupId the group identifier
    * @param request the expense creation details
    * @throws TransactionGroupNotFoundException if no group with the given ID exists
-   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the
-   *     group
-   * @throws IdempotencyConflictException if the idempotency key was already used with a
-   *     different request body
+   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the group
+   * @throws IdempotencyConflictException if the idempotency key was already used with a different
+   *     request body
    */
   @Operation(summary = "Create an expense in a group")
   @PostMapping(path = "groups/{groupId}/expenses", version = "1")

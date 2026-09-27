@@ -11,11 +11,10 @@ CREATE TABLE expenses (
   id UUID PRIMARY KEY,
   group_id UUID NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
   description description NOT NULL,
-  currency_code currency_code NOT NULL,
   done_at TIMESTAMPTZ NOT NULL,
-  created_by UUID NOT NULL REFERENCES users (id), -- the user who created the expense. for auditing purposes.
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), -- the time when the expense was created. for auditing purposes.
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW() -- the time when the expense was last updated. for auditing purposes.
+  created_by UUID NOT NULL REFERENCES users (id), -- the user who created it. for auditing purposes.
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), -- the time when it was created. for auditing purposes.
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW() -- the time when it was last updated. for auditing purposes.
 );
 
 CREATE INDEX idx_expenses_group_id_done_at ON expenses (group_id, done_at DESC);
@@ -29,7 +28,7 @@ SELECT
 CREATE TABLE expense_payments (
   expense_id UUID NOT NULL REFERENCES expenses (id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES users (id),
-  amount positive_money_amount NOT NULL, -- Currency is defined in expenses table, so this amount is in the same currency as the expense.
+  amount positive_money_amount NOT NULL, -- currency is defined in group table
   PRIMARY KEY (expense_id, user_id)
 );
 
@@ -41,7 +40,7 @@ CREATE INDEX idx_expense_payments_user_id ON expense_payments (user_id);
 CREATE TABLE expense_shares (
   expense_id UUID NOT NULL REFERENCES expenses (id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES users (id),
-  amount positive_money_amount NOT NULL, -- Currency is defined in expenses table, so this amount is in the same currency as the expense.
+  amount positive_money_amount NOT NULL, -- currency is defined in group table
   PRIMARY KEY (expense_id, user_id)
 );
 
@@ -56,13 +55,12 @@ CREATE TABLE payments (
   group_id UUID NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
   description description NOT NULL,
   amount positive_money_amount NOT NULL,
-  currency_code currency_code NOT NULL,
   creditor UUID NOT NULL REFERENCES users (id),
   debitor UUID NOT NULL REFERENCES users (id),
   done_at TIMESTAMPTZ NOT NULL,
-  created_by UUID NOT NULL REFERENCES users (id), -- the user who created the payment. for auditing purposes.
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), -- the time when the payment was created. for auditing purposes.
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), -- the time when the payment was last updated. for auditing purposes.
+  created_by UUID NOT NULL REFERENCES users (id), -- the user who created it. for auditing purposes.
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), -- the time when it was created. for auditing purposes.
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), -- the time when it was last updated. for auditing purposes.
   CHECK (creditor <> debitor)
 );
 

@@ -50,8 +50,8 @@ public interface GroupController {
    * @return the identifier of the created group
    * @throws GroupOwnerNotFoundException if the authenticated user cannot be found when it is
    *     assigned as the group's first member
-   * @throws IdempotencyConflictException if the idempotency key was already used with a
-   *     different request body
+   * @throws IdempotencyConflictException if the idempotency key was already used with a different
+   *     request body
    */
   @Operation(summary = "Create a new transaction group")
   @PostMapping(path = "", version = "1")
@@ -74,8 +74,7 @@ public interface GroupController {
    *
    * @param groupId the group identifier
    * @throws TransactionGroupNotFoundException if no group with the given ID exists
-   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the
-   *     group
+   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the group
    */
   @Operation(summary = "Delete a group where the authenticated user is a member")
   @DeleteMapping(path = "{groupId}", version = "1")
@@ -87,8 +86,7 @@ public interface GroupController {
    * @param groupId the group identifier
    * @return the group information
    * @throws TransactionGroupNotFoundException if no group with the given ID exists
-   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the
-   *     group
+   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the group
    */
   @Operation(
       summary = "Get information about a specific group where the authenticated user is a member")
@@ -101,8 +99,7 @@ public interface GroupController {
    * @param groupId the group identifier
    * @param request the group fields to update
    * @throws TransactionGroupNotFoundException if no group with the given ID exists
-   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the
-   *     group
+   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the group
    */
   @Operation(
       summary = "Update information of a specific group where the authenticated user is a member")
@@ -111,17 +108,16 @@ public interface GroupController {
       @PathVariable @NotNull UUID groupId, @RequestBody @Valid UpdateGroupRequestDto request);
 
   /**
-   * Retrieves a group's invitation token where the authenticated user is a member. Generates a
-   * new token, valid for a limited time, that can be redeemed once through {@link
+   * Retrieves a group's invitation token where the authenticated user is a member. Generates a new
+   * token, valid for a limited time, that can be redeemed once through {@link
    * #enterToGroup(EnterGroupRequestDto)}.
    *
    * @param groupId the group identifier
    * @return the invitation token
    * @throws TransactionGroupNotFoundException if no group with the given ID exists
-   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the
-   *     group
-   * @throws MaximumGroupInvitationsReachedException if the group already has the maximum number
-   *     of active invitations
+   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the group
+   * @throws MaximumGroupInvitationsReachedException if the group already has the maximum number of
+   *     active invitations
    */
   @Operation(
       summary = "Get an invitation token for a group where the authenticated user is a member")
@@ -145,8 +141,7 @@ public interface GroupController {
    * @param groupId the group identifier
    * @return the identifiers of the group's users
    * @throws TransactionGroupNotFoundException if no group with the given ID exists
-   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the
-   *     group
+   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the group
    */
   @Operation(summary = "Get the list of users in a specific group")
   @GetMapping(path = "{groupId}/users", version = "1")
@@ -158,8 +153,7 @@ public interface GroupController {
    * @param groupId the group identifier
    * @param userId the identifier of the user to remove
    * @throws TransactionGroupNotFoundException if no group with the given ID exists
-   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the
-   *     group
+   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the group
    */
   @Operation(
       summary = "Remove a user from a specific group where the authenticated user is a member")
@@ -174,8 +168,7 @@ public interface GroupController {
    * @param groupId the group identifier
    * @return the group balances
    * @throws TransactionGroupNotFoundException if no group with the given ID exists
-   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the
-   *     group
+   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the group
    */
   @Operation(summary = "Get the balances for a group where the authenticated user is a member")
   @GetMapping(path = "groups/{groupId}/balances", version = "1")
@@ -190,8 +183,7 @@ public interface GroupController {
    * @param size the maximum number of transactions to include in the page, between 20 and 100
    * @return a page of transactions for the group
    * @throws TransactionGroupNotFoundException if no group with the given ID exists
-   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the
-   *     group
+   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the group
    */
   @Operation(
       summary =

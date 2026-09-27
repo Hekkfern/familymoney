@@ -2,6 +2,7 @@ package com.familymoney.domains.transactions.controllers.dtos;
 
 import com.familymoney.domains.transactions.validations.PositiveMoney;
 import com.familymoney.domains.transactions.validations.ValidDescription;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import java.time.Instant;
@@ -16,8 +17,8 @@ public record UpdateExpenseRequestDto(
     @Nullable @ValidDescription String description,
     @Nullable @Past Instant doneAt,
     @Nullable UUID createdBy,
-    @Nullable List<ExpenseShareDto> shares,
-    @Nullable List<ExpensePayerDto> payers) {
+    @Nullable @Valid List<ExpenseShareDto> shares,
+    @Nullable @Valid List<ExpensePayerDto> payers) {
 
   public record ExpenseShareDto(@NotNull UUID userId, @NotNull @PositiveMoney Money amount) {}
 

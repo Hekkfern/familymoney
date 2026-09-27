@@ -11,7 +11,9 @@ import java.util.UUID;
  *
  * @param id the unique identifier for the group invitation record
  * @param groupId the identifier of the group for which the invitation is being created
+ * @param userId the identifier of the user being invited to the group
  * @param token the token associated with the group invitation
+ * @param createdBy the identifier of the user who created the group invitation
  * @param expiresAt the timestamp indicating when the invitation expires, after which it should no
  *     longer be valid
  */
@@ -20,4 +22,5 @@ public record CreateGroupInvitationDto(
     GroupId groupId,
     UserId userId,
     GroupInvitationToken token,
+    UserId createdBy,
     ExpirationTime expiresAt) {}

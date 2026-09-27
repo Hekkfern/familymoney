@@ -19,8 +19,11 @@ public class DefaultExpenseController implements ExpenseController {
   }
 
   @Override
-  public void createExpense(final String idempotencyKey,
-      final UUID groupId, final CreateExpenseRequestDto request, HttpServletRequest httpRequest) {}
+  public void createExpense(
+      final String idempotencyKey,
+      final UUID groupId,
+      final CreateExpenseRequestDto request,
+      HttpServletRequest httpRequest) {}
 
   @Override
   public ExpenseDto getExpense(final UUID expenseId) {

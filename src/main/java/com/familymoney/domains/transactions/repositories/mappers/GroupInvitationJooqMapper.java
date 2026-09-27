@@ -16,8 +16,6 @@ public final class GroupInvitationJooqMapper {
   }
 
   public static GroupInvitationEntity toEntity(final Record r) {
-    OffsetDateTime createdAt =
-        Objects.requireNonNull(r.get(GroupInvitations.GROUP_INVITATIONS.CREATED_AT));
     OffsetDateTime expiresAt =
         Objects.requireNonNull(r.get(GroupInvitations.GROUP_INVITATIONS.EXPIRES_AT));
 
@@ -25,7 +23,6 @@ public final class GroupInvitationJooqMapper {
         r.get(GroupInvitations.GROUP_INVITATIONS.ID),
         GroupId.fromUuid(r.get(GroupInvitations.GROUP_INVITATIONS.GROUP_ID)),
         UserId.fromUuid(r.get(GroupInvitations.GROUP_INVITATIONS.USER_ID)),
-        createdAt.toInstant(),
         ExpirationTime.of(expiresAt));
   }
 }

@@ -1,6 +1,6 @@
 package com.familymoney.domains.transactions.repositories;
 
-import com.familymoney.domains.transactions.repositories.dtos.BalanceKey;
+import com.familymoney.domains.transactions.repositories.dtos.BalanceKeyDto;
 import com.familymoney.domains.transactions.repositories.entitites.BalanceEntity;
 import com.familymoney.domains.transactions.repositories.exceptions.CreateBalanceException;
 import com.familymoney.domains.transactions.repositories.exceptions.UpdateBalanceException;
@@ -13,7 +13,6 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import org.javamoney.moneta.Money;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +24,7 @@ public class DefaultBalanceRepository implements BalanceRepository {
   private final DSLContext db;
 
   @Override
-  public void create(final BalanceKey data) {
+  public void create(final BalanceKeyDto data) {
     final OrderedUsers orderedUsers = orderUsers(data.user1(), data.user2());
 
     final int balancesCreated =
@@ -46,7 +45,7 @@ public class DefaultBalanceRepository implements BalanceRepository {
 
   @Transactional
   @Override
-  public void incrementByKey(final BalanceKey key, final Money delta) {
+  public void incrementByKey(final BalanceKeyDto key, final BigDecimal delta) {
     final String currencyCode =
         db.select(Groups.GROUPS.CURRENCY_CODE)
             .from(Groups.GROUPS)
@@ -81,7 +80,7 @@ public class DefaultBalanceRepository implements BalanceRepository {
   }
 
   @Override
-  public Optional<BalanceEntity> findByKey(final BalanceKey key) {
+  public Optional<BalanceEntity> findByKey(final BalanceKeyDto key) {
     final OrderedUsers orderedUsers = orderUsers(key.user1(), key.user2());
     return db.select(GroupBalances.GROUP_BALANCES.fields())
         .select(Groups.GROUPS.CURRENCY_CODE)

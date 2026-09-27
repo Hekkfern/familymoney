@@ -40,8 +40,7 @@ public interface PaymentController {
    * @param size the maximum number of payments to include in the page, between 20 and 100
    * @return a page of payments for the group
    * @throws TransactionGroupNotFoundException if no group with the given ID exists
-   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the
-   *     group
+   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the group
    */
   @Operation(summary = "Get the payments for a group")
   @GetMapping(path = "groups/{groupId}/payments", version = "1")
@@ -59,10 +58,9 @@ public interface PaymentController {
    * @param groupId the group identifier
    * @param request the payment creation details
    * @throws TransactionGroupNotFoundException if no group with the given ID exists
-   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the
-   *     group
-   * @throws IdempotencyConflictException if the idempotency key was already used with a
-   *     different request body
+   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the group
+   * @throws IdempotencyConflictException if the idempotency key was already used with a different
+   *     request body
    */
   @Operation(summary = "Create a payment in a group")
   @PostMapping(path = "groups/{groupId}/payments", version = "1")

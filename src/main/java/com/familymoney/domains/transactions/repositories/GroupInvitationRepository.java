@@ -13,10 +13,8 @@ public interface GroupInvitationRepository {
    * Creates a new group invitation record.
    *
    * @param data values to persist for the invitation
-   * @return an {@link Optional} containing the created {@link GroupInvitationEntity} when the
-   *     insert succeeds; otherwise an empty {@link Optional}
    */
-  Optional<GroupInvitationEntity> create(CreateGroupInvitationDto data);
+  void create(CreateGroupInvitationDto data);
 
   /**
    * Finds a group invitation by its token.
@@ -31,9 +29,8 @@ public interface GroupInvitationRepository {
    * Deletes a group invitation by its token.
    *
    * @param token the unique invitation token
-   * @return {@code true} if a matching invitation was deleted; otherwise {@code false}
    */
-  boolean deleteByToken(GroupInvitationToken token);
+  void deleteByToken(GroupInvitationToken token);
 
   /**
    * Counts invitations for the given group and user pair.

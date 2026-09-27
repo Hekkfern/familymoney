@@ -4,7 +4,6 @@ import com.familymoney.domains.transactions.repositories.dtos.CreatePaymentDto;
 import com.familymoney.domains.transactions.repositories.dtos.UpdatePaymentDto;
 import com.familymoney.domains.transactions.repositories.entitites.PaymentEntity;
 import com.familymoney.domains.transactions.repositories.exceptions.CreatePaymentException;
-import com.familymoney.domains.transactions.repositories.exceptions.DeletePaymentException;
 import com.familymoney.domains.transactions.repositories.exceptions.UpdatePaymentException;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.PaymentId;
@@ -15,8 +14,8 @@ import org.springframework.data.domain.Page;
  * Repository interface for persisting completed payments between members of a group.
  *
  * <p>A payment records a single amount transferred from its {@code debitor} to its {@code
- * creditor}, settling part or all of the debt between them. Implementations create, update,
- * delete, and retrieve payments, including paged queries for a group.
+ * creditor}, settling part or all of the debt between them. Implementations create, update, delete,
+ * and retrieve payments, including paged queries for a group.
  */
 public interface PaymentRepository {
 
@@ -24,8 +23,8 @@ public interface PaymentRepository {
    * Creates a payment.
    *
    * @param dto the payment values to store
-   * @throws CreatePaymentException if the payment could not be created, or if its currency does
-   *     not match the currency of its group
+   * @throws CreatePaymentException if the payment could not be created, or if its currency does not
+   *     match the currency of its group
    */
   void create(CreatePaymentDto dto);
 
@@ -34,8 +33,8 @@ public interface PaymentRepository {
    *
    * @param id the identifier of the payment to update
    * @param dto the values to update
-   * @throws UpdatePaymentException if no payment with the given ID exists, or if the updated
-   *     amount uses a currency other than the payment's own
+   * @throws UpdatePaymentException if no payment with the given ID exists, or if the updated amount
+   *     uses a currency other than the payment's own
    */
   void updateById(PaymentId id, UpdatePaymentDto dto);
 
@@ -43,7 +42,6 @@ public interface PaymentRepository {
    * Deletes a payment.
    *
    * @param id the identifier of the payment to delete
-   * @throws DeletePaymentException if no payment with the given ID exists
    */
   void deleteById(PaymentId id);
 

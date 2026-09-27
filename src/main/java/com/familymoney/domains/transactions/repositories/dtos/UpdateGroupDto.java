@@ -8,6 +8,12 @@ import org.jspecify.annotations.Nullable;
 @Builder
 public record UpdateGroupDto(@Nullable GroupName name, @Nullable Description description) {
 
+  public UpdateGroupDto {
+    if (isEmpty()) {
+      throw new IllegalArgumentException("At least one field must be provided for update");
+    }
+  }
+
   public boolean isEmpty() {
     return name == null && description == null;
   }

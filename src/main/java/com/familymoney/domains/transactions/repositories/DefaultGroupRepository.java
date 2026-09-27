@@ -3,8 +3,10 @@ package com.familymoney.domains.transactions.repositories;
 import com.familymoney.domains.transactions.repositories.dtos.CreateGroupDto;
 import com.familymoney.domains.transactions.repositories.dtos.UpdateGroupDto;
 import com.familymoney.domains.transactions.repositories.entitites.GroupEntity;
+import com.familymoney.domains.transactions.repositories.exceptions.AddUserToGroupException;
+import com.familymoney.domains.transactions.repositories.exceptions.CreateGroupException;
+import com.familymoney.domains.transactions.repositories.exceptions.UpdateGroupException;
 import com.familymoney.domains.transactions.repositories.mappers.GroupJooqMapper;
-import com.familymoney.domains.transactions.repositories.mappers.UserGroupJooqMapper;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.tables.Groups;
@@ -13,6 +15,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.SortField;
@@ -21,35 +24,37 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 @RequiredArgsConstructor
+@Slf4j
 public class DefaultGroupRepository implements GroupRepository {
 
   private final DSLContext db;
 
   @Override
   public void create(final CreateGroupDto dto) {
-    return db.insertInto(Groups.GROUPS)
-        .columns(
-            Groups.GROUPS.ID,
-            Groups.GROUPS.NAME,
-            Groups.GROUPS.DESCRIPTION,
-            Groups.GROUPS.CURRENCY_CODE)
-        .values(
-            dto.id().value(),
-            dto.name().value(),
-            dto.description().value(),
-            dto.currency().getCurrencyCode())
-        .returning(
-            Groups.GROUPS.ID,
-            Groups.GROUPS.NAME,
-            Groups.GROUPS.DESCRIPTION,
-            Groups.GROUPS.CURRENCY_CODE,
-            Groups.GROUPS.CREATED_AT,
-            Groups.GROUPS.UPDATED_AT)
-        .fetchOptional()
-        .map(GroupJooqMapper::toEntity);
+    final int rowsAffected =
+        db.insertInto(Groups.GROUPS)
+            .columns(
+                Groups.GROUPS.ID,
+                Groups.GROUPS.NAME,
+                Groups.GROUPS.DESCRIPTION,
+                Groups.GROUPS.CURRENCY_CODE,
+                Groups.GROUPS.CREATED_BY)
+            .values(
+                dto.id().value(),
+                dto.name().value(),
+                dto.description().value(),
+                dto.currency().getCurrencyCode(),
+                dto.createdBy().value())
+            .execute();
+    if (rowsAffected != 1) {
+      final String msg = "Could not create group with ID: %s".formatted(dto.id().value());
+      log.error(msg);
+      throw new CreateGroupException(msg);
+    }
   }
 
   @Override
@@ -67,16 +72,23 @@ public class DefaultGroupRepository implements GroupRepository {
                     Groups.GROUPS.DESCRIPTION))
             .where(Groups.GROUPS.ID.eq(id.value()))
             .execute();
-    return rowsAffected > 0;
+    if (rowsAffected != 1) {
+      final String msg = "Could not update group with ID: %s".formatted(id.value());
+      log.error(msg);
+      throw new UpdateGroupException(msg);
+    }
   }
 
   @Override
   public void deleteById(final GroupId id) {
     final int rowsAffected =
         db.deleteFrom(Groups.GROUPS).where(Groups.GROUPS.ID.eq(id.value())).execute();
-    return rowsAffected > 0;
+    if (rowsAffected == 0) {
+      log.warn("Could not delete group with ID: {}", id.value());
+    }
   }
 
+  @Transactional(readOnly = true)
   @Override
   public Page<GroupEntity> findByUserId(final UserId userId, final Pageable pageable) {
     final Long total =
@@ -108,8 +120,7 @@ public class DefaultGroupRepository implements GroupRepository {
                 Groups.GROUPS.NAME,
                 Groups.GROUPS.DESCRIPTION,
                 Groups.GROUPS.CURRENCY_CODE,
-                Groups.GROUPS.CREATED_AT,
-                Groups.GROUPS.UPDATED_AT)
+                Groups.GROUPS.CREATED_BY)
             .from(UserGroups.USER_GROUPS)
             .join(Groups.GROUPS)
             .on(Groups.GROUPS.ID.eq(UserGroups.USER_GROUPS.GROUP_ID))
@@ -130,8 +141,7 @@ public class DefaultGroupRepository implements GroupRepository {
             Groups.GROUPS.NAME,
             Groups.GROUPS.DESCRIPTION,
             Groups.GROUPS.CURRENCY_CODE,
-            Groups.GROUPS.CREATED_AT,
-            Groups.GROUPS.UPDATED_AT)
+            Groups.GROUPS.CREATED_BY)
         .from(Groups.GROUPS)
         .where(Groups.GROUPS.ID.eq(id.value()))
         .fetchOptional()
@@ -173,15 +183,18 @@ public class DefaultGroupRepository implements GroupRepository {
 
   @Override
   public void addUser(UserId userId, GroupId groupId) {
-    return db.insertInto(UserGroups.USER_GROUPS)
-        .columns(UserGroups.USER_GROUPS.USER_ID, UserGroups.USER_GROUPS.GROUP_ID)
-        .values(userId.value(), groupId.value())
-        .returning(
-            UserGroups.USER_GROUPS.USER_ID,
-            UserGroups.USER_GROUPS.GROUP_ID,
-            UserGroups.USER_GROUPS.JOINED_AT)
-        .fetchOptional()
-        .map(UserGroupJooqMapper::toEntity);
+    final int rowsAffected =
+        db.insertInto(UserGroups.USER_GROUPS)
+            .columns(UserGroups.USER_GROUPS.USER_ID, UserGroups.USER_GROUPS.GROUP_ID)
+            .values(userId.value(), groupId.value())
+            .execute();
+    if (rowsAffected != 1) {
+      final String msg =
+          "Could not add user with ID: %s to group with ID: %s"
+              .formatted(userId.value(), groupId.value());
+      log.error(msg);
+      throw new AddUserToGroupException(msg);
+    }
   }
 
   @Override
@@ -194,6 +207,11 @@ public class DefaultGroupRepository implements GroupRepository {
                     .eq(userId.value())
                     .and(UserGroups.USER_GROUPS.GROUP_ID.eq(groupId.value())))
             .execute();
-    return rowsAffected > 0;
+    if (rowsAffected != 1) {
+      log.warn(
+          "Could not remove user with ID: {} from group with ID: {}",
+          userId.value(),
+          groupId.value());
+    }
   }
 }
