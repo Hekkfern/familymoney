@@ -25,6 +25,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -34,6 +35,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 /** Defines the HTTP API for managing groups and their memberships. */
 @RequestMapping("groups")
@@ -47,7 +49,7 @@ public interface GroupController {
    * @param request the group creation details (name, description, currency)
    * @param httpRequest the underlying HTTP request, used together with {@code idempotencyKey} to
    *     detect a duplicate submission with a different request body
-   * @return the identifier of the created group
+   * @return the ID of the newly created group
    * @throws GroupOwnerNotFoundException if the authenticated user cannot be found when it is
    *     assigned as the group's first member
    * @throws IdempotencyConflictException if the idempotency key was already used with a different
@@ -55,6 +57,7 @@ public interface GroupController {
    */
   @Operation(summary = "Create a new transaction group")
   @PostMapping(path = "", version = "1")
+  @ResponseStatus(HttpStatus.CREATED)
   CreateGroupResponseDto createGroup(
       @RequestHeader(IDEMPOTENCY_KEY_HEADER) String idempotencyKey,
       @RequestBody @Valid CreateGroupRequestDto request,
@@ -70,15 +73,15 @@ public interface GroupController {
   List<UUID> getGroupsForUser();
 
   /**
-   * Deletes a group where the authenticated user is a member.
+   * Leaves a group where the authenticated user is a member.
    *
    * @param groupId the group identifier
    * @throws TransactionGroupNotFoundException if no group with the given ID exists
    * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the group
    */
-  @Operation(summary = "Delete a group where the authenticated user is a member")
+  @Operation(summary = "Leave a group where the authenticated user is a member")
   @DeleteMapping(path = "{groupId}", version = "1")
-  void deleteGroup(@PathVariable @NotNull UUID groupId);
+  void leaveGroup(@PathVariable @NotNull UUID groupId);
 
   /**
    * Retrieves a group's information where the authenticated user is a member.
@@ -110,7 +113,7 @@ public interface GroupController {
   /**
    * Retrieves a group's invitation token where the authenticated user is a member. Generates a new
    * token, valid for a limited time, that can be redeemed once through {@link
-   * #enterToGroup(EnterGroupRequestDto)}.
+   * #enterToGroup(String,EnterGroupRequestDto,HttpServletRequest)}.
    *
    * @param groupId the group identifier
    * @return the invitation token
@@ -121,19 +124,26 @@ public interface GroupController {
    */
   @Operation(
       summary = "Get an invitation token for a group where the authenticated user is a member")
-  @GetMapping(path = "{groupId}/invitation", version = "1")
-  InvitationTokenDto getInvitationToken(@PathVariable @NotNull UUID groupId);
+  @PostMapping(path = "{groupId}/invitation", version = "1")
+  InvitationTokenDto getInvitationToken(
+      @RequestHeader(IDEMPOTENCY_KEY_HEADER) String idempotencyKey,
+      @PathVariable @NotNull UUID groupId,
+      HttpServletRequest httpRequest);
 
   /**
    * Adds the authenticated user to a group using an invitation token generated through {@link
-   * #getInvitationToken(UUID)}. The token is consumed and can no longer be used once redeemed.
+   * #getInvitationToken(String,UUID,HttpServletRequest)}. The token is consumed and can no longer
+   * be used once redeemed.
    *
    * @param request the invitation token
    * @throws GroupInvitationInvalidException if the token does not exist or has expired
    */
   @Operation(summary = "Join a group using an invitation token")
   @PostMapping(path = "invitation", version = "1")
-  void enterToGroup(@RequestBody @Valid EnterGroupRequestDto request);
+  void enterToGroup(
+      @RequestHeader(IDEMPOTENCY_KEY_HEADER) String idempotencyKey,
+      @RequestBody @Valid EnterGroupRequestDto request,
+      HttpServletRequest httpRequest);
 
   /**
    * Retrieves the list of users in a group where the authenticated user is a member.
@@ -171,7 +181,7 @@ public interface GroupController {
    * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the group
    */
   @Operation(summary = "Get the balances for a group where the authenticated user is a member")
-  @GetMapping(path = "groups/{groupId}/balances", version = "1")
+  @GetMapping(path = "{groupId}/balances", version = "1")
   List<BalanceDto> getGroupBalances(@PathVariable @NotNull UUID groupId);
 
   /**
@@ -188,7 +198,7 @@ public interface GroupController {
   @Operation(
       summary =
           "Get the transactions (expenses and payments) for a group where the authenticated user is a member")
-  @GetMapping(path = "groups/{groupId}/transactions", version = "1")
+  @GetMapping(path = "{groupId}/transactions", version = "1")
   PageResponse<TransactionDto> getGroupTransactions(
       @PathVariable @NotNull UUID groupId,
       @RequestParam(defaultValue = "0") @Min(0) @Max(10_000) int page,

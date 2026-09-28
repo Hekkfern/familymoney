@@ -31,7 +31,6 @@ import javax.money.Monetary;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -55,7 +54,6 @@ public class DefaultGroupController implements GroupController {
         httpRequest,
         request,
         objectMapper.constructType(CreateGroupResponseDto.class),
-        HttpStatus.OK,
         () -> {
           final GroupId groupId =
               groupService.createGroupAndAddCreatorAsMember(
@@ -76,9 +74,9 @@ public class DefaultGroupController implements GroupController {
   }
 
   @Override
-  public void deleteGroup(final UUID groupId) {
+  public void leaveGroup(final UUID groupId) {
     final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
-    groupService.deleteGroup(GroupId.fromUuid(groupId), user.id());
+    groupService.leaveGroup(GroupId.fromUuid(groupId), user.id());
   }
 
   @Override
@@ -96,17 +94,38 @@ public class DefaultGroupController implements GroupController {
   }
 
   @Override
-  public InvitationTokenDto getInvitationToken(final UUID groupId) {
+  public InvitationTokenDto getInvitationToken(
+      final String idempotencyKey, final UUID groupId, final HttpServletRequest httpRequest) {
     final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
-    final GroupInvitationToken token =
-        groupService.getInvitationToken(GroupId.fromUuid(groupId), user.id());
-    return new InvitationTokenDto(token.value());
+    final IdempotencyKey key = IdempotencyKey.fromString(idempotencyKey);
+    return idempotencyService.runWithIdempotency(
+        key,
+        user.id(),
+        httpRequest,
+        null,
+        objectMapper.constructType(InvitationTokenDto.class),
+        () -> {
+          final GroupInvitationToken token =
+              groupService.getInvitationToken(GroupId.fromUuid(groupId), user.id());
+          return new InvitationTokenDto(token.value());
+        });
   }
 
   @Override
-  public void enterToGroup(final EnterGroupRequestDto request) {
+  public void enterToGroup(
+      final String idempotencyKey,
+      final EnterGroupRequestDto request,
+      final HttpServletRequest httpRequest) {
     final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
-    groupService.enterToGroupWithToken(GroupInvitationToken.fromString(request.token()), user.id());
+    final IdempotencyKey key = IdempotencyKey.fromString(idempotencyKey);
+    idempotencyService.runWithIdempotency(
+        key,
+        user.id(),
+        httpRequest,
+        request,
+        () ->
+            groupService.enterToGroupWithToken(
+                GroupInvitationToken.fromString(request.token()), user.id()));
   }
 
   @Override

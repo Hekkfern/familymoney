@@ -45,14 +45,15 @@ public interface GroupService {
       GroupName name, Description description, CurrencyUnit currency, UserId createdBy);
 
   /**
-   * Delete a group where the selected user is a member. Only members of the group can delete it.
+   * Leaves a group where the selected user is a member. Only members of the group can leave it. If
+   * this user is the last member of the group, the group will be deleted.
    *
-   * @param groupId Identifier of the group to delete
-   * @param userId Identifier of the user attempting to delete the group
+   * @param groupId Identifier of the group to leave
+   * @param userId Identifier of the user attempting to leave the group
    * @throws TransactionGroupNotFoundException if the group does not exist
    * @throws UserIsNotMemberOfGroupException if the user is not a member of the group
    */
-  void deleteGroup(GroupId groupId, UserId userId);
+  void leaveGroup(GroupId groupId, UserId userId);
 
   /**
    * Deletes a transaction group as an administrator.

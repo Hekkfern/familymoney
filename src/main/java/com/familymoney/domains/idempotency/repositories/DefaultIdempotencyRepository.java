@@ -1,11 +1,11 @@
 package com.familymoney.domains.idempotency.repositories;
 
-import com.familymoney.domains.idempotency.repositories.dtos.CachedResponseDto;
 import com.familymoney.domains.idempotency.repositories.dtos.ReserveIdempotencyKeyDto;
 import com.familymoney.domains.idempotency.repositories.entitites.IdempotencyEntry;
 import com.familymoney.domains.idempotency.repositories.mappers.IdempotencyEntryJooqMapper;
 import com.familymoney.domains.idempotency.types.IdempotencyKey;
 import com.familymoney.domains.users.types.UserId;
+import com.familymoney.generated.enums.IdempotencyState;
 import com.familymoney.generated.tables.IdempotencyKeys;
 import com.familymoney.properties.IdempotencyProperties;
 import java.time.Clock;
@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.jooq.JSONB;
 import org.jooq.impl.DSL;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -41,7 +42,7 @@ public class DefaultIdempotencyRepository implements IdempotencyRepository {
                 IdempotencyKeys.IDEMPOTENCY_KEYS.USER_ID, IdempotencyKeys.IDEMPOTENCY_KEYS.KEY)
             .doUpdate()
             .set(IdempotencyKeys.IDEMPOTENCY_KEYS.REQUEST_HASH, dto.requestHash())
-            .set(IdempotencyKeys.IDEMPOTENCY_KEYS.RESPONSE_STATUS, (Integer) null)
+            .set(IdempotencyKeys.IDEMPOTENCY_KEYS.STATE, IdempotencyState.IN_PROGRESS)
             .set(IdempotencyKeys.IDEMPOTENCY_KEYS.RESPONSE_BODY, (JSONB) null)
             .set(IdempotencyKeys.IDEMPOTENCY_KEYS.EXPIRES_AT, expiresAt)
             .where(IdempotencyKeys.IDEMPOTENCY_KEYS.EXPIRES_AT.lt(now))
@@ -50,17 +51,19 @@ public class DefaultIdempotencyRepository implements IdempotencyRepository {
   }
 
   @Override
-  public void complete(final UserId userId, final IdempotencyKey key, final CachedResponseDto dto) {
+  public void complete(
+      final UserId userId, final IdempotencyKey key, final @Nullable String responseBody) {
     db.update(IdempotencyKeys.IDEMPOTENCY_KEYS)
-        .set(IdempotencyKeys.IDEMPOTENCY_KEYS.RESPONSE_STATUS, dto.httpStatus())
-        .set(IdempotencyKeys.IDEMPOTENCY_KEYS.RESPONSE_BODY, JSONB.valueOf(dto.body()))
+        .set(IdempotencyKeys.IDEMPOTENCY_KEYS.STATE, IdempotencyState.COMPLETED)
+        .set(
+            IdempotencyKeys.IDEMPOTENCY_KEYS.RESPONSE_BODY,
+            responseBody != null ? JSONB.valueOf(responseBody) : null)
         .where(
             IdempotencyKeys.IDEMPOTENCY_KEYS
                 .USER_ID
                 .eq(userId.value())
                 .and(IdempotencyKeys.IDEMPOTENCY_KEYS.KEY.eq(key.value()))
-                .and(IdempotencyKeys.IDEMPOTENCY_KEYS.RESPONSE_STATUS.isNull())
-                .and(IdempotencyKeys.IDEMPOTENCY_KEYS.RESPONSE_BODY.isNull()))
+                .and(IdempotencyKeys.IDEMPOTENCY_KEYS.STATE.eq(IdempotencyState.IN_PROGRESS)))
         .execute();
   }
 
@@ -70,7 +73,7 @@ public class DefaultIdempotencyRepository implements IdempotencyRepository {
             IdempotencyKeys.IDEMPOTENCY_KEYS.USER_ID,
             IdempotencyKeys.IDEMPOTENCY_KEYS.KEY,
             IdempotencyKeys.IDEMPOTENCY_KEYS.REQUEST_HASH,
-            IdempotencyKeys.IDEMPOTENCY_KEYS.RESPONSE_STATUS,
+            IdempotencyKeys.IDEMPOTENCY_KEYS.STATE,
             IdempotencyKeys.IDEMPOTENCY_KEYS.RESPONSE_BODY,
             IdempotencyKeys.IDEMPOTENCY_KEYS.EXPIRES_AT)
         .from(IdempotencyKeys.IDEMPOTENCY_KEYS)

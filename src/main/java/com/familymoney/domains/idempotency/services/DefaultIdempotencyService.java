@@ -2,7 +2,6 @@ package com.familymoney.domains.idempotency.services;
 
 import com.familymoney.domains.idempotency.exceptions.IdempotencyConflictException;
 import com.familymoney.domains.idempotency.repositories.IdempotencyRepository;
-import com.familymoney.domains.idempotency.repositories.dtos.CachedResponseDto;
 import com.familymoney.domains.idempotency.repositories.dtos.ReserveIdempotencyKeyDto;
 import com.familymoney.domains.idempotency.repositories.entitites.IdempotencyEntry;
 import com.familymoney.domains.idempotency.repositories.entitites.IdempotencyState;
@@ -16,12 +15,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -33,6 +31,8 @@ public class DefaultIdempotencyService implements IdempotencyService {
   private static final String IN_PROGRESS_MESSAGE = "The request is already in progress";
   private static final String MISSING_ENTRY_MESSAGE =
       "The idempotency entry was not found after a failed reservation";
+  private static final String MISSING_BODY_MESSAGE =
+      "The idempotency entry was completed without a response body";
 
   private final IdempotencyRepository idempotencyRepository;
   private final ObjectMapper objectMapper = new ObjectMapper();
@@ -44,29 +44,56 @@ public class DefaultIdempotencyService implements IdempotencyService {
       final HttpServletRequest httpRequest,
       final @Nullable Object requestBody,
       final JavaType responseType,
-      final HttpStatus successStatus,
       final Supplier<T> action) {
     final byte[] requestHash = requestHash(httpRequest, requestBody);
-    final IdempotencyEntry existingEntry =
-        idempotencyRepository.findByKey(userId, idempotencyKey).orElse(null);
-    if (existingEntry != null) {
-      return handleExistingEntry(existingEntry, requestHash, responseType);
-    }
-    if (!idempotencyRepository.reserve(
-        new ReserveIdempotencyKeyDto(userId, idempotencyKey, requestHash))) {
-      final IdempotencyEntry reservedEntry =
-          idempotencyRepository
-              .findByKey(userId, idempotencyKey)
-              .orElseThrow(() -> new IllegalStateException(MISSING_ENTRY_MESSAGE));
-      return handleExistingEntry(reservedEntry, requestHash, responseType);
+    final IdempotencyEntry completedEntry =
+        reserveOrReplay(idempotencyKey, userId, requestHash).orElse(null);
+    if (completedEntry != null) {
+      final String cachedBody = completedEntry.responseBody();
+      if (cachedBody == null) {
+        throw new IllegalStateException(MISSING_BODY_MESSAGE);
+      }
+      return deserializeResponse(cachedBody, responseType);
     }
 
     final T response = action.get();
-    idempotencyRepository.complete(
-        userId,
-        idempotencyKey,
-        new CachedResponseDto(successStatus.value(), serializeResponse(response)));
+    idempotencyRepository.complete(userId, idempotencyKey, serializeResponse(response));
     return response;
+  }
+
+  @Override
+  public void runWithIdempotency(
+      final IdempotencyKey idempotencyKey,
+      final UserId userId,
+      final HttpServletRequest httpRequest,
+      final @Nullable Object requestBody,
+      final Runnable action) {
+    final byte[] requestHash = requestHash(httpRequest, requestBody);
+    if (reserveOrReplay(idempotencyKey, userId, requestHash).isPresent()) {
+      return;
+    }
+
+    action.run();
+    idempotencyRepository.complete(userId, idempotencyKey, null);
+  }
+
+  private Optional<IdempotencyEntry> reserveOrReplay(
+      final IdempotencyKey idempotencyKey, final UserId userId, final byte[] requestHash) {
+    final IdempotencyEntry existingEntry =
+        idempotencyRepository.findByKey(userId, idempotencyKey).orElse(null);
+    if (existingEntry != null) {
+      return Optional.of(handleExistingEntry(existingEntry, requestHash));
+    }
+    if (idempotencyRepository.reserve(
+        new ReserveIdempotencyKeyDto(userId, idempotencyKey, requestHash))) {
+      return Optional.empty();
+    }
+
+    final IdempotencyEntry reservedEntry =
+        idempotencyRepository
+            .findByKey(userId, idempotencyKey)
+            .orElseThrow(() -> new IllegalStateException(MISSING_ENTRY_MESSAGE));
+    return Optional.of(handleExistingEntry(reservedEntry, requestHash));
   }
 
   private byte[] requestHash(
@@ -82,8 +109,8 @@ public class DefaultIdempotencyService implements IdempotencyService {
         HttpMethod.valueOf(httpRequest.getMethod()), path, queryParameters, requestBody);
   }
 
-  private <T> T handleExistingEntry(
-      final IdempotencyEntry entry, final byte[] requestHash, final JavaType responseType) {
+  private IdempotencyEntry handleExistingEntry(
+      final IdempotencyEntry entry, final byte[] requestHash) {
     if (!Arrays.equals(entry.requestHash(), requestHash)) {
       throw new IdempotencyConflictException(DIFFERENT_REQUEST_MESSAGE);
     }
@@ -91,7 +118,7 @@ public class DefaultIdempotencyService implements IdempotencyService {
       throw new IdempotencyConflictException(IN_PROGRESS_MESSAGE);
     }
 
-    return deserializeResponse(Objects.requireNonNull(entry.response()).body(), responseType);
+    return entry;
   }
 
   private String serializeResponse(final Object response) {

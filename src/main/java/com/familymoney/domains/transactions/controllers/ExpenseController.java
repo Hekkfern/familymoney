@@ -4,6 +4,7 @@ import static com.familymoney.utils.CustomHttp.IDEMPOTENCY_KEY_HEADER;
 
 import com.familymoney.domains.idempotency.exceptions.IdempotencyConflictException;
 import com.familymoney.domains.transactions.controllers.dtos.CreateExpenseRequestDto;
+import com.familymoney.domains.transactions.controllers.dtos.CreateExpenseResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.ExpenseDto;
 import com.familymoney.domains.transactions.controllers.dtos.UpdateExpenseRequestDto;
 import com.familymoney.domains.transactions.exceptions.TransactionGroupNotFoundException;
@@ -17,6 +18,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -26,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 /** Defines the HTTP API for managing expense transactions. */
 @RequestMapping
@@ -56,6 +59,7 @@ public interface ExpenseController {
    *     without creating a duplicate expense
    * @param groupId the group identifier
    * @param request the expense creation details
+   * @return the ID of the newly created expense
    * @throws TransactionGroupNotFoundException if no group with the given ID exists
    * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the group
    * @throws IdempotencyConflictException if the idempotency key was already used with a different
@@ -63,7 +67,8 @@ public interface ExpenseController {
    */
   @Operation(summary = "Create an expense in a group")
   @PostMapping(path = "groups/{groupId}/expenses", version = "1")
-  void createExpense(
+  @ResponseStatus(HttpStatus.CREATED)
+  CreateExpenseResponseDto createExpense(
       @RequestHeader(IDEMPOTENCY_KEY_HEADER) String idempotencyKey,
       @PathVariable @NotNull UUID groupId,
       @RequestBody @Valid CreateExpenseRequestDto request,

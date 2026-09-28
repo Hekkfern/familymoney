@@ -75,10 +75,11 @@ public class DefaultGroupService implements GroupService {
 
   @Override
   @Transactional
-  public void deleteGroup(final GroupId groupId, final UserId userId) {
+  public void leaveGroup(final GroupId groupId, final UserId userId) {
     groupOperations.checkIfGroupExists(groupId);
     groupOperations.checkIfUserIsInGroup(userId, groupId);
-    groupOperations.deleteGroup(groupId);
+    // TODO
+
   }
 
   @Override

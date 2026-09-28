@@ -4,6 +4,7 @@ import static com.familymoney.utils.CustomHttp.IDEMPOTENCY_KEY_HEADER;
 
 import com.familymoney.domains.idempotency.exceptions.IdempotencyConflictException;
 import com.familymoney.domains.transactions.controllers.dtos.CreatePaymentRequestDto;
+import com.familymoney.domains.transactions.controllers.dtos.CreatePaymentResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.PaymentDto;
 import com.familymoney.domains.transactions.controllers.dtos.UpdatePaymentRequestDto;
 import com.familymoney.domains.transactions.exceptions.TransactionGroupNotFoundException;
@@ -17,6 +18,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -26,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 /** Defines the HTTP API for managing payment transactions. */
 @RequestMapping
@@ -57,6 +60,7 @@ public interface PaymentController {
    *     without creating a duplicate payment
    * @param groupId the group identifier
    * @param request the payment creation details
+   * @return the ID of the newly created payment
    * @throws TransactionGroupNotFoundException if no group with the given ID exists
    * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the group
    * @throws IdempotencyConflictException if the idempotency key was already used with a different
@@ -64,7 +68,8 @@ public interface PaymentController {
    */
   @Operation(summary = "Create a payment in a group")
   @PostMapping(path = "groups/{groupId}/payments", version = "1")
-  void createPayment(
+  @ResponseStatus(HttpStatus.CREATED)
+  CreatePaymentResponseDto createPayment(
       @RequestHeader(IDEMPOTENCY_KEY_HEADER) String idempotencyKey,
       @PathVariable @NotNull UUID groupId,
       @RequestBody @Valid CreatePaymentRequestDto request,

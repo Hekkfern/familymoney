@@ -1,6 +1,5 @@
 package com.familymoney.domains.idempotency.repositories.entitites;
 
-import com.familymoney.domains.idempotency.repositories.dtos.CachedResponseDto;
 import com.familymoney.domains.idempotency.types.IdempotencyKey;
 import com.familymoney.domains.users.types.UserId;
 import java.time.Instant;
@@ -13,7 +12,7 @@ public record IdempotencyEntry(
     IdempotencyKey key,
     byte[] requestHash,
     IdempotencyState state,
-    @Nullable CachedResponseDto response,
+    @Nullable String responseBody,
     Instant expiresAt) {
 
   public IdempotencyEntry {
@@ -38,19 +37,19 @@ public record IdempotencyEntry(
         && Objects.equals(key, other.key)
         && Arrays.equals(requestHash, other.requestHash)
         && state == other.state
-        && Objects.equals(response, other.response)
+        && Objects.equals(responseBody, other.responseBody)
         && Objects.equals(expiresAt, other.expiresAt);
   }
 
   @Override
   public int hashCode() {
-    final int fieldsHash = Objects.hash(userId, key, state, response, expiresAt);
+    final int fieldsHash = Objects.hash(userId, key, state, responseBody, expiresAt);
     return 31 * fieldsHash + Arrays.hashCode(requestHash);
   }
 
   @Override
   public String toString() {
-    return "IdempotencyEntry[userId=%s, key=%s, requestHash=%s, state=%s, response=%s, expiresAt=%s]"
-        .formatted(userId, key, Arrays.toString(requestHash), state, response, expiresAt);
+    return "IdempotencyEntry[userId=%s, key=%s, requestHash=%s, state=%s, responseBody=%s, expiresAt=%s]"
+        .formatted(userId, key, Arrays.toString(requestHash), state, responseBody, expiresAt);
   }
 }
