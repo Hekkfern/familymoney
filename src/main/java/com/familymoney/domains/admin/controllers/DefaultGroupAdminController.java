@@ -15,10 +15,12 @@ import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupName;
 import com.familymoney.domains.users.types.UserId;
+import com.familymoney.utils.AuthenticationUtils;
+import com.familymoney.utils.AuthorizedUser;
 import com.familymoney.utils.PageResponse;
+import java.util.Currency;
 import java.util.List;
 import java.util.UUID;
-import javax.money.Monetary;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -32,11 +34,13 @@ public class DefaultGroupAdminController implements GroupAdminController {
 
   @Override
   public CreateGroupResponseDto createGroup(final CreateGroupRequestDto request) {
+    final AuthorizedUser admin = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     final GroupId groupId =
         groupService.createGroup(
             GroupName.fromString(request.name()),
             Description.of(request.description().trim()),
-            Monetary.getCurrency(request.currencyCode()));
+            Currency.getInstance(request.currencyCode()),
+            admin.id());
     return CreateGroupResponseMapper.toDto(groupId);
   }
 
@@ -67,11 +71,6 @@ public class DefaultGroupAdminController implements GroupAdminController {
   @Override
   public void addUserToGroup(final UUID groupId, final UUID userId) {
     groupService.addUserToGroupAsAdmin(GroupId.fromUuid(groupId), UserId.fromUuid(userId));
-  }
-
-  @Override
-  public void removeUserFromGroup(final UUID groupId, final UUID userId) {
-    groupService.removeUserFromGroupAsAdmin(GroupId.fromUuid(groupId), UserId.fromUuid(userId));
   }
 
   @Override

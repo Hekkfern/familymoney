@@ -1,6 +1,6 @@
 package com.familymoney.domains.transactions.services;
 
-import com.familymoney.domains.transactions.exceptions.TransactionGroupNotFoundException;
+import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
 import com.familymoney.domains.transactions.exceptions.UserIsNotMemberOfGroupException;
 import com.familymoney.domains.transactions.services.data.GroupData;
 import com.familymoney.domains.transactions.services.data.UpdateGroupData;
@@ -9,8 +9,8 @@ import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupName;
 import com.familymoney.domains.users.exceptions.UserNotFoundException;
 import com.familymoney.domains.users.types.UserId;
+import java.util.Currency;
 import java.util.List;
-import javax.money.CurrencyUnit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -23,9 +23,11 @@ public interface GroupOperations {
    * @param name Name of the group
    * @param description Description of the group
    * @param currency Default currency of the group
+   * @param createdBy Identifier of the user creating the group
    * @return Identifier of the created group
+   * @throws UserNotFoundException if the creating user does not exist
    */
-  GroupId createGroup(GroupName name, Description description, CurrencyUnit currency);
+  GroupId createGroup(GroupName name, Description description, Currency currency, UserId createdBy);
 
   /**
    * Deletes a group.
@@ -79,7 +81,7 @@ public interface GroupOperations {
    * Checks if a group exists, throwing an exception if not.
    *
    * @param groupId Identifier of the group
-   * @throws TransactionGroupNotFoundException if the group does not exist
+   * @throws GroupNotFoundException if the group does not exist
    */
   void checkIfGroupExists(GroupId groupId);
 

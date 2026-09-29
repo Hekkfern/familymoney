@@ -1,17 +1,21 @@
 package com.familymoney.domains.transactions.repositories;
 
+import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
+import com.familymoney.domains.transactions.exceptions.UserAlreadyInGroupException;
 import com.familymoney.domains.transactions.repositories.dtos.CreateGroupDto;
 import com.familymoney.domains.transactions.repositories.dtos.UpdateGroupDto;
 import com.familymoney.domains.transactions.repositories.entitites.GroupEntity;
-import com.familymoney.domains.transactions.repositories.exceptions.AddUserToGroupException;
-import com.familymoney.domains.transactions.repositories.exceptions.CreateGroupException;
-import com.familymoney.domains.transactions.repositories.exceptions.UpdateGroupException;
 import com.familymoney.domains.transactions.repositories.mappers.GroupJooqMapper;
 import com.familymoney.domains.transactions.types.GroupId;
+import com.familymoney.domains.users.exceptions.UserNotFoundException;
 import com.familymoney.domains.users.types.UserId;
+import com.familymoney.generated.Keys;
 import com.familymoney.generated.tables.Groups;
 import com.familymoney.generated.tables.UserGroups;
+import com.familymoney.utils.ConstraintViolationUtils;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.SortField;
-import org.jooq.impl.DSL;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -35,47 +40,50 @@ public class DefaultGroupRepository implements GroupRepository {
 
   @Override
   public void create(final CreateGroupDto dto) {
-    final int rowsAffected =
-        db.insertInto(Groups.GROUPS)
-            .columns(
-                Groups.GROUPS.ID,
-                Groups.GROUPS.NAME,
-                Groups.GROUPS.DESCRIPTION,
-                Groups.GROUPS.CURRENCY_CODE,
-                Groups.GROUPS.CREATED_BY)
-            .values(
-                dto.id().value(),
-                dto.name().value(),
-                dto.description().value(),
-                dto.currency().getCurrencyCode(),
-                dto.createdBy().value())
-            .execute();
-    if (rowsAffected != 1) {
-      final String msg = "Could not create group with ID: %s".formatted(dto.id().value());
-      log.error(msg);
-      throw new CreateGroupException(msg);
+    try {
+      db.insertInto(Groups.GROUPS)
+          .columns(
+              Groups.GROUPS.ID,
+              Groups.GROUPS.NAME,
+              Groups.GROUPS.DESCRIPTION,
+              Groups.GROUPS.CURRENCY_CODE,
+              Groups.GROUPS.CREATED_BY)
+          .values(
+              dto.id().value(),
+              dto.name().value(),
+              dto.description().value(),
+              dto.currency().getCurrencyCode(),
+              dto.createdBy().value())
+          .execute();
+    } catch (final DataIntegrityViolationException exception) {
+      if (ConstraintViolationUtils.isConstraintViolated(
+          exception, Keys.GROUPS__GROUPS_CREATED_BY_FKEY)) {
+        final String msg = "User with ID '%s' does not exist".formatted(dto.createdBy().value());
+        log.info(msg);
+        throw new UserNotFoundException(msg, exception);
+      }
+      throw exception;
     }
   }
 
   @Override
   public void updateById(final GroupId id, final UpdateGroupDto dto) {
+    final Map<Field<?>, Object> changedFields = new HashMap<>();
+    if (dto.name() != null) {
+      changedFields.put(Groups.GROUPS.NAME, dto.name().value());
+    }
+    if (dto.description() != null) {
+      changedFields.put(Groups.GROUPS.DESCRIPTION, dto.description().value());
+    }
     final int rowsAffected =
         db.update(Groups.GROUPS)
-            .set(
-                Groups.GROUPS.NAME,
-                DSL.coalesce(
-                    DSL.val(dto.name() != null ? dto.name().value() : null), Groups.GROUPS.NAME))
-            .set(
-                Groups.GROUPS.DESCRIPTION,
-                DSL.coalesce(
-                    DSL.val(dto.description() != null ? dto.description().value() : null),
-                    Groups.GROUPS.DESCRIPTION))
+            .set(changedFields)
             .where(Groups.GROUPS.ID.eq(id.value()))
             .execute();
-    if (rowsAffected != 1) {
-      final String msg = "Could not update group with ID: %s".formatted(id.value());
-      log.error(msg);
-      throw new UpdateGroupException(msg);
+    if (rowsAffected == 0) {
+      final String msg = "Group with ID '%s' does not exist".formatted(id.value());
+      log.info(msg);
+      throw new GroupNotFoundException(msg);
     }
   }
 
@@ -182,36 +190,32 @@ public class DefaultGroupRepository implements GroupRepository {
   }
 
   @Override
-  public void addUser(UserId userId, GroupId groupId) {
-    final int rowsAffected =
-        db.insertInto(UserGroups.USER_GROUPS)
-            .columns(UserGroups.USER_GROUPS.USER_ID, UserGroups.USER_GROUPS.GROUP_ID)
-            .values(userId.value(), groupId.value())
-            .execute();
-    if (rowsAffected != 1) {
+  public void addUserToGroup(final UserId userId, final GroupId groupId) {
+    try {
+      db.insertInto(UserGroups.USER_GROUPS)
+          .columns(UserGroups.USER_GROUPS.USER_ID, UserGroups.USER_GROUPS.GROUP_ID)
+          .values(userId.value(), groupId.value())
+          .execute();
+    } catch (final DuplicateKeyException exception) {
       final String msg =
-          "Could not add user with ID: %s to group with ID: %s"
+          "User with ID '%s' is already a member of group with ID '%s'"
               .formatted(userId.value(), groupId.value());
-      log.error(msg);
-      throw new AddUserToGroupException(msg);
-    }
-  }
-
-  @Override
-  public void deleteUser(UserId userId, GroupId groupId) {
-    final int rowsAffected =
-        db.deleteFrom(UserGroups.USER_GROUPS)
-            .where(
-                UserGroups.USER_GROUPS
-                    .USER_ID
-                    .eq(userId.value())
-                    .and(UserGroups.USER_GROUPS.GROUP_ID.eq(groupId.value())))
-            .execute();
-    if (rowsAffected != 1) {
-      log.warn(
-          "Could not remove user with ID: {} from group with ID: {}",
-          userId.value(),
-          groupId.value());
+      log.info(msg);
+      throw new UserAlreadyInGroupException(msg, exception);
+    } catch (final DataIntegrityViolationException exception) {
+      if (ConstraintViolationUtils.isConstraintViolated(
+          exception, Keys.USER_GROUPS__USER_GROUPS_USER_ID_FKEY)) {
+        final String msg = "User with ID: %s does not exist".formatted(userId.value());
+        log.info(msg);
+        throw new UserNotFoundException(msg, exception);
+      }
+      if (ConstraintViolationUtils.isConstraintViolated(
+          exception, Keys.USER_GROUPS__USER_GROUPS_GROUP_ID_FKEY)) {
+        final String msg = "Group with ID: %s does not exist".formatted(groupId.value());
+        log.info(msg);
+        throw new GroupNotFoundException(msg, exception);
+      }
+      throw exception;
     }
   }
 }

@@ -18,21 +18,21 @@ import com.familymoney.domains.transactions.types.ExpirationTime;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import com.familymoney.domains.transactions.types.GroupName;
+import com.familymoney.domains.users.exceptions.UserNotFoundException;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.exceptions.DatabaseExecutionException;
 import com.familymoney.properties.GroupInvitationProperties;
 import com.familymoney.utils.UUIDGenerator;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Currency;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import javax.money.CurrencyUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.javamoney.moneta.Money;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -50,8 +50,12 @@ public class DefaultGroupService implements GroupService {
   private final GroupInvitationProperties groupInvitationProperties;
 
   @Override
-  public GroupId createGroup(GroupName name, Description description, CurrencyUnit currency) {
-    return groupOperations.createGroup(name, description, currency);
+  public GroupId createGroup(
+      final GroupName name,
+      final Description description,
+      final Currency currency,
+      final UserId createdBy) {
+    return groupOperations.createGroup(name, description, currency, createdBy);
   }
 
   @Override
@@ -59,18 +63,15 @@ public class DefaultGroupService implements GroupService {
   public GroupId createGroupAndAddCreatorAsMember(
       final GroupName name,
       final Description description,
-      final CurrencyUnit currency,
+      final Currency currency,
       final UserId createdBy) {
-    final GroupId groupId = groupOperations.createGroup(name, description, currency);
     try {
-      groupRepository
-          .addUser(createdBy, groupId)
-          .orElseThrow(
-              () -> new DatabaseExecutionException("Unable to assign owner to the new group"));
-    } catch (final DataIntegrityViolationException e) {
-      throw new GroupOwnerNotFoundException("User does not exist");
+      final GroupId groupId = groupOperations.createGroup(name, description, currency, createdBy);
+      groupRepository.addUserToGroup(createdBy, groupId);
+      return groupId;
+    } catch (final UserNotFoundException e) {
+      throw new GroupOwnerNotFoundException("User does not exist", e);
     }
-    return groupId;
   }
 
   @Override
@@ -158,7 +159,7 @@ public class DefaultGroupService implements GroupService {
       throw new GroupInvitationInvalidException("Invitation token expired");
     }
     groupInvitationRepository.deleteByToken(token);
-    groupRepository.addUser(userId, invitationDb.groupId());
+    groupRepository.addUserToGroup(userId, invitationDb.groupId());
   }
 
   @Override
@@ -181,9 +182,7 @@ public class DefaultGroupService implements GroupService {
   public void addUserToGroupAsAdmin(final GroupId groupId, final UserId userIdToAdd) {
     groupOperations.checkIfGroupExists(groupId);
     groupOperations.checkIfUserExists(userIdToAdd);
-    groupRepository
-        .addUser(userIdToAdd, groupId)
-        .orElseThrow(() -> new DatabaseExecutionException("Unable to add user to group"));
+    groupRepository.addUserToGroup(userIdToAdd, groupId);
   }
 
   @Override

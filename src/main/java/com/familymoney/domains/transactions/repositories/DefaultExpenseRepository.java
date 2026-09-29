@@ -2,20 +2,23 @@ package com.familymoney.domains.transactions.repositories;
 
 import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
 
+import com.familymoney.domains.transactions.exceptions.ExpenseNotFoundException;
+import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
 import com.familymoney.domains.transactions.repositories.dtos.CreateExpenseDto;
 import com.familymoney.domains.transactions.repositories.dtos.UpdateExpenseDto;
 import com.familymoney.domains.transactions.repositories.entitites.FullExpenseEntity;
-import com.familymoney.domains.transactions.repositories.exceptions.CreateExpenseException;
-import com.familymoney.domains.transactions.repositories.exceptions.UpdateExpenseException;
 import com.familymoney.domains.transactions.repositories.mappers.ExpenseJooqMapper;
 import com.familymoney.domains.transactions.repositories.mappers.ExpensePaymentJooqMapper;
 import com.familymoney.domains.transactions.repositories.mappers.ExpenseShareJooqMapper;
 import com.familymoney.domains.transactions.types.ExpenseId;
 import com.familymoney.domains.transactions.types.GroupId;
+import com.familymoney.domains.users.exceptions.UserNotFoundException;
 import com.familymoney.domains.users.types.UserId;
+import com.familymoney.generated.Keys;
 import com.familymoney.generated.tables.ExpensePayments;
 import com.familymoney.generated.tables.ExpenseShares;
 import com.familymoney.generated.tables.Expenses;
+import com.familymoney.utils.ConstraintViolationUtils;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
@@ -27,6 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.impl.DSL;
+import org.jspecify.annotations.Nullable;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -43,39 +48,25 @@ public class DefaultExpenseRepository implements ExpenseRepository {
   @Transactional
   @Override
   public void create(final CreateExpenseDto dto) {
-    final int expensesCreated =
-        db.insertInto(Expenses.EXPENSES)
-            .columns(
-                Expenses.EXPENSES.ID,
-                Expenses.EXPENSES.DESCRIPTION,
-                Expenses.EXPENSES.GROUP_ID,
-                Expenses.EXPENSES.DONE_AT,
-                Expenses.EXPENSES.CREATED_BY)
-            .values(
-                dto.id().value(),
-                dto.description().value(),
-                dto.groupId().value(),
-                OffsetDateTime.ofInstant(dto.doneAt(), DEFAULT_TIMEZONE_OFFSET),
-                dto.createdBy().value())
-            .execute();
-    if (expensesCreated != 1) {
-      final String msg = "Could not create expense with ID: %s".formatted(dto.id().value());
-      log.error(msg);
-      throw new CreateExpenseException(msg);
-    }
-    final int sharesCreated = insertShares(dto.id(), dto.shares());
-    if (sharesCreated != dto.shares().size()) {
-      final String msg =
-          "Could not create expense shares for expense ID: %s".formatted(dto.id().value());
-      log.error(msg);
-      throw new CreateExpenseException(msg);
-    }
-    final int paymentsCreated = insertPayments(dto.id(), dto.payers());
-    if (paymentsCreated != dto.payers().size()) {
-      final String msg =
-          "Could not create expense payments for expense ID: %s".formatted(dto.id().value());
-      log.error(msg);
-      throw new CreateExpenseException(msg);
+    try {
+      db.insertInto(Expenses.EXPENSES)
+          .columns(
+              Expenses.EXPENSES.ID,
+              Expenses.EXPENSES.DESCRIPTION,
+              Expenses.EXPENSES.GROUP_ID,
+              Expenses.EXPENSES.DONE_AT,
+              Expenses.EXPENSES.CREATED_BY)
+          .values(
+              dto.id().value(),
+              dto.description().value(),
+              dto.groupId().value(),
+              OffsetDateTime.ofInstant(dto.doneAt(), DEFAULT_TIMEZONE_OFFSET),
+              dto.createdBy().value())
+          .execute();
+      insertShares(dto.id(), dto.shares());
+      insertPayments(dto.id(), dto.payers());
+    } catch (final DataIntegrityViolationException exception) {
+      throw toDomainException(exception, dto.groupId(), dto.createdBy());
     }
   }
 
@@ -98,39 +89,72 @@ public class DefaultExpenseRepository implements ExpenseRepository {
             .set(values)
             .where(Expenses.EXPENSES.ID.eq(id.value()))
             .execute();
-    if (expensesUpdated != 1) {
-      final String msg = "Could not update expense ID: %s".formatted(id.value());
-      log.error(msg);
-      throw new UpdateExpenseException(msg);
+    if (expensesUpdated == 0) {
+      final String msg = "Expense with ID: %s does not exist".formatted(id.value());
+      log.info(msg);
+      throw new ExpenseNotFoundException(msg);
     }
 
     final Map<UserId, BigDecimal> shares = dto.shares();
-    if (shares != null) {
+    final Map<UserId, BigDecimal> payers = dto.payers();
+    if (shares != null && payers != null) {
+      replaceSharesAndPayers(id, shares, payers);
+    }
+  }
+
+  private void replaceSharesAndPayers(
+      final ExpenseId id,
+      final Map<UserId, BigDecimal> shares,
+      final Map<UserId, BigDecimal> payers) {
+    try {
       db.deleteFrom(ExpenseShares.EXPENSE_SHARES)
           .where(ExpenseShares.EXPENSE_SHARES.EXPENSE_ID.eq(id.value()))
           .execute();
-      final int sharesCreated = insertShares(id, shares);
-      if (sharesCreated != shares.size()) {
-        final String msg =
-            "Could not update expense shares for expense ID: %s".formatted(id.value());
-        log.error(msg);
-        throw new UpdateExpenseException(msg);
-      }
-    }
-
-    final Map<UserId, BigDecimal> payers = dto.payers();
-    if (payers != null) {
+      insertShares(id, shares);
       db.deleteFrom(ExpensePayments.EXPENSE_PAYMENTS)
           .where(ExpensePayments.EXPENSE_PAYMENTS.EXPENSE_ID.eq(id.value()))
           .execute();
-      final int paymentsCreated = insertPayments(id, payers);
-      if (paymentsCreated != payers.size()) {
-        final String msg =
-            "Could not update expense payments for expense ID: %s".formatted(id.value());
-        log.error(msg);
-        throw new UpdateExpenseException(msg);
-      }
+      insertPayments(id, payers);
+    } catch (final DataIntegrityViolationException exception) {
+      throw toDomainException(exception, null, null);
     }
+  }
+
+  private static RuntimeException toDomainException(
+      final DataIntegrityViolationException exception,
+      final @Nullable GroupId groupId,
+      final @Nullable UserId createdBy) {
+    final boolean isGroupMissing =
+        groupId != null
+            && ConstraintViolationUtils.isConstraintViolated(
+                exception, Keys.EXPENSES__EXPENSES_GROUP_ID_FKEY);
+    if (isGroupMissing) {
+      final String msg = "Group with ID: %s does not exist".formatted(groupId.value());
+      log.info(msg);
+      return new GroupNotFoundException(msg, exception);
+    }
+    final boolean isCreatorMissing =
+        createdBy != null
+            && ConstraintViolationUtils.isConstraintViolated(
+                exception, Keys.EXPENSES__EXPENSES_CREATED_BY_FKEY);
+    if (isCreatorMissing) {
+      final String msg = "Creator with ID: %s does not exist".formatted(createdBy.value());
+      log.info(msg);
+      return new UserNotFoundException(msg, exception);
+    }
+    if (ConstraintViolationUtils.isConstraintViolated(
+        exception, Keys.EXPENSE_SHARES__EXPENSE_SHARES_USER_ID_FKEY)) {
+      final String msg = "A user in the expense shares does not exist";
+      log.info(msg);
+      return new UserNotFoundException(msg, exception);
+    }
+    if (ConstraintViolationUtils.isConstraintViolated(
+        exception, Keys.EXPENSE_PAYMENTS__EXPENSE_PAYMENTS_USER_ID_FKEY)) {
+      final String msg = "A user in the expense payers does not exist";
+      log.info(msg);
+      return new UserNotFoundException(msg, exception);
+    }
+    return exception;
   }
 
   @Override
@@ -213,7 +237,7 @@ public class DefaultExpenseRepository implements ExpenseRepository {
                     .as("payments"))
             .from(Expenses.EXPENSES)
             .where(Expenses.EXPENSES.GROUP_ID.eq(groupId.value()))
-            .orderBy(Expenses.EXPENSES.DONE_AT.desc())
+            .orderBy(Expenses.EXPENSES.DONE_AT.desc(), Expenses.EXPENSES.ID.desc())
             .limit(pageable.getPageSize())
             .offset(pageable.getOffset())
             .fetch(
@@ -225,8 +249,8 @@ public class DefaultExpenseRepository implements ExpenseRepository {
     return new PageImpl<>(data, pageable, safeTotal);
   }
 
-  private int insertShares(final ExpenseId expenseId, final Map<UserId, BigDecimal> shares) {
-    return db.insertInto(
+  private void insertShares(final ExpenseId expenseId, final Map<UserId, BigDecimal> shares) {
+    db.insertInto(
             ExpenseShares.EXPENSE_SHARES,
             ExpenseShares.EXPENSE_SHARES.EXPENSE_ID,
             ExpenseShares.EXPENSE_SHARES.USER_ID,
@@ -241,8 +265,8 @@ public class DefaultExpenseRepository implements ExpenseRepository {
         .execute();
   }
 
-  private int insertPayments(final ExpenseId expenseId, final Map<UserId, BigDecimal> payers) {
-    return db.insertInto(
+  private void insertPayments(final ExpenseId expenseId, final Map<UserId, BigDecimal> payers) {
+    db.insertInto(
             ExpensePayments.EXPENSE_PAYMENTS,
             ExpensePayments.EXPENSE_PAYMENTS.EXPENSE_ID,
             ExpensePayments.EXPENSE_PAYMENTS.USER_ID,

@@ -7,8 +7,7 @@ import com.familymoney.domains.transactions.controllers.dtos.CreatePaymentReques
 import com.familymoney.domains.transactions.controllers.dtos.CreatePaymentResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.PaymentDto;
 import com.familymoney.domains.transactions.controllers.dtos.UpdatePaymentRequestDto;
-import com.familymoney.domains.transactions.exceptions.TransactionGroupNotFoundException;
-import com.familymoney.domains.transactions.exceptions.TransactionNotFoundException;
+import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
 import com.familymoney.domains.transactions.exceptions.UserIsNotMemberOfGroupException;
 import com.familymoney.utils.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,7 +41,7 @@ public interface PaymentController {
    * @param page the zero-based index of the page to retrieve
    * @param size the maximum number of payments to include in the page, between 20 and 100
    * @return a page of payments for the group
-   * @throws TransactionGroupNotFoundException if no group with the given ID exists
+   * @throws GroupNotFoundException if no group with the given ID exists
    * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the group
    */
   @Operation(summary = "Get the payments for a group")
@@ -61,7 +60,7 @@ public interface PaymentController {
    * @param groupId the group identifier
    * @param request the payment creation details
    * @return the ID of the newly created payment
-   * @throws TransactionGroupNotFoundException if no group with the given ID exists
+   * @throws GroupNotFoundException if no group with the given ID exists
    * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the group
    * @throws IdempotencyConflictException if the idempotency key was already used with a different
    *     request body

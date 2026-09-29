@@ -15,9 +15,20 @@ public record UpdatePaymentDto(
     @Nullable UserId creditor,
     @Nullable UserId debitor) {
 
+  private static final int MAX_AMOUNT_SCALE = 3;
+
   public UpdatePaymentDto {
     if (isEmpty()) {
       throw new IllegalArgumentException("At least one field must be provided for update");
+    }
+    final boolean isSameUser = creditor != null && creditor.equals(debitor);
+    if (isSameUser) {
+      throw new IllegalArgumentException("Creditor and debitor must be different users");
+    }
+    final boolean isInvalidAmount =
+        amount != null && (amount.signum() <= 0 || amount.scale() > MAX_AMOUNT_SCALE);
+    if (isInvalidAmount) {
+      throw new IllegalArgumentException("Invalid payment amount");
     }
   }
 

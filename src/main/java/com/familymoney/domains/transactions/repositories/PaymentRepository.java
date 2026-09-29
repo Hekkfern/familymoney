@@ -1,12 +1,13 @@
 package com.familymoney.domains.transactions.repositories;
 
+import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
+import com.familymoney.domains.transactions.exceptions.PaymentNotFoundException;
 import com.familymoney.domains.transactions.repositories.dtos.CreatePaymentDto;
 import com.familymoney.domains.transactions.repositories.dtos.UpdatePaymentDto;
 import com.familymoney.domains.transactions.repositories.entitites.PaymentEntity;
-import com.familymoney.domains.transactions.repositories.exceptions.CreatePaymentException;
-import com.familymoney.domains.transactions.repositories.exceptions.UpdatePaymentException;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.PaymentId;
+import com.familymoney.domains.users.exceptions.UserNotFoundException;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 
@@ -23,8 +24,8 @@ public interface PaymentRepository {
    * Creates a payment.
    *
    * @param dto the payment values to store
-   * @throws CreatePaymentException if the payment could not be created, or if its currency does not
-   *     match the currency of its group
+   * @throws GroupNotFoundException if the group of the payment does not exist
+   * @throws UserNotFoundException if the creditor, the debitor, or the creator does not exist
    */
   void create(CreatePaymentDto dto);
 
@@ -33,8 +34,8 @@ public interface PaymentRepository {
    *
    * @param id the identifier of the payment to update
    * @param dto the values to update
-   * @throws UpdatePaymentException if no payment with the given ID exists, or if the updated amount
-   *     uses a currency other than the payment's own
+   * @throws PaymentNotFoundException if no payment with the given ID exists
+   * @throws UserNotFoundException if the updated creditor or debitor does not exist
    */
   void updateById(PaymentId id, UpdatePaymentDto dto);
 

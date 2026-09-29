@@ -15,4 +15,17 @@ public record CreatePaymentDto(
     Instant doneAt,
     BigDecimal amount,
     UserId creditor,
-    UserId debitor) {}
+    UserId debitor) {
+
+  private static final int MAX_AMOUNT_SCALE = 3;
+
+  public CreatePaymentDto {
+    if (creditor.equals(debitor)) {
+      throw new IllegalArgumentException("Creditor and debitor must be different users");
+    }
+    final boolean isInvalidAmount = amount.signum() <= 0 || amount.scale() > MAX_AMOUNT_SCALE;
+    if (isInvalidAmount) {
+      throw new IllegalArgumentException("Invalid payment amount");
+    }
+  }
+}

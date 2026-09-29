@@ -235,8 +235,8 @@ class GroupRepositoryTest {
       final UserId userId = insertRandomUser();
       final GroupId groupIdA = insertRandomGroup();
       final GroupId groupIdB = insertRandomGroup();
-      groupRepository.addUser(userId, groupIdA);
-      groupRepository.addUser(userId, groupIdB);
+      groupRepository.addUserToGroup(userId, groupIdA);
+      groupRepository.addUserToGroup(userId, groupIdB);
 
       final Page<GroupEntity> page = groupRepository.findByUserId(userId, PageRequest.of(0, 10));
 
@@ -260,9 +260,9 @@ class GroupRepositoryTest {
       final GroupId groupIdA = insertRandomGroup();
       final GroupId groupIdB = insertRandomGroup();
       final GroupId groupIdC = insertRandomGroup();
-      groupRepository.addUser(userId, groupIdA);
-      groupRepository.addUser(userId, groupIdB);
-      groupRepository.addUser(userId, groupIdC);
+      groupRepository.addUserToGroup(userId, groupIdA);
+      groupRepository.addUserToGroup(userId, groupIdB);
+      groupRepository.addUserToGroup(userId, groupIdC);
 
       final Page<GroupEntity> page = groupRepository.findByUserId(userId, PageRequest.of(1, 2));
 
@@ -330,8 +330,8 @@ class GroupRepositoryTest {
       final UserId userId2 = insertRandomUser();
       insertRandomUser(); // noise user that should not be returned
       final GroupId groupId = insertRandomGroup();
-      groupRepository.addUser(userId1, groupId);
-      groupRepository.addUser(userId2, groupId);
+      groupRepository.addUserToGroup(userId1, groupId);
+      groupRepository.addUserToGroup(userId2, groupId);
 
       final List<UserId> users = groupRepository.findUserIdsByGroupId(groupId);
 
@@ -364,7 +364,7 @@ class GroupRepositoryTest {
     void returns_true_when_user_is_in_group() {
       final UserId userId = insertRandomUser();
       final GroupId groupId = insertRandomGroup();
-      groupRepository.addUser(userId, groupId);
+      groupRepository.addUserToGroup(userId, groupId);
 
       final boolean result = groupRepository.isUserInGroup(userId, groupId);
 
@@ -401,7 +401,7 @@ class GroupRepositoryTest {
       final GroupId groupId = insertRandomGroup();
       final Instant now = Instant.now();
 
-      final Optional<UserGroupEntity> addedOpt = groupRepository.addUser(userId, groupId);
+      final Optional<UserGroupEntity> addedOpt = groupRepository.addUserToGroup(userId, groupId);
 
       assertThat(addedOpt).isPresent();
       final UserGroupEntity added = addedOpt.get();
@@ -420,7 +420,7 @@ class GroupRepositoryTest {
       final UserId userId = UserId.generate();
       final GroupId groupId = insertRandomGroup();
 
-      assertThatThrownBy(() -> groupRepository.addUser(userId, groupId))
+      assertThatThrownBy(() -> groupRepository.addUserToGroup(userId, groupId))
           .isInstanceOf(DataIntegrityViolationException.class);
     }
 
@@ -428,9 +428,9 @@ class GroupRepositoryTest {
     void throws_when_user_is_already_in_group() {
       final UserId userId = insertRandomUser();
       final GroupId groupId = insertRandomGroup();
-      groupRepository.addUser(userId, groupId);
+      groupRepository.addUserToGroup(userId, groupId);
 
-      assertThatThrownBy(() -> groupRepository.addUser(userId, groupId))
+      assertThatThrownBy(() -> groupRepository.addUserToGroup(userId, groupId))
           .isInstanceOf(DuplicateKeyException.class);
     }
 
@@ -439,7 +439,7 @@ class GroupRepositoryTest {
       final UserId userId = insertRandomUser();
       final GroupId groupId = GroupId.generate();
 
-      assertThatThrownBy(() -> groupRepository.addUser(userId, groupId))
+      assertThatThrownBy(() -> groupRepository.addUserToGroup(userId, groupId))
           .isInstanceOf(DataIntegrityViolationException.class);
     }
   }
@@ -451,9 +451,9 @@ class GroupRepositoryTest {
     void removes_membership() {
       final UserId userId = insertRandomUser();
       final GroupId groupId = insertRandomGroup();
-      groupRepository.addUser(userId, groupId);
+      groupRepository.addUserToGroup(userId, groupId);
 
-      final boolean deleted = groupRepository.deleteUser(userId, groupId);
+      final boolean deleted = groupRepository.removeUserFromGroup(userId, groupId);
 
       assertThat(deleted).isTrue();
       assertThat(groupRepository.isUserInGroup(userId, groupId)).isFalse();
@@ -464,7 +464,7 @@ class GroupRepositoryTest {
       final UserId userId = UserId.generate();
       final GroupId groupId = GroupId.generate();
 
-      final boolean deleted = groupRepository.deleteUser(userId, groupId);
+      final boolean deleted = groupRepository.removeUserFromGroup(userId, groupId);
 
       assertThat(deleted).isFalse();
     }
@@ -474,7 +474,7 @@ class GroupRepositoryTest {
       final UserId userId = insertRandomUser();
       final GroupId groupId = GroupId.generate();
 
-      final boolean deleted = groupRepository.deleteUser(userId, groupId);
+      final boolean deleted = groupRepository.removeUserFromGroup(userId, groupId);
 
       assertThat(deleted).isFalse();
     }

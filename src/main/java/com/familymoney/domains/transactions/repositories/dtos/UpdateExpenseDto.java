@@ -19,6 +19,14 @@ public record UpdateExpenseDto(
     if (isEmpty()) {
       throw new IllegalArgumentException("At least one field must be provided for update");
     }
+    if ((shares == null) != (payers == null)) {
+      throw new IllegalArgumentException("Shares and payers must be provided together");
+    }
+    if (shares != null && payers != null) {
+      ExpenseAmounts.validate(shares, payers);
+      shares = Map.copyOf(shares);
+      payers = Map.copyOf(payers);
+    }
   }
 
   public boolean isEmpty() {

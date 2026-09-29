@@ -1,12 +1,13 @@
 package com.familymoney.domains.transactions.repositories;
 
+import com.familymoney.domains.transactions.exceptions.ExpenseNotFoundException;
+import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
 import com.familymoney.domains.transactions.repositories.dtos.CreateExpenseDto;
 import com.familymoney.domains.transactions.repositories.dtos.UpdateExpenseDto;
 import com.familymoney.domains.transactions.repositories.entitites.FullExpenseEntity;
-import com.familymoney.domains.transactions.repositories.exceptions.CreateExpenseException;
-import com.familymoney.domains.transactions.repositories.exceptions.UpdateExpenseException;
 import com.familymoney.domains.transactions.types.ExpenseId;
 import com.familymoney.domains.transactions.types.GroupId;
+import com.familymoney.domains.users.exceptions.UserNotFoundException;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 
@@ -14,9 +15,9 @@ import org.springframework.data.domain.Page;
  * Repository interface that defines persistence operations for expenses.
  *
  * <p>An expense records a total amount owed by a group, split across each member's {@code share} of
- * it, together with the amounts individually paid by each {@code payer} toward it. Both are
- * recorded in the same currency; implementations are responsible for enforcing that shares and
- * payers use a single, consistent currency and that their totals match.
+ * it, together with the amounts individually paid by each {@code payer} toward it. Amounts are
+ * expressed in the currency of the group. The totals of shares and payers are guaranteed to match
+ * by {@link CreateExpenseDto} and {@link UpdateExpenseDto}.
  *
  * <p>Implementations are responsible for creating, updating, and deleting expenses, and for paged
  * queries of expenses associated with a group. Optional is used for methods that may not find a
@@ -28,8 +29,9 @@ public interface ExpenseRepository {
    * Creates a new expense with the provided details.
    *
    * @param dto values to store
-   * @throws CreateExpenseException if the expense could not be created, or if its currency does not
-   *     match the currency of its group
+   * @throws GroupNotFoundException if the group of the expense does not exist
+   * @throws UserNotFoundException if the creator, or any user in the shares or payers, does not
+   *     exist
    */
   void create(CreateExpenseDto dto);
 
@@ -40,9 +42,8 @@ public interface ExpenseRepository {
    * @param id the identifier of the expense to update
    * @param dto the data containing the updated information for the expense. Non-null fields in the
    *     {@link UpdateExpenseDto} are used to update the corresponding fields of the expense.
-   * @throws UpdateExpenseException if no expense with the given ID exists, if the updated shares or
-   *     payers are empty, non-positive, or use a currency other than the expense's own, or if the
-   *     shares and payers totals would no longer match
+   * @throws ExpenseNotFoundException if no expense with the given ID exists
+   * @throws UserNotFoundException if any user in the updated shares or payers does not exist
    */
   void updateById(ExpenseId id, UpdateExpenseDto dto);
 

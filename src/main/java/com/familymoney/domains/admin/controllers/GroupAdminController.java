@@ -51,10 +51,6 @@ public interface GroupAdminController {
   @PostMapping(path = "{groupId}/users/{userId}", version = "1")
   void addUserToGroup(@PathVariable @NotNull UUID groupId, @PathVariable @NotNull UUID userId);
 
-  @Operation(summary = "Remove a user from a specific group")
-  @DeleteMapping(path = "{groupId}/users/{userId}", version = "1")
-  void removeUserFromGroup(@PathVariable @NotNull UUID groupId, @PathVariable @NotNull UUID userId);
-
   @Operation(summary = "Get the list of users in a specific group")
   @GetMapping(path = "{groupId}/users", version = "1")
   List<UUID> getUsersInGroup(@PathVariable @NotNull UUID groupId);

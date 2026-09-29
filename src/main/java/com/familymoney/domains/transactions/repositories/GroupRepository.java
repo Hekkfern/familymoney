@@ -1,13 +1,15 @@
 package com.familymoney.domains.transactions.repositories;
 
+import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
+import com.familymoney.domains.transactions.exceptions.UserAlreadyInGroupException;
 import com.familymoney.domains.transactions.repositories.dtos.CreateGroupDto;
 import com.familymoney.domains.transactions.repositories.dtos.UpdateGroupDto;
 import com.familymoney.domains.transactions.repositories.entitites.GroupEntity;
 import com.familymoney.domains.transactions.types.GroupId;
+import com.familymoney.domains.users.exceptions.UserNotFoundException;
 import com.familymoney.domains.users.types.UserId;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -25,25 +27,27 @@ public interface GroupRepository {
   /**
    * Creates a new transaction group using the identifier, name, description, and currency supplied
    * in {@code dto}. The group starts with no members; callers are responsible for adding the
-   * creator through {@link #addUser(UserId, GroupId)}.
+   * creator through {@link #addUserToGroup(UserId, GroupId)}.
    *
    * @param dto values to persist for the new group
+   * @throws UserNotFoundException if the user referenced by {@code dto.createdBy()} does not exist
    */
   void create(CreateGroupDto dto);
 
   /**
    * Updates a group identified by its ID.
    *
-   * <p>Only non-null fields in {@code data} should be applied.
+   * <p>Only non-null fields in {@code dto} are applied.
    *
    * @param id the group identifier
    * @param dto the fields to update
+   * @throws GroupNotFoundException if no group with the given ID exists
    */
   void updateById(GroupId id, UpdateGroupDto dto);
 
   /**
-   * Deletes a group by its ID. Group membership rows for this group (see {@link #addUser(UserId,
-   * GroupId)}) are removed automatically as part of the deletion.
+   * Deletes a group by its ID. Group membership rows for this group (see {@link
+   * #addUserToGroup(UserId, GroupId)}) are removed automatically as part of the deletion.
    *
    * @param id the group identifier
    */
@@ -99,16 +103,9 @@ public interface GroupRepository {
    *
    * @param userId the user identifier
    * @param groupId the group identifier
-   * @throws DataIntegrityViolationException if no user or group with the given ID exists, or if the
-   *     user is already a member of the group
+   * @throws UserAlreadyInGroupException if the user is already a member of the group
+   * @throws UserNotFoundException if no user with the given ID exists
+   * @throws GroupNotFoundException if no group with the given ID exists
    */
-  void addUser(UserId userId, GroupId groupId);
-
-  /**
-   * Removes a user from a group. Does nothing if the user is not a member of the group.
-   *
-   * @param userId the user identifier
-   * @param groupId the group identifier
-   */
-  void deleteUser(UserId userId, GroupId groupId);
+  void addUserToGroup(UserId userId, GroupId groupId);
 }

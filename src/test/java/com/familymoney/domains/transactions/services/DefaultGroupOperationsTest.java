@@ -7,7 +7,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.familymoney.domains.transactions.exceptions.TransactionGroupNotFoundException;
+import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
 import com.familymoney.domains.transactions.exceptions.UserIsNotMemberOfGroupException;
 import com.familymoney.domains.transactions.repositories.GroupRepository;
 import com.familymoney.domains.transactions.repositories.dtos.CreateGroupDto;
@@ -115,7 +115,7 @@ class DefaultGroupOperationsTest {
       when(groupRepository.existsById(groupId)).thenReturn(false);
 
       assertThatThrownBy(() -> groupOperations.checkIfGroupExists(groupId))
-          .isInstanceOf(TransactionGroupNotFoundException.class);
+          .isInstanceOf(GroupNotFoundException.class);
     }
   }
 
@@ -185,7 +185,7 @@ class DefaultGroupOperationsTest {
 
       groupOperations.removeUserFromGroup(groupId, userId);
 
-      verify(groupRepository).deleteUser(userId, groupId);
+      verify(groupRepository).removeUserFromGroup(userId, groupId);
     }
   }
 

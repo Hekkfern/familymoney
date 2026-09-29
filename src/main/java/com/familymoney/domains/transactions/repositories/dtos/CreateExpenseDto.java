@@ -15,4 +15,11 @@ public record CreateExpenseDto(
     UserId createdBy,
     Instant doneAt,
     Map<UserId, BigDecimal> shares,
-    Map<UserId, BigDecimal> payers) {}
+    Map<UserId, BigDecimal> payers) {
+
+  public CreateExpenseDto {
+    ExpenseAmounts.validate(shares, payers);
+    shares = Map.copyOf(shares);
+    payers = Map.copyOf(payers);
+  }
+}

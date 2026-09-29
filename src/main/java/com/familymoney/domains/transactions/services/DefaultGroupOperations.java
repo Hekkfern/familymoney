@@ -1,6 +1,6 @@
 package com.familymoney.domains.transactions.services;
 
-import com.familymoney.domains.transactions.exceptions.TransactionGroupNotFoundException;
+import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
 import com.familymoney.domains.transactions.exceptions.UserIsNotMemberOfGroupException;
 import com.familymoney.domains.transactions.repositories.GroupRepository;
 import com.familymoney.domains.transactions.repositories.dtos.CreateGroupDto;
@@ -14,9 +14,8 @@ import com.familymoney.domains.transactions.types.GroupName;
 import com.familymoney.domains.users.exceptions.UserNotFoundException;
 import com.familymoney.domains.users.repositories.UserRepository;
 import com.familymoney.domains.users.types.UserId;
-import com.familymoney.exceptions.DatabaseExecutionException;
+import java.util.Currency;
 import java.util.List;
-import javax.money.CurrencyUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -34,11 +33,12 @@ public class DefaultGroupOperations implements GroupOperations {
 
   @Override
   public GroupId createGroup(
-      final GroupName name, final Description description, final CurrencyUnit currency) {
+      final GroupName name,
+      final Description description,
+      final Currency currency,
+      final UserId createdBy) {
     final GroupId groupId = GroupId.generate();
-    groupRepository
-        .create(new CreateGroupDto(groupId, name, description, currency))
-        .orElseThrow(() -> new DatabaseExecutionException("Unable to create group"));
+    groupRepository.create(new CreateGroupDto(groupId, name, description, currency, createdBy));
     return groupId;
   }
 
@@ -58,9 +58,7 @@ public class DefaultGroupOperations implements GroupOperations {
         .findById(groupId)
         .map(GroupDataMapper::fromDbo)
         .orElseThrow(
-            () ->
-                new TransactionGroupNotFoundException(
-                    String.format("Unable to find group %s", groupId)));
+            () -> new GroupNotFoundException(String.format("Unable to find group %s", groupId)));
   }
 
   @Override
@@ -75,7 +73,7 @@ public class DefaultGroupOperations implements GroupOperations {
 
   @Override
   public void removeUserFromGroup(final GroupId groupId, final UserId userId) {
-    groupRepository.deleteUser(userId, groupId);
+    groupRepository.removeUserFromGroup(userId, groupId);
   }
 
   @Override
@@ -84,7 +82,7 @@ public class DefaultGroupOperations implements GroupOperations {
     if (!exists) {
       final String msg = "Group '%s' does not exist".formatted(groupId);
       log.info(msg);
-      throw new TransactionGroupNotFoundException(msg);
+      throw new GroupNotFoundException(msg);
     }
   }
 

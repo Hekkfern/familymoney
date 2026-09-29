@@ -3,4 +3,4 @@ package com.familymoney.domains.transactions.exceptions;
 import lombok.experimental.StandardException;
 
 @StandardException
-public final class TransactionNotFoundException extends RuntimeException {}
+public final class ExpenseNotFoundException extends RuntimeException {}

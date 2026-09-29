@@ -5,6 +5,15 @@ package com.familymoney.domains.transactions.types;
  */
 public record Description(String value) {
 
+  private static final int MAX_LENGTH = 255;
+
+  public Description {
+    final boolean isInvalid = value.length() > MAX_LENGTH;
+    if (isInvalid) {
+      throw new IllegalArgumentException("Invalid description");
+    }
+  }
+
   public static Description of(final String value) {
     return new Description(value);
   }

@@ -25,9 +25,9 @@ import com.familymoney.utils.AuthorizedUser;
 import com.familymoney.utils.PageResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.Currency;
 import java.util.List;
 import java.util.UUID;
-import javax.money.Monetary;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -59,7 +59,7 @@ public class DefaultGroupController implements GroupController {
               groupService.createGroupAndAddCreatorAsMember(
                   GroupName.fromString(request.name()),
                   Description.of(request.description().trim()),
-                  Monetary.getCurrency(request.currencyCode()),
+                  Currency.getInstance(request.currencyCode()),
                   user.id());
           return CreateGroupResponseMapper.toDto(groupId);
         });
@@ -133,12 +133,6 @@ public class DefaultGroupController implements GroupController {
     final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     final List<UserId> users = groupService.getUsersInGroup(GroupId.fromUuid(groupId), user.id());
     return users.stream().map(UserId::value).toList();
-  }
-
-  @Override
-  public void removeUserFromGroup(final UUID groupId, final UUID userId) {
-    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
-    groupService.removeUserFromGroup(GroupId.fromUuid(groupId), user.id(), UserId.fromUuid(userId));
   }
 
   @Override
