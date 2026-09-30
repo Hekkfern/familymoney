@@ -1,5 +1,7 @@
 package com.familymoney.domains.transactions.repositories;
 
+import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
+
 import com.familymoney.domains.transactions.repositories.dtos.BalanceKeyDto;
 import com.familymoney.domains.transactions.repositories.entitites.BalanceEntity;
 import com.familymoney.domains.transactions.repositories.exceptions.CreateBalanceException;
@@ -10,10 +12,12 @@ import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.tables.GroupBalances;
 import com.familymoney.generated.tables.Groups;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
+import org.jooq.impl.DSL;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -110,4 +114,27 @@ public class DefaultBalanceRepository implements BalanceRepository {
   }
 
   private record OrderedUsers(UserId lower, UserId higher) {}
+
+  @Override
+  public int deleteBalancesOfPurgeableGroups(final Instant deletedBefore, final int batchSize) {
+    return db.deleteFrom(GroupBalances.GROUP_BALANCES)
+        .where(
+            DSL.row(
+                    GroupBalances.GROUP_BALANCES.GROUP_ID,
+                    GroupBalances.GROUP_BALANCES.USER_ID_1,
+                    GroupBalances.GROUP_BALANCES.USER_ID_2)
+                .in(
+                    db.select(
+                            GroupBalances.GROUP_BALANCES.GROUP_ID,
+                            GroupBalances.GROUP_BALANCES.USER_ID_1,
+                            GroupBalances.GROUP_BALANCES.USER_ID_2)
+                        .from(GroupBalances.GROUP_BALANCES)
+                        .join(Groups.GROUPS)
+                        .on(Groups.GROUPS.ID.eq(GroupBalances.GROUP_BALANCES.GROUP_ID))
+                        .where(
+                            Groups.GROUPS.DELETED_AT.lt(
+                                deletedBefore.atOffset(DEFAULT_TIMEZONE_OFFSET)))
+                        .limit(batchSize)))
+        .execute();
+  }
 }

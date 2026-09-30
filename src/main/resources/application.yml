@@ -68,3 +68,6 @@ familymoney:
   idempotency:
     key-duration: "1m"
     deleteBatchSize: 2000
+  group-deletion:
+    retention: "7d"
+    delete-batch-size: 500

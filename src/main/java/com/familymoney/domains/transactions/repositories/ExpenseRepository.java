@@ -8,6 +8,7 @@ import com.familymoney.domains.transactions.repositories.entitites.FullExpenseEn
 import com.familymoney.domains.transactions.types.ExpenseId;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.users.exceptions.UserNotFoundException;
+import java.time.Instant;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 
@@ -48,11 +49,21 @@ public interface ExpenseRepository {
   void updateById(ExpenseId id, UpdateExpenseDto dto);
 
   /**
-   * Deletes the expense identified by {@code id}.
+   * Deletes the expense identified by {@code id}, together with its shares and payers.
    *
    * @param id the identifier of the expense to delete
    */
   void deleteById(ExpenseId id);
+
+  /**
+   * Deletes a batch of expenses, together with their shares and payers, that belong to groups
+   * soft-deleted before the given instant. The whole batch is deleted in a single transaction.
+   *
+   * @param deletedBefore only expenses of groups soft-deleted before this instant are deleted
+   * @param batchSize the maximum number of expenses to delete
+   * @return the number of deleted expenses
+   */
+  int deleteExpensesOfPurgeableGroups(Instant deletedBefore, int batchSize);
 
   /**
    * Retrieves an expense, together with its shares and payers, by its unique identifier.

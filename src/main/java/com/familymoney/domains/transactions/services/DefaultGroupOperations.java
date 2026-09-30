@@ -44,7 +44,7 @@ public class DefaultGroupOperations implements GroupOperations {
 
   @Override
   public void deleteGroup(final GroupId groupId) {
-    groupRepository.deleteById(groupId);
+    groupRepository.softDeleteById(groupId);
   }
 
   @Override

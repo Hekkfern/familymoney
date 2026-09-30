@@ -8,6 +8,7 @@ import com.familymoney.domains.transactions.repositories.entitites.GroupEntity;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.users.exceptions.UserNotFoundException;
 import com.familymoney.domains.users.types.UserId;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -46,12 +47,33 @@ public interface GroupRepository {
   void updateById(GroupId id, UpdateGroupDto dto);
 
   /**
-   * Deletes a group by its ID. Group membership rows for this group (see {@link
-   * #addUserToGroup(UserId, GroupId)}) are removed automatically as part of the deletion.
+   * Soft-deletes a group by its ID. The group is marked as deleted and becomes invisible to every
+   * query of this repository. The group row and its dependent rows are physically removed later by
+   * the batched purge (see {@link #deletePurgeableGroups(Instant, int)}).
    *
    * @param id the group identifier
    */
-  void deleteById(GroupId id);
+  void softDeleteById(GroupId id);
+
+  /**
+   * Deletes a batch of group memberships that belong to groups soft-deleted before the given
+   * instant.
+   *
+   * @param deletedBefore only memberships of groups soft-deleted before this instant are deleted
+   * @param batchSize the maximum number of memberships to delete
+   * @return the number of deleted memberships
+   */
+  int deleteMembershipsOfPurgeableGroups(Instant deletedBefore, int batchSize);
+
+  /**
+   * Deletes a batch of groups soft-deleted before the given instant that no longer have dependent
+   * rows (expenses, payments, balances, invitations, or memberships).
+   *
+   * @param deletedBefore only groups soft-deleted before this instant are deleted
+   * @param batchSize the maximum number of groups to delete
+   * @return the number of deleted groups
+   */
+  int deletePurgeableGroups(Instant deletedBefore, int batchSize);
 
   /**
    * Finds the groups that a given user belongs to as a paged result.

@@ -15,7 +15,7 @@ public class CleanUpExpiredIdempotencyKeysTask {
   private final IdempotencyProperties idempotencyProperties;
   private final IdempotencyRepository idempotencyRepository;
 
-  @Scheduled(fixedRate = 5, initialDelay = 5, timeUnit = TimeUnit.SECONDS)
+  @Scheduled(fixedRate = 30, initialDelay = 30, timeUnit = TimeUnit.SECONDS)
   @SchedulerLock(name = "CleanUpExpiredIdempotencyKeysTask")
   public void scheduleTask() {
     idempotencyRepository.deleteExpired(idempotencyProperties.deleteBatchSize());

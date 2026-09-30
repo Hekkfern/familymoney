@@ -13,8 +13,10 @@ import com.familymoney.domains.transactions.types.PaymentId;
 import com.familymoney.domains.users.exceptions.UserNotFoundException;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.Keys;
+import com.familymoney.generated.tables.Groups;
 import com.familymoney.generated.tables.Payments;
 import com.familymoney.utils.ConstraintViolationUtils;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -189,5 +191,21 @@ public class DefaultPaymentRepository implements PaymentRepository {
             .offset(pageable.getOffset())
             .fetch(PaymentJooqMapper::toEntity);
     return new PageImpl<>(data, pageable, safeTotal);
+  }
+
+  @Override
+  public int deletePaymentsOfPurgeableGroups(final Instant deletedBefore, final int batchSize) {
+    return db.deleteFrom(Payments.PAYMENTS)
+        .where(
+            Payments.PAYMENTS.ID.in(
+                db.select(Payments.PAYMENTS.ID)
+                    .from(Payments.PAYMENTS)
+                    .join(Groups.GROUPS)
+                    .on(Groups.GROUPS.ID.eq(Payments.PAYMENTS.GROUP_ID))
+                    .where(
+                        Groups.GROUPS.DELETED_AT.lt(
+                            deletedBefore.atOffset(DEFAULT_TIMEZONE_OFFSET)))
+                    .limit(batchSize)))
+        .execute();
   }
 }

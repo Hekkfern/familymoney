@@ -1,5 +1,7 @@
 package com.familymoney.domains.transactions.repositories;
 
+import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
+
 import com.familymoney.domains.transactions.repositories.dtos.CreateGroupInvitationDto;
 import com.familymoney.domains.transactions.repositories.entitites.GroupInvitationEntity;
 import com.familymoney.domains.transactions.repositories.exceptions.CreateGroupInvitationException;
@@ -8,7 +10,9 @@ import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.tables.GroupInvitations;
+import com.familymoney.generated.tables.Groups;
 import com.familymoney.security.OpaqueTokenHasher;
+import java.time.Instant;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -82,5 +86,21 @@ public class DefaultGroupInvitationRepository implements GroupInvitationReposito
             .GROUP_ID
             .eq(groupId.value())
             .and(GroupInvitations.GROUP_INVITATIONS.USER_ID.eq(userId.value())));
+  }
+
+  @Override
+  public int deleteInvitationsOfPurgeableGroups(final Instant deletedBefore, final int batchSize) {
+    return db.deleteFrom(GroupInvitations.GROUP_INVITATIONS)
+        .where(
+            GroupInvitations.GROUP_INVITATIONS.ID.in(
+                db.select(GroupInvitations.GROUP_INVITATIONS.ID)
+                    .from(GroupInvitations.GROUP_INVITATIONS)
+                    .join(Groups.GROUPS)
+                    .on(Groups.GROUPS.ID.eq(GroupInvitations.GROUP_INVITATIONS.GROUP_ID))
+                    .where(
+                        Groups.GROUPS.DELETED_AT.lt(
+                            deletedBefore.atOffset(DEFAULT_TIMEZONE_OFFSET)))
+                    .limit(batchSize)))
+        .execute();
   }
 }

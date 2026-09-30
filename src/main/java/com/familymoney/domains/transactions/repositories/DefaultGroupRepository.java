@@ -1,5 +1,7 @@
 package com.familymoney.domains.transactions.repositories;
 
+import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
+
 import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
 import com.familymoney.domains.transactions.exceptions.UserAlreadyInGroupException;
 import com.familymoney.domains.transactions.repositories.dtos.CreateGroupDto;
@@ -10,9 +12,16 @@ import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.users.exceptions.UserNotFoundException;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.Keys;
+import com.familymoney.generated.tables.Expenses;
+import com.familymoney.generated.tables.GroupBalances;
+import com.familymoney.generated.tables.GroupInvitations;
 import com.familymoney.generated.tables.Groups;
+import com.familymoney.generated.tables.Payments;
 import com.familymoney.generated.tables.UserGroups;
 import com.familymoney.utils.ConstraintViolationUtils;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,9 +29,11 @@ import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.SortField;
+import org.jooq.impl.DSL;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
@@ -37,6 +48,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class DefaultGroupRepository implements GroupRepository {
 
   private final DSLContext db;
+  private final Clock clock;
 
   @Override
   public void create(final CreateGroupDto dto) {
@@ -78,7 +90,7 @@ public class DefaultGroupRepository implements GroupRepository {
     final int rowsAffected =
         db.update(Groups.GROUPS)
             .set(changedFields)
-            .where(Groups.GROUPS.ID.eq(id.value()))
+            .where(Groups.GROUPS.ID.eq(id.value()).and(Groups.GROUPS.DELETED_AT.isNull()))
             .execute();
     if (rowsAffected == 0) {
       final String msg = "Group with ID '%s' does not exist".formatted(id.value());
@@ -88,12 +100,72 @@ public class DefaultGroupRepository implements GroupRepository {
   }
 
   @Override
-  public void deleteById(final GroupId id) {
+  public void softDeleteById(final GroupId id) {
     final int rowsAffected =
-        db.deleteFrom(Groups.GROUPS).where(Groups.GROUPS.ID.eq(id.value())).execute();
+        db.update(Groups.GROUPS)
+            .set(Groups.GROUPS.DELETED_AT, OffsetDateTime.now(clock))
+            .where(Groups.GROUPS.ID.eq(id.value()).and(Groups.GROUPS.DELETED_AT.isNull()))
+            .execute();
     if (rowsAffected == 0) {
-      log.warn("Could not delete group with ID: {}", id.value());
+      log.warn("Could not soft-delete group with ID: {}", id.value());
     }
+  }
+
+  @Override
+  public int deleteMembershipsOfPurgeableGroups(final Instant deletedBefore, final int batchSize) {
+    return db.deleteFrom(UserGroups.USER_GROUPS)
+        .where(
+            DSL.row(UserGroups.USER_GROUPS.USER_ID, UserGroups.USER_GROUPS.GROUP_ID)
+                .in(
+                    db.select(UserGroups.USER_GROUPS.USER_ID, UserGroups.USER_GROUPS.GROUP_ID)
+                        .from(UserGroups.USER_GROUPS)
+                        .join(Groups.GROUPS)
+                        .on(Groups.GROUPS.ID.eq(UserGroups.USER_GROUPS.GROUP_ID))
+                        .where(isPurgeable(deletedBefore))
+                        .limit(batchSize)))
+        .execute();
+  }
+
+  @Override
+  public int deletePurgeableGroups(final Instant deletedBefore, final int batchSize) {
+    final Condition hasNoDependentRows =
+        DSL.notExists(
+                db.selectOne()
+                    .from(Expenses.EXPENSES)
+                    .where(Expenses.EXPENSES.GROUP_ID.eq(Groups.GROUPS.ID)))
+            .and(
+                DSL.notExists(
+                    db.selectOne()
+                        .from(Payments.PAYMENTS)
+                        .where(Payments.PAYMENTS.GROUP_ID.eq(Groups.GROUPS.ID))))
+            .and(
+                DSL.notExists(
+                    db.selectOne()
+                        .from(GroupBalances.GROUP_BALANCES)
+                        .where(GroupBalances.GROUP_BALANCES.GROUP_ID.eq(Groups.GROUPS.ID))))
+            .and(
+                DSL.notExists(
+                    db.selectOne()
+                        .from(GroupInvitations.GROUP_INVITATIONS)
+                        .where(GroupInvitations.GROUP_INVITATIONS.GROUP_ID.eq(Groups.GROUPS.ID))))
+            .and(
+                DSL.notExists(
+                    db.selectOne()
+                        .from(UserGroups.USER_GROUPS)
+                        .where(UserGroups.USER_GROUPS.GROUP_ID.eq(Groups.GROUPS.ID))));
+    return db.deleteFrom(Groups.GROUPS)
+        .where(
+            Groups.GROUPS.ID.in(
+                db.select(Groups.GROUPS.ID)
+                    .from(Groups.GROUPS)
+                    .where(isPurgeable(deletedBefore).and(hasNoDependentRows))
+                    .orderBy(Groups.GROUPS.DELETED_AT.asc())
+                    .limit(batchSize)))
+        .execute();
+  }
+
+  private static Condition isPurgeable(final Instant deletedBefore) {
+    return Groups.GROUPS.DELETED_AT.lt(deletedBefore.atOffset(DEFAULT_TIMEZONE_OFFSET));
   }
 
   @Transactional(readOnly = true)
@@ -102,7 +174,13 @@ public class DefaultGroupRepository implements GroupRepository {
     final Long total =
         db.selectCount()
             .from(UserGroups.USER_GROUPS)
-            .where(UserGroups.USER_GROUPS.USER_ID.eq(userId.value()))
+            .join(Groups.GROUPS)
+            .on(Groups.GROUPS.ID.eq(UserGroups.USER_GROUPS.GROUP_ID))
+            .where(
+                UserGroups.USER_GROUPS
+                    .USER_ID
+                    .eq(userId.value())
+                    .and(Groups.GROUPS.DELETED_AT.isNull()))
             .fetchOne(0, Long.class);
     final long safeTotal = total != null ? total : 0L;
 
@@ -132,7 +210,11 @@ public class DefaultGroupRepository implements GroupRepository {
             .from(UserGroups.USER_GROUPS)
             .join(Groups.GROUPS)
             .on(Groups.GROUPS.ID.eq(UserGroups.USER_GROUPS.GROUP_ID))
-            .where(UserGroups.USER_GROUPS.USER_ID.eq(userId.value()))
+            .where(
+                UserGroups.USER_GROUPS
+                    .USER_ID
+                    .eq(userId.value())
+                    .and(Groups.GROUPS.DELETED_AT.isNull()))
             .orderBy(effectiveOrder)
             .limit(pageable.getPageSize())
             .offset(pageable.getOffset())
@@ -151,7 +233,7 @@ public class DefaultGroupRepository implements GroupRepository {
             Groups.GROUPS.CURRENCY_CODE,
             Groups.GROUPS.CREATED_BY)
         .from(Groups.GROUPS)
-        .where(Groups.GROUPS.ID.eq(id.value()))
+        .where(Groups.GROUPS.ID.eq(id.value()).and(Groups.GROUPS.DELETED_AT.isNull()))
         .fetchOptional()
         .map(GroupJooqMapper::toEntity);
   }
@@ -159,7 +241,9 @@ public class DefaultGroupRepository implements GroupRepository {
   @Override
   public boolean existsById(GroupId id) {
     return db.fetchExists(
-        db.selectOne().from(Groups.GROUPS).where(Groups.GROUPS.ID.eq(id.value())));
+        db.selectOne()
+            .from(Groups.GROUPS)
+            .where(Groups.GROUPS.ID.eq(id.value()).and(Groups.GROUPS.DELETED_AT.isNull())));
   }
 
   @Override
@@ -182,11 +266,14 @@ public class DefaultGroupRepository implements GroupRepository {
     return db.fetchExists(
         db.selectOne()
             .from(UserGroups.USER_GROUPS)
+            .join(Groups.GROUPS)
+            .on(Groups.GROUPS.ID.eq(UserGroups.USER_GROUPS.GROUP_ID))
             .where(
                 UserGroups.USER_GROUPS
                     .USER_ID
                     .eq(userId.value())
-                    .and(UserGroups.USER_GROUPS.GROUP_ID.eq(groupId.value()))));
+                    .and(UserGroups.USER_GROUPS.GROUP_ID.eq(groupId.value()))
+                    .and(Groups.GROUPS.DELETED_AT.isNull())));
   }
 
   @Override

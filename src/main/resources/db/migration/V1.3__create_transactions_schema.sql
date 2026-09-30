@@ -9,7 +9,7 @@ CREATE DOMAIN non_negative_money_amount AS DECIMAL(19, 3) CHECK (value >= 0);
 -- Stores an expense recorded for a group, including its total amount, currency, and completion time.
 CREATE TABLE expenses (
   id UUID PRIMARY KEY,
-  group_id UUID NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
+  group_id UUID NOT NULL REFERENCES groups (id),
   description description NOT NULL,
   done_at TIMESTAMPTZ NOT NULL,
   created_by UUID NOT NULL REFERENCES users (id), -- the user who created it. for auditing purposes.
@@ -26,7 +26,7 @@ SELECT
 
 -- Records how much each user paid toward an expense for settlement calculations.
 CREATE TABLE expense_payments (
-  expense_id UUID NOT NULL REFERENCES expenses (id) ON DELETE CASCADE,
+  expense_id UUID NOT NULL REFERENCES expenses (id),
   user_id UUID NOT NULL REFERENCES users (id),
   amount positive_money_amount NOT NULL, -- currency is defined in group table
   PRIMARY KEY (expense_id, user_id)
@@ -38,7 +38,7 @@ CREATE INDEX idx_expense_payments_user_id ON expense_payments (user_id);
 
 -- Records each user's share of an expense so the amount owed can be calculated.
 CREATE TABLE expense_shares (
-  expense_id UUID NOT NULL REFERENCES expenses (id) ON DELETE CASCADE,
+  expense_id UUID NOT NULL REFERENCES expenses (id),
   user_id UUID NOT NULL REFERENCES users (id),
   amount positive_money_amount NOT NULL, -- currency is defined in group table
   PRIMARY KEY (expense_id, user_id)
@@ -52,7 +52,7 @@ CREATE INDEX idx_expense_shares_user_id ON expense_shares (user_id);
 -- Stores a completed payment between group members, separate from the expenses being settled.
 CREATE TABLE payments (
   id UUID PRIMARY KEY,
-  group_id UUID NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
+  group_id UUID NOT NULL REFERENCES groups (id),
   description description NOT NULL,
   amount positive_money_amount NOT NULL,
   creditor UUID NOT NULL REFERENCES users (id),

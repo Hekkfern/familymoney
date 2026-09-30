@@ -30,7 +30,7 @@ public interface GroupOperations {
   GroupId createGroup(GroupName name, Description description, Currency currency, UserId createdBy);
 
   /**
-   * Deletes a group.
+   * Soft-deletes a group. The group and its dependent rows are purged later in batches.
    *
    * @param groupId Identifier of the group
    */

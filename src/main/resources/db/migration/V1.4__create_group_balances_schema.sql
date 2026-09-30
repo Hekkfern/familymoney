@@ -1,6 +1,6 @@
 -- ******************* GROUP BALANCES *******************
 CREATE TABLE group_balances (
-  group_id UUID NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
+  group_id UUID NOT NULL REFERENCES groups (id),
   amount money_amount NOT NULL DEFAULT 0, -- currency is defined by the group
   user_id_1 UUID NOT NULL REFERENCES users (id),
   user_id_2 UUID NOT NULL REFERENCES users (id),

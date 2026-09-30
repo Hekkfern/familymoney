@@ -6,6 +6,7 @@ import com.familymoney.domains.transactions.repositories.exceptions.CreateBalanc
 import com.familymoney.domains.transactions.repositories.exceptions.UpdateBalanceException;
 import com.familymoney.domains.transactions.types.GroupId;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -56,4 +57,13 @@ public interface BalanceRepository {
    *     recorded balances
    */
   List<BalanceEntity> findByGroupId(GroupId groupId);
+
+  /**
+   * Deletes a batch of balances that belong to groups soft-deleted before the given instant.
+   *
+   * @param deletedBefore only balances of groups soft-deleted before this instant are deleted
+   * @param batchSize the maximum number of balances to delete
+   * @return the number of deleted balances
+   */
+  int deleteBalancesOfPurgeableGroups(Instant deletedBefore, int batchSize);
 }

@@ -5,6 +5,7 @@ import com.familymoney.domains.transactions.repositories.entitites.GroupInvitati
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import com.familymoney.domains.users.types.UserId;
+import java.time.Instant;
 import java.util.Optional;
 
 public interface GroupInvitationRepository {
@@ -40,4 +41,13 @@ public interface GroupInvitationRepository {
    * @return the number of invitation records that match the provided group and user IDs
    */
   long countByGroupIdAndUserId(GroupId groupId, UserId userId);
+
+  /**
+   * Deletes a batch of invitations that belong to groups soft-deleted before the given instant.
+   *
+   * @param deletedBefore only invitations of groups soft-deleted before this instant are deleted
+   * @param batchSize the maximum number of invitations to delete
+   * @return the number of deleted invitations
+   */
+  int deleteInvitationsOfPurgeableGroups(Instant deletedBefore, int batchSize);
 }

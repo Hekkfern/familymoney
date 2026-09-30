@@ -158,6 +158,7 @@ public class DefaultGroupService implements GroupService {
       log.info("Invitation token is expired");
       throw new GroupInvitationInvalidException("Invitation token expired");
     }
+    groupOperations.checkIfGroupExists(invitationDb.groupId());
     groupInvitationRepository.deleteByToken(token);
     groupRepository.addUserToGroup(userId, invitationDb.groupId());
   }
@@ -183,23 +184,6 @@ public class DefaultGroupService implements GroupService {
     groupOperations.checkIfGroupExists(groupId);
     groupOperations.checkIfUserExists(userIdToAdd);
     groupRepository.addUserToGroup(userIdToAdd, groupId);
-  }
-
-  @Override
-  @Transactional
-  public void removeUserFromGroup(
-      final GroupId groupId, final UserId userId, final UserId userIdToRemove) {
-    groupOperations.checkIfGroupExists(groupId);
-    groupOperations.checkIfUserIsInGroup(userId, groupId);
-    groupOperations.removeUserFromGroup(groupId, userIdToRemove);
-  }
-
-  @Override
-  @Transactional
-  public void removeUserFromGroupAsAdmin(final GroupId groupId, final UserId userIdToRemove) {
-    groupOperations.checkIfGroupExists(groupId);
-    groupOperations.checkIfUserExists(userIdToRemove);
-    groupOperations.removeUserFromGroup(groupId, userIdToRemove);
   }
 
   @Override

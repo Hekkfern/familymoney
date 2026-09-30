@@ -8,6 +8,7 @@ import com.familymoney.domains.transactions.repositories.entitites.PaymentEntity
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.PaymentId;
 import com.familymoney.domains.users.exceptions.UserNotFoundException;
+import java.time.Instant;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 
@@ -63,4 +64,13 @@ public interface PaymentRepository {
    * @return a page of payments for the group
    */
   Page<PaymentEntity> findAllByGroupId(GroupId groupId, int page, int size);
+
+  /**
+   * Deletes a batch of payments that belong to groups soft-deleted before the given instant.
+   *
+   * @param deletedBefore only payments of groups soft-deleted before this instant are deleted
+   * @param batchSize the maximum number of payments to delete
+   * @return the number of deleted payments
+   */
+  int deletePaymentsOfPurgeableGroups(Instant deletedBefore, int batchSize);
 }

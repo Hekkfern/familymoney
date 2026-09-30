@@ -18,13 +18,16 @@ import com.familymoney.generated.Keys;
 import com.familymoney.generated.tables.ExpensePayments;
 import com.familymoney.generated.tables.ExpenseShares;
 import com.familymoney.generated.tables.Expenses;
+import com.familymoney.generated.tables.Groups;
 import com.familymoney.utils.ConstraintViolationUtils;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
@@ -157,13 +160,44 @@ public class DefaultExpenseRepository implements ExpenseRepository {
     return exception;
   }
 
+  @Transactional
   @Override
   public void deleteById(final ExpenseId id) {
+    db.deleteFrom(ExpenseShares.EXPENSE_SHARES)
+        .where(ExpenseShares.EXPENSE_SHARES.EXPENSE_ID.eq(id.value()))
+        .execute();
+    db.deleteFrom(ExpensePayments.EXPENSE_PAYMENTS)
+        .where(ExpensePayments.EXPENSE_PAYMENTS.EXPENSE_ID.eq(id.value()))
+        .execute();
     final int rowsAffected =
         db.deleteFrom(Expenses.EXPENSES).where(Expenses.EXPENSES.ID.eq(id.value())).execute();
     if (rowsAffected != 1) {
       log.warn("Could not delete expense ID: {}", id.value());
     }
+  }
+
+  @Transactional
+  @Override
+  public int deleteExpensesOfPurgeableGroups(final Instant deletedBefore, final int batchSize) {
+    final List<UUID> expenseIds =
+        db.select(Expenses.EXPENSES.ID)
+            .from(Expenses.EXPENSES)
+            .join(Groups.GROUPS)
+            .on(Groups.GROUPS.ID.eq(Expenses.EXPENSES.GROUP_ID))
+            .where(Groups.GROUPS.DELETED_AT.lt(deletedBefore.atOffset(DEFAULT_TIMEZONE_OFFSET)))
+            .limit(batchSize)
+            .fetch(Expenses.EXPENSES.ID);
+    if (expenseIds.isEmpty()) {
+      return 0;
+    }
+
+    db.deleteFrom(ExpenseShares.EXPENSE_SHARES)
+        .where(ExpenseShares.EXPENSE_SHARES.EXPENSE_ID.in(expenseIds))
+        .execute();
+    db.deleteFrom(ExpensePayments.EXPENSE_PAYMENTS)
+        .where(ExpensePayments.EXPENSE_PAYMENTS.EXPENSE_ID.in(expenseIds))
+        .execute();
+    return db.deleteFrom(Expenses.EXPENSES).where(Expenses.EXPENSES.ID.in(expenseIds)).execute();
   }
 
   @Override
