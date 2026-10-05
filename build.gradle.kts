@@ -36,7 +36,7 @@ dependencies {
   implementation(libs.spring.starter.security)
   implementation(libs.spring.starter.thymeleaf)
   implementation(libs.spring.starter.validation)
-  implementation(libs.spring.starter.web)
+  implementation(libs.spring.starter.webmvc)
   implementation(libs.spring.starter.flyway)
   implementation(libs.spring.starter.jooq)
   implementation(libs.flyway.postgresql)

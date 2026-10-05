@@ -24,7 +24,7 @@ spring-starter-mail = { module = "org.springframework.boot:spring-boot-starter-m
 spring-starter-security = { module = "org.springframework.boot:spring-boot-starter-security" }
 spring-starter-thymeleaf = { module = "org.springframework.boot:spring-boot-starter-thymeleaf" }
 spring-starter-validation = { module = "org.springframework.boot:spring-boot-starter-validation" }
-spring-starter-web = { module = "org.springframework.boot:spring-boot-starter-web" }
+spring-starter-webmvc = { module = "org.springframework.boot:spring-boot-starter-webmvc" }
 spring-starter-flyway = { module = "org.springframework.boot:spring-boot-starter-flyway" }
 spring-starter-jooq = { module = "org.springframework.boot:spring-boot-starter-jooq" }
 spring-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
