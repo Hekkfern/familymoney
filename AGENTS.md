@@ -4,7 +4,6 @@
 - Blank Lines: Use to separate logical blocks of code.
 - Line Length: Maximum 120 characters.
 - Use Google code style for Java.
-- Execute `./gradlew spotlessApply` to format the code.`
 
 ## Java Style
 
