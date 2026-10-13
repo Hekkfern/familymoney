@@ -24,6 +24,6 @@ public record CreatePaymentRequestDto(
   @JsonIgnore
   @AssertTrue(message = "from and to must be different")
   public boolean isFromDifferentFromTo() {
-    return from == null || to == null || !from.equals(to);
+    return !from.equals(to);
   }
 }
