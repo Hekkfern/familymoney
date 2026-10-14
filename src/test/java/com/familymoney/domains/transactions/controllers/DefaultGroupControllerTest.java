@@ -207,7 +207,7 @@ class DefaultGroupControllerTest {
           .expectStatus()
           .isOk();
 
-      verify(groupService).deleteGroup(any(), any());
+      verify(groupService).deleteGroupAsAdmin(any(), any());
     }
 
     @Test
@@ -227,7 +227,7 @@ class DefaultGroupControllerTest {
     void unauthorized_when_delete_service_rejects_user() {
       doThrow(new UserIsNotMemberOfGroupException("not a member"))
           .when(groupService)
-          .deleteGroup(any(), any());
+          .deleteGroupAsAdmin(any(), any());
 
       client
           .delete()

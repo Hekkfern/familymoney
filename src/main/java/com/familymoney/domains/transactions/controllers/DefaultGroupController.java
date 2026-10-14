@@ -8,10 +8,12 @@ import com.familymoney.domains.transactions.controllers.dtos.CreateGroupResponse
 import com.familymoney.domains.transactions.controllers.dtos.EnterGroupRequestDto;
 import com.familymoney.domains.transactions.controllers.dtos.GroupDto;
 import com.familymoney.domains.transactions.controllers.dtos.InvitationTokenDto;
+import com.familymoney.domains.transactions.controllers.dtos.MemberDto;
 import com.familymoney.domains.transactions.controllers.dtos.TransactionDto;
 import com.familymoney.domains.transactions.controllers.dtos.UpdateGroupRequestDto;
 import com.familymoney.domains.transactions.controllers.mappers.CreateGroupResponseMapper;
 import com.familymoney.domains.transactions.controllers.mappers.GroupDtoMapper;
+import com.familymoney.domains.transactions.controllers.mappers.MemberDtoMapper;
 import com.familymoney.domains.transactions.controllers.mappers.UpdateGroupRequestMapper;
 import com.familymoney.domains.transactions.services.GroupService;
 import com.familymoney.domains.transactions.services.data.GroupData;
@@ -19,6 +21,7 @@ import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import com.familymoney.domains.transactions.types.GroupName;
+import com.familymoney.domains.users.services.data.UserData;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.utils.AuthenticationUtils;
 import com.familymoney.utils.AuthorizedUser;
@@ -60,29 +63,29 @@ public class DefaultGroupController implements GroupController {
                   GroupName.fromString(request.name()),
                   Description.of(request.description().trim()),
                   Currency.getInstance(request.currencyCode()),
-                  user.id());
+                  user);
           return CreateGroupResponseMapper.toDto(groupId);
         });
   }
 
   @Override
-  public List<UUID> getGroupsForUser() {
+  public PageResponse<GroupDto> getGroupsForUser(final int page, final int size) {
     final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     final Page<GroupData> groupPages =
-        groupService.getGroupsByUser(user.id(), PageRequest.of(0, 10_000));
+        groupService.getGroupsByUser(user, PageRequest.of(0, 10_000));
     return groupPages.getContent().stream().map(GroupDtoMapper::toDto).map(GroupDto::id).toList();
   }
 
   @Override
   public void leaveGroup(final UUID groupId) {
     final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
-    groupService.leaveGroup(GroupId.fromUuid(groupId), user.id());
+    groupService.leaveGroup(GroupId.fromUuid(groupId), user);
   }
 
   @Override
   public GroupDto getGroupInfo(final UUID groupId) {
     final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
-    final GroupData groupData = groupService.getGroupInfo(GroupId.fromUuid(groupId), user.id());
+    final GroupData groupData = groupService.getGroupInfo(GroupId.fromUuid(groupId), user);
     return GroupDtoMapper.toDto(groupData);
   }
 
@@ -90,7 +93,7 @@ public class DefaultGroupController implements GroupController {
   public void updateGroupInfo(final UUID groupId, final UpdateGroupRequestDto request) {
     final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     groupService.updateGroupInfo(
-        GroupId.fromUuid(groupId), user.id(), UpdateGroupRequestMapper.fromDto(request));
+        GroupId.fromUuid(groupId), user, UpdateGroupRequestMapper.fromDto(request));
   }
 
   @Override
@@ -106,7 +109,7 @@ public class DefaultGroupController implements GroupController {
         objectMapper.constructType(InvitationTokenDto.class),
         () -> {
           final GroupInvitationToken token =
-              groupService.getInvitationToken(GroupId.fromUuid(groupId), user.id());
+              groupService.getInvitationToken(GroupId.fromUuid(groupId), user);
           return new InvitationTokenDto(token.value());
         });
   }
@@ -125,14 +128,14 @@ public class DefaultGroupController implements GroupController {
         request,
         () ->
             groupService.enterToGroupWithToken(
-                GroupInvitationToken.fromString(request.token()), user.id()));
+                GroupInvitationToken.fromString(request.token()), user));
   }
 
   @Override
-  public List<UUID> getUsersInGroup(final UUID groupId) {
+  public List<MemberDto> getUsersInGroup(final UUID groupId) {
     final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
-    final List<UserId> users = groupService.getUsersInGroup(GroupId.fromUuid(groupId), user.id());
-    return users.stream().map(UserId::value).toList();
+    final List<UserData> users = groupService.getUsersInGroup(GroupId.fromUuid(groupId), user);
+    return users.stream().map(MemberDtoMapper::toDto).toList();
   }
 
   @Override

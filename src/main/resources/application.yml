@@ -50,9 +50,11 @@ familymoney:
   email-verification:
     token-duration: "24h"
     wait-time: "2m"
-  group-invitation:
+  group:
     invitation-duration: "1h"
     max-num-invitations: 5
+    max-groups-per-user: 100
+    max-users-per-group: 100
   reset-password:
     token-duration: "1h"
     wait-time: "2m"

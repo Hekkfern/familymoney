@@ -32,7 +32,7 @@ import com.familymoney.domains.transactions.types.GroupName;
 import com.familymoney.domains.users.exceptions.UserNotFoundException;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.exceptions.DatabaseExecutionException;
-import com.familymoney.properties.GroupInvitationProperties;
+import com.familymoney.properties.GroupProperties;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -65,7 +65,7 @@ class DefaultGroupServiceTest {
   @Mock private GroupInvitationRepository groupInvitationRepository;
   @Mock private GroupOperations groupOperations;
   @Spy private final Clock clock = Clock.fixed(NOW, DEFAULT_TIMEZONE_OFFSET);
-  @Mock private GroupInvitationProperties groupInvitationProperties;
+  @Mock private GroupProperties groupProperties;
 
   @InjectMocks private DefaultGroupService groupService;
 
@@ -185,7 +185,7 @@ class DefaultGroupServiceTest {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
 
-      groupService.deleteGroup(gid, user);
+      groupService.deleteGroupAsAdmin(gid, user);
 
       verify(groupOperations).deleteGroup(gid);
     }
@@ -198,7 +198,7 @@ class DefaultGroupServiceTest {
           .when(groupOperations)
           .checkIfGroupExists(gid);
 
-      assertThatThrownBy(() -> groupService.deleteGroup(gid, user))
+      assertThatThrownBy(() -> groupService.deleteGroupAsAdmin(gid, user))
           .isInstanceOf(GroupNotFoundException.class);
     }
 
@@ -210,7 +210,7 @@ class DefaultGroupServiceTest {
           .when(groupOperations)
           .checkIfUserIsInGroup(user, gid);
 
-      assertThatThrownBy(() -> groupService.deleteGroup(gid, user))
+      assertThatThrownBy(() -> groupService.deleteGroupAsAdmin(gid, user))
           .isInstanceOf(UserIsNotMemberOfGroupException.class);
     }
   }
@@ -321,9 +321,9 @@ class DefaultGroupServiceTest {
     @BeforeEach()
     void beforeEach() {
       lenient()
-          .when(groupInvitationProperties.invitationDuration())
+          .when(groupProperties.invitationDuration())
           .thenReturn(Duration.ofHours(1));
-      lenient().when(groupInvitationProperties.maxNumInvitations()).thenReturn(5);
+      lenient().when(groupProperties.maxNumInvitations()).thenReturn(5);
     }
 
     @Test

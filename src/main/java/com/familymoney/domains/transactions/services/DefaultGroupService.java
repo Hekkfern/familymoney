@@ -19,9 +19,10 @@ import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import com.familymoney.domains.transactions.types.GroupName;
 import com.familymoney.domains.users.exceptions.UserNotFoundException;
+import com.familymoney.domains.users.services.data.UserData;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.exceptions.DatabaseExecutionException;
-import com.familymoney.properties.GroupInvitationProperties;
+import com.familymoney.properties.GroupProperties;
 import com.familymoney.utils.UUIDGenerator;
 import java.time.Clock;
 import java.time.Instant;
@@ -47,10 +48,10 @@ public class DefaultGroupService implements GroupService {
   private final GroupInvitationRepository groupInvitationRepository;
   private final GroupOperations groupOperations;
   private final Clock clock;
-  private final GroupInvitationProperties groupInvitationProperties;
+  private final GroupProperties groupProperties;
 
   @Override
-  public GroupId createGroup(
+  public GroupId createEmptyGroup(
       final GroupName name,
       final Description description,
       final Currency currency,
@@ -134,12 +135,12 @@ public class DefaultGroupService implements GroupService {
     groupOperations.checkIfGroupExists(groupId);
     groupOperations.checkIfUserIsInGroup(userId, groupId);
     if (groupInvitationRepository.countByGroupIdAndUserId(groupId, userId)
-        >= groupInvitationProperties.maxNumInvitations()) {
+        >= groupProperties.maxNumInvitations()) {
       throw new MaximumGroupInvitationsReachedException();
     }
     final GroupInvitationToken token = GroupInvitationToken.generate();
     final ExpirationTime expiresAt =
-        ExpirationTime.of(Instant.now(clock).plus(groupInvitationProperties.invitationDuration()));
+        ExpirationTime.of(Instant.now(clock).plus(groupProperties.invitationDuration()));
     final UUID invitationId = UUIDGenerator.generate();
     groupInvitationRepository
         .create(new CreateGroupInvitationDto(invitationId, groupId, userId, token, expiresAt))
@@ -165,16 +166,9 @@ public class DefaultGroupService implements GroupService {
 
   @Override
   @Transactional
-  public List<UserId> getUsersInGroup(final GroupId groupId, final UserId userId) {
+  public List<UserData> getUsersInGroup(final GroupId groupId, final UserId userId) {
     groupOperations.checkIfGroupExists(groupId);
     groupOperations.checkIfUserIsInGroup(userId, groupId);
-    return groupOperations.getUsersInGroup(groupId);
-  }
-
-  @Override
-  @Transactional
-  public List<UserId> getUsersInGroupAsAdmin(final GroupId groupId) {
-    groupOperations.checkIfGroupExists(groupId);
     return groupOperations.getUsersInGroup(groupId);
   }
 

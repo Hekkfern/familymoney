@@ -9,6 +9,7 @@ import com.familymoney.domains.transactions.controllers.dtos.CreateGroupResponse
 import com.familymoney.domains.transactions.controllers.dtos.EnterGroupRequestDto;
 import com.familymoney.domains.transactions.controllers.dtos.GroupDto;
 import com.familymoney.domains.transactions.controllers.dtos.InvitationTokenDto;
+import com.familymoney.domains.transactions.controllers.dtos.MemberDto;
 import com.familymoney.domains.transactions.controllers.dtos.TransactionDto;
 import com.familymoney.domains.transactions.controllers.dtos.UpdateGroupRequestDto;
 import com.familymoney.domains.transactions.exceptions.GroupInvitationInvalidException;
@@ -64,13 +65,17 @@ public interface GroupController {
       HttpServletRequest httpRequest);
 
   /**
-   * Retrieves the ID of the groups where the authenticated user is a member.
+   * Retrieves the groups where the authenticated user is a member.
    *
-   * @return a list of group identifiers
+   * @param page the page number to retrieve
+   * @param size the number of items per page
+   * @return a paginated response of group information
    */
-  @Operation(summary = "Retrieves the ID of the groups where the authenticated user is a member")
+  @Operation(summary = "Retrieves the groups where the authenticated user is a member")
   @GetMapping(path = "", version = "1")
-  List<UUID> getGroupsForUser();
+  PageResponse<GroupDto> getGroupsForUser(
+      @RequestParam(defaultValue = "0") @Min(0) @Max(100) int page,
+      @RequestParam(defaultValue = "20") @Min(20) @Max(100) int size);
 
   /**
    * Leaves a group where the authenticated user is a member.
@@ -149,13 +154,13 @@ public interface GroupController {
    * Retrieves the list of users in a group where the authenticated user is a member.
    *
    * @param groupId the group identifier
-   * @return the identifiers of the group's users
+   * @return the group's users
    * @throws GroupNotFoundException if no group with the given ID exists
    * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the group
    */
   @Operation(summary = "Get the list of users in a specific group")
   @GetMapping(path = "{groupId}/users", version = "1")
-  List<UUID> getUsersInGroup(@PathVariable @NotNull UUID groupId);
+  List<MemberDto> getUsersInGroup(@PathVariable @NotNull UUID groupId);
 
   /**
    * Retrieves the balances (debts between members) for a group where the authenticated user is a
