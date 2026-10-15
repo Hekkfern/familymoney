@@ -4,9 +4,11 @@ import com.familymoney.domains.transactions.controllers.dtos.BalanceDto;
 import com.familymoney.domains.transactions.controllers.dtos.CreateGroupRequestDto;
 import com.familymoney.domains.transactions.controllers.dtos.CreateGroupResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.GroupDto;
+import com.familymoney.domains.transactions.controllers.dtos.MemberDto;
 import com.familymoney.domains.transactions.controllers.dtos.TransactionDto;
 import com.familymoney.domains.transactions.controllers.dtos.UpdateGroupRequestDto;
 import com.familymoney.utils.PageResponse;
+import io.github.benhendayoussef.idempotency.api.Idempotent;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -28,7 +30,8 @@ public interface GroupAdminController {
 
   @Operation(summary = "Create a new transaction group")
   @PostMapping(path = "", version = "1")
-  CreateGroupResponseDto createGroup(@RequestBody @Valid CreateGroupRequestDto request);
+  @Idempotent
+  CreateGroupResponseDto createEmptyGroup(@RequestBody @Valid CreateGroupRequestDto request);
 
   @Operation(summary = "Get the list of groups where the selected user is a member")
   @GetMapping(path = "users/{userId}", version = "1")
@@ -49,17 +52,19 @@ public interface GroupAdminController {
 
   @Operation(summary = "Add a user to a specific group")
   @PostMapping(path = "{groupId}/users/{userId}", version = "1")
+  @Idempotent
   void addUserToGroup(@PathVariable @NotNull UUID groupId, @PathVariable @NotNull UUID userId);
 
   @Operation(summary = "Get the list of users in a specific group")
   @GetMapping(path = "{groupId}/users", version = "1")
-  List<UUID> getUsersInGroup(@PathVariable @NotNull UUID groupId);
+  List<MemberDto> getUsersInGroup(@PathVariable @NotNull UUID groupId);
 
   @GetMapping(path = "{groupId}/balances", version = "1")
   List<BalanceDto> getGroupBalances(@PathVariable @NotNull UUID groupId);
 
   @Operation(summary = "Recalculates the balances of all the expenses in the group")
   @PostMapping(path = "{groupId}", version = "1")
+  @Idempotent
   void forceSyncBalances(@PathVariable @NotNull UUID groupId);
 
   @GetMapping(path = "{groupId}/transactions", version = "1")

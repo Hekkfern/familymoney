@@ -47,8 +47,9 @@ dependencies {
   implementation("org.jooq:jooq:${JOOQ_VERSION}")
   implementation(libs.uuidcreator)
   implementation(libs.shedlock)
-  implementation(libs.shedlock)
   implementation(libs.shedlock.provider.jooq)
+  implementation(libs.idempotency.springboot.starter)
+  implementation(libs.idempotency.store.jdbc)
 
   runtimeOnly("org.postgresql:postgresql")
   runtimeOnly(libs.jjwt.impl)

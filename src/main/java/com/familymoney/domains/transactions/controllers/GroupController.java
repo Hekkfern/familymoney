@@ -1,8 +1,5 @@
 package com.familymoney.domains.transactions.controllers;
 
-import static com.familymoney.utils.CustomHttp.IDEMPOTENCY_KEY_HEADER;
-
-import com.familymoney.domains.idempotency.exceptions.IdempotencyConflictException;
 import com.familymoney.domains.transactions.controllers.dtos.BalanceDto;
 import com.familymoney.domains.transactions.controllers.dtos.CreateGroupRequestDto;
 import com.familymoney.domains.transactions.controllers.dtos.CreateGroupResponseDto;
@@ -18,8 +15,8 @@ import com.familymoney.domains.transactions.exceptions.GroupOwnerNotFoundExcepti
 import com.familymoney.domains.transactions.exceptions.MaximumGroupInvitationsReachedException;
 import com.familymoney.domains.transactions.exceptions.UserIsNotMemberOfGroupException;
 import com.familymoney.utils.PageResponse;
+import io.github.benhendayoussef.idempotency.api.Idempotent;
 import io.swagger.v3.oas.annotations.Operation;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -33,7 +30,6 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -45,24 +41,14 @@ public interface GroupController {
   /**
    * Creates a group and adds the authenticated user to it as its first member.
    *
-   * @param idempotencyKey a client-supplied key that allows the request to be safely retried
-   *     without creating a duplicate group
    * @param request the group creation details (name, description, currency)
-   * @param httpRequest the underlying HTTP request, used together with {@code idempotencyKey} to
-   *     detect a duplicate submission with a different request body
    * @return the ID of the newly created group
-   * @throws GroupOwnerNotFoundException if the authenticated user cannot be found when it is
-   *     assigned as the group's first member
-   * @throws IdempotencyConflictException if the idempotency key was already used with a different
-   *     request body
    */
   @Operation(summary = "Create a new transaction group")
   @PostMapping(path = "", version = "1")
   @ResponseStatus(HttpStatus.CREATED)
-  CreateGroupResponseDto createGroup(
-      @RequestHeader(IDEMPOTENCY_KEY_HEADER) String idempotencyKey,
-      @RequestBody @Valid CreateGroupRequestDto request,
-      HttpServletRequest httpRequest);
+  @Idempotent
+  CreateGroupResponseDto createGroupAndAddCreatorAsMember(@RequestBody @Valid CreateGroupRequestDto request);
 
   /**
    * Retrieves the groups where the authenticated user is a member.
@@ -81,8 +67,6 @@ public interface GroupController {
    * Leaves a group where the authenticated user is a member.
    *
    * @param groupId the group identifier
-   * @throws GroupNotFoundException if no group with the given ID exists
-   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the group
    */
   @Operation(summary = "Leave a group where the authenticated user is a member")
   @DeleteMapping(path = "{groupId}", version = "1")
@@ -93,8 +77,6 @@ public interface GroupController {
    *
    * @param groupId the group identifier
    * @return the group information
-   * @throws GroupNotFoundException if no group with the given ID exists
-   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the group
    */
   @Operation(
       summary = "Get information about a specific group where the authenticated user is a member")
@@ -106,8 +88,6 @@ public interface GroupController {
    *
    * @param groupId the group identifier
    * @param request the group fields to update
-   * @throws GroupNotFoundException if no group with the given ID exists
-   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the group
    */
   @Operation(
       summary = "Update information of a specific group where the authenticated user is a member")
@@ -118,45 +98,33 @@ public interface GroupController {
   /**
    * Retrieves a group's invitation token where the authenticated user is a member. Generates a new
    * token, valid for a limited time, that can be redeemed once through {@link
-   * #enterToGroup(String,EnterGroupRequestDto,HttpServletRequest)}.
+   * #enterToGroup(EnterGroupRequestDto)}.
    *
    * @param groupId the group identifier
    * @return the invitation token
-   * @throws GroupNotFoundException if no group with the given ID exists
-   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the group
-   * @throws MaximumGroupInvitationsReachedException if the group already has the maximum number of
-   *     active invitations
    */
   @Operation(
       summary = "Get an invitation token for a group where the authenticated user is a member")
   @PostMapping(path = "{groupId}/invitation", version = "1")
-  InvitationTokenDto getInvitationToken(
-      @RequestHeader(IDEMPOTENCY_KEY_HEADER) String idempotencyKey,
-      @PathVariable @NotNull UUID groupId,
-      HttpServletRequest httpRequest);
+  @Idempotent
+  InvitationTokenDto getInvitationToken(@PathVariable @NotNull UUID groupId);
 
   /**
    * Adds the authenticated user to a group using an invitation token generated through {@link
-   * #getInvitationToken(String,UUID,HttpServletRequest)}. The token is consumed and can no longer
-   * be used once redeemed.
+   * #getInvitationToken(UUID)}. The token is consumed and can no longer be used once redeemed.
    *
    * @param request the invitation token
-   * @throws GroupInvitationInvalidException if the token does not exist or has expired
    */
   @Operation(summary = "Join a group using an invitation token")
   @PostMapping(path = "invitation", version = "1")
-  void enterToGroup(
-      @RequestHeader(IDEMPOTENCY_KEY_HEADER) String idempotencyKey,
-      @RequestBody @Valid EnterGroupRequestDto request,
-      HttpServletRequest httpRequest);
+  @Idempotent
+  void enterToGroup(@RequestBody @Valid EnterGroupRequestDto request);
 
   /**
    * Retrieves the list of users in a group where the authenticated user is a member.
    *
    * @param groupId the group identifier
    * @return the group's users
-   * @throws GroupNotFoundException if no group with the given ID exists
-   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the group
    */
   @Operation(summary = "Get the list of users in a specific group")
   @GetMapping(path = "{groupId}/users", version = "1")
@@ -169,8 +137,6 @@ public interface GroupController {
    *
    * @param groupId the group identifier
    * @return the group balances
-   * @throws GroupNotFoundException if no group with the given ID exists
-   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the group
    */
   @Operation(summary = "Get the balances for a group where the authenticated user is a member")
   @GetMapping(path = "{groupId}/balances", version = "1")
@@ -184,8 +150,6 @@ public interface GroupController {
    * @param page the zero-based index of the page to retrieve
    * @param size the maximum number of transactions to include in the page, between 20 and 100
    * @return a page of transactions for the group
-   * @throws GroupNotFoundException if no group with the given ID exists
-   * @throws UserIsNotMemberOfGroupException if the authenticated user is not a member of the group
    */
   @Operation(
       summary =

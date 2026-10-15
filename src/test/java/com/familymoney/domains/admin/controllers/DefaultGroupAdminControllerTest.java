@@ -169,7 +169,7 @@ class DefaultGroupAdminControllerTest {
     void returns_groups_for_user() {
       final UserId userId = UserId.generate();
       final GroupData group = groupData(GroupId.generate());
-      when(groupService.getGroupsByUser(any(), any())).thenReturn(new PageImpl<>(List.of(group)));
+      when(groupService.getGroupsForUser(any(), any())).thenReturn(new PageImpl<>(List.of(group)));
 
       final GetGroupsResponseDto response =
           client

@@ -1,5 +1,6 @@
 package com.familymoney.domains.transactions.controllers.dtos;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -14,7 +15,6 @@ import org.javamoney.moneta.Money;
  * @param totalAmount the total monetary amount of the expense
  * @param currency the ISO 4217 currency code of the expense
  * @param doneAt the time at which the expense was completed
- * @param createdBy the identifier of the user who created the expense
  * @param shares the amounts owed by each participating user
  * @param payers the amounts paid by each contributing user
  */
@@ -22,10 +22,9 @@ public record ExpenseDto(
     UUID id,
     UUID groupId,
     String description,
-    Money totalAmount,
+    BigDecimal totalAmount,
     String currency,
     Instant doneAt,
-    UUID createdBy,
     List<ExpenseShareDto> shares,
     List<ExpensePayerDto> payers) {
 

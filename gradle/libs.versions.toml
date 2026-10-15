@@ -1,7 +1,7 @@
 [versions]
 springboot = "4.1.1"
 springboot-dependencymanagement = "1.1.7"
-springdoc-openapi = "3.1.0"
+springdoc-openapi = "3.1.1"
 jjwt = "0.13.0"
 testcontainers = "2.0.5"
 moneta = "1.4.5"
@@ -15,6 +15,7 @@ versions-plugin = "0.61.0"
 spotless = "8.10.1"
 release-plugin = "1.5.1"
 shedlock = "7.10.1"
+idempotency = "1.0.0"
 
 [libraries]
 #Spring dependencies
@@ -50,6 +51,8 @@ assertj = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 uuidcreator = { module = "com.github.f4b6a3:uuid-creator", version.ref = "uuid-creator" }
 shedlock = { module = "net.javacrumbs.shedlock:shedlock-spring", version.ref = "shedlock" }
 shedlock-provider-jooq = { module = "net.javacrumbs.shedlock:shedlock-provider-jooq", version.ref = "shedlock" }
+idempotency-springboot-starter = { module = "io.github.benhendayoussef:idempotency-spring-boot-starter", version.ref = "idempotency" }
+idempotency-store-jdbc = { module = "io.github.benhendayoussef:idempotency-store-jdbc", version.ref = "idempotency" }
 
 [plugins]
 springboot = { id = "org.springframework.boot", version.ref = "springboot" }

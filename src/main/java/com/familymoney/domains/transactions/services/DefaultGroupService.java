@@ -23,6 +23,7 @@ import com.familymoney.domains.users.services.data.UserData;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.exceptions.DatabaseExecutionException;
 import com.familymoney.properties.GroupProperties;
+import com.familymoney.utils.AuthorizedUser;
 import com.familymoney.utils.UUIDGenerator;
 import java.time.Clock;
 import java.time.Instant;
@@ -55,8 +56,8 @@ public class DefaultGroupService implements GroupService {
       final GroupName name,
       final Description description,
       final Currency currency,
-      final UserId createdBy) {
-    return groupOperations.createGroup(name, description, currency, createdBy);
+      final AuthorizedUser user) {
+    return groupOperations.createGroup(name, description, currency, user);
   }
 
   @Override
@@ -65,7 +66,7 @@ public class DefaultGroupService implements GroupService {
       final GroupName name,
       final Description description,
       final Currency currency,
-      final UserId createdBy) {
+      final AuthorizedUser user) {
     try {
       final GroupId groupId = groupOperations.createGroup(name, description, currency, createdBy);
       groupRepository.addUserToGroup(createdBy, groupId);

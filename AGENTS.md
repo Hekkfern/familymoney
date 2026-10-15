@@ -56,3 +56,4 @@ business logic.
 test.
 - Execute `./gradlew testAll` to run all tests.
 - Use a `Clock` instance for time-dependent code to facilitate testing.
+- Use AssertJ for assertions in tests.

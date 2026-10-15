@@ -19,7 +19,6 @@ import org.jspecify.annotations.Nullable;
 public record UpdateExpenseRequestDto(
     @Nullable @ValidDescription String description,
     @Nullable @Past Instant doneAt,
-    @Nullable UUID createdBy,
     @Nullable @NotEmpty @Valid List<ExpenseShareDto> shares,
     @Nullable @NotEmpty @Valid List<ExpensePayerDto> payers) {
 
@@ -32,7 +31,6 @@ public record UpdateExpenseRequestDto(
   public boolean isAnyFieldProvided() {
     return description != null
         || doneAt != null
-        || createdBy != null
         || shares != null
         || payers != null;
   }

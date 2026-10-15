@@ -4,20 +4,28 @@ import com.familymoney.domains.transactions.controllers.dtos.BalanceDto;
 import com.familymoney.domains.transactions.controllers.dtos.CreateGroupRequestDto;
 import com.familymoney.domains.transactions.controllers.dtos.CreateGroupResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.GroupDto;
+import com.familymoney.domains.transactions.controllers.dtos.MemberDto;
 import com.familymoney.domains.transactions.controllers.dtos.TransactionDto;
 import com.familymoney.domains.transactions.controllers.dtos.UpdateGroupRequestDto;
+import com.familymoney.domains.transactions.controllers.mappers.BalanceDtoMapper;
 import com.familymoney.domains.transactions.controllers.mappers.CreateGroupResponseMapper;
 import com.familymoney.domains.transactions.controllers.mappers.GroupDtoMapper;
+import com.familymoney.domains.transactions.controllers.mappers.MemberDtoMapper;
+import com.familymoney.domains.transactions.controllers.mappers.TransactionDtoMapper;
 import com.familymoney.domains.transactions.controllers.mappers.UpdateGroupRequestMapper;
 import com.familymoney.domains.transactions.services.GroupService;
+import com.familymoney.domains.transactions.services.data.BalanceData;
 import com.familymoney.domains.transactions.services.data.GroupData;
+import com.familymoney.domains.transactions.services.data.TransactionData;
 import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupName;
+import com.familymoney.domains.users.services.data.UserData;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.utils.AuthenticationUtils;
 import com.familymoney.utils.AuthorizedUser;
 import com.familymoney.utils.PageResponse;
+import com.familymoney.utils.PageResponseMapper;
 import java.util.Currency;
 import java.util.List;
 import java.util.UUID;
@@ -33,21 +41,21 @@ public class DefaultGroupAdminController implements GroupAdminController {
   private final GroupService groupService;
 
   @Override
-  public CreateGroupResponseDto createGroup(final CreateGroupRequestDto request) {
-    final AuthorizedUser admin = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
+  public CreateGroupResponseDto createEmptyGroup(final CreateGroupRequestDto request) {
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     final GroupId groupId =
-        groupService.createGroup(
+        groupService.createEmptyGroup(
             GroupName.fromString(request.name()),
             Description.of(request.description().trim()),
             Currency.getInstance(request.currencyCode()),
-            admin.id());
+            user);
     return CreateGroupResponseMapper.toDto(groupId);
   }
 
   @Override
   public List<UUID> getGroupsForUser(final UUID userId) {
     final Page<GroupData> groupPages =
-        groupService.getGroupsByUser(UserId.fromUuid(userId), PageRequest.of(0, 10_000));
+        groupService.getGroupsForUser(UserId.fromUuid(userId), PageRequest.of(0, 10_000));
     return groupPages.getContent().stream().map(GroupDtoMapper::toDto).map(GroupDto::id).toList();
   }
 
@@ -58,14 +66,16 @@ public class DefaultGroupAdminController implements GroupAdminController {
 
   @Override
   public GroupDto getGroupInfo(final UUID groupId) {
-    final GroupData groupData = groupService.getGroupInfoAsAdmin(GroupId.fromUuid(groupId));
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
+    final GroupData groupData = groupService.getGroupInfo(GroupId.fromUuid(groupId), user);
     return GroupDtoMapper.toDto(groupData);
   }
 
   @Override
   public void updateGroupInfo(final UUID groupId, final UpdateGroupRequestDto request) {
-    groupService.updateGroupInfoAsAdmin(
-        GroupId.fromUuid(groupId), UpdateGroupRequestMapper.fromDto(request));
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
+    groupService.updateGroupInfo(
+        GroupId.fromUuid(groupId), user, UpdateGroupRequestMapper.fromDto(request));
   }
 
   @Override
@@ -74,25 +84,32 @@ public class DefaultGroupAdminController implements GroupAdminController {
   }
 
   @Override
-  public List<UUID> getUsersInGroup(final UUID groupId) {
-    final List<UserId> users = groupService.getUsersInGroupAsAdmin(GroupId.fromUuid(groupId));
-    return users.stream().map(UserId::value).toList();
+  public List<MemberDto> getUsersInGroup(final UUID groupId) {
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
+    final List<UserData> users = groupService.getUsersInGroup(GroupId.fromUuid(groupId), user);
+    return users.stream().map(MemberDtoMapper::toDto).toList();
   }
 
   @Override
-  public List<BalanceDto> getGroupBalances(UUID groupId) {
-    // TODO
-    return List.of();
+  public List<BalanceDto> getGroupBalances(final UUID groupId) {
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
+    final List<BalanceData> balances =
+        groupService.getGroupBalances(GroupId.fromUuid(groupId), user);
+    return balances.stream().map(BalanceDtoMapper::toDto).toList();
   }
 
   @Override
-  public void forceSyncBalances(UUID groupId) {
-    // TODO
+  public void forceSyncBalances(final UUID groupId) {
+    groupService.forceSyncBalancesAsAdmin(GroupId.fromUuid(groupId));
   }
 
   @Override
-  public PageResponse<TransactionDto> getGroupTransactions(UUID groupId, int page, int size) {
-    // TODO
-    return null;
+  public PageResponse<TransactionDto> getGroupTransactions(
+      final UUID groupId, final int page, final int size) {
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
+    final Page<TransactionData> transactionPages =
+        groupService.getGroupTransactions(
+            GroupId.fromUuid(groupId), user, PageRequest.of(page, size));
+    return PageResponseMapper.from(transactionPages.map(TransactionDtoMapper::toDto));
   }
 }

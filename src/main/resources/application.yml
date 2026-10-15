@@ -9,6 +9,10 @@ spring:
     username: "${POSTGRES_USER}"
     password: "${POSTGRES_PASSWORD}"
     driver-class-name: "org.postgresql.Driver"
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/idempotency/postgres.sql
   config:
     import: "optional:file:.env[.properties]"
   mail:
@@ -42,6 +46,9 @@ springdoc:
   show-actuator: true
   cache:
     disabled: true
+idempotency:
+  store: jdbc
+  require-key: true
 familymoney:
   jwt:
     key: "${JWT_KEY}"
@@ -67,9 +74,6 @@ familymoney:
     username: "${ADMIN_USERNAME}"
     email: "${ADMIN_EMAIL}"
     password: "${ADMIN_PASSWORD}"
-  idempotency:
-    key-duration: "1m"
-    deleteBatchSize: 2000
   group-deletion:
     retention: "7d"
     delete-batch-size: 500
