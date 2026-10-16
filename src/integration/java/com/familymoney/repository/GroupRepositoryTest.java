@@ -333,7 +333,7 @@ class GroupRepositoryTest {
       groupRepository.addUserToGroup(userId1, groupId);
       groupRepository.addUserToGroup(userId2, groupId);
 
-      final List<UserId> users = groupRepository.findUserIdsByGroupId(groupId);
+      final List<UserId> users = groupRepository.findUsersByGroupId(groupId);
 
       assertThat(users).containsExactlyInAnyOrder(userId1, userId2);
     }
@@ -342,7 +342,7 @@ class GroupRepositoryTest {
     void returns_empty_list_when_group_has_no_members() {
       final GroupId groupId = insertRandomGroup();
 
-      final List<UserId> users = groupRepository.findUserIdsByGroupId(groupId);
+      final List<UserId> users = groupRepository.findUsersByGroupId(groupId);
 
       assertThat(users).isEmpty();
     }
@@ -351,7 +351,7 @@ class GroupRepositoryTest {
     void returns_empty_list_when_group_does_not_exist() {
       final GroupId groupId = GroupId.generate();
 
-      final List<UserId> users = groupRepository.findUserIdsByGroupId(groupId);
+      final List<UserId> users = groupRepository.findUsersByGroupId(groupId);
 
       assertThat(users).isEmpty();
     }
@@ -410,7 +410,7 @@ class GroupRepositoryTest {
       assertThat(added.joinedAt()).isNotNull().isBetween(now.minusSeconds(1), now.plusSeconds(1));
 
       assertThat(groupRepository.isUserInGroup(userId, groupId)).isTrue();
-      assertThat(groupRepository.findUserIdsByGroupId(groupId)).containsExactlyInAnyOrder(userId);
+      assertThat(groupRepository.findUsersByGroupId(groupId)).containsExactlyInAnyOrder(userId);
       final Page<GroupEntity> page = groupRepository.findByUserId(userId, PageRequest.of(0, 10));
       assertThat(page.getContent()).extracting(GroupEntity::id).contains(groupId);
     }

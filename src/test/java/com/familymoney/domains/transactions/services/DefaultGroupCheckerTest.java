@@ -35,13 +35,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
 
 @ExtendWith(MockitoExtension.class)
-class DefaultGroupOperationsTest {
+class DefaultGroupCheckerTest {
 
   private static final Instant NOW = Instant.parse("2025-01-01T00:00:00Z");
 
   @Mock private GroupRepository groupRepository;
   @Mock private UserRepository userRepository;
-  @InjectMocks private DefaultGroupOperations groupOperations;
+  @InjectMocks private DefaultGroupChecker groupOperations;
 
   private GroupEntity groupEntity(final GroupId groupId) {
     return new GroupEntity(
@@ -130,7 +130,7 @@ class DefaultGroupOperationsTest {
       when(groupRepository.findByUserId(userId, pageable))
           .thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(group)));
 
-      final List<GroupData> groups = groupOperations.getGroupsByUser(userId, pageable).getContent();
+      final List<GroupData> groups = groupOperations.getGroupsForUser(userId, pageable).getContent();
 
       assertThat(groups).hasSize(1).first().extracting(GroupData::id).isEqualTo(group.id());
     }
@@ -169,7 +169,7 @@ class DefaultGroupOperationsTest {
     void returns_group_members() {
       final GroupId groupId = GroupId.generate();
       final List<UserId> users = List.of(UserId.generate());
-      when(groupRepository.findUserIdsByGroupId(groupId)).thenReturn(users);
+      when(groupRepository.findUsersByGroupId(groupId)).thenReturn(users);
 
       assertThat(groupOperations.getUsersInGroup(groupId)).isEqualTo(users);
     }

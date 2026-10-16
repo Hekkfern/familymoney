@@ -4,12 +4,14 @@ import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
 
 import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
 import com.familymoney.domains.transactions.exceptions.UserAlreadyInGroupException;
+import com.familymoney.domains.transactions.exceptions.UserIsNotMemberOfGroupException;
 import com.familymoney.domains.transactions.repositories.dtos.CreateGroupDto;
 import com.familymoney.domains.transactions.repositories.dtos.UpdateGroupDto;
 import com.familymoney.domains.transactions.repositories.entitites.GroupEntity;
 import com.familymoney.domains.transactions.repositories.mappers.GroupJooqMapper;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.users.exceptions.UserNotFoundException;
+import com.familymoney.domains.users.repositories.entitites.UserEntity;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.Keys;
 import com.familymoney.generated.tables.Expenses;
@@ -247,7 +249,7 @@ public class DefaultGroupRepository implements GroupRepository {
   }
 
   @Override
-  public List<UserId> findUserIdsByGroupId(final GroupId id) {
+  public Page<UserEntity> findUsersByGroupId(final GroupId id, final Pageable pageable) {
     return db
         .select(UserGroups.USER_GROUPS.USER_ID)
         .from(UserGroups.USER_GROUPS)
@@ -304,5 +306,52 @@ public class DefaultGroupRepository implements GroupRepository {
       }
       throw exception;
     }
+  }
+
+  @Override
+  public void removeUserFromGroup(final UserId userId, final GroupId groupId) {
+    final int rowsAffected =
+        db.deleteFrom(UserGroups.USER_GROUPS)
+            .where(
+                UserGroups.USER_GROUPS
+                    .USER_ID
+                    .eq(userId.value())
+                    .and(UserGroups.USER_GROUPS.GROUP_ID.eq(groupId.value())))
+            .execute();
+    if (rowsAffected == 0) {
+      final String msg =
+          "User with ID '%s' is not a member of group with ID '%s'"
+              .formatted(userId.value(), groupId.value());
+      log.info(msg);
+      throw new UserIsNotMemberOfGroupException(msg);
+    }
+  }
+
+  @Override
+  public int countMembershipsOfGroup(final GroupId groupId) {
+    return db.fetchCount(
+        db.selectOne()
+            .from(UserGroups.USER_GROUPS)
+            .join(Groups.GROUPS)
+            .on(Groups.GROUPS.ID.eq(UserGroups.USER_GROUPS.GROUP_ID))
+            .where(
+                UserGroups.USER_GROUPS
+                    .GROUP_ID
+                    .eq(groupId.value())
+                    .and(Groups.GROUPS.DELETED_AT.isNull())));
+  }
+
+  @Override
+  public int countMembershipsOfUser(final UserId userId) {
+    return db.fetchCount(
+        db.selectOne()
+            .from(UserGroups.USER_GROUPS)
+            .join(Groups.GROUPS)
+            .on(Groups.GROUPS.ID.eq(UserGroups.USER_GROUPS.GROUP_ID))
+            .where(
+                UserGroups.USER_GROUPS
+                    .USER_ID
+                    .eq(userId.value())
+                    .and(Groups.GROUPS.DELETED_AT.isNull())));
   }
 }

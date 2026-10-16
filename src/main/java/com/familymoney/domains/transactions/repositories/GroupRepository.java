@@ -7,6 +7,7 @@ import com.familymoney.domains.transactions.repositories.dtos.UpdateGroupDto;
 import com.familymoney.domains.transactions.repositories.entitites.GroupEntity;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.users.exceptions.UserNotFoundException;
+import com.familymoney.domains.users.repositories.entitites.UserEntity;
 import com.familymoney.domains.users.types.UserId;
 import java.time.Instant;
 import java.util.List;
@@ -105,11 +106,12 @@ public interface GroupRepository {
    * Returns the user IDs that are members of the given group, ordered by the time each user joined,
    * earliest first.
    *
-   * @param id the group identifier
-   * @return a list of {@link UserId} values for users in the group; empty if the group has no
-   *     members or does not exist
+   * @param id       the group identifier
+   * @param pageable
+   * @return a list of {@link UserEntity} objects for users in the group; empty if the group has no
+   * members or does not exist
    */
-  List<UserId> findUserIdsByGroupId(GroupId id);
+  Page<UserEntity> findUsersByGroupId(GroupId id, Pageable pageable);
 
   /**
    * Checks whether a given user is part of a group.
@@ -130,4 +132,30 @@ public interface GroupRepository {
    * @throws GroupNotFoundException if no group with the given ID exists
    */
   void addUserToGroup(UserId userId, GroupId groupId);
+
+  /**
+   * Removes a user from a group.
+   *
+   * @param userId the user identifier
+   * @param groupId the group identifier
+   * @throws UserNotFoundException if no user with the given ID exists
+   * @throws GroupNotFoundException if no group with the given ID exists
+   */
+  void removeUserFromGroup(UserId userId, GroupId groupId);
+
+  /**
+   * Counts the number of members for a given group.
+   *
+   * @param groupId the group identifier
+   * @return the number of users in the group
+   */
+  int countMembershipsOfGroup(GroupId groupId);
+
+  /**
+   * Counts the number of groups a given user belongs to.
+   *
+   * @param userId the user identifier
+   * @return the number of groups the user is a member of
+   */
+  int countMembershipsOfUser(UserId userId);
 }

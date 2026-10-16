@@ -60,8 +60,8 @@ familymoney:
   group:
     invitation-duration: "1h"
     max-num-invitations: 5
-    max-groups-per-user: 100
-    max-users-per-group: 100
+    max-num-groups-per-user: 100
+    max-num-users-per-group: 10
   reset-password:
     token-duration: "1h"
     wait-time: "2m"

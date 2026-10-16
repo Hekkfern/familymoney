@@ -14,5 +14,5 @@ import org.springframework.validation.annotation.Validated;
 public record GroupProperties(
     @NotNull @DurationMin(minutes = 5) @DurationMax(hours = 1) Duration invitationDuration,
     @NotNull @Min(1) @Max(5) Integer maxNumInvitations,
-    @NotNull @Min(1) @Max(1000) Integer maxGroupsPerUser,
-    @NotNull @Min(1) @Max(10) Integer maxUsersPerGroup) {}
+    @NotNull @Min(1) @Max(1000) Integer maxNumGroupsPerUser,
+    @NotNull @Min(1) @Max(10) Integer maxNumUsersPerGroup) {}

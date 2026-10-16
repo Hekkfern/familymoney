@@ -63,7 +63,7 @@ class DefaultGroupServiceTest {
 
   @Mock private GroupRepository groupRepository;
   @Mock private GroupInvitationRepository groupInvitationRepository;
-  @Mock private GroupOperations groupOperations;
+  @Mock private GroupChecker groupChecker;
   @Spy private final Clock clock = Clock.fixed(NOW, DEFAULT_TIMEZONE_OFFSET);
   @Mock private GroupProperties groupProperties;
 
@@ -115,7 +115,7 @@ class DefaultGroupServiceTest {
       final Description desc = Description.of("mydesc");
       final UserId createdBy = UserId.generate();
       final GroupId groupId = GroupId.generate();
-      when(groupOperations.createGroup(groupName, desc, CURRENCY_USD)).thenReturn(groupId);
+      when(groupChecker.createGroup(groupName, desc, CURRENCY_USD)).thenReturn(groupId);
       mockAddUserToGroupRepository();
 
       assertThatCode(
@@ -129,7 +129,7 @@ class DefaultGroupServiceTest {
 
     @Test
     void throws_when_repository_returns_empty() {
-      when(groupOperations.createGroup(any(), any(), any()))
+      when(groupChecker.createGroup(any(), any(), any()))
           .thenThrow(new DatabaseExecutionException("Unable to create group"));
 
       final GroupName groupName = GroupName.fromString("n");
@@ -145,7 +145,7 @@ class DefaultGroupServiceTest {
 
     @Test
     void throws_when_addUser_returns_empty() {
-      when(groupOperations.createGroup(any(), any(), any())).thenReturn(GroupId.generate());
+      when(groupChecker.createGroup(any(), any(), any())).thenReturn(GroupId.generate());
       when(groupRepository.addUserToGroup(any(UserId.class), any(GroupId.class)))
           .thenReturn(Optional.empty());
 
@@ -162,7 +162,7 @@ class DefaultGroupServiceTest {
 
     @Test
     void throws_user_not_found_when_addUser_fails_due_to_user_deleted_concurrently() {
-      when(groupOperations.createGroup(any(), any(), any())).thenReturn(GroupId.generate());
+      when(groupChecker.createGroup(any(), any(), any())).thenReturn(GroupId.generate());
       when(groupRepository.addUserToGroup(any(UserId.class), any(GroupId.class)))
           .thenThrow(new DataIntegrityViolationException("FK violation"));
 
@@ -187,7 +187,7 @@ class DefaultGroupServiceTest {
 
       groupService.deleteGroupAsAdmin(gid, user);
 
-      verify(groupOperations).deleteGroup(gid);
+      verify(groupChecker).deleteGroup(gid);
     }
 
     @Test
@@ -195,7 +195,7 @@ class DefaultGroupServiceTest {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
       doThrow(new GroupNotFoundException("Group not found"))
-          .when(groupOperations)
+          .when(groupChecker)
           .checkIfGroupExists(gid);
 
       assertThatThrownBy(() -> groupService.deleteGroupAsAdmin(gid, user))
@@ -207,7 +207,7 @@ class DefaultGroupServiceTest {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
       doThrow(new UserIsNotMemberOfGroupException("User is not a member of the group"))
-          .when(groupOperations)
+          .when(groupChecker)
           .checkIfUserIsInGroup(user, gid);
 
       assertThatThrownBy(() -> groupService.deleteGroupAsAdmin(gid, user))
@@ -224,7 +224,7 @@ class DefaultGroupServiceTest {
       final GroupId gid = GroupId.generate();
       final GroupEntity g = groupDbo(gid);
       final Pageable p = PageRequest.of(0, 10);
-      when(groupOperations.getGroupsByUser(user, p))
+      when(groupChecker.getGroupsForUser(user, p))
           .thenReturn(new PageImpl<>(List.of(GroupDataMapper.fromDbo(g))));
 
       final Page<GroupData> page = groupService.getGroupsByUser(user, p);
@@ -241,7 +241,7 @@ class DefaultGroupServiceTest {
     void returns_data_when_group_exists_and_user_is_member_of_the_group() {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
-      when(groupOperations.getGroupInfo(gid)).thenReturn(GroupDataMapper.fromDbo(groupDbo(gid)));
+      when(groupChecker.getGroupInfo(gid)).thenReturn(GroupDataMapper.fromDbo(groupDbo(gid)));
 
       final GroupData data = groupService.getGroupInfo(gid, user);
 
@@ -254,7 +254,7 @@ class DefaultGroupServiceTest {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
       doThrow(new UserIsNotMemberOfGroupException("User is not a member of the group"))
-          .when(groupOperations)
+          .when(groupChecker)
           .checkIfUserIsInGroup(user, gid);
 
       assertThatThrownBy(() -> groupService.getGroupInfo(gid, user))
@@ -266,7 +266,7 @@ class DefaultGroupServiceTest {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
       doThrow(new GroupNotFoundException("Group not found"))
-          .when(groupOperations)
+          .when(groupChecker)
           .checkIfGroupExists(gid);
 
       assertThatThrownBy(() -> groupService.getGroupInfo(gid, user))
@@ -285,7 +285,7 @@ class DefaultGroupServiceTest {
       final UpdateGroupData data = new UpdateGroupData(null, Description.of("new"));
       groupService.updateGroupInfo(gid, user, data);
 
-      verify(groupOperations).updateGroupInfo(gid, data);
+      verify(groupChecker).updateGroupInfo(gid, data);
     }
 
     @Test
@@ -293,7 +293,7 @@ class DefaultGroupServiceTest {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
       doThrow(new UserIsNotMemberOfGroupException("User is not a member of the group"))
-          .when(groupOperations)
+          .when(groupChecker)
           .checkIfUserIsInGroup(user, gid);
 
       final UpdateGroupData data = new UpdateGroupData(null, Description.of("new"));
@@ -306,7 +306,7 @@ class DefaultGroupServiceTest {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
       doThrow(new GroupNotFoundException("Group not found"))
-          .when(groupOperations)
+          .when(groupChecker)
           .checkIfGroupExists(gid);
 
       final UpdateGroupData data = new UpdateGroupData(null, Description.of("new"));
@@ -342,7 +342,7 @@ class DefaultGroupServiceTest {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
       doThrow(new UserIsNotMemberOfGroupException("User is not a member of the group"))
-          .when(groupOperations)
+          .when(groupChecker)
           .checkIfUserIsInGroup(user, gid);
 
       assertThatThrownBy(() -> groupService.getInvitationToken(gid, user))
@@ -365,7 +365,7 @@ class DefaultGroupServiceTest {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
       doThrow(new GroupNotFoundException("Group not found"))
-          .when(groupOperations)
+          .when(groupChecker)
           .checkIfGroupExists(gid);
 
       assertThatThrownBy(() -> groupService.getInvitationToken(gid, user))
@@ -432,7 +432,7 @@ class DefaultGroupServiceTest {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
       final UserId other = UserId.generate();
-      when(groupOperations.getUsersInGroup(gid)).thenReturn(List.of(user, other));
+      when(groupChecker.getUsersInGroup(gid)).thenReturn(List.of(user, other));
 
       final List<UserId> users = groupService.getUsersInGroup(gid, user);
 
@@ -444,7 +444,7 @@ class DefaultGroupServiceTest {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
       doThrow(new UserIsNotMemberOfGroupException("User is not a member of the group"))
-          .when(groupOperations)
+          .when(groupChecker)
           .checkIfUserIsInGroup(user, gid);
 
       assertThatThrownBy(() -> groupService.getUsersInGroup(gid, user))
@@ -456,7 +456,7 @@ class DefaultGroupServiceTest {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
       doThrow(new GroupNotFoundException("Group not found"))
-          .when(groupOperations)
+          .when(groupChecker)
           .checkIfGroupExists(gid);
 
       assertThatThrownBy(() -> groupService.getUsersInGroup(gid, user))
@@ -475,7 +475,7 @@ class DefaultGroupServiceTest {
       assertThatCode(() -> groupService.removeUserFromGroup(gid, user, toRemove))
           .doesNotThrowAnyException();
 
-      verify(groupOperations).removeUserFromGroup(gid, toRemove);
+      verify(groupChecker).removeUserFromGroup(gid, toRemove);
     }
 
     @Test
@@ -484,7 +484,7 @@ class DefaultGroupServiceTest {
       final UserId user = UserId.generate();
       final UserId toRemove = UserId.generate();
       doThrow(new UserIsNotMemberOfGroupException("User is not a member of the group"))
-          .when(groupOperations)
+          .when(groupChecker)
           .checkIfUserIsInGroup(user, gid);
 
       assertThatThrownBy(() -> groupService.removeUserFromGroup(gid, user, toRemove))
@@ -497,7 +497,7 @@ class DefaultGroupServiceTest {
       final UserId user = UserId.generate();
       final UserId toRemove = UserId.generate();
       doThrow(new GroupNotFoundException("Group not found"))
-          .when(groupOperations)
+          .when(groupChecker)
           .checkIfGroupExists(gid);
 
       assertThatThrownBy(() -> groupService.removeUserFromGroup(gid, user, toRemove))
@@ -510,7 +510,7 @@ class DefaultGroupServiceTest {
       final UserId user = UserId.generate();
       final UserId toRemove = UserId.generate();
       doThrow(new UserNotFoundException("User not found"))
-          .when(groupOperations)
+          .when(groupChecker)
           .removeUserFromGroup(gid, toRemove);
 
       assertThatThrownBy(() -> groupService.removeUserFromGroup(gid, user, toRemove))
@@ -530,8 +530,8 @@ class DefaultGroupServiceTest {
 
       groupService.addUserToGroupAsAdmin(groupId, userId);
 
-      verify(groupOperations).checkIfGroupExists(groupId);
-      verify(groupOperations).checkIfUserExists(userId);
+      verify(groupChecker).checkIfGroupExists(groupId);
+      verify(groupChecker).checkIfUserExists(userId);
       verify(groupRepository).addUserToGroup(userId, groupId);
     }
 
@@ -540,7 +540,7 @@ class DefaultGroupServiceTest {
       final GroupId groupId = GroupId.generate();
       final UserId userId = UserId.generate();
       doThrow(new GroupNotFoundException("Group not found"))
-          .when(groupOperations)
+          .when(groupChecker)
           .checkIfGroupExists(groupId);
 
       assertThatThrownBy(() -> groupService.addUserToGroupAsAdmin(groupId, userId))
@@ -552,7 +552,7 @@ class DefaultGroupServiceTest {
       final GroupId groupId = GroupId.generate();
       final UserId userId = UserId.generate();
       doThrow(new UserNotFoundException("User not found"))
-          .when(groupOperations)
+          .when(groupChecker)
           .checkIfUserExists(userId);
 
       assertThatThrownBy(() -> groupService.addUserToGroupAsAdmin(groupId, userId))
