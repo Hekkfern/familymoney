@@ -11,6 +11,7 @@ import com.familymoney.domains.users.exceptions.UserNotFoundException;
 import java.time.Instant;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 /**
  * Repository interface that defines persistence operations for expenses.
@@ -77,11 +78,10 @@ public interface ExpenseRepository {
    * Retrieves a page of expenses associated with a specific group, ordered by completion time, most
    * recent first.
    *
-   * @param groupId the identifier of the group for which to retrieve expenses
-   * @param page the zero-based index of the page to retrieve
-   * @param size the maximum number of expenses to include in the page
+   * @param groupId  the identifier of the group for which to retrieve expenses
+   * @param pageable the maximum number of expenses to include in the page
    * @return a page of {@link FullExpenseEntity} objects representing expenses associated with the
-   *     specified group. If no expenses are found for the group, the returned page is empty.
+   * specified group. If no expenses are found for the group, the returned page is empty.
    */
-  Page<FullExpenseEntity> findAllByGroupId(GroupId groupId, int page, int size);
+  Page<FullExpenseEntity> findAllByGroupId(GroupId groupId, Pageable pageable);
 }

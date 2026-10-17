@@ -16,12 +16,10 @@ import com.familymoney.utils.AuthenticationUtils;
 import com.familymoney.utils.AuthorizedUser;
 import com.familymoney.utils.PageResponse;
 import com.familymoney.utils.PageResponseMapper;
-import java.util.Currency;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -32,8 +30,9 @@ public class DefaultExpenseController implements ExpenseController {
 
   @Override
   public PageResponse<ExpenseDto> getExpenses(final UUID groupId, final int page, final int size) {
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     final Page<ExpenseData> expensePages =
-        expenseService.getExpenses(GroupId.fromUuid(groupId), PageRequest.of(page, size), );
+        expenseService.getExpenses(GroupId.fromUuid(groupId), user, page, size);
     return PageResponseMapper.from(expensePages.map(ExpenseDtoMapper::toDto));
   }
 
@@ -45,7 +44,6 @@ public class DefaultExpenseController implements ExpenseController {
         expenseService.createExpense(
             GroupId.fromUuid(groupId),
             Description.of(request.description()),
-            Currency.getInstance(request.currency()),
             request.doneAt(),
             request.shares().stream()
                 .collect(
@@ -57,24 +55,27 @@ public class DefaultExpenseController implements ExpenseController {
                     Collectors.toMap(
                         payer -> UserId.fromUuid(payer.userId()),
                         CreateExpenseRequestDto.ExpensePayerDto::amount)),
-            user.id());
+            user);
     return new CreateExpenseResponseDto(expenseId.value());
   }
 
   @Override
   public ExpenseDto getExpense(final UUID expenseId) {
-    final ExpenseData expense = expenseService.getExpense(ExpenseId.fromUuid(expenseId));
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
+    final ExpenseData expense = expenseService.getExpense(ExpenseId.fromUuid(expenseId), user);
     return ExpenseDtoMapper.toDto(expense);
   }
 
   @Override
   public void updateExpense(final UUID expenseId, final UpdateExpenseRequestDto request) {
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     expenseService.updateExpense(
-        ExpenseId.fromUuid(expenseId), UpdateExpenseRequestMapper.fromDto(request));
+        ExpenseId.fromUuid(expenseId), user, UpdateExpenseRequestMapper.fromDto(request));
   }
 
   @Override
   public void deleteExpense(final UUID expenseId) {
-    expenseService.deleteExpense(ExpenseId.fromUuid(expenseId));
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
+    expenseService.deleteExpense(ExpenseId.fromUuid(expenseId), user);
   }
 }

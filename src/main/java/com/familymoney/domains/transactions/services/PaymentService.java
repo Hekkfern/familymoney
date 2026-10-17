@@ -6,26 +6,27 @@ import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.PaymentId;
 import com.familymoney.domains.users.types.UserId;
+import com.familymoney.utils.AuthorizedUser;
 import java.math.BigDecimal;
 import java.time.Instant;
 import org.springframework.data.domain.Page;
 
 public interface PaymentService {
 
-  Page<PaymentData> getPayments(final GroupId groupId, final int page, int size);
+  Page<PaymentData> getPayments(GroupId groupId, AuthorizedUser requester, int page, int size);
 
   PaymentId createPayment(
-      final GroupId groupId,
-      final Description description,
-      final BigDecimal amount,
-      final Instant doneAt,
-      final UserId from,
-      final UserId to,
-      final UserId createdBy);
+      GroupId groupId,
+      Description description,
+      BigDecimal amount,
+      Instant doneAt,
+      UserId from,
+      UserId to,
+      AuthorizedUser requester);
 
-  PaymentData getPayment(final PaymentId id);
+  PaymentData getPayment(PaymentId id, AuthorizedUser requester);
 
-  void updatePayment(final PaymentId id, final UpdatePaymentData data);
+  void updatePayment(PaymentId id, AuthorizedUser requester, UpdatePaymentData data);
 
-  void deletePayment(final PaymentId id);
+  void deletePayment(PaymentId id, AuthorizedUser requester);
 }

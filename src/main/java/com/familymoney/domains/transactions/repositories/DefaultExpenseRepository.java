@@ -32,12 +32,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
 import org.jooq.Field;
+import org.jooq.SortField;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.Nullable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -235,15 +236,32 @@ public class DefaultExpenseRepository implements ExpenseRepository {
 
   @Transactional(readOnly = true)
   @Override
-  public Page<FullExpenseEntity> findAllByGroupId(
-      final GroupId groupId, final int page, final int size) {
-    final PageRequest pageable = PageRequest.of(page, size);
+  public Page<FullExpenseEntity> findAllByGroupId(final GroupId groupId, final Pageable pageable) {
     final Long total =
         db.selectCount()
             .from(Expenses.EXPENSES)
             .where(Expenses.EXPENSES.GROUP_ID.eq(groupId.value()))
             .fetchOne(0, Long.class);
     final long safeTotal = total != null ? total : 0L;
+
+    final List<SortField<?>> orderFields =
+        pageable.getSort().stream()
+            .map(
+                order -> {
+                  final Field<?> field = Expenses.EXPENSES.field(order.getProperty());
+                  if (field == null) {
+                    throw new IllegalArgumentException(
+                        "Unknown sort field: " + order.getProperty());
+                  }
+                  return order.isAscending() ? field.asc() : field.desc();
+                })
+            .toList();
+
+    final List<SortField<?>> effectiveOrder =
+        orderFields.isEmpty()
+            ? List.of(Expenses.EXPENSES.DONE_AT.desc(), Expenses.EXPENSES.ID.desc())
+            : orderFields;
+
     final List<FullExpenseEntity> data =
         db.select(
                 Expenses.EXPENSES.ID,
@@ -271,7 +289,7 @@ public class DefaultExpenseRepository implements ExpenseRepository {
                     .as("payments"))
             .from(Expenses.EXPENSES)
             .where(Expenses.EXPENSES.GROUP_ID.eq(groupId.value()))
-            .orderBy(Expenses.EXPENSES.DONE_AT.desc(), Expenses.EXPENSES.ID.desc())
+            .orderBy(effectiveOrder)
             .limit(pageable.getPageSize())
             .offset(pageable.getOffset())
             .fetch(

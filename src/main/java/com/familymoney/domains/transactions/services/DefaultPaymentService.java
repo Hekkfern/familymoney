@@ -13,6 +13,7 @@ import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.PaymentId;
 import com.familymoney.domains.users.types.UserId;
+import com.familymoney.utils.AuthorizedUser;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Currency;
@@ -34,7 +35,8 @@ public class DefaultPaymentService implements PaymentService {
 
   @Override
   @Transactional(readOnly = true)
-  public Page<PaymentData> getPayments(final GroupId groupId, final int page, int size) {
+  public Page<PaymentData> getPayments(
+      final GroupId groupId, final AuthorizedUser requester, final int page, int size) {
     final Currency currency = getGroupCurrency(groupId);
     return paymentRepository
         .findAllByGroupId(groupId, PageRequest.of(page, size))
@@ -49,16 +51,16 @@ public class DefaultPaymentService implements PaymentService {
       final Instant doneAt,
       final UserId from,
       final UserId to,
-      final UserId createdBy) {
+      final AuthorizedUser requester) {
     final PaymentId id = PaymentId.generate();
     paymentRepository.create(
-        new CreatePaymentDto(id, description, groupId, createdBy, doneAt, amount, to, from));
+        new CreatePaymentDto(id, description, groupId, requester.id(), doneAt, amount, to, from));
     return id;
   }
 
   @Override
   @Transactional(readOnly = true)
-  public PaymentData getPayment(final PaymentId id) {
+  public PaymentData getPayment(final PaymentId id, final AuthorizedUser requester) {
     final PaymentEntity entity =
         paymentRepository
             .findById(id)
@@ -73,7 +75,8 @@ public class DefaultPaymentService implements PaymentService {
   }
 
   @Override
-  public void updatePayment(final PaymentId id, final UpdatePaymentData data) {
+  public void updatePayment(
+      final PaymentId id, final AuthorizedUser requester, final UpdatePaymentData data) {
     paymentRepository.updateById(
         id,
         new UpdatePaymentDto(
@@ -81,7 +84,7 @@ public class DefaultPaymentService implements PaymentService {
   }
 
   @Override
-  public void deletePayment(final PaymentId id) {
+  public void deletePayment(final PaymentId id, final AuthorizedUser requester) {
     paymentRepository.deleteById(id);
   }
 

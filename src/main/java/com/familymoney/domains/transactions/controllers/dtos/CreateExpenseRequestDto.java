@@ -1,6 +1,5 @@
 package com.familymoney.domains.transactions.controllers.dtos;
 
-import com.familymoney.domains.transactions.validations.ValidCurrencyCode;
 import com.familymoney.domains.transactions.validations.ValidDescription;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.Valid;
@@ -17,7 +16,6 @@ import java.util.UUID;
 public record CreateExpenseRequestDto(
     @NotNull @ValidDescription String description,
     @NotNull UUID groupId,
-    @NotNull @ValidCurrencyCode String currency,
     @NotNull @Past Instant doneAt,
     @NotNull UUID createdBy,
     @NotEmpty @Valid List<ExpenseShareDto> shares,

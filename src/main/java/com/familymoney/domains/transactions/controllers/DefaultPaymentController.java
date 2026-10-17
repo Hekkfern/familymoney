@@ -19,7 +19,6 @@ import com.familymoney.utils.PageResponseMapper;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -30,8 +29,9 @@ public class DefaultPaymentController implements PaymentController {
 
   @Override
   public PageResponse<PaymentDto> getPayments(final UUID groupId, final int page, final int size) {
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     final Page<PaymentData> paymentPages =
-        paymentService.getPayments(GroupId.fromUuid(groupId), PageRequest.of(page, size), );
+        paymentService.getPayments(GroupId.fromUuid(groupId), user, page, size);
     return PageResponseMapper.from(paymentPages.map(PaymentDtoMapper::toDto));
   }
 
@@ -47,24 +47,27 @@ public class DefaultPaymentController implements PaymentController {
             request.doneAt(),
             UserId.fromUuid(request.from()),
             UserId.fromUuid(request.to()),
-            user.id());
+            user);
     return new CreatePaymentResponseDto(paymentId.value());
   }
 
   @Override
   public PaymentDto getPayment(final UUID paymentId) {
-    final PaymentData payment = paymentService.getPayment(PaymentId.fromUuid(paymentId));
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
+    final PaymentData payment = paymentService.getPayment(PaymentId.fromUuid(paymentId), user);
     return PaymentDtoMapper.toDto(payment);
   }
 
   @Override
   public void updatePayment(final UUID paymentId, final UpdatePaymentRequestDto request) {
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     paymentService.updatePayment(
-        PaymentId.fromUuid(paymentId), UpdatePaymentRequestMapper.fromDto(request));
+        PaymentId.fromUuid(paymentId), user, UpdatePaymentRequestMapper.fromDto(request));
   }
 
   @Override
   public void deletePayment(final UUID paymentId) {
-    paymentService.deletePayment(PaymentId.fromUuid(paymentId));
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
+    paymentService.deletePayment(PaymentId.fromUuid(paymentId), user);
   }
 }

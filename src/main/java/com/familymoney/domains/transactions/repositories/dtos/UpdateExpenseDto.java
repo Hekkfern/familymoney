@@ -16,7 +16,9 @@ public record UpdateExpenseDto(
     @Nullable Map<UserId, BigDecimal> payers) {
 
   public UpdateExpenseDto {
-    if (isEmpty()) {
+    final boolean isEmptyUpdate =
+        description == null && doneAt == null && shares == null && payers == null;
+    if (isEmptyUpdate) {
       throw new IllegalArgumentException("At least one field must be provided for update");
     }
     if ((shares == null) != (payers == null)) {
