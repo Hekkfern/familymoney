@@ -11,6 +11,7 @@ import com.familymoney.domains.users.exceptions.UserNotFoundException;
 import java.time.Instant;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 /**
  * Repository interface for persisting completed payments between members of a group.
@@ -59,11 +60,9 @@ public interface PaymentRepository {
    * Finds a page of payments for a group, ordered from newest to oldest completion time.
    *
    * @param groupId the group identifier
-   * @param page the zero-based page number
-   * @param size the maximum number of payments in the page
    * @return a page of payments for the group
    */
-  Page<PaymentEntity> findAllByGroupId(GroupId groupId, int page, int size);
+  Page<PaymentEntity> findAllByGroupId(GroupId groupId, Pageable pageable);
 
   /**
    * Deletes a batch of payments that belong to groups soft-deleted before the given instant.

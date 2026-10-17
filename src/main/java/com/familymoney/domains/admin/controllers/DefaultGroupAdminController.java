@@ -55,7 +55,7 @@ public class DefaultGroupAdminController implements GroupAdminController {
   @Override
   public List<UUID> getGroupsForUser(final UUID userId) {
     final Page<GroupData> groupPages =
-        groupService.getGroupsForUser(UserId.fromUuid(userId), PageRequest.of(0, 10_000));
+        groupService.getGroupsForUser(UserId.fromUuid(userId), PageRequest.of(0, 10_000), );
     return groupPages.getContent().stream().map(GroupDtoMapper::toDto).map(GroupDto::id).toList();
   }
 
@@ -109,7 +109,7 @@ public class DefaultGroupAdminController implements GroupAdminController {
     final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     final Page<TransactionData> transactionPages =
         groupService.getGroupTransactions(
-            GroupId.fromUuid(groupId), user, PageRequest.of(page, size));
+            GroupId.fromUuid(groupId), user, PageRequest.of(page, size), );
     return PageResponseMapper.from(transactionPages.map(TransactionDtoMapper::toDto));
   }
 }

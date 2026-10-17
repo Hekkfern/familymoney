@@ -9,11 +9,10 @@ import com.familymoney.domains.users.types.UserId;
 import java.math.BigDecimal;
 import java.time.Instant;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 public interface PaymentService {
 
-  Page<PaymentData> getPayments(final GroupId groupId, final Pageable pageable);
+  Page<PaymentData> getPayments(final GroupId groupId, final int page, int size);
 
   PaymentId createPayment(
       final GroupId groupId,

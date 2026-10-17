@@ -26,11 +26,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
 import org.jooq.Field;
+import org.jooq.SortField;
 import org.jspecify.annotations.Nullable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -174,19 +175,36 @@ public class DefaultPaymentRepository implements PaymentRepository {
 
   @Transactional(readOnly = true)
   @Override
-  public Page<PaymentEntity> findAllByGroupId(
-      final GroupId groupId, final int page, final int size) {
-    final PageRequest pageable = PageRequest.of(page, size);
+  public Page<PaymentEntity> findAllByGroupId(final GroupId groupId, final Pageable pageable) {
     final Long total =
         db.selectCount()
             .from(Payments.PAYMENTS)
             .where(Payments.PAYMENTS.GROUP_ID.eq(groupId.value()))
             .fetchOne(0, Long.class);
     final long safeTotal = total != null ? total : 0L;
+
+    final List<SortField<?>> orderFields =
+        pageable.getSort().stream()
+            .map(
+                order -> {
+                  final Field<?> field = Payments.PAYMENTS.field(order.getProperty());
+                  if (field == null) {
+                    throw new IllegalArgumentException(
+                        "Unknown sort field: " + order.getProperty());
+                  }
+                  return order.isAscending() ? field.asc() : field.desc();
+                })
+            .toList();
+
+    final List<SortField<?>> effectiveOrder =
+        orderFields.isEmpty()
+            ? List.of(Payments.PAYMENTS.DONE_AT.desc(), Payments.PAYMENTS.ID.desc())
+            : orderFields;
+
     final List<PaymentEntity> data =
         db.selectFrom(Payments.PAYMENTS)
             .where(Payments.PAYMENTS.GROUP_ID.eq(groupId.value()))
-            .orderBy(Payments.PAYMENTS.DONE_AT.desc(), Payments.PAYMENTS.ID.desc())
+            .orderBy(effectiveOrder)
             .limit(pageable.getPageSize())
             .offset(pageable.getOffset())
             .fetch(PaymentJooqMapper::toEntity);

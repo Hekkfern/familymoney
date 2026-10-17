@@ -28,7 +28,7 @@ import com.familymoney.utils.AuthenticationUtils;
 import com.familymoney.utils.AuthorizedUser;
 import com.familymoney.utils.PageResponse;
 import com.familymoney.utils.PageResponseMapper;
-import io.github.benhendayoussef.idempotency.api.Idempotent;
+
 import java.util.Currency;
 import java.util.List;
 import java.util.UUID;
@@ -59,7 +59,7 @@ public class DefaultGroupController implements GroupController {
   public PageResponse<GroupDto> getGroupsForUser(final int page, final int size) {
     final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     final Page<GroupData> groupPages =
-        groupService.getGroupsForUser(user.id(), PageRequest.of(page, size));
+        groupService.getGroupsForUser(user.id(), PageRequest.of(page, size), );
     return PageResponseMapper.from(groupPages.map(GroupDtoMapper::toDto));
   }
 
@@ -117,7 +117,7 @@ public class DefaultGroupController implements GroupController {
     final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     final Page<TransactionData> transactionPages =
         groupService.getGroupTransactions(
-            GroupId.fromUuid(groupId), user, PageRequest.of(page, size));
+            GroupId.fromUuid(groupId), user, PageRequest.of(page, size), );
     return PageResponseMapper.from(transactionPages.map(TransactionDtoMapper::toDto));
   }
 }

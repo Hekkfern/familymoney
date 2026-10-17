@@ -19,7 +19,6 @@ import com.familymoney.utils.AuthorizedUser;
 import java.util.Currency;
 import java.util.List;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 public interface GroupService {
 
@@ -75,10 +74,11 @@ public interface GroupService {
    * Get a paginated list of groups the user is a member of
    *
    * @param userId The identifier of the user to get the groups for
-   * @param pageable Pagination information
+   * @param page
+   * @param size
    * @return Paginated list of groups
    */
-  Page<GroupData> getGroupsForUser(UserId userId, Pageable pageable);
+  Page<GroupData> getGroupsForUser(UserId userId, int page, int size);
 
   /**
    * Get information about a specific group where the selected user is a member. Only members of the
@@ -160,15 +160,16 @@ public interface GroupService {
   /**
    * Get a paginated list of individual expenses in a group, ordered by most recent first
    *
-   * @param groupId Identifier of the group
+   * @param groupId   Identifier of the group
    * @param requester The user requesting the balances
-   * @param pageable Pagination information
+   * @param page
+   * @param size
    * @return Paginated list of expenses
-   * @throws GroupNotFoundException if the group does not exist
+   * @throws GroupNotFoundException          if the group does not exist
    * @throws UserIsNotMemberOfGroupException if the user is not a member of the group
    */
   Page<TransactionData> getGroupTransactions(
-      GroupId groupId, AuthorizedUser requester, Pageable pageable);
+    GroupId groupId, AuthorizedUser requester, int page, int size);
 
   /**
    * Recalculates the balances of all the expenses in the group. This is a heavy operation and

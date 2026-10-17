@@ -33,7 +33,7 @@ public class DefaultExpenseController implements ExpenseController {
   @Override
   public PageResponse<ExpenseDto> getExpenses(final UUID groupId, final int page, final int size) {
     final Page<ExpenseData> expensePages =
-        expenseService.getExpenses(GroupId.fromUuid(groupId), PageRequest.of(page, size));
+        expenseService.getExpenses(GroupId.fromUuid(groupId), PageRequest.of(page, size), );
     return PageResponseMapper.from(expensePages.map(ExpenseDtoMapper::toDto));
   }
 

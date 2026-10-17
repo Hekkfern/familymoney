@@ -31,7 +31,7 @@ public class DefaultPaymentController implements PaymentController {
   @Override
   public PageResponse<PaymentDto> getPayments(final UUID groupId, final int page, final int size) {
     final Page<PaymentData> paymentPages =
-        paymentService.getPayments(GroupId.fromUuid(groupId), PageRequest.of(page, size));
+        paymentService.getPayments(GroupId.fromUuid(groupId), PageRequest.of(page, size), );
     return PageResponseMapper.from(paymentPages.map(PaymentDtoMapper::toDto));
   }
 

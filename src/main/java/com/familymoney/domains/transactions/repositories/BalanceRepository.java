@@ -2,8 +2,6 @@ package com.familymoney.domains.transactions.repositories;
 
 import com.familymoney.domains.transactions.repositories.dtos.BalanceKeyDto;
 import com.familymoney.domains.transactions.repositories.entitites.BalanceEntity;
-import com.familymoney.domains.transactions.repositories.exceptions.CreateBalanceException;
-import com.familymoney.domains.transactions.repositories.exceptions.UpdateBalanceException;
 import com.familymoney.domains.transactions.types.GroupId;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -25,9 +23,18 @@ public interface BalanceRepository {
    * Creates a balance row, initialized to zero, for the unordered pair of users in {@code key}.
    *
    * @param key the group and pair of users the balance belongs to
-   * @throws CreateBalanceException if the balance could not be created
    */
   void create(BalanceKeyDto key);
+
+  /**
+   * Sets the balance identified by {@code key} to {@code newBalance}. A positive amount indicates
+   * that {@code key.user1()} is owed money by {@code key.user2()}, while a negative amount
+   * indicates the opposite.
+   *
+   * @param key the group and pair of users the balance belongs to
+   * @param newBalance the new signed balance to set
+   */
+  void setByKey(BalanceKeyDto key, BigDecimal newBalance);
 
   /**
    * Adds {@code delta} to the balance identified by {@code key}. A positive amount shifts the
@@ -36,8 +43,6 @@ public interface BalanceRepository {
    *
    * @param key the group and pair of users the balance belongs to
    * @param delta the signed amount to add to the current balance
-   * @throws UpdateBalanceException if no group with the given ID exists, if {@code delta}'s
-   *     currency does not match the group's currency, or if no balance exists for the given key
    */
   void incrementByKey(BalanceKeyDto key, BigDecimal delta);
 

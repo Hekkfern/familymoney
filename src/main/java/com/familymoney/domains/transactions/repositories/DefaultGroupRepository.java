@@ -12,6 +12,7 @@ import com.familymoney.domains.transactions.repositories.mappers.GroupJooqMapper
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.users.exceptions.UserNotFoundException;
 import com.familymoney.domains.users.repositories.entitites.UserEntity;
+import com.familymoney.domains.users.repositories.mappers.UserJooqMapper;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.Keys;
 import com.familymoney.generated.tables.Expenses;
@@ -20,6 +21,7 @@ import com.familymoney.generated.tables.GroupInvitations;
 import com.familymoney.generated.tables.Groups;
 import com.familymoney.generated.tables.Payments;
 import com.familymoney.generated.tables.UserGroups;
+import com.familymoney.generated.tables.Users;
 import com.familymoney.utils.ConstraintViolationUtils;
 import java.time.Clock;
 import java.time.Instant;
@@ -27,7 +29,6 @@ import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -249,18 +250,26 @@ public class DefaultGroupRepository implements GroupRepository {
   }
 
   @Override
-  public Page<UserEntity> findUsersByGroupId(final GroupId id, final Pageable pageable) {
-    return db
-        .select(UserGroups.USER_GROUPS.USER_ID)
+  public List<UserEntity> findUsersByGroupId(final GroupId id) {
+    return db.select(
+            Users.USERS.ID,
+            Users.USERS.USERNAME,
+            Users.USERS.EMAIL,
+            Users.USERS.HASHED_PASSWORD,
+            Users.USERS.CREATED_AT,
+            Users.USERS.UPDATED_AT,
+            Users.USERS.IS_EMAIL_VERIFIED,
+            Users.USERS.IS_ENABLED)
         .from(UserGroups.USER_GROUPS)
-        .where(UserGroups.USER_GROUPS.GROUP_ID.eq(id.value()))
+        .join(Users.USERS)
+        .on(Users.USERS.ID.eq(UserGroups.USER_GROUPS.USER_ID))
+        .join(Groups.GROUPS)
+        .on(Groups.GROUPS.ID.eq(UserGroups.USER_GROUPS.GROUP_ID))
+        .where(
+            UserGroups.USER_GROUPS.GROUP_ID.eq(id.value()).and(Groups.GROUPS.DELETED_AT.isNull()))
         .orderBy(UserGroups.USER_GROUPS.JOINED_AT.asc())
         .fetch()
-        .stream()
-        .map(r -> r.get(UserGroups.USER_GROUPS.USER_ID))
-        .filter(Objects::nonNull)
-        .map(UserId::fromUuid)
-        .toList();
+        .map(UserJooqMapper::toEntity);
   }
 
   @Override

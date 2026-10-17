@@ -18,7 +18,13 @@ public record UpdatePaymentDto(
   private static final int MAX_AMOUNT_SCALE = 3;
 
   public UpdatePaymentDto {
-    if (isEmpty()) {
+    final boolean isEmptyUpdate =
+        description == null
+            && doneAt == null
+            && amount == null
+            && creditor == null
+            && debitor == null;
+    if (isEmptyUpdate) {
       throw new IllegalArgumentException("At least one field must be provided for update");
     }
     final boolean isSameUser = creditor != null && creditor.equals(debitor);

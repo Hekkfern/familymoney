@@ -4,8 +4,6 @@ import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
 
 import com.familymoney.domains.transactions.repositories.dtos.BalanceKeyDto;
 import com.familymoney.domains.transactions.repositories.entitites.BalanceEntity;
-import com.familymoney.domains.transactions.repositories.exceptions.CreateBalanceException;
-import com.familymoney.domains.transactions.repositories.exceptions.UpdateBalanceException;
 import com.familymoney.domains.transactions.repositories.mappers.BalanceJooqMapper;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.users.types.UserId;
@@ -30,57 +28,30 @@ public class DefaultBalanceRepository implements BalanceRepository {
   @Override
   public void create(final BalanceKeyDto data) {
     final OrderedUsers orderedUsers = orderUsers(data.user1(), data.user2());
+    db.insertInto(GroupBalances.GROUP_BALANCES)
+        .columns(
+            GroupBalances.GROUP_BALANCES.GROUP_ID,
+            GroupBalances.GROUP_BALANCES.USER_ID_1,
+            GroupBalances.GROUP_BALANCES.USER_ID_2)
+        .values(data.groupId().value(), orderedUsers.lower().value(), orderedUsers.higher().value())
+        .execute();
+  }
 
-    final int balancesCreated =
-        db.insertInto(GroupBalances.GROUP_BALANCES)
-            .columns(
-                GroupBalances.GROUP_BALANCES.GROUP_ID,
-                GroupBalances.GROUP_BALANCES.USER_ID_1,
-                GroupBalances.GROUP_BALANCES.USER_ID_2)
-            .values(
-                data.groupId().value(), orderedUsers.lower().value(), orderedUsers.higher().value())
-            .execute();
-    if (balancesCreated != 1) {
-      throw new CreateBalanceException(
-          "Could not create balance in Group '%s', between users '%s' and '%s'"
-              .formatted(data.groupId().value(), data.user1().value(), data.user2().value()));
-    }
+  @Override
+  public void setByKey(BalanceKeyDto key, BigDecimal newBalance) {
+    //TODO
   }
 
   @Transactional
   @Override
   public void incrementByKey(final BalanceKeyDto key, final BigDecimal delta) {
-    final String currencyCode =
-        db.select(Groups.GROUPS.CURRENCY_CODE)
-            .from(Groups.GROUPS)
-            .where(Groups.GROUPS.ID.eq(key.groupId().value()))
-            .fetchOptional(Groups.GROUPS.CURRENCY_CODE)
-            .orElseThrow(
-                () ->
-                    new UpdateBalanceException(
-                        "Could not find group with ID: %s".formatted(key.groupId().value())));
-    if (!currencyCode.equals(delta.getCurrency().getCurrencyCode())) {
-      throw new UpdateBalanceException(
-          "Balance delta in Group '%s' must use currency: %s"
-              .formatted(key.groupId().value(), currencyCode));
-    }
-
     final OrderedUsers orderedUsers = orderUsers(key.user1(), key.user2());
-    final BigDecimal deltaValue = delta.getNumber().numberValue(BigDecimal.class);
-    final int updatedRows =
-        db.update(GroupBalances.GROUP_BALANCES)
-            .set(
-                GroupBalances.GROUP_BALANCES.AMOUNT,
-                GroupBalances.GROUP_BALANCES.AMOUNT.plus(deltaValue))
-            .where(GroupBalances.GROUP_BALANCES.GROUP_ID.eq(key.groupId().value()))
-            .and(GroupBalances.GROUP_BALANCES.USER_ID_1.eq(orderedUsers.lower().value()))
-            .and(GroupBalances.GROUP_BALANCES.USER_ID_2.eq(orderedUsers.higher().value()))
-            .execute();
-    if (updatedRows != 1) {
-      throw new UpdateBalanceException(
-          "Could not update balance in Group '%s', between users '%s' and '%s'"
-              .formatted(key.groupId().value(), key.user1().value(), key.user2().value()));
-    }
+    db.update(GroupBalances.GROUP_BALANCES)
+        .set(GroupBalances.GROUP_BALANCES.AMOUNT, GroupBalances.GROUP_BALANCES.AMOUNT.plus(delta))
+        .where(GroupBalances.GROUP_BALANCES.GROUP_ID.eq(key.groupId().value()))
+        .and(GroupBalances.GROUP_BALANCES.USER_ID_1.eq(orderedUsers.lower().value()))
+        .and(GroupBalances.GROUP_BALANCES.USER_ID_2.eq(orderedUsers.higher().value()))
+        .execute();
   }
 
   @Override

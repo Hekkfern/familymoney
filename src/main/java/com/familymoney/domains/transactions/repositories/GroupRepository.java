@@ -106,12 +106,11 @@ public interface GroupRepository {
    * Returns the user IDs that are members of the given group, ordered by the time each user joined,
    * earliest first.
    *
-   * @param id       the group identifier
-   * @param pageable
+   * @param id the group identifier
    * @return a list of {@link UserEntity} objects for users in the group; empty if the group has no
    * members or does not exist
    */
-  Page<UserEntity> findUsersByGroupId(GroupId id, Pageable pageable);
+  List<UserEntity> findUsersByGroupId(GroupId id);
 
   /**
    * Checks whether a given user is part of a group.

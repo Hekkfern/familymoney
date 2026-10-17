@@ -11,24 +11,23 @@ import java.time.Instant;
 import java.util.Currency;
 import java.util.Map;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 public interface ExpenseService {
 
-  Page<ExpenseData> getExpenses(final GroupId groupId, final Pageable pageable);
+  Page<ExpenseData> getExpenses(GroupId groupId, int page, int size);
 
   ExpenseId createExpense(
-      final GroupId groupId,
-      final Description description,
-      final Currency currency,
-      final Instant doneAt,
-      final Map<UserId, BigDecimal> shares,
-      final Map<UserId, BigDecimal> payers,
-      final UserId createdBy);
+      GroupId groupId,
+      Description description,
+      Currency currency,
+      Instant doneAt,
+      Map<UserId, BigDecimal> shares,
+      Map<UserId, BigDecimal> payers,
+      UserId createdBy);
 
-  ExpenseData getExpense(final ExpenseId id);
+  ExpenseData getExpense(ExpenseId id);
 
-  void updateExpense(final ExpenseId id, final UpdateExpenseData data);
+  void updateExpense(ExpenseId id, UpdateExpenseData data);
 
-  void deleteExpense(final ExpenseId id);
+  void deleteExpense(ExpenseId id);
 }

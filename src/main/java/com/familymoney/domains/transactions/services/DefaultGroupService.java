@@ -6,19 +6,19 @@ import com.familymoney.domains.transactions.exceptions.GroupOwnerNotFoundExcepti
 import com.familymoney.domains.transactions.exceptions.MaximumGroupInvitationsReachedException;
 import com.familymoney.domains.transactions.exceptions.MaximumGroupMembersReachedException;
 import com.familymoney.domains.transactions.exceptions.MaximumGroupsPerUserReachedException;
+import com.familymoney.domains.transactions.repositories.BalanceRepository;
 import com.familymoney.domains.transactions.repositories.GroupInvitationRepository;
 import com.familymoney.domains.transactions.repositories.GroupRepository;
 import com.familymoney.domains.transactions.repositories.dtos.CreateGroupDto;
 import com.familymoney.domains.transactions.repositories.dtos.CreateGroupInvitationDto;
-import com.familymoney.domains.transactions.repositories.entitites.BalanceEntity;
-import com.familymoney.domains.transactions.repositories.entitites.ExpenseEntity;
 import com.familymoney.domains.transactions.repositories.entitites.GroupInvitationEntity;
+import com.familymoney.domains.transactions.services.data.BalanceData;
 import com.familymoney.domains.transactions.services.data.GroupData;
 import com.familymoney.domains.transactions.services.data.MemberData;
 import com.familymoney.domains.transactions.services.data.TransactionData;
 import com.familymoney.domains.transactions.services.data.UpdateGroupData;
 import com.familymoney.domains.transactions.services.mappers.GroupDataMapper;
-import com.familymoney.domains.transactions.services.mappers.TransactionDataMapper;
+import com.familymoney.domains.transactions.services.mappers.MemberDataMapper;
 import com.familymoney.domains.transactions.services.mappers.UpdateGroupDataMapper;
 import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.ExpirationTime;
@@ -35,14 +35,11 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Currency;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.javamoney.moneta.Money;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,6 +49,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class DefaultGroupService implements GroupService {
 
   private final GroupRepository groupRepository;
+  private final BalanceRepository balanceRepository;
   private final GroupInvitationRepository groupInvitationRepository;
   private final GroupChecker groupChecker;
   private final Clock clock;
@@ -104,9 +102,11 @@ public class DefaultGroupService implements GroupService {
 
   @Override
   @Transactional
-  public Page<GroupData> getGroupsForUser(final UserId userId, final Pageable pageable) {
+  public Page<GroupData> getGroupsForUser(final UserId userId, final int page, final int size) {
     groupChecker.checkIfUserExists(userId);
-    return groupRepository.findByUserId(userId, pageable).map(GroupDataMapper::fromDbo);
+    return groupRepository
+        .findByUserId(userId, PageRequest.of(page, size))
+        .map(GroupDataMapper::fromDbo);
   }
 
   @Override
@@ -191,7 +191,9 @@ public class DefaultGroupService implements GroupService {
     if (requester.role().equals(Role.USER)) {
       groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
     }
-    return groupRepository.findUsersByGroupId(groupId).stream().map(UserData);
+    return groupRepository.findUsersByGroupId(groupId).stream()
+        .map(MemberDataMapper::fromDbo)
+        .toList();
   }
 
   @Override
@@ -211,42 +213,29 @@ public class DefaultGroupService implements GroupService {
 
   @Override
   @Transactional
-  public Map<UserId, Money> getAllGroupBalances(final GroupId groupId, final UserId userId) {
+  public List<BalanceData> getGroupBalances(final GroupId groupId, final AuthorizedUser requester) {
     groupChecker.checkIfGroupExists(groupId);
-    groupChecker.checkIfUserIsInGroup(userId, groupId);
-    final List<BalanceEntity> balancesDb = balanceRepository.findByGroup(groupId);
-    return balancesDb.stream()
-        .collect(
-            Collectors.toMap(
-                b -> b.user1().equals(userId) ? b.user2() : b.user1(),
-                BalanceEntity::money,
-                (existing, replacement) -> existing));
-  }
-
-  @Override
-  public Map<UserId, Money> getAllGroupBalancesAsAdmin(final GroupId groupId) {
+    if (requester.role().equals(Role.USER)) {
+      groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+    }
     // TODO
-    return Map.of();
+    return List.of();
   }
 
   @Override
   @Transactional
   public Page<TransactionData> getGroupTransactions(
-      final GroupId groupId, final UserId userId, final Pageable pageable) {
+      final GroupId groupId, final AuthorizedUser requester, final int page, final int size) {
     groupChecker.checkIfGroupExists(groupId);
-    groupChecker.checkIfUserIsInGroup(userId, groupId);
-    final Page<ExpenseEntity> transactionsDb =
-        transactionRepository.findAllByGroupId(groupId, pageable);
-    return transactionsDb.map(TransactionDataMapper::fromDbo);
+    if (requester.role().equals(Role.USER)) {
+      groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+    }
+    // TODO
+    return null;
   }
 
   @Override
-  @Transactional
-  public Page<TransactionData> getGroupTransactionsAsAdmin(
-      final GroupId groupId, final Pageable pageable) {
-    groupChecker.checkIfGroupExists(groupId);
-    final Page<ExpenseEntity> transactionsDb =
-        transactionRepository.findAllByGroupId(groupId, pageable);
-    return transactionsDb.map(TransactionDataMapper::fromDbo);
+  public void forceSyncBalancesAsAdmin(final GroupId groupId) {
+    // TODO
   }
 }
