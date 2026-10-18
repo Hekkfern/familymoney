@@ -16,8 +16,7 @@ public record CreatePaymentRequestDto(
     @NotNull @PositiveMoney BigDecimal amount,
     @NotNull @Past Instant doneAt,
     @NotNull UUID from,
-    @NotNull UUID to,
-    @NotNull UUID createdBy) {
+    @NotNull UUID to) {
 
   @JsonIgnore
   @AssertTrue(message = "from and to must be different")

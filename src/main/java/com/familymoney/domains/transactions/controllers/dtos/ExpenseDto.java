@@ -2,6 +2,7 @@ package com.familymoney.domains.transactions.controllers.dtos;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Currency;
 import java.util.List;
 import java.util.UUID;
 import org.javamoney.moneta.Money;
@@ -23,7 +24,7 @@ public record ExpenseDto(
     UUID groupId,
     String description,
     BigDecimal totalAmount,
-    String currency,
+    Currency currency,
     Instant doneAt,
     List<ExpenseShareDto> shares,
     List<ExpensePayerDto> payers) {

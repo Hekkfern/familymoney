@@ -12,6 +12,7 @@ import com.familymoney.domains.transactions.services.data.UpdatePaymentData;
 import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.PaymentId;
+import com.familymoney.domains.users.types.Role;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.utils.AuthorizedUser;
 import java.math.BigDecimal;
@@ -32,11 +33,16 @@ public class DefaultPaymentService implements PaymentService {
 
   private final PaymentRepository paymentRepository;
   private final GroupRepository groupRepository;
+  private final GroupChecker groupChecker;
 
   @Override
   @Transactional(readOnly = true)
   public Page<PaymentData> getPayments(
       final GroupId groupId, final AuthorizedUser requester, final int page, int size) {
+    groupChecker.checkIfGroupExists(groupId);
+    if (requester.role().equals(Role.USER)) {
+      groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+    }
     final Currency currency = getGroupCurrency(groupId);
     return paymentRepository
         .findAllByGroupId(groupId, PageRequest.of(page, size))
@@ -52,6 +58,10 @@ public class DefaultPaymentService implements PaymentService {
       final UserId from,
       final UserId to,
       final AuthorizedUser requester) {
+    groupChecker.checkIfGroupExists(groupId);
+    if (requester.role().equals(Role.USER)) {
+      groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+    }
     final PaymentId id = PaymentId.generate();
     paymentRepository.create(
         new CreatePaymentDto(id, description, groupId, requester.id(), doneAt, amount, to, from));
@@ -61,22 +71,23 @@ public class DefaultPaymentService implements PaymentService {
   @Override
   @Transactional(readOnly = true)
   public PaymentData getPayment(final PaymentId id, final AuthorizedUser requester) {
-    final PaymentEntity entity =
-        paymentRepository
-            .findById(id)
-            .orElseThrow(
-                () -> {
-                  final String message =
-                      "Payment with ID '%s' does not exist".formatted(id.value());
-                  log.info(message);
-                  return new PaymentNotFoundException(message);
-                });
-    return toPaymentData(entity, getGroupCurrency(entity.groupId()));
+    final PaymentEntity entity = getPaymentFromId(id);
+    final GroupId groupId = entity.groupId();
+    groupChecker.checkIfGroupExists(groupId);
+    if (requester.role().equals(Role.USER)) {
+      groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+    }
+    return toPaymentData(entity, getGroupCurrency(groupId));
   }
 
   @Override
   public void updatePayment(
       final PaymentId id, final AuthorizedUser requester, final UpdatePaymentData data) {
+    final GroupId groupId = getPaymentFromId(id).groupId();
+    groupChecker.checkIfGroupExists(groupId);
+    if (requester.role().equals(Role.USER)) {
+      groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+    }
     paymentRepository.updateById(
         id,
         new UpdatePaymentDto(
@@ -85,7 +96,23 @@ public class DefaultPaymentService implements PaymentService {
 
   @Override
   public void deletePayment(final PaymentId id, final AuthorizedUser requester) {
+    final GroupId groupId = getPaymentFromId(id).groupId();
+    groupChecker.checkIfGroupExists(groupId);
+    if (requester.role().equals(Role.USER)) {
+      groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+    }
     paymentRepository.deleteById(id);
+  }
+
+  private PaymentEntity getPaymentFromId(final PaymentId id) {
+    return paymentRepository
+        .findById(id)
+        .orElseThrow(
+            () -> {
+              final String message = "Payment with ID '%s' does not exist".formatted(id.value());
+              log.info(message);
+              return new PaymentNotFoundException(message);
+            });
   }
 
   private Currency getGroupCurrency(final GroupId groupId) {

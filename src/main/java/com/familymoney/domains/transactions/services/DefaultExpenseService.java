@@ -15,6 +15,7 @@ import com.familymoney.domains.transactions.services.data.UpdateExpenseData;
 import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.ExpenseId;
 import com.familymoney.domains.transactions.types.GroupId;
+import com.familymoney.domains.users.types.Role;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.utils.AuthorizedUser;
 import java.math.BigDecimal;
@@ -37,11 +38,16 @@ public class DefaultExpenseService implements ExpenseService {
 
   private final ExpenseRepository expenseRepository;
   private final GroupRepository groupRepository;
+  private final GroupChecker groupChecker;
 
   @Override
   @Transactional(readOnly = true)
   public Page<ExpenseData> getExpenses(
       final GroupId groupId, final AuthorizedUser requester, final int page, final int size) {
+    groupChecker.checkIfGroupExists(groupId);
+    if (requester.role().equals(Role.USER)) {
+      groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+    }
     final Currency currency = getGroupCurrency(groupId);
     return expenseRepository
         .findAllByGroupId(groupId, PageRequest.of(page, size))
@@ -57,6 +63,7 @@ public class DefaultExpenseService implements ExpenseService {
       final Map<UserId, BigDecimal> shares,
       final Map<UserId, BigDecimal> payers,
       final AuthorizedUser requester) {
+    groupChecker.checkIfGroupExists(groupId);
     final ExpenseId id = ExpenseId.generate();
     expenseRepository.create(
         new CreateExpenseDto(id, description, groupId, requester.id(), doneAt, shares, payers));
@@ -66,28 +73,36 @@ public class DefaultExpenseService implements ExpenseService {
   @Override
   @Transactional(readOnly = true)
   public ExpenseData getExpense(final ExpenseId id, final AuthorizedUser requester) {
-    final FullExpenseEntity entity =
-        expenseRepository
-            .findById(id)
-            .orElseThrow(
-                () -> {
-                  final String message =
-                      "Expense with ID '%s' does not exist".formatted(id.value());
-                  log.info(message);
-                  return new ExpenseNotFoundException(message);
-                });
+    final FullExpenseEntity entity = getExpenseFromId(id);
+    final GroupId groupId = entity.expense().groupId();
+    groupChecker.checkIfGroupExists(groupId);
+    if (requester.role().equals(Role.USER)) {
+      groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+    }
     return toExpenseData(entity, getGroupCurrency(entity.expense().groupId()));
   }
 
   @Override
   public void updateExpense(
       final ExpenseId id, final AuthorizedUser requester, final UpdateExpenseData data) {
+    final FullExpenseEntity entity = getExpenseFromId(id);
+    final GroupId groupId = entity.expense().groupId();
+    groupChecker.checkIfGroupExists(groupId);
+    if (requester.role().equals(Role.USER)) {
+      groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+    }
     expenseRepository.updateById(
         id, new UpdateExpenseDto(data.description(), data.doneAt(), data.shares(), data.payers()));
   }
 
   @Override
   public void deleteExpense(final ExpenseId id, final AuthorizedUser requester) {
+    final FullExpenseEntity entity = getExpenseFromId(id);
+    final GroupId groupId = entity.expense().groupId();
+    groupChecker.checkIfGroupExists(groupId);
+    if (requester.role().equals(Role.USER)) {
+      groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+    }
     expenseRepository.deleteById(id);
   }
 
@@ -126,5 +141,16 @@ public class DefaultExpenseService implements ExpenseService {
         expense.doneAt(),
         shares,
         payers);
+  }
+
+  private FullExpenseEntity getExpenseFromId(final ExpenseId id) {
+    return expenseRepository
+        .findById(id)
+        .orElseThrow(
+            () -> {
+              final String message = "Expense with ID '%s' does not exist".formatted(id.value());
+              log.info(message);
+              return new ExpenseNotFoundException(message);
+            });
   }
 }

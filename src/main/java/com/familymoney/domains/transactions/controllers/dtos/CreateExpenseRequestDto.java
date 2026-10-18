@@ -17,7 +17,6 @@ public record CreateExpenseRequestDto(
     @NotNull @ValidDescription String description,
     @NotNull UUID groupId,
     @NotNull @Past Instant doneAt,
-    @NotNull UUID createdBy,
     @NotEmpty @Valid List<ExpenseShareDto> shares,
     @NotEmpty @Valid List<ExpensePayerDto> payers) {
 

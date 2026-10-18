@@ -2,6 +2,8 @@ package com.familymoney.domains.transactions.controllers.mappers;
 
 import com.familymoney.domains.transactions.controllers.dtos.PaymentDto;
 import com.familymoney.domains.transactions.services.data.PaymentData;
+import java.math.BigDecimal;
+import java.util.Currency;
 
 /** Maps payment service data to response DTOs. */
 public final class PaymentDtoMapper {
@@ -21,10 +23,9 @@ public final class PaymentDtoMapper {
         data.id().value(),
         data.groupId().value(),
         data.description().value(),
-        data.amount(),
-        data.amount().getCurrency().getCurrencyCode(),
+        data.money().getNumber().numberValueExact(BigDecimal.class),
+        Currency.getInstance(data.money().getCurrency().getCurrencyCode()),
         data.doneAt(),
-        data.createdBy().value(),
         data.fromUserId().value(),
         data.toUserId().value());
   }

@@ -3,6 +3,8 @@ package com.familymoney.domains.transactions.controllers.mappers;
 import com.familymoney.domains.transactions.controllers.dtos.ExpenseDto;
 import com.familymoney.domains.transactions.services.data.ExpenseData;
 import java.math.BigDecimal;
+import java.util.Currency;
+
 import org.javamoney.moneta.Money;
 
 public final class ExpenseDtoMapper {
@@ -17,7 +19,7 @@ public final class ExpenseDtoMapper {
         data.groupId().value(),
         data.description().value(),
         data.totalAmount().getNumber().numberValueExact(BigDecimal.class),
-        data.totalAmount().getCurrency().getCurrencyCode(),
+        Currency.getInstance(data.totalAmount().getCurrency().getCurrencyCode()),
         data.doneAt(),
         data.shares().entrySet().stream()
             .map(

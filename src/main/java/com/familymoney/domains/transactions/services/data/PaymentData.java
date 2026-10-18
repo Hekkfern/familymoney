@@ -13,7 +13,7 @@ import org.javamoney.moneta.Money;
  * @param id the payment identifier
  * @param groupId the group identifier
  * @param description the payment description
- * @param amount the paid monetary amount
+ * @param money the paid monetary amount
  * @param doneAt the payment completion time
  * @param fromUserId the user who made the payment
  * @param toUserId the user who received the payment
@@ -22,7 +22,7 @@ public record PaymentData(
     PaymentId id,
     GroupId groupId,
     Description description,
-    Money amount,
+    Money money,
     Instant doneAt,
     UserId fromUserId,
     UserId toUserId) {}
