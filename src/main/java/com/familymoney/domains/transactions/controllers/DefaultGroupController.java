@@ -18,23 +18,21 @@ import com.familymoney.domains.transactions.controllers.mappers.UpdateGroupReque
 import com.familymoney.domains.transactions.services.GroupService;
 import com.familymoney.domains.transactions.services.data.BalanceData;
 import com.familymoney.domains.transactions.services.data.GroupData;
+import com.familymoney.domains.transactions.services.data.MemberData;
 import com.familymoney.domains.transactions.services.data.TransactionData;
 import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import com.familymoney.domains.transactions.types.GroupName;
-import com.familymoney.domains.users.services.data.UserData;
 import com.familymoney.utils.AuthenticationUtils;
 import com.familymoney.utils.AuthorizedUser;
 import com.familymoney.utils.PageResponse;
 import com.familymoney.utils.PageResponseMapper;
-
 import java.util.Currency;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -44,7 +42,8 @@ public class DefaultGroupController implements GroupController {
   private final GroupService groupService;
 
   @Override
-  public CreateGroupResponseDto createGroupAndAddCreatorAsMember(final CreateGroupRequestDto request) {
+  public CreateGroupResponseDto createGroupAndAddCreatorAsMember(
+      final CreateGroupRequestDto request) {
     final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     final GroupId groupId =
         groupService.createGroupAndAddCreatorAsMember(
@@ -58,8 +57,7 @@ public class DefaultGroupController implements GroupController {
   @Override
   public PageResponse<GroupDto> getGroupsForUser(final int page, final int size) {
     final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
-    final Page<GroupData> groupPages =
-        groupService.getGroupsForUser(user.id(), PageRequest.of(page, size), );
+    final Page<GroupData> groupPages = groupService.getGroupsForUser(user.id(), page, size);
     return PageResponseMapper.from(groupPages.map(GroupDtoMapper::toDto));
   }
 
@@ -100,7 +98,7 @@ public class DefaultGroupController implements GroupController {
   @Override
   public List<MemberDto> getUsersInGroup(final UUID groupId) {
     final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
-    final List<UserData> users = groupService.getUsersInGroup(GroupId.fromUuid(groupId), user);
+    final List<MemberData> users = groupService.getUsersInGroup(GroupId.fromUuid(groupId), user);
     return users.stream().map(MemberDtoMapper::toDto).toList();
   }
 
@@ -116,8 +114,7 @@ public class DefaultGroupController implements GroupController {
   public PageResponse<TransactionDto> getGroupTransactions(final UUID groupId, int page, int size) {
     final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     final Page<TransactionData> transactionPages =
-        groupService.getGroupTransactions(
-            GroupId.fromUuid(groupId), user, PageRequest.of(page, size), );
+        groupService.getGroupTransactions(GroupId.fromUuid(groupId), user, page, size);
     return PageResponseMapper.from(transactionPages.map(TransactionDtoMapper::toDto));
   }
 }

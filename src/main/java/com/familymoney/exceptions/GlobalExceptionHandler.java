@@ -1,6 +1,5 @@
 package com.familymoney.exceptions;
 
-import com.familymoney.domains.idempotency.exceptions.IdempotencyConflictException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
@@ -23,11 +22,5 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
       AuthenticationCredentialsNotFoundException e) {
     logger.info(e.getMessage());
     return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "");
-  }
-
-  @ExceptionHandler(IdempotencyConflictException.class)
-  public ProblemDetail handleIdempotencyConflictException(final IdempotencyConflictException e) {
-    logger.info(e.getMessage());
-    return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
   }
 }

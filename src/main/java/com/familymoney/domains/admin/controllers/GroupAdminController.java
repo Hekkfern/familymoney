@@ -35,7 +35,10 @@ public interface GroupAdminController {
 
   @Operation(summary = "Get the list of groups where the selected user is a member")
   @GetMapping(path = "users/{userId}", version = "1")
-  List<UUID> getGroupsForUser(@PathVariable @NotNull UUID userId);
+  PageResponse<GroupDto> getGroupsForUser(
+      @PathVariable @NotNull UUID userId,
+      @RequestParam(defaultValue = "0") @Min(0) @Max(100) int page,
+      @RequestParam(defaultValue = "20") @Min(20) @Max(100) int size);
 
   @Operation(summary = "Delete a group")
   @DeleteMapping(path = "{groupId}", version = "1")

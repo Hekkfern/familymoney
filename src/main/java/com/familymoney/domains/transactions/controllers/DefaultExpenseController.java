@@ -62,8 +62,8 @@ public class DefaultExpenseController implements ExpenseController {
   @Override
   public ExpenseDto getExpense(final UUID expenseId) {
     final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
-    final ExpenseData expense = expenseService.getExpense(ExpenseId.fromUuid(expenseId), user);
-    return ExpenseDtoMapper.toDto(expense);
+    final ExpenseData expenseData = expenseService.getExpense(ExpenseId.fromUuid(expenseId), user);
+    return ExpenseDtoMapper.toDto(expenseData);
   }
 
   @Override

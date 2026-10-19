@@ -16,11 +16,11 @@ import com.familymoney.domains.transactions.controllers.mappers.UpdateGroupReque
 import com.familymoney.domains.transactions.services.GroupService;
 import com.familymoney.domains.transactions.services.data.BalanceData;
 import com.familymoney.domains.transactions.services.data.GroupData;
+import com.familymoney.domains.transactions.services.data.MemberData;
 import com.familymoney.domains.transactions.services.data.TransactionData;
 import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupName;
-import com.familymoney.domains.users.services.data.UserData;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.utils.AuthenticationUtils;
 import com.familymoney.utils.AuthorizedUser;
@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -53,10 +52,11 @@ public class DefaultGroupAdminController implements GroupAdminController {
   }
 
   @Override
-  public List<UUID> getGroupsForUser(final UUID userId) {
+  public PageResponse<GroupDto> getGroupsForUser(
+      final UUID userId, final int page, final int size) {
     final Page<GroupData> groupPages =
-        groupService.getGroupsForUser(UserId.fromUuid(userId), PageRequest.of(0, 10_000), );
-    return groupPages.getContent().stream().map(GroupDtoMapper::toDto).map(GroupDto::id).toList();
+        groupService.getGroupsForUser(UserId.fromUuid(userId), page, size);
+    return PageResponseMapper.from(groupPages.map(GroupDtoMapper::toDto));
   }
 
   @Override
@@ -79,14 +79,14 @@ public class DefaultGroupAdminController implements GroupAdminController {
   }
 
   @Override
-  public void addUserToGroup(final UUID groupId, final UUID userId) {
-    groupService.addUserToGroupAsAdmin(GroupId.fromUuid(groupId), UserId.fromUuid(userId));
+  public void addUserToGroup(final UUID groupId, final UUID userIdToAdd) {
+    groupService.addUserToGroupAsAdmin(GroupId.fromUuid(groupId), UserId.fromUuid(userIdToAdd));
   }
 
   @Override
   public List<MemberDto> getUsersInGroup(final UUID groupId) {
     final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
-    final List<UserData> users = groupService.getUsersInGroup(GroupId.fromUuid(groupId), user);
+    final List<MemberData> users = groupService.getUsersInGroup(GroupId.fromUuid(groupId), user);
     return users.stream().map(MemberDtoMapper::toDto).toList();
   }
 
@@ -108,8 +108,7 @@ public class DefaultGroupAdminController implements GroupAdminController {
       final UUID groupId, final int page, final int size) {
     final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     final Page<TransactionData> transactionPages =
-        groupService.getGroupTransactions(
-            GroupId.fromUuid(groupId), user, PageRequest.of(page, size), );
+        groupService.getGroupTransactions(GroupId.fromUuid(groupId), user, page, size);
     return PageResponseMapper.from(transactionPages.map(TransactionDtoMapper::toDto));
   }
 }

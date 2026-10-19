@@ -4,19 +4,22 @@ import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
 
 import com.familymoney.domains.transactions.repositories.dtos.CreateGroupInvitationDto;
 import com.familymoney.domains.transactions.repositories.entitites.GroupInvitationEntity;
-import com.familymoney.domains.transactions.repositories.exceptions.CreateGroupInvitationException;
 import com.familymoney.domains.transactions.repositories.mappers.GroupInvitationJooqMapper;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
+import com.familymoney.domains.users.exceptions.UserNotFoundException;
 import com.familymoney.domains.users.types.UserId;
+import com.familymoney.generated.Keys;
 import com.familymoney.generated.tables.GroupInvitations;
 import com.familymoney.generated.tables.Groups;
 import com.familymoney.security.OpaqueTokenHasher;
+import com.familymoney.utils.ConstraintViolationUtils;
 import java.time.Instant;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -28,28 +31,32 @@ public class DefaultGroupInvitationRepository implements GroupInvitationReposito
   private final OpaqueTokenHasher tokenHasher;
 
   @Override
-  public void create(final CreateGroupInvitationDto data) {
-    final int rowsAffected =
-        db.insertInto(GroupInvitations.GROUP_INVITATIONS)
-            .columns(
-                GroupInvitations.GROUP_INVITATIONS.ID,
-                GroupInvitations.GROUP_INVITATIONS.GROUP_ID,
-                GroupInvitations.GROUP_INVITATIONS.USER_ID,
-                GroupInvitations.GROUP_INVITATIONS.TOKEN_HASH,
-                GroupInvitations.GROUP_INVITATIONS.CREATED_BY,
-                GroupInvitations.GROUP_INVITATIONS.EXPIRES_AT)
-            .values(
-                data.id(),
-                data.groupId().value(),
-                data.userId().value(),
-                tokenHasher.hash(data.token().value()),
-                data.createdBy().value(),
-                data.expiresAt().toOffsetDateTime())
-            .execute();
-    if (rowsAffected != 1) {
-      final String msg = "Could not create group invitation with ID: %s".formatted(data.id());
-      log.error(msg);
-      throw new CreateGroupInvitationException(msg);
+  public void create(final CreateGroupInvitationDto dto) {
+    try {
+      db.insertInto(GroupInvitations.GROUP_INVITATIONS)
+          .columns(
+              GroupInvitations.GROUP_INVITATIONS.ID,
+              GroupInvitations.GROUP_INVITATIONS.GROUP_ID,
+              GroupInvitations.GROUP_INVITATIONS.USER_ID,
+              GroupInvitations.GROUP_INVITATIONS.TOKEN_HASH,
+              GroupInvitations.GROUP_INVITATIONS.CREATED_BY,
+              GroupInvitations.GROUP_INVITATIONS.EXPIRES_AT)
+          .values(
+              dto.id(),
+              dto.groupId().value(),
+              dto.userId().value(),
+              tokenHasher.hash(dto.token().value()),
+              dto.createdBy().value(),
+              dto.expiresAt().toOffsetDateTime())
+          .execute();
+    } catch (final DataIntegrityViolationException exception) {
+      if (ConstraintViolationUtils.isConstraintViolated(
+          exception, Keys.GROUPS__GROUPS_CREATED_BY_FKEY)) {
+        final String msg = "User with ID '%s' does not exist".formatted(dto.createdBy().value());
+        log.info(msg);
+        throw new UserNotFoundException(msg, exception);
+      }
+      throw exception;
     }
   }
 

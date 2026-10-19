@@ -1,7 +1,7 @@
 package com.familymoney.domains.transactions.controllers.mappers;
 
 import com.familymoney.domains.transactions.controllers.dtos.MemberDto;
-import com.familymoney.domains.users.services.data.UserData;
+import com.familymoney.domains.transactions.services.data.MemberData;
 
 public class MemberDtoMapper {
 
@@ -9,7 +9,7 @@ public class MemberDtoMapper {
     /* this class is not intended to be instantiated */
   }
 
-  public static MemberDto toDto(final UserData userData) {
-    return new MemberDto(userData.id().value(), userData.username().value());
+  public static MemberDto toDto(final MemberData data) {
+    return new MemberDto(data.userId().value(), data.username().value());
   }
 }

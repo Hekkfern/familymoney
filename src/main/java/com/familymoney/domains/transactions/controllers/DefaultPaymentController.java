@@ -54,8 +54,8 @@ public class DefaultPaymentController implements PaymentController {
   @Override
   public PaymentDto getPayment(final UUID paymentId) {
     final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
-    final PaymentData payment = paymentService.getPayment(PaymentId.fromUuid(paymentId), user);
-    return PaymentDtoMapper.toDto(payment);
+    final PaymentData paymentData = paymentService.getPayment(PaymentId.fromUuid(paymentId), user);
+    return PaymentDtoMapper.toDto(paymentData);
   }
 
   @Override
