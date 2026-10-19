@@ -108,7 +108,7 @@ public interface GroupRepository {
    *
    * @param id the group identifier
    * @return a list of {@link UserEntity} objects for users in the group; empty if the group has no
-   * members or does not exist
+   *     members or does not exist
    */
   List<UserEntity> findUsersByGroupId(GroupId id);
 

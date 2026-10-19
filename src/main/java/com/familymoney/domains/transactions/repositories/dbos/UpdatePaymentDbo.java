@@ -8,7 +8,6 @@ import lombok.Builder;
 import org.jspecify.annotations.Nullable;
 
 @Builder
-
 public record UpdatePaymentDbo(
     @Nullable Description description,
     @Nullable Instant doneAt,
@@ -20,11 +19,7 @@ public record UpdatePaymentDbo(
 
   public UpdatePaymentDbo {
     final boolean isEmptyUpdate =
-        description == null
-            && doneAt == null
-            && amount == null
-            && from == null
-            && to == null;
+        description == null && doneAt == null && amount == null && from == null && to == null;
     if (isEmptyUpdate) {
       throw new IllegalArgumentException("At least one field must be provided for update");
     }
@@ -40,10 +35,6 @@ public record UpdatePaymentDbo(
   }
 
   public boolean isEmpty() {
-    return description == null
-        && doneAt == null
-        && amount == null
-        && from == null
-        && to == null;
+    return description == null && doneAt == null && amount == null && from == null && to == null;
   }
 }

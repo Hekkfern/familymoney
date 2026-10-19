@@ -320,9 +320,7 @@ class DefaultGroupServiceTest {
 
     @BeforeEach()
     void beforeEach() {
-      lenient()
-          .when(groupProperties.invitationDuration())
-          .thenReturn(Duration.ofHours(1));
+      lenient().when(groupProperties.invitationDuration()).thenReturn(Duration.ofHours(1));
       lenient().when(groupProperties.maxNumInvitations()).thenReturn(5);
     }
 

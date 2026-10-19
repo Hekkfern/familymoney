@@ -44,8 +44,8 @@ public interface PaymentController {
       @RequestParam(defaultValue = "20") @Min(20) @Max(100) int size);
 
   /**
-   * Creates a payment in a group, settling part or all of the debt between its from and
-   * to. The authenticated user must be a member of the group.
+   * Creates a payment in a group, settling part or all of the debt between its from and to. The
+   * authenticated user must be a member of the group.
    *
    * @param groupId the group identifier
    * @param request the payment creation details

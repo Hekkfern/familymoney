@@ -4,7 +4,6 @@ import com.familymoney.domains.transactions.controllers.dtos.ExpenseDto;
 import com.familymoney.domains.transactions.services.data.ExpenseData;
 import java.math.BigDecimal;
 import java.util.Currency;
-
 import org.javamoney.moneta.Money;
 
 public final class ExpenseDtoMapper {

@@ -10,7 +10,6 @@ public final class GroupDataMapper {
   }
 
   public static GroupData fromDbo(final GroupEntity entity) {
-    return new GroupData(
-        entity.id(), entity.name(), entity.description(), entity.currency());
+    return new GroupData(entity.id(), entity.name(), entity.description(), entity.currency());
   }
 }

@@ -130,7 +130,8 @@ class DefaultGroupCheckerTest {
       when(groupRepository.findByUserId(userId, pageable))
           .thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(group)));
 
-      final List<GroupData> groups = groupOperations.getGroupsForUser(userId, pageable).getContent();
+      final List<GroupData> groups =
+          groupOperations.getGroupsForUser(userId, pageable).getContent();
 
       assertThat(groups).hasSize(1).first().extracting(GroupData::id).isEqualTo(group.id());
     }

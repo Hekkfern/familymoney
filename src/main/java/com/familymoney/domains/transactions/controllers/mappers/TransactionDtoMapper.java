@@ -1,8 +1,8 @@
 package com.familymoney.domains.transactions.controllers.mappers;
 
 import com.familymoney.domains.transactions.controllers.dtos.TransactionDto;
-import com.familymoney.domains.transactions.services.data.TransactionType;
 import com.familymoney.domains.transactions.services.data.TransactionData;
+import com.familymoney.domains.transactions.services.data.TransactionType;
 
 public final class TransactionDtoMapper {
 

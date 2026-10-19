@@ -30,8 +30,8 @@ public final class PaymentJooqMapper {
         PaymentId.fromUuid(record.get(Payments.PAYMENTS.ID)),
         Description.of(record.get(Payments.PAYMENTS.DESCRIPTION)),
         record.get(Payments.PAYMENTS.AMOUNT),
-        UserId.fromUuid(record.get(Payments.PAYMENTS.CREDITOR)),
-        UserId.fromUuid(record.get(Payments.PAYMENTS.DEBITOR)),
+        UserId.fromUuid(record.get(Payments.PAYMENTS.FROM_USER)),
+        UserId.fromUuid(record.get(Payments.PAYMENTS.TO_USER)),
         GroupId.fromUuid(record.get(Payments.PAYMENTS.GROUP_ID)),
         doneAt.toInstant());
   }

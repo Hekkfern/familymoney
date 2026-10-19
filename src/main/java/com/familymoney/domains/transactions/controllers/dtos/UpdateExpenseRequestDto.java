@@ -29,10 +29,7 @@ public record UpdateExpenseRequestDto(
   @JsonIgnore
   @AssertTrue(message = "At least one field must be provided")
   public boolean isAnyFieldProvided() {
-    return description != null
-        || doneAt != null
-        || shares != null
-        || payers != null;
+    return description != null || doneAt != null || shares != null || payers != null;
   }
 
   @JsonIgnore

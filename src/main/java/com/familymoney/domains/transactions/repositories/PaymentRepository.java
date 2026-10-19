@@ -16,9 +16,9 @@ import org.springframework.data.domain.Pageable;
 /**
  * Repository interface for persisting completed payments between members of a group.
  *
- * <p>A payment records a single amount transferred from its {@code to} to its {@code
- * from}, settling part or all of the debt between them. Implementations create, update, delete,
- * and retrieve payments, including paged queries for a group.
+ * <p>A payment records a single amount transferred from its {@code to} to its {@code from},
+ * settling part or all of the debt between them. Implementations create, update, delete, and
+ * retrieve payments, including paged queries for a group.
  */
 public interface PaymentRepository {
 

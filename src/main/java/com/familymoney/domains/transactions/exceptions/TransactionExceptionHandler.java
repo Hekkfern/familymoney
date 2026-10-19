@@ -10,7 +10,13 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-@RestControllerAdvice(assignableTypes = {ExpenseController.class, ExpenseService.class, PaymentController.class, PaymentService.class})
+@RestControllerAdvice(
+    assignableTypes = {
+      ExpenseController.class,
+      ExpenseService.class,
+      PaymentController.class,
+      PaymentService.class
+    })
 public class TransactionExceptionHandler extends ResponseEntityExceptionHandler {
 
   @ExceptionHandler(PaymentNotFoundException.class)

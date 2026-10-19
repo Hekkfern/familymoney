@@ -2,7 +2,6 @@ package com.familymoney.domains.transactions.controllers.mappers;
 
 import com.familymoney.domains.transactions.controllers.dtos.PaymentDto;
 import com.familymoney.domains.transactions.services.data.PaymentData;
-
 import java.math.BigDecimal;
 import java.util.Currency;
 

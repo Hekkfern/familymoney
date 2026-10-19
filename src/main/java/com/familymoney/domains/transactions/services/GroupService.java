@@ -160,16 +160,16 @@ public interface GroupService {
   /**
    * Get a paginated list of individual expenses in a group, ordered by most recent first
    *
-   * @param groupId   Identifier of the group
+   * @param groupId Identifier of the group
    * @param requester The user requesting the balances
    * @param page
    * @param size
    * @return Paginated list of expenses
-   * @throws GroupNotFoundException          if the group does not exist
+   * @throws GroupNotFoundException if the group does not exist
    * @throws UserIsNotMemberOfGroupException if the user is not a member of the group
    */
   Page<TransactionData> getGroupTransactions(
-    GroupId groupId, AuthorizedUser requester, int page, int size);
+      GroupId groupId, AuthorizedUser requester, int page, int size);
 
   /**
    * Recalculates the balances of all the expenses in the group. This is a heavy operation and

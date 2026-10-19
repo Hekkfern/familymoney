@@ -9,11 +9,6 @@ import com.familymoney.domains.transactions.controllers.dtos.InvitationTokenDto;
 import com.familymoney.domains.transactions.controllers.dtos.MemberDto;
 import com.familymoney.domains.transactions.controllers.dtos.TransactionDto;
 import com.familymoney.domains.transactions.controllers.dtos.UpdateGroupRequestDto;
-import com.familymoney.domains.transactions.exceptions.GroupInvitationInvalidException;
-import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
-import com.familymoney.domains.transactions.exceptions.GroupOwnerNotFoundException;
-import com.familymoney.domains.transactions.exceptions.MaximumGroupInvitationsReachedException;
-import com.familymoney.domains.transactions.exceptions.UserIsNotMemberOfGroupException;
 import com.familymoney.utils.PageResponse;
 import io.github.benhendayoussef.idempotency.api.Idempotent;
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,7 +43,8 @@ public interface GroupController {
   @PostMapping(path = "", version = "1")
   @ResponseStatus(HttpStatus.CREATED)
   @Idempotent
-  CreateGroupResponseDto createGroupAndAddCreatorAsMember(@RequestBody @Valid CreateGroupRequestDto request);
+  CreateGroupResponseDto createGroupAndAddCreatorAsMember(
+      @RequestBody @Valid CreateGroupRequestDto request);
 
   /**
    * Retrieves the groups where the authenticated user is a member.

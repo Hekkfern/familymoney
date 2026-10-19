@@ -39,7 +39,7 @@ public class DefaultBalanceRepository implements BalanceRepository {
 
   @Override
   public void setByKey(BalanceKeyDbo key, BigDecimal newBalance) {
-    //TODO
+    // TODO
   }
 
   @Transactional

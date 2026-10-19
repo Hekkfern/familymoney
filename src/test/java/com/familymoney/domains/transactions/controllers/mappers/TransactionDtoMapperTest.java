@@ -3,8 +3,8 @@ package com.familymoney.domains.transactions.controllers.mappers;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import com.familymoney.domains.transactions.controllers.dtos.TransactionDto;
-import com.familymoney.domains.transactions.services.data.TransactionType;
 import com.familymoney.domains.transactions.services.data.TransactionData;
+import com.familymoney.domains.transactions.services.data.TransactionType;
 import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.ExpenseId;
 import com.familymoney.domains.transactions.types.GroupId;
