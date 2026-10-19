@@ -1,4 +1,4 @@
-package com.familymoney.domains.transactions.repositories.dtos;
+package com.familymoney.domains.transactions.repositories.dbos;
 
 import com.familymoney.domains.transactions.types.ExpirationTime;
 import com.familymoney.domains.transactions.types.GroupId;
@@ -17,7 +17,7 @@ import java.util.UUID;
  * @param expiresAt the timestamp indicating when the invitation expires, after which it should no
  *     longer be valid
  */
-public record CreateGroupInvitationDto(
+public record CreateGroupInvitationDbo(
     UUID id,
     GroupId groupId,
     UserId userId,

@@ -1,7 +1,7 @@
 package com.familymoney.domains.auth.repositories;
 
-import com.familymoney.domains.auth.repositories.dtos.CreateRefreshTokenDto;
-import com.familymoney.domains.auth.repositories.dtos.UpdateRefreshTokenDto;
+import com.familymoney.domains.auth.repositories.dbos.CreateRefreshTokenDbo;
+import com.familymoney.domains.auth.repositories.dbos.UpdateRefreshTokenDbo;
 import com.familymoney.domains.auth.repositories.entitites.RefreshTokenEntity;
 import com.familymoney.domains.auth.repositories.mappers.RefreshTokenJooqMapper;
 import com.familymoney.domains.auth.types.RefreshToken;
@@ -23,7 +23,7 @@ public class DefaultRefreshTokenRepository implements RefreshTokenRepository {
   private final OpaqueTokenHasher tokenHasher;
 
   @Override
-  public Optional<RefreshTokenEntity> create(final CreateRefreshTokenDto data) {
+  public Optional<RefreshTokenEntity> create(final CreateRefreshTokenDbo data) {
     return db.insertInto(RefreshTokens.REFRESH_TOKENS)
         .columns(
             RefreshTokens.REFRESH_TOKENS.ID,
@@ -64,7 +64,7 @@ public class DefaultRefreshTokenRepository implements RefreshTokenRepository {
   }
 
   @Override
-  public boolean updateByToken(final RefreshToken token, final UpdateRefreshTokenDto data) {
+  public boolean updateByToken(final RefreshToken token, final UpdateRefreshTokenDbo data) {
     final OffsetDateTime expiresAtVal =
         data.expiresAt() != null ? data.expiresAt().toOffsetDateTime() : null;
     final int rowsAffected =
@@ -83,7 +83,7 @@ public class DefaultRefreshTokenRepository implements RefreshTokenRepository {
   }
 
   @Override
-  public boolean updateByUserId(final UserId userId, final UpdateRefreshTokenDto data) {
+  public boolean updateByUserId(final UserId userId, final UpdateRefreshTokenDbo data) {
     final OffsetDateTime expiresAtVal =
         data.expiresAt() != null ? data.expiresAt().toOffsetDateTime() : null;
     final int rowsAffected =

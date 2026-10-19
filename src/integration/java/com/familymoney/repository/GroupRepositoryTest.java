@@ -6,8 +6,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.familymoney.domains.transactions.repositories.DefaultGroupRepository;
 import com.familymoney.domains.transactions.repositories.GroupRepository;
-import com.familymoney.domains.transactions.repositories.dtos.CreateGroupDto;
-import com.familymoney.domains.transactions.repositories.dtos.UpdateGroupDto;
+import com.familymoney.domains.transactions.repositories.dbos.CreateGroupDbo;
+import com.familymoney.domains.transactions.repositories.dbos.UpdateGroupDbo;
 import com.familymoney.domains.transactions.repositories.entitites.GroupEntity;
 import com.familymoney.domains.transactions.repositories.entitites.UserGroupEntity;
 import com.familymoney.domains.transactions.types.Description;
@@ -96,7 +96,7 @@ class GroupRepositoryTest {
       final Instant now = Instant.now();
 
       final Optional<GroupEntity> groupOpt =
-          groupRepository.create(new CreateGroupDto(groupId, groupName, description, currency));
+          groupRepository.create(new CreateGroupDbo(groupId, groupName, description, currency));
 
       assertThat(groupOpt).isPresent();
       final GroupEntity group = groupOpt.get();
@@ -111,8 +111,8 @@ class GroupRepositoryTest {
     @Test
     void throws_when_group_id_already_exists() {
       final GroupId groupId = insertRandomGroup();
-      final CreateGroupDto dto =
-          new CreateGroupDto(
+      final CreateGroupDbo dto =
+          new CreateGroupDbo(
               groupId,
               GroupName.fromString(FakeGenerator.groupName()),
               Description.of("desc"),
@@ -133,7 +133,7 @@ class GroupRepositoryTest {
 
       final GroupName newGroupName = GroupName.fromString(FakeGenerator.groupName());
       final Description newDescription = Description.of("new description");
-      final UpdateGroupDto dataToUpdate = new UpdateGroupDto(newGroupName, newDescription);
+      final UpdateGroupDbo dataToUpdate = new UpdateGroupDbo(newGroupName, newDescription);
       final boolean updated = groupRepository.updateById(groupId, dataToUpdate);
 
       assertThat(updated).isTrue();
@@ -151,7 +151,7 @@ class GroupRepositoryTest {
       final GroupId groupId = insertRandomGroup();
       final GroupEntity original = groupRepository.findById(groupId).orElseThrow();
       final GroupName newName = GroupName.fromString(FakeGenerator.groupName());
-      final UpdateGroupDto dataToUpdate = UpdateGroupDto.builder().name(newName).build();
+      final UpdateGroupDbo dataToUpdate = UpdateGroupDbo.builder().name(newName).build();
 
       final boolean updated = groupRepository.updateById(groupId, dataToUpdate);
 
@@ -166,8 +166,8 @@ class GroupRepositoryTest {
       final GroupId groupId = insertRandomGroup();
       final GroupEntity original = groupRepository.findById(groupId).orElseThrow();
       final Description newDescription = Description.of("only-desc-changed");
-      final UpdateGroupDto dataToUpdate =
-          UpdateGroupDto.builder().description(newDescription).build();
+      final UpdateGroupDbo dataToUpdate =
+          UpdateGroupDbo.builder().description(newDescription).build();
 
       final boolean updated = groupRepository.updateById(groupId, dataToUpdate);
 
@@ -181,7 +181,7 @@ class GroupRepositoryTest {
     void keeps_existing_values_when_all_fields_are_null() {
       final GroupId groupId = insertRandomGroup();
       final GroupEntity original = groupRepository.findById(groupId).orElseThrow();
-      final UpdateGroupDto dataToUpdate = UpdateGroupDto.builder().build();
+      final UpdateGroupDbo dataToUpdate = UpdateGroupDbo.builder().build();
 
       final boolean updated = groupRepository.updateById(groupId, dataToUpdate);
 
@@ -195,8 +195,8 @@ class GroupRepositoryTest {
     void returns_false_when_group_does_not_exist() {
       final Description newDescription = Description.of("new-desc");
       final GroupId groupId = GroupId.generate();
-      final UpdateGroupDto dataToUpdate =
-          UpdateGroupDto.builder().description(newDescription).build();
+      final UpdateGroupDbo dataToUpdate =
+          UpdateGroupDbo.builder().description(newDescription).build();
 
       final boolean updated = groupRepository.updateById(groupId, dataToUpdate);
 

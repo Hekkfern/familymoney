@@ -2,8 +2,8 @@ package com.familymoney.domains.auth.repositories;
 
 import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
 
-import com.familymoney.domains.auth.repositories.dtos.CreateEmailVerificationDto;
-import com.familymoney.domains.auth.repositories.dtos.UpdateEmailVerificationTokenDto;
+import com.familymoney.domains.auth.repositories.dbos.CreateEmailVerificationDbo;
+import com.familymoney.domains.auth.repositories.dbos.UpdateEmailVerificationTokenDbo;
 import com.familymoney.domains.auth.repositories.entitites.EmailVerificationEntity;
 import com.familymoney.domains.auth.repositories.mappers.EmailVerificationJooqMapper;
 import com.familymoney.domains.auth.types.EmailVerificationToken;
@@ -25,7 +25,7 @@ public class DefaultEmailVerificationRepository implements EmailVerificationRepo
   private final OpaqueTokenHasher tokenHasher;
 
   @Override
-  public Optional<EmailVerificationEntity> create(final CreateEmailVerificationDto data) {
+  public Optional<EmailVerificationEntity> create(final CreateEmailVerificationDbo data) {
     return db.insertInto(EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS)
         .columns(
             EmailVerificationTokens.EMAIL_VERIFICATION_TOKENS.USER_ID,
@@ -76,7 +76,7 @@ public class DefaultEmailVerificationRepository implements EmailVerificationRepo
   }
 
   @Override
-  public boolean updateByUserId(final UserId userId, final UpdateEmailVerificationTokenDto data) {
+  public boolean updateByUserId(final UserId userId, final UpdateEmailVerificationTokenDbo data) {
     final OffsetDateTime lastSentAt =
         data.lastSentAt() != null ? data.lastSentAt().atOffset(DEFAULT_TIMEZONE_OFFSET) : null;
     final int rowsAffected =

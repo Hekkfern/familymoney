@@ -18,14 +18,14 @@ import com.familymoney.domains.auth.repositories.PasswordResetRepository;
 import com.familymoney.domains.auth.repositories.RefreshTokenRepository;
 import com.familymoney.domains.auth.repositories.TokenFamilyBlacklistRepository;
 import com.familymoney.domains.auth.repositories.UsedRefreshTokenRepository;
-import com.familymoney.domains.auth.repositories.dtos.CreateEmailVerificationDto;
-import com.familymoney.domains.auth.repositories.dtos.CreatePasswordResetDto;
-import com.familymoney.domains.auth.repositories.dtos.CreateRefreshTokenDto;
-import com.familymoney.domains.auth.repositories.dtos.CreateTokenFamilyBlacklistDto;
-import com.familymoney.domains.auth.repositories.dtos.CreateUsedRefreshTokenDto;
-import com.familymoney.domains.auth.repositories.dtos.UpdateEmailVerificationTokenDto;
-import com.familymoney.domains.auth.repositories.dtos.UpdatePasswordResetDto;
-import com.familymoney.domains.auth.repositories.dtos.UpdateRefreshTokenDto;
+import com.familymoney.domains.auth.repositories.dbos.CreateEmailVerificationDbo;
+import com.familymoney.domains.auth.repositories.dbos.CreatePasswordResetDbo;
+import com.familymoney.domains.auth.repositories.dbos.CreateRefreshTokenDbo;
+import com.familymoney.domains.auth.repositories.dbos.CreateTokenFamilyBlacklistDbo;
+import com.familymoney.domains.auth.repositories.dbos.CreateUsedRefreshTokenDbo;
+import com.familymoney.domains.auth.repositories.dbos.UpdateEmailVerificationTokenDbo;
+import com.familymoney.domains.auth.repositories.dbos.UpdatePasswordResetDbo;
+import com.familymoney.domains.auth.repositories.dbos.UpdateRefreshTokenDbo;
 import com.familymoney.domains.auth.repositories.entitites.EmailVerificationEntity;
 import com.familymoney.domains.auth.repositories.entitites.PasswordResetEntity;
 import com.familymoney.domains.auth.repositories.entitites.RefreshTokenEntity;
@@ -39,8 +39,8 @@ import com.familymoney.domains.auth.types.RefreshToken;
 import com.familymoney.domains.auth.types.TokenFamily;
 import com.familymoney.domains.users.repositories.RoleRepository;
 import com.familymoney.domains.users.repositories.UserRepository;
-import com.familymoney.domains.users.repositories.dtos.CreateUserDto;
-import com.familymoney.domains.users.repositories.dtos.UpdateUserDto;
+import com.familymoney.domains.users.repositories.dbos.CreateUserDbo;
+import com.familymoney.domains.users.repositories.dbos.UpdateUserDbo;
 import com.familymoney.domains.users.repositories.entitites.UserEntity;
 import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.Password;
@@ -100,7 +100,7 @@ public class DefaultAuthService implements AuthService {
     try {
       userRepository
           .create(
-              new CreateUserDto(
+              new CreateUserDbo(
                   userId, username, email, passwordEncoder.encode(password.value()), true, false))
           .orElseThrow(
               () -> new DatabaseExecutionException("Could not create user in the database"));
@@ -119,7 +119,7 @@ public class DefaultAuthService implements AuthService {
     final EmailVerificationToken emailVerificationToken = EmailVerificationToken.generate();
     emailVerificationRepository
         .create(
-            new CreateEmailVerificationDto(
+            new CreateEmailVerificationDbo(
                 userId,
                 emailVerificationToken,
                 ExpirationTime.of(
@@ -170,7 +170,7 @@ public class DefaultAuthService implements AuthService {
     // Save refresh token in database
     refreshTokenRepository
         .create(
-            new CreateRefreshTokenDto(
+            new CreateRefreshTokenDbo(
                 UUIDGenerator.generate(),
                 userDb.id(),
                 refreshToken,
@@ -225,7 +225,7 @@ public class DefaultAuthService implements AuthService {
     // add the token to the list of used refresh tokens
     final Optional<UsedRefreshTokenEntity> usedRefreshToken =
         usedRefreshTokenRepository.create(
-            new CreateUsedRefreshTokenDto(
+            new CreateUsedRefreshTokenDbo(
                 refreshToken, refreshTokenDb.family(), Instant.now(clock)));
     if (usedRefreshToken.isEmpty()) {
       blacklistFamily(refreshTokenDb.family());
@@ -239,7 +239,7 @@ public class DefaultAuthService implements AuthService {
     final boolean refreshTokenUpdated =
         refreshTokenRepository.updateByToken(
             refreshToken,
-            UpdateRefreshTokenDto.builder()
+            UpdateRefreshTokenDbo.builder()
                 .token(newRefreshToken)
                 .expiresAt(
                     ExpirationTime.of(
@@ -269,7 +269,7 @@ public class DefaultAuthService implements AuthService {
     final boolean userUpdated =
         userRepository.updateById(
             emailVerificationTokenDb.userId(),
-            UpdateUserDto.builder().isEmailVerified(true).build());
+            UpdateUserDbo.builder().isEmailVerified(true).build());
     if (!userUpdated) {
       throw new DatabaseExecutionException(
           "Could not set the is_email_verified column of the user in the database");
@@ -311,7 +311,7 @@ public class DefaultAuthService implements AuthService {
     final boolean emailVerificationTokenUpdated =
         emailVerificationRepository.updateByUserId(
             userDb.id(),
-            UpdateEmailVerificationTokenDto.builder()
+            UpdateEmailVerificationTokenDbo.builder()
                 .token(newEmailVerificationToken)
                 .expiresAt(
                     ExpirationTime.of(
@@ -358,11 +358,11 @@ public class DefaultAuthService implements AuthService {
         ExpirationTime.of(now.plus(resetPasswordProperties.tokenDuration()));
     if (existingToken.isEmpty()) {
       passwordResetRepository
-          .create(new CreatePasswordResetDto(user.id(), resetToken, expiresAt, now))
+          .create(new CreatePasswordResetDbo(user.id(), resetToken, expiresAt, now))
           .orElseThrow(
               () -> new DatabaseExecutionException("Could not create password reset token"));
     } else if (!passwordResetRepository.updateByUserId(
-        user.id(), new UpdatePasswordResetDto(resetToken, expiresAt, now))) {
+        user.id(), new UpdatePasswordResetDbo(resetToken, expiresAt, now))) {
       throw new DatabaseExecutionException("Could not update password reset token");
     }
 
@@ -395,7 +395,7 @@ public class DefaultAuthService implements AuthService {
     final boolean passwordUpdated =
         userRepository.updateById(
             resetToken.userId(),
-            UpdateUserDto.builder()
+            UpdateUserDbo.builder()
                 .hashedPassword(passwordEncoder.encode(newPassword.value()))
                 .build());
     if (!passwordUpdated) {
@@ -445,6 +445,6 @@ public class DefaultAuthService implements AuthService {
   }
 
   private void blacklistFamily(final TokenFamily family) {
-    tokenFamilyBlacklistRepository.create(new CreateTokenFamilyBlacklistDto(family));
+    tokenFamilyBlacklistRepository.create(new CreateTokenFamilyBlacklistDbo(family));
   }
 }

@@ -11,6 +11,6 @@ public final class TransactionDtoMapper {
   }
 
   public static TransactionDto toDto(final TransactionData data) {
-    return new TransactionDto(TransactionType.EXPENSE, data.id().value());
+    return new TransactionDto(TransactionType.EXPENSE, data.id());
   }
 }

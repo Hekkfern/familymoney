@@ -1,7 +1,7 @@
 package com.familymoney.domains.users.repositories;
 
-import com.familymoney.domains.users.repositories.dtos.CreateUserDto;
-import com.familymoney.domains.users.repositories.dtos.UpdateUserDto;
+import com.familymoney.domains.users.repositories.dbos.CreateUserDbo;
+import com.familymoney.domains.users.repositories.dbos.UpdateUserDbo;
 import com.familymoney.domains.users.repositories.entitites.UserEntity;
 import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.UserId;
@@ -25,7 +25,7 @@ public interface UserRepository {
    * @return an {@link Optional} containing the created {@link UserEntity} when successful; empty
    *     Optional if the creation failed (e.g., uniqueness violation).
    */
-  Optional<UserEntity> create(CreateUserDto data);
+  Optional<UserEntity> create(CreateUserDbo data);
 
   /**
    * Find a user by its identifier.
@@ -77,11 +77,11 @@ public interface UserRepository {
    * Update one or more fields of a user identified by its id.
    *
    * @param id the id of the user to update. Must not be null.
-   * @param data a {@link UpdateUserDto} containing fields to change. Must not be null. Only
+   * @param data a {@link UpdateUserDbo} containing fields to change. Must not be null. Only
    *     non-null fields will be applied.
    * @return true if the update affected an existing record, false otherwise.
    */
-  boolean updateById(UserId id, UpdateUserDto data);
+  boolean updateById(UserId id, UpdateUserDbo data);
 
   /**
    * Delete a user by its id.

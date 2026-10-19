@@ -1,4 +1,4 @@
-package com.familymoney.domains.auth.repositories.dtos;
+package com.familymoney.domains.auth.repositories.dbos;
 
 import com.familymoney.domains.auth.types.ExpirationTime;
 import com.familymoney.domains.auth.types.RefreshToken;
@@ -17,5 +17,5 @@ import java.util.UUID;
  * @param expiresAt the timestamp indicating when the refresh token will expire and should no longer
  *     be accepted for authentication.
  */
-public record CreateRefreshTokenDto(
+public record CreateRefreshTokenDbo(
     UUID id, UserId userId, RefreshToken token, TokenFamily family, ExpirationTime expiresAt) {}

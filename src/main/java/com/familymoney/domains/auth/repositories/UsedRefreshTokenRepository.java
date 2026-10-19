@@ -1,6 +1,6 @@
 package com.familymoney.domains.auth.repositories;
 
-import com.familymoney.domains.auth.repositories.dtos.CreateUsedRefreshTokenDto;
+import com.familymoney.domains.auth.repositories.dbos.CreateUsedRefreshTokenDbo;
 import com.familymoney.domains.auth.repositories.entitites.UsedRefreshTokenEntity;
 import com.familymoney.domains.auth.types.RefreshToken;
 import java.util.Optional;
@@ -14,7 +14,7 @@ public interface UsedRefreshTokenRepository {
    * @param data the data to store.
    * @return the persisted token record, or empty when the token was already present.
    */
-  Optional<UsedRefreshTokenEntity> create(CreateUsedRefreshTokenDto data);
+  Optional<UsedRefreshTokenEntity> create(CreateUsedRefreshTokenDbo data);
 
   /**
    * Find a consumed refresh token by its value.

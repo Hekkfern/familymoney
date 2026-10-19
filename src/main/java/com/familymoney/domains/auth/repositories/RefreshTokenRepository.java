@@ -1,7 +1,7 @@
 package com.familymoney.domains.auth.repositories;
 
-import com.familymoney.domains.auth.repositories.dtos.CreateRefreshTokenDto;
-import com.familymoney.domains.auth.repositories.dtos.UpdateRefreshTokenDto;
+import com.familymoney.domains.auth.repositories.dbos.CreateRefreshTokenDbo;
+import com.familymoney.domains.auth.repositories.dbos.UpdateRefreshTokenDbo;
 import com.familymoney.domains.auth.repositories.entitites.RefreshTokenEntity;
 import com.familymoney.domains.auth.types.RefreshToken;
 import com.familymoney.domains.users.types.UserId;
@@ -17,7 +17,7 @@ public interface RefreshTokenRepository {
    * @return an {@link Optional} containing the persisted {@link RefreshTokenEntity} when creation
    *     succeeds, or an empty Optional when creation fails (e.g. due to constraint violation).
    */
-  Optional<RefreshTokenEntity> create(CreateRefreshTokenDto data);
+  Optional<RefreshTokenEntity> create(CreateRefreshTokenDbo data);
 
   /**
    * Find a refresh token record by its token value.
@@ -37,7 +37,7 @@ public interface RefreshTokenRepository {
    * @return true if at least one row was updated; false if no matching token exists or no change
    *     was performed.
    */
-  boolean updateByToken(RefreshToken token, UpdateRefreshTokenDto data);
+  boolean updateByToken(RefreshToken token, UpdateRefreshTokenDbo data);
 
   /**
    * Update refresh tokens associated with a specific user id.
@@ -47,7 +47,7 @@ public interface RefreshTokenRepository {
    *     fields in {@code data} will be modified.
    * @return true if at least one row was updated; false otherwise.
    */
-  boolean updateByUserId(UserId userId, UpdateRefreshTokenDto data);
+  boolean updateByUserId(UserId userId, UpdateRefreshTokenDbo data);
 
   /**
    * Delete refresh token records by their token value.

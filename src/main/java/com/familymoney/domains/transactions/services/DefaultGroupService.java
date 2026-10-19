@@ -9,8 +9,8 @@ import com.familymoney.domains.transactions.exceptions.MaximumGroupsPerUserReach
 import com.familymoney.domains.transactions.repositories.BalanceRepository;
 import com.familymoney.domains.transactions.repositories.GroupInvitationRepository;
 import com.familymoney.domains.transactions.repositories.GroupRepository;
-import com.familymoney.domains.transactions.repositories.dtos.CreateGroupDto;
-import com.familymoney.domains.transactions.repositories.dtos.CreateGroupInvitationDto;
+import com.familymoney.domains.transactions.repositories.dbos.CreateGroupDbo;
+import com.familymoney.domains.transactions.repositories.dbos.CreateGroupInvitationDbo;
 import com.familymoney.domains.transactions.repositories.entitites.GroupInvitationEntity;
 import com.familymoney.domains.transactions.services.data.BalanceData;
 import com.familymoney.domains.transactions.services.data.GroupData;
@@ -63,7 +63,7 @@ public class DefaultGroupService implements GroupService {
       final AuthorizedUser requester) {
     final GroupId groupId = GroupId.generate();
     groupRepository.create(
-        new CreateGroupDto(groupId, name, description, currency, requester.id()));
+        new CreateGroupDbo(groupId, name, description, currency, requester.id()));
     return groupId;
   }
 
@@ -77,7 +77,7 @@ public class DefaultGroupService implements GroupService {
     try {
       final GroupId groupId = GroupId.generate();
       groupRepository.create(
-          new CreateGroupDto(groupId, name, description, currency, requester.id()));
+          new CreateGroupDbo(groupId, name, description, currency, requester.id()));
       groupRepository.addUserToGroup(requester.id(), groupId);
       return groupId;
     } catch (final UserNotFoundException e) {
@@ -154,7 +154,7 @@ public class DefaultGroupService implements GroupService {
         ExpirationTime.of(Instant.now(clock).plus(groupProperties.invitationDuration()));
     final UUID invitationId = UUIDGenerator.generate();
     groupInvitationRepository.create(
-        new CreateGroupInvitationDto(
+        new CreateGroupInvitationDbo(
             invitationId, groupId, requester.id(), token, requester.id(), expiresAt));
     return token;
   }

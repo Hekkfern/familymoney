@@ -4,11 +4,12 @@ import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
 import com.familymoney.domains.transactions.exceptions.PaymentNotFoundException;
 import com.familymoney.domains.transactions.repositories.GroupRepository;
 import com.familymoney.domains.transactions.repositories.PaymentRepository;
-import com.familymoney.domains.transactions.repositories.dtos.CreatePaymentDto;
-import com.familymoney.domains.transactions.repositories.dtos.UpdatePaymentDto;
+import com.familymoney.domains.transactions.repositories.dbos.CreatePaymentDbo;
+import com.familymoney.domains.transactions.repositories.dbos.UpdatePaymentDbo;
 import com.familymoney.domains.transactions.repositories.entitites.PaymentEntity;
 import com.familymoney.domains.transactions.services.data.PaymentData;
 import com.familymoney.domains.transactions.services.data.UpdatePaymentData;
+import com.familymoney.domains.transactions.services.mappers.PaymentDataMapper;
 import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.PaymentId;
@@ -20,7 +21,6 @@ import java.time.Instant;
 import java.util.Currency;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.javamoney.moneta.Money;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -46,7 +46,7 @@ public class DefaultPaymentService implements PaymentService {
     final Currency currency = getGroupCurrency(groupId);
     return paymentRepository
         .findAllByGroupId(groupId, PageRequest.of(page, size))
-        .map(entity -> toPaymentData(entity, currency));
+        .map(entity -> PaymentDataMapper.fromDbo(entity, currency));
   }
 
   @Override
@@ -64,7 +64,7 @@ public class DefaultPaymentService implements PaymentService {
     }
     final PaymentId id = PaymentId.generate();
     paymentRepository.create(
-        new CreatePaymentDto(id, description, groupId, requester.id(), doneAt, amount, to, from));
+        new CreatePaymentDbo(id, description, groupId, requester.id(), doneAt, amount, from, to));
     return id;
   }
 
@@ -77,7 +77,7 @@ public class DefaultPaymentService implements PaymentService {
     if (requester.role().equals(Role.USER)) {
       groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
     }
-    return toPaymentData(entity, getGroupCurrency(groupId));
+    return PaymentDataMapper.fromDbo(entity, getGroupCurrency(groupId));
   }
 
   @Override
@@ -90,8 +90,8 @@ public class DefaultPaymentService implements PaymentService {
     }
     paymentRepository.updateById(
         id,
-        new UpdatePaymentDto(
-            data.description(), data.doneAt(), data.amount(), data.to(), data.from()));
+        new UpdatePaymentDbo(
+            data.description(), data.doneAt(), data.amount(), data.from(), data.to()));
   }
 
   @Override
@@ -125,16 +125,5 @@ public class DefaultPaymentService implements PaymentService {
               return new GroupNotFoundException(message);
             })
         .currency();
-  }
-
-  private static PaymentData toPaymentData(final PaymentEntity entity, final Currency currency) {
-    return new PaymentData(
-        entity.id(),
-        entity.groupId(),
-        entity.description(),
-        Money.of(entity.amount(), currency.getCurrencyCode()),
-        entity.doneAt(),
-        entity.debitor(),
-        entity.creditor());
   }
 }

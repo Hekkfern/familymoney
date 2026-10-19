@@ -2,7 +2,7 @@ package com.familymoney.domains.transactions.repositories;
 
 import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
 
-import com.familymoney.domains.transactions.repositories.dtos.BalanceKeyDto;
+import com.familymoney.domains.transactions.repositories.dbos.BalanceKeyDbo;
 import com.familymoney.domains.transactions.repositories.entitites.BalanceEntity;
 import com.familymoney.domains.transactions.repositories.mappers.BalanceJooqMapper;
 import com.familymoney.domains.transactions.types.GroupId;
@@ -26,7 +26,7 @@ public class DefaultBalanceRepository implements BalanceRepository {
   private final DSLContext db;
 
   @Override
-  public void create(final BalanceKeyDto data) {
+  public void create(final BalanceKeyDbo data) {
     final OrderedUsers orderedUsers = orderUsers(data.user1(), data.user2());
     db.insertInto(GroupBalances.GROUP_BALANCES)
         .columns(
@@ -38,13 +38,13 @@ public class DefaultBalanceRepository implements BalanceRepository {
   }
 
   @Override
-  public void setByKey(BalanceKeyDto key, BigDecimal newBalance) {
+  public void setByKey(BalanceKeyDbo key, BigDecimal newBalance) {
     //TODO
   }
 
   @Transactional
   @Override
-  public void incrementByKey(final BalanceKeyDto key, final BigDecimal delta) {
+  public void incrementByKey(final BalanceKeyDbo key, final BigDecimal delta) {
     final OrderedUsers orderedUsers = orderUsers(key.user1(), key.user2());
     db.update(GroupBalances.GROUP_BALANCES)
         .set(GroupBalances.GROUP_BALANCES.AMOUNT, GroupBalances.GROUP_BALANCES.AMOUNT.plus(delta))
@@ -55,7 +55,7 @@ public class DefaultBalanceRepository implements BalanceRepository {
   }
 
   @Override
-  public Optional<BalanceEntity> findByKey(final BalanceKeyDto key) {
+  public Optional<BalanceEntity> findByKey(final BalanceKeyDbo key) {
     final OrderedUsers orderedUsers = orderUsers(key.user1(), key.user2());
     return db.select(GroupBalances.GROUP_BALANCES.fields())
         .select(Groups.GROUPS.CURRENCY_CODE)

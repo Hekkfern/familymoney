@@ -1,4 +1,4 @@
-package com.familymoney.domains.transactions.repositories.dtos;
+package com.familymoney.domains.transactions.repositories.dbos;
 
 import com.familymoney.domains.users.types.UserId;
 import java.math.BigDecimal;

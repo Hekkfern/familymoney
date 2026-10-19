@@ -5,8 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.familymoney.domains.auth.repositories.DefaultPasswordResetRepository;
 import com.familymoney.domains.auth.repositories.PasswordResetRepository;
-import com.familymoney.domains.auth.repositories.dtos.CreatePasswordResetDto;
-import com.familymoney.domains.auth.repositories.dtos.UpdatePasswordResetDto;
+import com.familymoney.domains.auth.repositories.dbos.CreatePasswordResetDbo;
+import com.familymoney.domains.auth.repositories.dbos.UpdatePasswordResetDbo;
 import com.familymoney.domains.auth.repositories.entitites.PasswordResetEntity;
 import com.familymoney.domains.auth.types.ExpirationTime;
 import com.familymoney.domains.auth.types.PasswordResetToken;
@@ -61,7 +61,7 @@ class PasswordResetRepositoryTest {
       final ExpirationTime expiresAt = ExpirationTime.of(now.plusSeconds(3600));
 
       final Optional<PasswordResetEntity> result =
-          passwordResetRepository.create(new CreatePasswordResetDto(userId, token, expiresAt, now));
+          passwordResetRepository.create(new CreatePasswordResetDbo(userId, token, expiresAt, now));
 
       assertThat(result).isPresent();
       assertThat(result.get().userId()).isEqualTo(userId);
@@ -86,7 +86,7 @@ class PasswordResetRepositoryTest {
       final PasswordResetToken token = PasswordResetToken.generate();
       final Instant now = Instant.now();
       passwordResetRepository.create(
-          new CreatePasswordResetDto(userId, token, ExpirationTime.of(now.plusSeconds(3600)), now));
+          new CreatePasswordResetDbo(userId, token, ExpirationTime.of(now.plusSeconds(3600)), now));
 
       assertThat(passwordResetRepository.findByUserId(userId)).isPresent();
       assertThat(passwordResetRepository.findByToken(token)).isPresent();
@@ -104,13 +104,13 @@ class PasswordResetRepositoryTest {
       final PasswordResetToken replacementToken = PasswordResetToken.generate();
       final Instant now = Instant.now();
       passwordResetRepository.create(
-          new CreatePasswordResetDto(
+          new CreatePasswordResetDbo(
               userId, initialToken, ExpirationTime.of(now.plusSeconds(300)), now));
 
       final boolean updated =
           passwordResetRepository.updateByUserId(
               userId,
-              new UpdatePasswordResetDto(
+              new UpdatePasswordResetDbo(
                   replacementToken, ExpirationTime.of(now.plusSeconds(600)), now.plusSeconds(60)));
 
       assertThat(updated).isTrue();
@@ -128,7 +128,7 @@ class PasswordResetRepositoryTest {
       final PasswordResetToken token = PasswordResetToken.generate();
       final Instant now = Instant.now();
       passwordResetRepository.create(
-          new CreatePasswordResetDto(userId, token, ExpirationTime.of(now.plusSeconds(3600)), now));
+          new CreatePasswordResetDbo(userId, token, ExpirationTime.of(now.plusSeconds(3600)), now));
 
       assertThat(passwordResetRepository.deleteByUserId(userId)).isTrue();
       assertThat(passwordResetRepository.findByToken(token)).isEmpty();

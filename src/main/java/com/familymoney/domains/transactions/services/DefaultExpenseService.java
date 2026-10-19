@@ -4,14 +4,12 @@ import com.familymoney.domains.transactions.exceptions.ExpenseNotFoundException;
 import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
 import com.familymoney.domains.transactions.repositories.ExpenseRepository;
 import com.familymoney.domains.transactions.repositories.GroupRepository;
-import com.familymoney.domains.transactions.repositories.dtos.CreateExpenseDto;
-import com.familymoney.domains.transactions.repositories.dtos.UpdateExpenseDto;
-import com.familymoney.domains.transactions.repositories.entitites.ExpenseEntity;
-import com.familymoney.domains.transactions.repositories.entitites.ExpensePaymentEntity;
-import com.familymoney.domains.transactions.repositories.entitites.ExpenseShareEntity;
+import com.familymoney.domains.transactions.repositories.dbos.CreateExpenseDbo;
+import com.familymoney.domains.transactions.repositories.dbos.UpdateExpenseDbo;
 import com.familymoney.domains.transactions.repositories.entitites.FullExpenseEntity;
 import com.familymoney.domains.transactions.services.data.ExpenseData;
 import com.familymoney.domains.transactions.services.data.UpdateExpenseData;
+import com.familymoney.domains.transactions.services.mappers.ExpenseDataMapper;
 import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.ExpenseId;
 import com.familymoney.domains.transactions.types.GroupId;
@@ -22,10 +20,8 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Currency;
 import java.util.Map;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.javamoney.moneta.Money;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -51,7 +47,7 @@ public class DefaultExpenseService implements ExpenseService {
     final Currency currency = getGroupCurrency(groupId);
     return expenseRepository
         .findAllByGroupId(groupId, PageRequest.of(page, size))
-        .map(entity -> toExpenseData(entity, currency));
+        .map(entity -> ExpenseDataMapper.fromDbo(entity, currency));
   }
 
   @Override
@@ -66,7 +62,7 @@ public class DefaultExpenseService implements ExpenseService {
     groupChecker.checkIfGroupExists(groupId);
     final ExpenseId id = ExpenseId.generate();
     expenseRepository.create(
-        new CreateExpenseDto(id, description, groupId, requester.id(), doneAt, shares, payers));
+        new CreateExpenseDbo(id, description, groupId, requester.id(), doneAt, shares, payers));
     return id;
   }
 
@@ -79,7 +75,7 @@ public class DefaultExpenseService implements ExpenseService {
     if (requester.role().equals(Role.USER)) {
       groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
     }
-    return toExpenseData(entity, getGroupCurrency(entity.expense().groupId()));
+    return ExpenseDataMapper.fromDbo(entity, getGroupCurrency(entity.expense().groupId()));
   }
 
   @Override
@@ -92,7 +88,7 @@ public class DefaultExpenseService implements ExpenseService {
       groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
     }
     expenseRepository.updateById(
-        id, new UpdateExpenseDto(data.description(), data.doneAt(), data.shares(), data.payers()));
+        id, new UpdateExpenseDbo(data.description(), data.doneAt(), data.shares(), data.payers()));
   }
 
   @Override
@@ -116,31 +112,6 @@ public class DefaultExpenseService implements ExpenseService {
               return new GroupNotFoundException(message);
             })
         .currency();
-  }
-
-  private static ExpenseData toExpenseData(
-      final FullExpenseEntity entity, final Currency currency) {
-    final ExpenseEntity expense = entity.expense();
-    final Map<UserId, BigDecimal> shares =
-        entity.shares().stream()
-            .collect(
-                Collectors.toUnmodifiableMap(
-                    ExpenseShareEntity::userId, ExpenseShareEntity::amount));
-    final Map<UserId, BigDecimal> payers =
-        entity.payments().stream()
-            .collect(
-                Collectors.toUnmodifiableMap(
-                    ExpensePaymentEntity::userId, ExpensePaymentEntity::amount));
-    final BigDecimal totalAmount =
-        shares.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add);
-    return new ExpenseData(
-        expense.id(),
-        expense.groupId(),
-        expense.description(),
-        Money.of(totalAmount, currency.getCurrencyCode()),
-        expense.doneAt(),
-        shares,
-        payers);
   }
 
   private FullExpenseEntity getExpenseFromId(final ExpenseId id) {

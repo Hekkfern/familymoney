@@ -27,7 +27,7 @@ public final class PaymentDtoMapper {
         data.money().getNumber().numberValueExact(BigDecimal.class),
         Currency.getInstance(data.money().getCurrency().getCurrencyCode()),
         data.doneAt(),
-        data.fromUserId().value(),
-        data.toUserId().value());
+        data.from().value(),
+        data.to().value());
   }
 }

@@ -1,4 +1,4 @@
-package com.familymoney.domains.users.repositories.dtos;
+package com.familymoney.domains.users.repositories.dbos;
 
 import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.UserId;
@@ -12,7 +12,7 @@ import com.familymoney.domains.users.types.UserName;
  * @param email the user's email address.
  * @param passwordHash the hashed password to store for the user. Cannot be empty.
  */
-public record CreateUserDto(
+public record CreateUserDbo(
     UserId id,
     UserName username,
     Email email,
@@ -20,7 +20,7 @@ public record CreateUserDto(
     boolean isEnabled,
     boolean isEmailVerified) {
 
-  public CreateUserDto {
+  public CreateUserDbo {
     assert !passwordHash.isEmpty() : "Password hash cannot be empty";
   }
 }

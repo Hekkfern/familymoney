@@ -1,6 +1,6 @@
 package com.familymoney.domains.auth.repositories;
 
-import com.familymoney.domains.auth.repositories.dtos.CreateTokenFamilyBlacklistDto;
+import com.familymoney.domains.auth.repositories.dbos.CreateTokenFamilyBlacklistDbo;
 import com.familymoney.domains.auth.repositories.entitites.TokenFamilyBlacklistEntity;
 import com.familymoney.domains.auth.repositories.mappers.TokenFamilyBlacklistJooqMapper;
 import com.familymoney.domains.auth.types.TokenFamily;
@@ -17,7 +17,7 @@ public class DefaultTokenFamilyBlacklistRepository implements TokenFamilyBlackli
   private final DSLContext db;
 
   @Override
-  public Optional<TokenFamilyBlacklistEntity> create(final CreateTokenFamilyBlacklistDto data) {
+  public Optional<TokenFamilyBlacklistEntity> create(final CreateTokenFamilyBlacklistDbo data) {
     return db.insertInto(TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST)
         .columns(TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST.FAMILY)
         .values(data.family().value())

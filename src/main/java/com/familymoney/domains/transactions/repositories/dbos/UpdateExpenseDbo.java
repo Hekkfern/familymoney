@@ -1,4 +1,4 @@
-package com.familymoney.domains.transactions.repositories.dtos;
+package com.familymoney.domains.transactions.repositories.dbos;
 
 import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.users.types.UserId;
@@ -9,13 +9,13 @@ import lombok.Builder;
 import org.jspecify.annotations.Nullable;
 
 @Builder
-public record UpdateExpenseDto(
+public record UpdateExpenseDbo(
     @Nullable Description description,
     @Nullable Instant doneAt,
     @Nullable Map<UserId, BigDecimal> shares,
     @Nullable Map<UserId, BigDecimal> payers) {
 
-  public UpdateExpenseDto {
+  public UpdateExpenseDbo {
     final boolean isEmptyUpdate =
         description == null && doneAt == null && shares == null && payers == null;
     if (isEmptyUpdate) {

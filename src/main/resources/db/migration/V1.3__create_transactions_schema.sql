@@ -55,20 +55,20 @@ CREATE TABLE payments (
   group_id UUID NOT NULL REFERENCES groups (id),
   description description NOT NULL,
   amount positive_money_amount NOT NULL,
-  creditor UUID NOT NULL REFERENCES users (id),
-  debitor UUID NOT NULL REFERENCES users (id),
+  from_user UUID NOT NULL REFERENCES users (id),
+  to_user UUID NOT NULL REFERENCES users (id),
   done_at TIMESTAMPTZ NOT NULL,
   created_by UUID NOT NULL REFERENCES users (id), -- the user who created it. for auditing purposes.
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), -- the time when it was created. for auditing purposes.
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), -- the time when it was last updated. for auditing purposes.
-  CHECK (creditor <> debitor)
+  CHECK (from_user <> to_user)
 );
 
 CREATE INDEX idx_payments_group_id_done_at ON payments (group_id, done_at DESC);
 
-CREATE INDEX idx_payments_creditor ON payments (creditor);
+CREATE INDEX idx_payments_creditor ON payments (from_user);
 
-CREATE INDEX idx_payments_debitor ON payments (debitor);
+CREATE INDEX idx_payments_debitor ON payments (to_user);
 
 CREATE INDEX idx_payments_created_by ON payments (created_by);
 

@@ -11,7 +11,7 @@ public record PaymentEntity(
     PaymentId id,
     Description description,
     BigDecimal amount,
-    UserId creditor,
-    UserId debitor,
+    UserId from,
+    UserId to,
     GroupId groupId,
     Instant doneAt) {}

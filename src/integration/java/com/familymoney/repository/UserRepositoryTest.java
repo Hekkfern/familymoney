@@ -6,8 +6,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.familymoney.domains.users.repositories.DefaultUserRepository;
 import com.familymoney.domains.users.repositories.UserRepository;
-import com.familymoney.domains.users.repositories.dtos.CreateUserDto;
-import com.familymoney.domains.users.repositories.dtos.UpdateUserDto;
+import com.familymoney.domains.users.repositories.dbos.CreateUserDbo;
+import com.familymoney.domains.users.repositories.dbos.UpdateUserDbo;
 import com.familymoney.domains.users.repositories.entitites.UserEntity;
 import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.UserId;
@@ -84,7 +84,7 @@ class UserRepositoryTest {
 
       final Optional<UserEntity> userCreated =
           userRepository.create(
-              new CreateUserDto(userId, username, email, passwordHash, true, false));
+              new CreateUserDbo(userId, username, email, passwordHash, true, false));
 
       assertThat(userCreated).isPresent();
       final UserEntity user = userCreated.get();
@@ -107,12 +107,12 @@ class UserRepositoryTest {
       final Email email = Email.fromString(FakeGenerator.email());
       final String passwordHash = "hashed-password";
 
-      final CreateUserDto dto1 =
-          new CreateUserDto(userId1, username1, email, passwordHash, true, false);
+      final CreateUserDbo dto1 =
+          new CreateUserDbo(userId1, username1, email, passwordHash, true, false);
       userRepository.create(dto1);
 
-      final CreateUserDto dto2 =
-          new CreateUserDto(userId2, username2, email, passwordHash, true, false);
+      final CreateUserDbo dto2 =
+          new CreateUserDbo(userId2, username2, email, passwordHash, true, false);
       assertThatThrownBy(() -> userRepository.create(dto2))
           .isInstanceOf(DuplicateKeyException.class);
     }
@@ -126,12 +126,12 @@ class UserRepositoryTest {
       final Email email2 = Email.fromString(FakeGenerator.email());
       final String passwordHash = "hashed-password";
 
-      final CreateUserDto dto1 =
-          new CreateUserDto(userId1, username, email1, passwordHash, true, false);
+      final CreateUserDbo dto1 =
+          new CreateUserDbo(userId1, username, email1, passwordHash, true, false);
       userRepository.create(dto1);
 
-      final CreateUserDto dto2 =
-          new CreateUserDto(userId2, username, email2, passwordHash, true, false);
+      final CreateUserDbo dto2 =
+          new CreateUserDbo(userId2, username, email2, passwordHash, true, false);
       assertThatThrownBy(() -> userRepository.create(dto2))
           .isInstanceOf(DuplicateKeyException.class);
     }
@@ -330,8 +330,8 @@ class UserRepositoryTest {
       final Instant now = Instant.now();
       databaseCrud.insertUser(userId, username1, email1, "hashed_password", now, false, true);
 
-      final UpdateUserDto dataToUpdate =
-          UpdateUserDto.builder()
+      final UpdateUserDbo dataToUpdate =
+          UpdateUserDbo.builder()
               .username(username2)
               .email(email2)
               .hashedPassword("updated-hash")
@@ -368,7 +368,7 @@ class UserRepositoryTest {
       final Instant now = Instant.now();
       databaseCrud.insertUser(userId, username1, email, "hashed_password", now, false, true);
 
-      final UpdateUserDto dataToUpdate = UpdateUserDto.builder().username(username2).build();
+      final UpdateUserDbo dataToUpdate = UpdateUserDbo.builder().username(username2).build();
 
       final boolean updated = userRepository.updateById(userId, dataToUpdate);
 
@@ -394,8 +394,8 @@ class UserRepositoryTest {
     void returns_false_when_userid_not_found() {
       final UserId userId = UserId.generate();
 
-      final UpdateUserDto updateData =
-          UpdateUserDto.builder().email(Email.fromString(FakeGenerator.email())).build();
+      final UpdateUserDbo updateData =
+          UpdateUserDbo.builder().email(Email.fromString(FakeGenerator.email())).build();
 
       final boolean updated = userRepository.updateById(userId, updateData);
 

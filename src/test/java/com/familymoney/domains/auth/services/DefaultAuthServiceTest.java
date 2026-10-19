@@ -33,14 +33,14 @@ import com.familymoney.domains.auth.repositories.PasswordResetRepository;
 import com.familymoney.domains.auth.repositories.RefreshTokenRepository;
 import com.familymoney.domains.auth.repositories.TokenFamilyBlacklistRepository;
 import com.familymoney.domains.auth.repositories.UsedRefreshTokenRepository;
-import com.familymoney.domains.auth.repositories.dtos.CreateEmailVerificationDto;
-import com.familymoney.domains.auth.repositories.dtos.CreatePasswordResetDto;
-import com.familymoney.domains.auth.repositories.dtos.CreateRefreshTokenDto;
-import com.familymoney.domains.auth.repositories.dtos.CreateTokenFamilyBlacklistDto;
-import com.familymoney.domains.auth.repositories.dtos.CreateUsedRefreshTokenDto;
-import com.familymoney.domains.auth.repositories.dtos.UpdateEmailVerificationTokenDto;
-import com.familymoney.domains.auth.repositories.dtos.UpdatePasswordResetDto;
-import com.familymoney.domains.auth.repositories.dtos.UpdateRefreshTokenDto;
+import com.familymoney.domains.auth.repositories.dbos.CreateEmailVerificationDbo;
+import com.familymoney.domains.auth.repositories.dbos.CreatePasswordResetDbo;
+import com.familymoney.domains.auth.repositories.dbos.CreateRefreshTokenDbo;
+import com.familymoney.domains.auth.repositories.dbos.CreateTokenFamilyBlacklistDbo;
+import com.familymoney.domains.auth.repositories.dbos.CreateUsedRefreshTokenDbo;
+import com.familymoney.domains.auth.repositories.dbos.UpdateEmailVerificationTokenDbo;
+import com.familymoney.domains.auth.repositories.dbos.UpdatePasswordResetDbo;
+import com.familymoney.domains.auth.repositories.dbos.UpdateRefreshTokenDbo;
 import com.familymoney.domains.auth.repositories.entitites.EmailVerificationEntity;
 import com.familymoney.domains.auth.repositories.entitites.PasswordResetEntity;
 import com.familymoney.domains.auth.repositories.entitites.RefreshTokenEntity;
@@ -55,8 +55,8 @@ import com.familymoney.domains.auth.types.RefreshToken;
 import com.familymoney.domains.auth.types.TokenFamily;
 import com.familymoney.domains.users.repositories.RoleRepository;
 import com.familymoney.domains.users.repositories.UserRepository;
-import com.familymoney.domains.users.repositories.dtos.CreateUserDto;
-import com.familymoney.domains.users.repositories.dtos.UpdateUserDto;
+import com.familymoney.domains.users.repositories.dbos.CreateUserDbo;
+import com.familymoney.domains.users.repositories.dbos.UpdateUserDbo;
 import com.familymoney.domains.users.repositories.entitites.UserEntity;
 import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.Password;
@@ -128,10 +128,10 @@ class DefaultAuthServiceTest {
   @InjectMocks private DefaultAuthService authService;
 
   private void mockUserRepositoryCreate() {
-    when(userRepository.create(any(CreateUserDto.class)))
+    when(userRepository.create(any(CreateUserDbo.class)))
         .thenAnswer(
             invocation -> {
-              CreateUserDto dto = invocation.getArgument(0, CreateUserDto.class);
+              CreateUserDbo dto = invocation.getArgument(0, CreateUserDbo.class);
               return Optional.of(
                   new UserEntity(
                       dto.id(), // return the same UserId received
@@ -146,11 +146,11 @@ class DefaultAuthServiceTest {
   }
 
   private void mockEmailVerificationRepositoryCreate() {
-    when(emailVerificationRepository.create(any(CreateEmailVerificationDto.class)))
+    when(emailVerificationRepository.create(any(CreateEmailVerificationDbo.class)))
         .thenAnswer(
             invocation -> {
-              CreateEmailVerificationDto dto =
-                  invocation.getArgument(0, CreateEmailVerificationDto.class);
+              CreateEmailVerificationDbo dto =
+                  invocation.getArgument(0, CreateEmailVerificationDbo.class);
               return Optional.of(
                   new EmailVerificationEntity(dto.userId(), now, now, dto.expiresAt(), now));
             });
@@ -168,10 +168,10 @@ class DefaultAuthServiceTest {
   }
 
   private void mockRefreshTokenRepositoryCreate() {
-    when(refreshTokenRepository.create(any(CreateRefreshTokenDto.class)))
+    when(refreshTokenRepository.create(any(CreateRefreshTokenDbo.class)))
         .thenAnswer(
             invocation -> {
-              CreateRefreshTokenDto dto = invocation.getArgument(0, CreateRefreshTokenDto.class);
+              CreateRefreshTokenDbo dto = invocation.getArgument(0, CreateRefreshTokenDbo.class);
               return Optional.of(
                   new RefreshTokenEntity(
                       dto.id(), dto.userId(), now, now, dto.expiresAt(), dto.family()));
@@ -260,11 +260,11 @@ class DefaultAuthServiceTest {
       assertThatCode(() -> authService.registerUser(username, email, password))
           .doesNotThrowAnyException();
 
-      final ArgumentCaptor<CreateEmailVerificationDto> verificationDtoCaptor =
-          ArgumentCaptor.forClass(CreateEmailVerificationDto.class);
+      final ArgumentCaptor<CreateEmailVerificationDbo> verificationDtoCaptor =
+          ArgumentCaptor.forClass(CreateEmailVerificationDbo.class);
       final ArgumentCaptor<EmailVerificationRequestedEvent> eventCaptor =
           ArgumentCaptor.forClass(EmailVerificationRequestedEvent.class);
-      verify(userRepository).create(any(CreateUserDto.class));
+      verify(userRepository).create(any(CreateUserDbo.class));
       verify(emailVerificationRepository).create(verificationDtoCaptor.capture());
       verify(permissionsRepository).setRoleForUserId(any(UserId.class), any(Role.class));
       verify(eventPublisher).publishEvent(eventCaptor.capture());
@@ -272,7 +272,7 @@ class DefaultAuthServiceTest {
           .sendEmailVerificationEmail(
               any(Email.class), any(UserName.class), any(EmailVerificationToken.class));
 
-      final CreateEmailVerificationDto verificationDto = verificationDtoCaptor.getValue();
+      final CreateEmailVerificationDbo verificationDto = verificationDtoCaptor.getValue();
       final EmailVerificationRequestedEvent event = eventCaptor.getValue();
       assertThat(event.userId()).isEqualTo(verificationDto.userId());
       assertThat(event.email()).isEqualTo(email);
@@ -288,7 +288,7 @@ class DefaultAuthServiceTest {
       final Email email = Email.fromString(FakeGenerator.email());
       final Password password = Password.fromString(FakeGenerator.password());
 
-      when(userRepository.create(any(CreateUserDto.class)))
+      when(userRepository.create(any(CreateUserDbo.class)))
           .thenThrow(
               new DuplicateKeyException(
                   "Concurrent duplicate user",
@@ -302,7 +302,7 @@ class DefaultAuthServiceTest {
           () -> authService.registerUser(username, email, password));
 
       verify(permissionsRepository, never()).setRoleForUserId(any(UserId.class), any(Role.class));
-      verify(emailVerificationRepository, never()).create(any(CreateEmailVerificationDto.class));
+      verify(emailVerificationRepository, never()).create(any(CreateEmailVerificationDbo.class));
       verify(eventPublisher, never()).publishEvent(any(EmailVerificationRequestedEvent.class));
       verify(emailSenderService, never())
           .sendEmailVerificationEmail(
@@ -315,7 +315,7 @@ class DefaultAuthServiceTest {
       final Email email = Email.fromString(FakeGenerator.email());
       final Password password = Password.fromString(FakeGenerator.password());
 
-      when(userRepository.create(any(CreateUserDto.class)))
+      when(userRepository.create(any(CreateUserDbo.class)))
           .thenThrow(
               new DuplicateKeyException(
                   "Duplicate generated user ID",
@@ -327,7 +327,7 @@ class DefaultAuthServiceTest {
           () -> authService.registerUser(username, email, password));
 
       verify(permissionsRepository, never()).setRoleForUserId(any(UserId.class), any(Role.class));
-      verify(emailVerificationRepository, never()).create(any(CreateEmailVerificationDto.class));
+      verify(emailVerificationRepository, never()).create(any(CreateEmailVerificationDbo.class));
       verify(eventPublisher, never()).publishEvent(any(EmailVerificationRequestedEvent.class));
     }
 
@@ -337,7 +337,7 @@ class DefaultAuthServiceTest {
       final Email email = Email.fromString(FakeGenerator.email());
       final Password password = Password.fromString(FakeGenerator.password());
 
-      when(userRepository.create(any(CreateUserDto.class))).thenReturn(Optional.empty());
+      when(userRepository.create(any(CreateUserDbo.class))).thenReturn(Optional.empty());
 
       assertThrows(
           DatabaseExecutionException.class,
@@ -362,7 +362,7 @@ class DefaultAuthServiceTest {
           DatabaseExecutionException.class,
           () -> authService.registerUser(username, email, password));
 
-      verify(emailVerificationRepository, never()).create(any(CreateEmailVerificationDto.class));
+      verify(emailVerificationRepository, never()).create(any(CreateEmailVerificationDbo.class));
       verify(eventPublisher, never()).publishEvent(any(EmailVerificationRequestedEvent.class));
       verify(emailSenderService, never())
           .sendEmailVerificationEmail(
@@ -378,7 +378,7 @@ class DefaultAuthServiceTest {
       mockUserRepositoryCreate();
       when(permissionsRepository.setRoleForUserId(any(UserId.class), eq(Role.USER)))
           .thenReturn(true);
-      when(emailVerificationRepository.create(any(CreateEmailVerificationDto.class)))
+      when(emailVerificationRepository.create(any(CreateEmailVerificationDbo.class)))
           .thenReturn(Optional.empty());
 
       assertThrows(
@@ -414,7 +414,7 @@ class DefaultAuthServiceTest {
               })
           .doesNotThrowAnyException();
 
-      verify(refreshTokenRepository).create(any(CreateRefreshTokenDto.class));
+      verify(refreshTokenRepository).create(any(CreateRefreshTokenDbo.class));
     }
 
     @Test
@@ -430,7 +430,7 @@ class DefaultAuthServiceTest {
       verify(passwordEncoder).verify(eq(password.value()), anyString());
       verify(passwordEncoder, never()).verifyDummyPassword(anyString());
       verify(jwtUtils, never()).generateAccessToken(any(UserId.class), any(TokenFamily.class));
-      verify(refreshTokenRepository, never()).create(any(CreateRefreshTokenDto.class));
+      verify(refreshTokenRepository, never()).create(any(CreateRefreshTokenDbo.class));
     }
 
     @Test
@@ -446,7 +446,7 @@ class DefaultAuthServiceTest {
       verify(passwordEncoder).verifyDummyPassword(password.value());
       verify(passwordEncoder, never()).verify(anyString(), anyString());
       verify(jwtUtils, never()).generateAccessToken(any(UserId.class), any(TokenFamily.class));
-      verify(refreshTokenRepository, never()).create(any(CreateRefreshTokenDto.class));
+      verify(refreshTokenRepository, never()).create(any(CreateRefreshTokenDbo.class));
     }
 
     @Test
@@ -458,7 +458,7 @@ class DefaultAuthServiceTest {
       when(passwordEncoder.verify(eq(password.value()), anyString())).thenReturn(true);
       when(jwtUtils.generateAccessToken(any(UserId.class), any(TokenFamily.class)))
           .thenReturn(AccessToken.fromString(FakeGenerator.accessToken()));
-      when(refreshTokenRepository.create(any(CreateRefreshTokenDto.class)))
+      when(refreshTokenRepository.create(any(CreateRefreshTokenDbo.class)))
           .thenReturn(Optional.empty());
 
       assertThrows(DatabaseExecutionException.class, () -> authService.loginUser(email, password));
@@ -477,7 +477,7 @@ class DefaultAuthServiceTest {
       verify(passwordEncoder).verify(eq(password.value()), anyString());
       verify(passwordEncoder, never()).verifyDummyPassword(anyString());
       verify(jwtUtils, never()).generateAccessToken(any(UserId.class), any(TokenFamily.class));
-      verify(refreshTokenRepository, never()).create(any(CreateRefreshTokenDto.class));
+      verify(refreshTokenRepository, never()).create(any(CreateRefreshTokenDbo.class));
     }
 
     @Test
@@ -493,7 +493,7 @@ class DefaultAuthServiceTest {
       verify(passwordEncoder).verify(eq(password.value()), anyString());
       verify(passwordEncoder, never()).verifyDummyPassword(anyString());
       verify(jwtUtils, never()).generateAccessToken(any(UserId.class), any(TokenFamily.class));
-      verify(refreshTokenRepository, never()).create(any(CreateRefreshTokenDto.class));
+      verify(refreshTokenRepository, never()).create(any(CreateRefreshTokenDbo.class));
     }
   }
 
@@ -506,10 +506,10 @@ class DefaultAuthServiceTest {
 
       mockRefreshTokenFindByToken();
       mockRefreshTokenOwner(true);
-      when(usedRefreshTokenRepository.create(any(CreateUsedRefreshTokenDto.class)))
+      when(usedRefreshTokenRepository.create(any(CreateUsedRefreshTokenDbo.class)))
           .thenReturn(Optional.of(new UsedRefreshTokenEntity(TokenFamily.generate(), now, now)));
       when(refreshTokenRepository.updateByToken(
-              any(RefreshToken.class), any(UpdateRefreshTokenDto.class)))
+              any(RefreshToken.class), any(UpdateRefreshTokenDbo.class)))
           .thenReturn(true);
       when(jwtUtils.generateAccessToken(any(UserId.class), any(TokenFamily.class)))
           .thenReturn(AccessToken.fromString(FakeGenerator.accessToken()));
@@ -529,7 +529,7 @@ class DefaultAuthServiceTest {
           .create(argThat(data -> data.token().equals(refreshToken)));
       inOrder
           .verify(refreshTokenRepository)
-          .updateByToken(any(RefreshToken.class), any(UpdateRefreshTokenDto.class));
+          .updateByToken(any(RefreshToken.class), any(UpdateRefreshTokenDbo.class));
     }
 
     @Test
@@ -551,7 +551,7 @@ class DefaultAuthServiceTest {
 
       mockRefreshTokenFindByToken();
       mockRefreshTokenOwner(true);
-      when(usedRefreshTokenRepository.create(any(CreateUsedRefreshTokenDto.class)))
+      when(usedRefreshTokenRepository.create(any(CreateUsedRefreshTokenDbo.class)))
           .thenReturn(Optional.of(new UsedRefreshTokenEntity(TokenFamily.generate(), now, now)));
       when(refreshTokenRepository.updateByToken(any(), any())).thenReturn(false);
       when(jwtUtils.generateAccessToken(any(UserId.class), any(TokenFamily.class)))
@@ -567,15 +567,15 @@ class DefaultAuthServiceTest {
       when(refreshTokenRepository.findByToken(refreshToken)).thenReturn(Optional.empty());
       when(usedRefreshTokenRepository.findByToken(refreshToken))
           .thenReturn(Optional.of(new UsedRefreshTokenEntity(family, now, now)));
-      when(tokenFamilyBlacklistRepository.create(any(CreateTokenFamilyBlacklistDto.class)))
+      when(tokenFamilyBlacklistRepository.create(any(CreateTokenFamilyBlacklistDbo.class)))
           .thenReturn(Optional.of(new TokenFamilyBlacklistEntity(family, now)));
 
       assertThrows(
           RefreshTokenReuseDetectedException.class, () -> authService.refreshTokens(refreshToken));
 
-      verify(tokenFamilyBlacklistRepository).create(new CreateTokenFamilyBlacklistDto(family));
+      verify(tokenFamilyBlacklistRepository).create(new CreateTokenFamilyBlacklistDbo(family));
       verify(refreshTokenRepository, never())
-          .updateByToken(any(RefreshToken.class), any(UpdateRefreshTokenDto.class));
+          .updateByToken(any(RefreshToken.class), any(UpdateRefreshTokenDbo.class));
       verify(jwtUtils, never()).generateAccessToken(any(UserId.class), any(TokenFamily.class));
     }
 
@@ -585,13 +585,13 @@ class DefaultAuthServiceTest {
 
       mockRefreshTokenFindByToken();
       mockRefreshTokenOwner(true);
-      when(usedRefreshTokenRepository.create(any(CreateUsedRefreshTokenDto.class)))
+      when(usedRefreshTokenRepository.create(any(CreateUsedRefreshTokenDbo.class)))
           .thenReturn(Optional.empty());
-      when(tokenFamilyBlacklistRepository.create(any(CreateTokenFamilyBlacklistDto.class)))
+      when(tokenFamilyBlacklistRepository.create(any(CreateTokenFamilyBlacklistDbo.class)))
           .thenAnswer(
               invocation -> {
-                final CreateTokenFamilyBlacklistDto dto =
-                    invocation.getArgument(0, CreateTokenFamilyBlacklistDto.class);
+                final CreateTokenFamilyBlacklistDbo dto =
+                    invocation.getArgument(0, CreateTokenFamilyBlacklistDbo.class);
                 return Optional.of(new TokenFamilyBlacklistEntity(dto.family(), now));
               });
 
@@ -599,7 +599,7 @@ class DefaultAuthServiceTest {
           RefreshTokenReuseDetectedException.class, () -> authService.refreshTokens(refreshToken));
 
       verify(refreshTokenRepository, never())
-          .updateByToken(any(RefreshToken.class), any(UpdateRefreshTokenDto.class));
+          .updateByToken(any(RefreshToken.class), any(UpdateRefreshTokenDbo.class));
       verify(jwtUtils, never()).generateAccessToken(any(UserId.class), any(TokenFamily.class));
     }
 
@@ -610,7 +610,7 @@ class DefaultAuthServiceTest {
       when(refreshTokenRepository.findByToken(refreshToken)).thenReturn(Optional.empty());
       when(usedRefreshTokenRepository.findByToken(refreshToken))
           .thenReturn(Optional.of(new UsedRefreshTokenEntity(family, now, now)));
-      when(tokenFamilyBlacklistRepository.create(any(CreateTokenFamilyBlacklistDto.class)))
+      when(tokenFamilyBlacklistRepository.create(any(CreateTokenFamilyBlacklistDbo.class)))
           .thenReturn(Optional.empty());
 
       assertThrows(
@@ -649,7 +649,7 @@ class DefaultAuthServiceTest {
       assertThrows(UserNotEnabledException.class, () -> authService.refreshTokens(refreshToken));
 
       verify(refreshTokenRepository, never())
-          .updateByToken(any(RefreshToken.class), any(UpdateRefreshTokenDto.class));
+          .updateByToken(any(RefreshToken.class), any(UpdateRefreshTokenDbo.class));
       verify(jwtUtils, never()).generateAccessToken(any(UserId.class), any(TokenFamily.class));
     }
 
@@ -664,7 +664,7 @@ class DefaultAuthServiceTest {
       assertThrows(BlacklistedFamilyException.class, () -> authService.refreshTokens(refreshToken));
 
       verify(refreshTokenRepository, never())
-          .updateByToken(any(RefreshToken.class), any(UpdateRefreshTokenDto.class));
+          .updateByToken(any(RefreshToken.class), any(UpdateRefreshTokenDbo.class));
     }
   }
 
@@ -676,13 +676,13 @@ class DefaultAuthServiceTest {
       final EmailVerificationToken emailVerificationToken = EmailVerificationToken.generate();
 
       mockEmailVerificationTokenFindByToken();
-      when(userRepository.updateById(any(UserId.class), any(UpdateUserDto.class))).thenReturn(true);
+      when(userRepository.updateById(any(UserId.class), any(UpdateUserDbo.class))).thenReturn(true);
       when(emailVerificationRepository.deleteByUserId(any(UserId.class))).thenReturn(true);
 
       assertThatCode(() -> authService.verifyEmail(emailVerificationToken))
           .doesNotThrowAnyException();
 
-      verify(userRepository).updateById(any(UserId.class), any(UpdateUserDto.class));
+      verify(userRepository).updateById(any(UserId.class), any(UpdateUserDbo.class));
       verify(emailVerificationRepository).deleteByUserId(any(UserId.class));
     }
 
@@ -720,7 +720,7 @@ class DefaultAuthServiceTest {
           VerificationTokenExpiredException.class,
           () -> authService.verifyEmail(emailVerificationToken));
 
-      verify(userRepository, never()).updateById(any(UserId.class), any(UpdateUserDto.class));
+      verify(userRepository, never()).updateById(any(UserId.class), any(UpdateUserDbo.class));
       verify(emailVerificationRepository, never()).deleteByUserId(any(UserId.class));
     }
 
@@ -729,13 +729,13 @@ class DefaultAuthServiceTest {
       final EmailVerificationToken emailVerificationToken = EmailVerificationToken.generate();
 
       mockEmailVerificationTokenFindByToken();
-      when(userRepository.updateById(any(UserId.class), any(UpdateUserDto.class)))
+      when(userRepository.updateById(any(UserId.class), any(UpdateUserDbo.class)))
           .thenReturn(false);
 
       assertThrows(
           DatabaseExecutionException.class, () -> authService.verifyEmail(emailVerificationToken));
 
-      verify(userRepository).updateById(any(UserId.class), any(UpdateUserDto.class));
+      verify(userRepository).updateById(any(UserId.class), any(UpdateUserDbo.class));
       verify(emailVerificationRepository, never()).deleteByUserId(any(UserId.class));
     }
 
@@ -744,13 +744,13 @@ class DefaultAuthServiceTest {
       final EmailVerificationToken emailVerificationToken = EmailVerificationToken.generate();
 
       mockEmailVerificationTokenFindByToken();
-      when(userRepository.updateById(any(UserId.class), any(UpdateUserDto.class))).thenReturn(true);
+      when(userRepository.updateById(any(UserId.class), any(UpdateUserDbo.class))).thenReturn(true);
       when(emailVerificationRepository.deleteByUserId(any(UserId.class))).thenReturn(false);
 
       assertThrows(
           DatabaseExecutionException.class, () -> authService.verifyEmail(emailVerificationToken));
 
-      verify(userRepository).updateById(any(UserId.class), any(UpdateUserDto.class));
+      verify(userRepository).updateById(any(UserId.class), any(UpdateUserDbo.class));
       verify(emailVerificationRepository).deleteByUserId(any(UserId.class));
     }
   }
@@ -773,7 +773,7 @@ class DefaultAuthServiceTest {
                       ExpirationTime.of(now.plusSeconds(100)),
                       now.minusSeconds(3600))));
       when(emailVerificationRepository.updateByUserId(
-              any(UserId.class), any(UpdateEmailVerificationTokenDto.class)))
+              any(UserId.class), any(UpdateEmailVerificationTokenDbo.class)))
           .thenReturn(true);
 
       assertThatCode(() -> authService.resendVerificationEmail(email)).doesNotThrowAnyException();
@@ -803,8 +803,8 @@ class DefaultAuthServiceTest {
           () -> authService.resendVerificationEmail(email));
 
       verify(emailVerificationRepository, never())
-          .updateByUserId(any(UserId.class), any(UpdateEmailVerificationTokenDto.class));
-      verify(emailVerificationRepository, never()).create(any(CreateEmailVerificationDto.class));
+          .updateByUserId(any(UserId.class), any(UpdateEmailVerificationTokenDbo.class));
+      verify(emailVerificationRepository, never()).create(any(CreateEmailVerificationDbo.class));
       verify(emailSenderService, never())
           .sendEmailVerificationEmail(
               any(Email.class), any(UserName.class), any(EmailVerificationToken.class));
@@ -825,13 +825,13 @@ class DefaultAuthServiceTest {
                       ExpirationTime.of(now.plusSeconds(100)),
                       now.minusSeconds(3600))));
       when(emailVerificationRepository.updateByUserId(
-              any(UserId.class), any(UpdateEmailVerificationTokenDto.class)))
+              any(UserId.class), any(UpdateEmailVerificationTokenDbo.class)))
           .thenReturn(false);
 
       assertThrows(
           DatabaseExecutionException.class, () -> authService.resendVerificationEmail(email));
 
-      verify(emailVerificationRepository, never()).create(any(CreateEmailVerificationDto.class));
+      verify(emailVerificationRepository, never()).create(any(CreateEmailVerificationDbo.class));
       verify(emailSenderService, never())
           .sendEmailVerificationEmail(
               any(Email.class), any(UserName.class), any(EmailVerificationToken.class));
@@ -875,7 +875,7 @@ class DefaultAuthServiceTest {
       assertThatCode(() -> authService.forgotPassword(email)).doesNotThrowAnyException();
 
       verify(passwordResetRepository, never()).findByUserId(any(UserId.class));
-      verify(passwordResetRepository, never()).create(any(CreatePasswordResetDto.class));
+      verify(passwordResetRepository, never()).create(any(CreatePasswordResetDbo.class));
       verify(eventPublisher, never()).publishEvent(any(PasswordResetRequestedEvent.class));
     }
 
@@ -887,7 +887,7 @@ class DefaultAuthServiceTest {
       assertThatCode(() -> authService.forgotPassword(email)).doesNotThrowAnyException();
 
       verify(passwordResetRepository, never()).findByUserId(any(UserId.class));
-      verify(passwordResetRepository, never()).create(any(CreatePasswordResetDto.class));
+      verify(passwordResetRepository, never()).create(any(CreatePasswordResetDbo.class));
       verify(eventPublisher, never()).publishEvent(any(PasswordResetRequestedEvent.class));
     }
 
@@ -902,10 +902,10 @@ class DefaultAuthServiceTest {
                   new UserEntity(
                       userId, username, email, "hashed-password", now, now, true, true)));
       when(passwordResetRepository.findByUserId(userId)).thenReturn(Optional.empty());
-      when(passwordResetRepository.create(any(CreatePasswordResetDto.class)))
+      when(passwordResetRepository.create(any(CreatePasswordResetDbo.class)))
           .thenAnswer(
               invocation -> {
-                final CreatePasswordResetDto data = invocation.getArgument(0);
+                final CreatePasswordResetDbo data = invocation.getArgument(0);
                 return Optional.of(
                     new PasswordResetEntity(
                         data.userId(), now, now, data.expiresAt(), data.lastSentAt()));
@@ -913,14 +913,14 @@ class DefaultAuthServiceTest {
 
       authService.forgotPassword(email);
 
-      final ArgumentCaptor<CreatePasswordResetDto> resetDtoCaptor =
-          ArgumentCaptor.forClass(CreatePasswordResetDto.class);
+      final ArgumentCaptor<CreatePasswordResetDbo> resetDtoCaptor =
+          ArgumentCaptor.forClass(CreatePasswordResetDbo.class);
       final ArgumentCaptor<PasswordResetRequestedEvent> eventCaptor =
           ArgumentCaptor.forClass(PasswordResetRequestedEvent.class);
       verify(passwordResetRepository).create(resetDtoCaptor.capture());
       verify(eventPublisher).publishEvent(eventCaptor.capture());
 
-      final CreatePasswordResetDto resetDto = resetDtoCaptor.getValue();
+      final CreatePasswordResetDbo resetDto = resetDtoCaptor.getValue();
       final PasswordResetRequestedEvent event = eventCaptor.getValue();
       assertThat(resetDto.userId()).isEqualTo(userId);
       assertThat(resetDto.lastSentAt()).isEqualTo(now);
@@ -955,9 +955,9 @@ class DefaultAuthServiceTest {
 
       assertThatCode(() -> authService.forgotPassword(email)).doesNotThrowAnyException();
 
-      verify(passwordResetRepository, never()).create(any(CreatePasswordResetDto.class));
+      verify(passwordResetRepository, never()).create(any(CreatePasswordResetDbo.class));
       verify(passwordResetRepository, never())
-          .updateByUserId(any(UserId.class), any(UpdatePasswordResetDto.class));
+          .updateByUserId(any(UserId.class), any(UpdatePasswordResetDbo.class));
       verify(eventPublisher, never()).publishEvent(any(PasswordResetRequestedEvent.class));
     }
   }
@@ -975,13 +975,13 @@ class DefaultAuthServiceTest {
               Optional.of(
                   new PasswordResetEntity(
                       userId, now, now, ExpirationTime.of(now.plus(Duration.ofHours(1))), now)));
-      when(userRepository.updateById(any(UserId.class), any(UpdateUserDto.class))).thenReturn(true);
+      when(userRepository.updateById(any(UserId.class), any(UpdateUserDbo.class))).thenReturn(true);
       when(passwordResetRepository.deleteByUserId(userId)).thenReturn(true);
 
       authService.resetPassword(token, newPassword);
 
-      final ArgumentCaptor<UpdateUserDto> updateCaptor =
-          ArgumentCaptor.forClass(UpdateUserDto.class);
+      final ArgumentCaptor<UpdateUserDbo> updateCaptor =
+          ArgumentCaptor.forClass(UpdateUserDbo.class);
       verify(userRepository).updateById(eq(userId), updateCaptor.capture());
       verify(passwordResetRepository).deleteByUserId(userId);
       verify(refreshTokenRepository).deleteByUserId(userId);
@@ -999,7 +999,7 @@ class DefaultAuthServiceTest {
           ResetPasswordTokenNotFoundException.class,
           () -> authService.resetPassword(token, Password.fromString(FakeGenerator.password())));
 
-      verify(userRepository, never()).updateById(any(UserId.class), any(UpdateUserDto.class));
+      verify(userRepository, never()).updateById(any(UserId.class), any(UpdateUserDbo.class));
       verify(refreshTokenRepository, never()).deleteByUserId(any(UserId.class));
     }
 
@@ -1016,7 +1016,7 @@ class DefaultAuthServiceTest {
           ResetPasswordTokenExpiredException.class,
           () -> authService.resetPassword(token, Password.fromString(FakeGenerator.password())));
 
-      verify(userRepository, never()).updateById(any(UserId.class), any(UpdateUserDto.class));
+      verify(userRepository, never()).updateById(any(UserId.class), any(UpdateUserDbo.class));
       verify(refreshTokenRepository, never()).deleteByUserId(any(UserId.class));
     }
 
@@ -1032,7 +1032,7 @@ class DefaultAuthServiceTest {
                       now,
                       ExpirationTime.of(now.plus(Duration.ofHours(1))),
                       now)));
-      when(userRepository.updateById(any(UserId.class), any(UpdateUserDto.class)))
+      when(userRepository.updateById(any(UserId.class), any(UpdateUserDbo.class)))
           .thenReturn(false);
 
       assertThrows(
@@ -1052,13 +1052,13 @@ class DefaultAuthServiceTest {
 
       mockRefreshTokenFindByToken();
       when(refreshTokenRepository.deleteByToken(any(RefreshToken.class))).thenReturn(true);
-      when(tokenFamilyBlacklistRepository.create(any(CreateTokenFamilyBlacklistDto.class)))
+      when(tokenFamilyBlacklistRepository.create(any(CreateTokenFamilyBlacklistDbo.class)))
           .thenReturn(Optional.of(new TokenFamilyBlacklistEntity(TokenFamily.generate(), now)));
 
       assertThatCode(() -> authService.logoutUser(refreshToken)).doesNotThrowAnyException();
 
       verify(refreshTokenRepository).deleteByToken(any(RefreshToken.class));
-      verify(tokenFamilyBlacklistRepository).create(any(CreateTokenFamilyBlacklistDto.class));
+      verify(tokenFamilyBlacklistRepository).create(any(CreateTokenFamilyBlacklistDbo.class));
     }
 
     @Test
@@ -1071,7 +1071,7 @@ class DefaultAuthServiceTest {
 
       verify(refreshTokenRepository, never()).deleteByToken(any(RefreshToken.class));
       verify(tokenFamilyBlacklistRepository, never())
-          .create(any(CreateTokenFamilyBlacklistDto.class));
+          .create(any(CreateTokenFamilyBlacklistDbo.class));
     }
 
     @Test
@@ -1096,7 +1096,7 @@ class DefaultAuthServiceTest {
 
       verify(refreshTokenRepository, never()).deleteByToken(any(RefreshToken.class));
       verify(tokenFamilyBlacklistRepository, never())
-          .create(any(CreateTokenFamilyBlacklistDto.class));
+          .create(any(CreateTokenFamilyBlacklistDbo.class));
     }
 
     @Test
@@ -1110,7 +1110,7 @@ class DefaultAuthServiceTest {
 
       verify(refreshTokenRepository, never()).deleteByToken(any(RefreshToken.class));
       verify(tokenFamilyBlacklistRepository, never())
-          .create(any(CreateTokenFamilyBlacklistDto.class));
+          .create(any(CreateTokenFamilyBlacklistDbo.class));
     }
 
     @Test
@@ -1132,13 +1132,13 @@ class DefaultAuthServiceTest {
 
       mockRefreshTokenFindByToken();
       when(refreshTokenRepository.deleteByToken(any(RefreshToken.class))).thenReturn(true);
-      when(tokenFamilyBlacklistRepository.create(any(CreateTokenFamilyBlacklistDto.class)))
+      when(tokenFamilyBlacklistRepository.create(any(CreateTokenFamilyBlacklistDbo.class)))
           .thenReturn(Optional.empty());
 
       assertThatCode(() -> authService.logoutUser(refreshToken)).doesNotThrowAnyException();
 
       verify(refreshTokenRepository).deleteByToken(any(RefreshToken.class));
-      verify(tokenFamilyBlacklistRepository).create(any(CreateTokenFamilyBlacklistDto.class));
+      verify(tokenFamilyBlacklistRepository).create(any(CreateTokenFamilyBlacklistDbo.class));
     }
   }
 

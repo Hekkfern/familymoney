@@ -1,7 +1,7 @@
 package com.familymoney.domains.auth.repositories;
 
-import com.familymoney.domains.auth.repositories.dtos.CreatePasswordResetDto;
-import com.familymoney.domains.auth.repositories.dtos.UpdatePasswordResetDto;
+import com.familymoney.domains.auth.repositories.dbos.CreatePasswordResetDbo;
+import com.familymoney.domains.auth.repositories.dbos.UpdatePasswordResetDbo;
 import com.familymoney.domains.auth.repositories.entitites.PasswordResetEntity;
 import com.familymoney.domains.auth.types.PasswordResetToken;
 import com.familymoney.domains.users.types.UserId;
@@ -15,7 +15,7 @@ public interface PasswordResetRepository {
    * @param data password reset values to persist
    * @return the persisted password reset record, or empty when it could not be created
    */
-  Optional<PasswordResetEntity> create(CreatePasswordResetDto data);
+  Optional<PasswordResetEntity> create(CreatePasswordResetDbo data);
 
   /**
    * Finds a password reset record by its user identifier.
@@ -41,7 +41,7 @@ public interface PasswordResetRepository {
    * @param data replacement password reset values
    * @return {@code true} when a password reset record was updated
    */
-  boolean updateByUserId(UserId userId, UpdatePasswordResetDto data);
+  boolean updateByUserId(UserId userId, UpdatePasswordResetDbo data);
 
   /**
    * Deletes password reset records associated with the specified user ID. This method is typically

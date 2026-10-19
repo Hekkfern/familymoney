@@ -1,7 +1,7 @@
 package com.familymoney.domains.auth.repositories;
 
-import com.familymoney.domains.auth.repositories.dtos.CreateEmailVerificationDto;
-import com.familymoney.domains.auth.repositories.dtos.UpdateEmailVerificationTokenDto;
+import com.familymoney.domains.auth.repositories.dbos.CreateEmailVerificationDbo;
+import com.familymoney.domains.auth.repositories.dbos.UpdateEmailVerificationTokenDbo;
 import com.familymoney.domains.auth.repositories.entitites.EmailVerificationEntity;
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.users.types.UserId;
@@ -16,7 +16,7 @@ public interface EmailVerificationRepository {
    * @return Created {@link EmailVerificationEntity} wrapped in Optional, or empty Optional if
    *     creation failed
    */
-  Optional<EmailVerificationEntity> create(CreateEmailVerificationDto data);
+  Optional<EmailVerificationEntity> create(CreateEmailVerificationDbo data);
 
   /**
    * Find an entry by its User ID.
@@ -39,11 +39,11 @@ public interface EmailVerificationRepository {
    * Update one or more fields identified by its User ID.
    *
    * @param userId the id of the user to update. Must not be null.
-   * @param data a {@link UpdateEmailVerificationTokenDto} containing fields to change. Must not be
+   * @param data a {@link UpdateEmailVerificationTokenDbo} containing fields to change. Must not be
    *     null. Only non-null fields will be applied.
    * @return true if the update affected an existing record, false otherwise.
    */
-  boolean updateByUserId(UserId userId, UpdateEmailVerificationTokenDto data);
+  boolean updateByUserId(UserId userId, UpdateEmailVerificationTokenDbo data);
 
   /**
    * Delete Email Verification records by User ID

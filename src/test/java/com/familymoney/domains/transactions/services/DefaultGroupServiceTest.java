@@ -17,7 +17,7 @@ import com.familymoney.domains.transactions.exceptions.MaximumGroupInvitationsRe
 import com.familymoney.domains.transactions.exceptions.UserIsNotMemberOfGroupException;
 import com.familymoney.domains.transactions.repositories.GroupInvitationRepository;
 import com.familymoney.domains.transactions.repositories.GroupRepository;
-import com.familymoney.domains.transactions.repositories.dtos.CreateGroupInvitationDto;
+import com.familymoney.domains.transactions.repositories.dbos.CreateGroupInvitationDbo;
 import com.familymoney.domains.transactions.repositories.entitites.GroupEntity;
 import com.familymoney.domains.transactions.repositories.entitites.GroupInvitationEntity;
 import com.familymoney.domains.transactions.repositories.entitites.UserGroupEntity;
@@ -91,11 +91,11 @@ class DefaultGroupServiceTest {
   }
 
   private void mockCreateInGroupInvitationRepository() {
-    when(groupInvitationRepository.create(any(CreateGroupInvitationDto.class)))
+    when(groupInvitationRepository.create(any(CreateGroupInvitationDbo.class)))
         .thenAnswer(
             invocation -> {
-              CreateGroupInvitationDto dto =
-                  invocation.getArgument(0, CreateGroupInvitationDto.class);
+              CreateGroupInvitationDbo dto =
+                  invocation.getArgument(0, CreateGroupInvitationDbo.class);
               return Optional.of(
                   new GroupInvitationEntity(
                       dto.id(), // return the same UserId received
@@ -334,7 +334,7 @@ class DefaultGroupServiceTest {
 
       assertThatCode(() -> groupService.getInvitationToken(gid, user)).doesNotThrowAnyException();
 
-      verify(groupInvitationRepository).create(any(CreateGroupInvitationDto.class));
+      verify(groupInvitationRepository).create(any(CreateGroupInvitationDbo.class));
     }
 
     @Test
@@ -353,7 +353,7 @@ class DefaultGroupServiceTest {
     void throws_when_create_fails() {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
-      when(groupInvitationRepository.create(any(CreateGroupInvitationDto.class)))
+      when(groupInvitationRepository.create(any(CreateGroupInvitationDbo.class)))
           .thenReturn(Optional.empty());
 
       assertThatThrownBy(() -> groupService.getInvitationToken(gid, user))

@@ -4,8 +4,8 @@ import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
 
 import com.familymoney.domains.transactions.exceptions.ExpenseNotFoundException;
 import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
-import com.familymoney.domains.transactions.repositories.dtos.CreateExpenseDto;
-import com.familymoney.domains.transactions.repositories.dtos.UpdateExpenseDto;
+import com.familymoney.domains.transactions.repositories.dbos.CreateExpenseDbo;
+import com.familymoney.domains.transactions.repositories.dbos.UpdateExpenseDbo;
 import com.familymoney.domains.transactions.repositories.entitites.FullExpenseEntity;
 import com.familymoney.domains.transactions.repositories.mappers.ExpenseJooqMapper;
 import com.familymoney.domains.transactions.repositories.mappers.ExpensePaymentJooqMapper;
@@ -51,7 +51,7 @@ public class DefaultExpenseRepository implements ExpenseRepository {
 
   @Transactional
   @Override
-  public void create(final CreateExpenseDto dto) {
+  public void create(final CreateExpenseDbo dto) {
     try {
       db.insertInto(Expenses.EXPENSES)
           .columns(
@@ -76,7 +76,7 @@ public class DefaultExpenseRepository implements ExpenseRepository {
 
   @Transactional
   @Override
-  public void updateById(final ExpenseId id, final UpdateExpenseDto dto) {
+  public void updateById(final ExpenseId id, final UpdateExpenseDbo dto) {
     final Map<Field<?>, Object> values = new LinkedHashMap<>();
     values.put(Expenses.EXPENSES.UPDATED_AT, DSL.currentOffsetDateTime());
     if (dto.description() != null) {

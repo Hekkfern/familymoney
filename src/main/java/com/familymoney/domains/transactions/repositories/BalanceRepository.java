@@ -1,6 +1,6 @@
 package com.familymoney.domains.transactions.repositories;
 
-import com.familymoney.domains.transactions.repositories.dtos.BalanceKeyDto;
+import com.familymoney.domains.transactions.repositories.dbos.BalanceKeyDbo;
 import com.familymoney.domains.transactions.repositories.entitites.BalanceEntity;
 import com.familymoney.domains.transactions.types.GroupId;
 import java.math.BigDecimal;
@@ -15,7 +15,7 @@ import java.util.Optional;
  * a single row exists per pair, and the sign of the stored amount, not the order in which the two
  * users are supplied, determines which of them currently owes the other. Callers do not need to
  * know or preserve a particular ordering of the two users when creating, updating, or looking up a
- * balance through a {@link BalanceKeyDto}.
+ * balance through a {@link BalanceKeyDbo}.
  */
 public interface BalanceRepository {
 
@@ -24,7 +24,7 @@ public interface BalanceRepository {
    *
    * @param key the group and pair of users the balance belongs to
    */
-  void create(BalanceKeyDto key);
+  void create(BalanceKeyDbo key);
 
   /**
    * Sets the balance identified by {@code key} to {@code newBalance}. A positive amount indicates
@@ -34,7 +34,7 @@ public interface BalanceRepository {
    * @param key the group and pair of users the balance belongs to
    * @param newBalance the new signed balance to set
    */
-  void setByKey(BalanceKeyDto key, BigDecimal newBalance);
+  void setByKey(BalanceKeyDbo key, BigDecimal newBalance);
 
   /**
    * Adds {@code delta} to the balance identified by {@code key}. A positive amount shifts the
@@ -44,7 +44,7 @@ public interface BalanceRepository {
    * @param key the group and pair of users the balance belongs to
    * @param delta the signed amount to add to the current balance
    */
-  void incrementByKey(BalanceKeyDto key, BigDecimal delta);
+  void incrementByKey(BalanceKeyDbo key, BigDecimal delta);
 
   /**
    * Finds the balance between the unordered pair of users in {@code key}.
@@ -52,7 +52,7 @@ public interface BalanceRepository {
    * @param key the group and pair of users the balance belongs to
    * @return an {@link Optional} containing the {@link BalanceEntity} if found, otherwise empty
    */
-  Optional<BalanceEntity> findByKey(BalanceKeyDto key);
+  Optional<BalanceEntity> findByKey(BalanceKeyDbo key);
 
   /**
    * Finds all balances recorded for a group.

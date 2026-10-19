@@ -2,7 +2,7 @@ package com.familymoney.domains.transactions.repositories;
 
 import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
 
-import com.familymoney.domains.transactions.repositories.dtos.CreateGroupInvitationDto;
+import com.familymoney.domains.transactions.repositories.dbos.CreateGroupInvitationDbo;
 import com.familymoney.domains.transactions.repositories.entitites.GroupInvitationEntity;
 import com.familymoney.domains.transactions.repositories.mappers.GroupInvitationJooqMapper;
 import com.familymoney.domains.transactions.types.GroupId;
@@ -31,7 +31,7 @@ public class DefaultGroupInvitationRepository implements GroupInvitationReposito
   private final OpaqueTokenHasher tokenHasher;
 
   @Override
-  public void create(final CreateGroupInvitationDto dto) {
+  public void create(final CreateGroupInvitationDbo dto) {
     try {
       db.insertInto(GroupInvitations.GROUP_INVITATIONS)
           .columns(

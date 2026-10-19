@@ -1,14 +1,14 @@
-package com.familymoney.domains.auth.repositories.dtos;
+package com.familymoney.domains.auth.repositories.dbos;
 
-import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.auth.types.ExpirationTime;
+import com.familymoney.domains.auth.types.PasswordResetToken;
+import jakarta.annotation.Nullable;
 import java.time.Instant;
 import lombok.Builder;
-import org.jspecify.annotations.Nullable;
 
 @Builder
-public record UpdateEmailVerificationTokenDto(
-    @Nullable EmailVerificationToken token,
+public record UpdatePasswordResetDbo(
+    @Nullable PasswordResetToken token,
     @Nullable ExpirationTime expiresAt,
     @Nullable Instant lastSentAt) {
 

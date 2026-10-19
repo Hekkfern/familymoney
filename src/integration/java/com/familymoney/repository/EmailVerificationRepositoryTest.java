@@ -6,8 +6,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.familymoney.domains.auth.repositories.DefaultEmailVerificationRepository;
 import com.familymoney.domains.auth.repositories.EmailVerificationRepository;
-import com.familymoney.domains.auth.repositories.dtos.CreateEmailVerificationDto;
-import com.familymoney.domains.auth.repositories.dtos.UpdateEmailVerificationTokenDto;
+import com.familymoney.domains.auth.repositories.dbos.CreateEmailVerificationDbo;
+import com.familymoney.domains.auth.repositories.dbos.UpdateEmailVerificationTokenDbo;
 import com.familymoney.domains.auth.repositories.entitites.EmailVerificationEntity;
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.auth.types.ExpirationTime;
@@ -78,7 +78,7 @@ class EmailVerificationRepositoryTest {
 
       final Optional<EmailVerificationEntity> tokenCreatedOpt =
           emailVerificationRepository.create(
-              new CreateEmailVerificationDto(userId, token, expiresAt));
+              new CreateEmailVerificationDbo(userId, token, expiresAt));
 
       assertThat(tokenCreatedOpt).isPresent();
       final EmailVerificationEntity tokenCreated = tokenCreatedOpt.get();
@@ -97,8 +97,8 @@ class EmailVerificationRepositoryTest {
 
     @Test
     void throws_when_user_does_not_exist() {
-      final CreateEmailVerificationDto dto =
-          new CreateEmailVerificationDto(
+      final CreateEmailVerificationDbo dto =
+          new CreateEmailVerificationDbo(
               UserId.generate(),
               EmailVerificationToken.generate(),
               ExpirationTime.of(Instant.now().plusSeconds(300)));
@@ -115,8 +115,8 @@ class EmailVerificationRepositoryTest {
       databaseCrud.insertEmailVerificationToken(
           userId, EmailVerificationToken.generate(), now, expiration);
 
-      final CreateEmailVerificationDto dto =
-          new CreateEmailVerificationDto(userId, EmailVerificationToken.generate(), expiration);
+      final CreateEmailVerificationDbo dto =
+          new CreateEmailVerificationDbo(userId, EmailVerificationToken.generate(), expiration);
       assertThatThrownBy(() -> emailVerificationRepository.create(dto))
           .isInstanceOf(DuplicateKeyException.class);
     }
@@ -131,8 +131,8 @@ class EmailVerificationRepositoryTest {
 
       databaseCrud.insertEmailVerificationToken(userId1, token, now, expiration);
 
-      final CreateEmailVerificationDto dto =
-          new CreateEmailVerificationDto(userId2, token, expiration);
+      final CreateEmailVerificationDbo dto =
+          new CreateEmailVerificationDbo(userId2, token, expiration);
       assertThatThrownBy(() -> emailVerificationRepository.create(dto))
           .isInstanceOf(DuplicateKeyException.class);
     }
@@ -214,8 +214,8 @@ class EmailVerificationRepositoryTest {
       databaseCrud.insertEmailVerificationToken(userId, token, now, expiration);
 
       final EmailVerificationToken newToken = EmailVerificationToken.generate();
-      final UpdateEmailVerificationTokenDto dto =
-          UpdateEmailVerificationTokenDto.builder().token(newToken).build();
+      final UpdateEmailVerificationTokenDbo dto =
+          UpdateEmailVerificationTokenDbo.builder().token(newToken).build();
 
       final boolean updated = emailVerificationRepository.updateByUserId(userId, dto);
 
@@ -236,8 +236,8 @@ class EmailVerificationRepositoryTest {
       final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
       databaseCrud.insertEmailVerificationToken(userId, token, now, expiration);
 
-      final UpdateEmailVerificationTokenDto nullDto =
-          UpdateEmailVerificationTokenDto.builder().build();
+      final UpdateEmailVerificationTokenDbo nullDto =
+          UpdateEmailVerificationTokenDbo.builder().build();
 
       final boolean updated = emailVerificationRepository.updateByUserId(userId, nullDto);
 
@@ -251,8 +251,8 @@ class EmailVerificationRepositoryTest {
 
     @Test
     void does_nothing_and_returns_false_when_user_does_not_exist() {
-      final UpdateEmailVerificationTokenDto update =
-          UpdateEmailVerificationTokenDto.builder()
+      final UpdateEmailVerificationTokenDbo update =
+          UpdateEmailVerificationTokenDbo.builder()
               .token(EmailVerificationToken.generate())
               .build();
 

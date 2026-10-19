@@ -11,6 +11,7 @@ import com.familymoney.domains.users.services.data.UserData;
 import com.familymoney.domains.users.types.Role;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.utils.PageResponse;
+import com.familymoney.utils.PageResponseMapper;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -43,7 +44,7 @@ public class DefaultUserAdminController implements UserAdminController {
         Sort.by(direction, sort.toString().toLowerCase()).and(Sort.by(Sort.Direction.ASC, "id"));
     final Pageable pageable = PageRequest.of(page, size, stableSort);
     final Page<UserData> userDataPages = userService.getUsers(pageable);
-    return PageResponse.from(userDataPages.map(UserDtoMapper::toDto));
+    return PageResponseMapper.from(userDataPages.map(UserDtoMapper::toDto));
   }
 
   @Override

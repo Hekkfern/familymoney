@@ -1,7 +1,7 @@
 package com.familymoney.domains.users.repositories;
 
-import com.familymoney.domains.users.repositories.dtos.CreateUserDto;
-import com.familymoney.domains.users.repositories.dtos.UpdateUserDto;
+import com.familymoney.domains.users.repositories.dbos.CreateUserDbo;
+import com.familymoney.domains.users.repositories.dbos.UpdateUserDbo;
 import com.familymoney.domains.users.repositories.entitites.UserEntity;
 import com.familymoney.domains.users.repositories.mappers.UserJooqMapper;
 import com.familymoney.domains.users.types.Email;
@@ -27,7 +27,7 @@ public class DefaultUserRepository implements UserRepository {
   private final DSLContext db;
 
   @Override
-  public Optional<UserEntity> create(final CreateUserDto data) {
+  public Optional<UserEntity> create(final CreateUserDbo data) {
     return db.insertInto(Users.USERS)
         .columns(
             Users.USERS.ID,
@@ -122,7 +122,7 @@ public class DefaultUserRepository implements UserRepository {
   }
 
   @Override
-  public boolean updateById(final UserId id, final UpdateUserDto data) {
+  public boolean updateById(final UserId id, final UpdateUserDbo data) {
     final int rowsAffected =
         db.update(Users.USERS)
             .set(

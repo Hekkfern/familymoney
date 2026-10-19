@@ -1,4 +1,4 @@
-package com.familymoney.domains.auth.repositories.dtos;
+package com.familymoney.domains.auth.repositories.dbos;
 
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.auth.types.ExpirationTime;
@@ -11,5 +11,5 @@ import com.familymoney.domains.users.types.UserId;
  * @param token Email Verification token
  * @param expiresAt Timestamp when the token expires
  */
-public record CreateEmailVerificationDto(
+public record CreateEmailVerificationDbo(
     UserId userId, EmailVerificationToken token, ExpirationTime expiresAt) {}

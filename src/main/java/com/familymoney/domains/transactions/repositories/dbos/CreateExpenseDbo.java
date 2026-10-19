@@ -1,4 +1,4 @@
-package com.familymoney.domains.transactions.repositories.dtos;
+package com.familymoney.domains.transactions.repositories.dbos;
 
 import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.ExpenseId;
@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Map;
 
-public record CreateExpenseDto(
+public record CreateExpenseDbo(
     ExpenseId id,
     Description description,
     GroupId groupId,
@@ -17,7 +17,7 @@ public record CreateExpenseDto(
     Map<UserId, BigDecimal> shares,
     Map<UserId, BigDecimal> payers) {
 
-  public CreateExpenseDto {
+  public CreateExpenseDbo {
     ExpenseAmounts.validate(shares, payers);
     shares = Map.copyOf(shares);
     payers = Map.copyOf(payers);

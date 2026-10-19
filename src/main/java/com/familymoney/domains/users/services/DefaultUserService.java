@@ -2,8 +2,8 @@ package com.familymoney.domains.users.services;
 
 import com.familymoney.domains.users.repositories.RoleRepository;
 import com.familymoney.domains.users.repositories.UserRepository;
-import com.familymoney.domains.users.repositories.dtos.CreateUserDto;
-import com.familymoney.domains.users.repositories.dtos.UpdateUserDto;
+import com.familymoney.domains.users.repositories.dbos.CreateUserDbo;
+import com.familymoney.domains.users.repositories.dbos.UpdateUserDbo;
 import com.familymoney.domains.users.repositories.entitites.UserEntity;
 import com.familymoney.domains.users.services.data.UpdateUserData;
 import com.familymoney.domains.users.services.data.UserData;
@@ -48,7 +48,7 @@ public class DefaultUserService implements UserService {
     if (!data.isEmpty()) {
       userRepository.updateById(
           userId,
-          UpdateUserDto.builder()
+          UpdateUserDbo.builder()
               .username(data.username())
               .email(data.email())
               .hashedPassword(
@@ -64,7 +64,7 @@ public class DefaultUserService implements UserService {
 
   @Override
   public void enableUser(final UserId userId, final boolean enabled) {
-    userRepository.updateById(userId, UpdateUserDto.builder().isEnabled(enabled).build());
+    userRepository.updateById(userId, UpdateUserDbo.builder().isEnabled(enabled).build());
   }
 
   @Override
@@ -88,7 +88,7 @@ public class DefaultUserService implements UserService {
     final UserId userId = UserId.generate();
     final Optional<UserEntity> userDbOpt =
         userRepository.create(
-            new CreateUserDto(
+            new CreateUserDbo(
                 userId, username, email, passwordEncoder.encode(password.value()), true, true));
     if (userDbOpt.isEmpty()) {
       log.error("Could not create user in the database");
@@ -97,7 +97,7 @@ public class DefaultUserService implements UserService {
     // Assign admin permissions
     roleRepository.setRoleForUserId(userId, Role.ADMIN);
     // verify email
-    userRepository.updateById(userId, UpdateUserDto.builder().isEmailVerified(true).build());
+    userRepository.updateById(userId, UpdateUserDbo.builder().isEmailVerified(true).build());
     log.info("Admin user created successfully");
   }
 }

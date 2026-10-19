@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.familymoney.domains.auth.repositories.DefaultUsedRefreshTokenRepository;
 import com.familymoney.domains.auth.repositories.UsedRefreshTokenRepository;
-import com.familymoney.domains.auth.repositories.dtos.CreateUsedRefreshTokenDto;
+import com.familymoney.domains.auth.repositories.dbos.CreateUsedRefreshTokenDbo;
 import com.familymoney.domains.auth.repositories.entitites.UsedRefreshTokenEntity;
 import com.familymoney.domains.auth.types.RefreshToken;
 import com.familymoney.domains.auth.types.TokenFamily;
@@ -52,7 +52,7 @@ class UsedRefreshTokenRepositoryTest {
       final Instant now = Instant.now();
 
       final Optional<UsedRefreshTokenEntity> created =
-          usedRefreshTokenRepository.create(new CreateUsedRefreshTokenDto(token, family, now));
+          usedRefreshTokenRepository.create(new CreateUsedRefreshTokenDbo(token, family, now));
 
       assertThat(created).isPresent();
       final UsedRefreshTokenEntity entry = created.get();
@@ -71,8 +71,8 @@ class UsedRefreshTokenRepositoryTest {
     @Test
     void create_returns_empty_when_token_has_already_been_used() {
       final RefreshToken token = RefreshToken.generate();
-      final CreateUsedRefreshTokenDto dto =
-          new CreateUsedRefreshTokenDto(token, TokenFamily.generate(), Instant.now());
+      final CreateUsedRefreshTokenDbo dto =
+          new CreateUsedRefreshTokenDbo(token, TokenFamily.generate(), Instant.now());
       usedRefreshTokenRepository.create(dto);
 
       final Optional<UsedRefreshTokenEntity> created = usedRefreshTokenRepository.create(dto);
@@ -89,7 +89,7 @@ class UsedRefreshTokenRepositoryTest {
       final RefreshToken token = RefreshToken.generate();
       final UsedRefreshTokenEntity created =
           usedRefreshTokenRepository
-              .create(new CreateUsedRefreshTokenDto(token, TokenFamily.generate(), Instant.now()))
+              .create(new CreateUsedRefreshTokenDbo(token, TokenFamily.generate(), Instant.now()))
               .orElseThrow();
 
       final UsedRefreshTokenEntity found =

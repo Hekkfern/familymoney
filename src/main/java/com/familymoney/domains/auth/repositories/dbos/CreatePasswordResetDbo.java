@@ -1,4 +1,4 @@
-package com.familymoney.domains.auth.repositories.dtos;
+package com.familymoney.domains.auth.repositories.dbos;
 
 import com.familymoney.domains.auth.types.ExpirationTime;
 import com.familymoney.domains.auth.types.PasswordResetToken;
@@ -14,5 +14,5 @@ import java.time.Instant;
  *     should no longer be valid
  * @param lastSentAt timestamp when the reset email was last requested
  */
-public record CreatePasswordResetDto(
+public record CreatePasswordResetDbo(
     UserId userId, PasswordResetToken token, ExpirationTime expiresAt, Instant lastSentAt) {}

@@ -2,8 +2,8 @@ package com.familymoney.domains.transactions.repositories;
 
 import com.familymoney.domains.transactions.exceptions.ExpenseNotFoundException;
 import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
-import com.familymoney.domains.transactions.repositories.dtos.CreateExpenseDto;
-import com.familymoney.domains.transactions.repositories.dtos.UpdateExpenseDto;
+import com.familymoney.domains.transactions.repositories.dbos.CreateExpenseDbo;
+import com.familymoney.domains.transactions.repositories.dbos.UpdateExpenseDbo;
 import com.familymoney.domains.transactions.repositories.entitites.FullExpenseEntity;
 import com.familymoney.domains.transactions.types.ExpenseId;
 import com.familymoney.domains.transactions.types.GroupId;
@@ -19,7 +19,7 @@ import org.springframework.data.domain.Pageable;
  * <p>An expense records a total amount owed by a group, split across each member's {@code share} of
  * it, together with the amounts individually paid by each {@code payer} toward it. Amounts are
  * expressed in the currency of the group. The totals of shares and payers are guaranteed to match
- * by {@link CreateExpenseDto} and {@link UpdateExpenseDto}.
+ * by {@link CreateExpenseDbo} and {@link UpdateExpenseDbo}.
  *
  * <p>Implementations are responsible for creating, updating, and deleting expenses, and for paged
  * queries of expenses associated with a group. Optional is used for methods that may not find a
@@ -35,7 +35,7 @@ public interface ExpenseRepository {
    * @throws UserNotFoundException if the creator, or any user in the shares or payers, does not
    *     exist
    */
-  void create(CreateExpenseDto dto);
+  void create(CreateExpenseDbo dto);
 
   /**
    * Updates the expense identified by {@code id} with the provided data. Only non-null fields of
@@ -43,11 +43,11 @@ public interface ExpenseRepository {
    *
    * @param id the identifier of the expense to update
    * @param dto the data containing the updated information for the expense. Non-null fields in the
-   *     {@link UpdateExpenseDto} are used to update the corresponding fields of the expense.
+   *     {@link UpdateExpenseDbo} are used to update the corresponding fields of the expense.
    * @throws ExpenseNotFoundException if no expense with the given ID exists
    * @throws UserNotFoundException if any user in the updated shares or payers does not exist
    */
-  void updateById(ExpenseId id, UpdateExpenseDto dto);
+  void updateById(ExpenseId id, UpdateExpenseDbo dto);
 
   /**
    * Deletes the expense identified by {@code id}, together with its shares and payers.

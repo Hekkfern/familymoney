@@ -1,4 +1,4 @@
-package com.familymoney.domains.transactions.repositories.dtos;
+package com.familymoney.domains.transactions.repositories.dbos;
 
 import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.GroupId;
@@ -15,5 +15,5 @@ import java.util.Currency;
  * @param currency Default currency of the group.
  * @param createdBy UserId of the user who created the group.
  */
-public record CreateGroupDto(
+public record CreateGroupDbo(
     GroupId id, GroupName name, Description description, Currency currency, UserId createdBy) {}

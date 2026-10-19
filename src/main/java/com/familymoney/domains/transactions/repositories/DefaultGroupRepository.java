@@ -5,8 +5,8 @@ import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
 import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
 import com.familymoney.domains.transactions.exceptions.UserAlreadyInGroupException;
 import com.familymoney.domains.transactions.exceptions.UserIsNotMemberOfGroupException;
-import com.familymoney.domains.transactions.repositories.dtos.CreateGroupDto;
-import com.familymoney.domains.transactions.repositories.dtos.UpdateGroupDto;
+import com.familymoney.domains.transactions.repositories.dbos.CreateGroupDbo;
+import com.familymoney.domains.transactions.repositories.dbos.UpdateGroupDbo;
 import com.familymoney.domains.transactions.repositories.entitites.GroupEntity;
 import com.familymoney.domains.transactions.repositories.mappers.GroupJooqMapper;
 import com.familymoney.domains.transactions.types.GroupId;
@@ -54,7 +54,7 @@ public class DefaultGroupRepository implements GroupRepository {
   private final Clock clock;
 
   @Override
-  public void create(final CreateGroupDto dto) {
+  public void create(final CreateGroupDbo dto) {
     try {
       db.insertInto(Groups.GROUPS)
           .columns(
@@ -82,7 +82,7 @@ public class DefaultGroupRepository implements GroupRepository {
   }
 
   @Override
-  public void updateById(final GroupId id, final UpdateGroupDto dto) {
+  public void updateById(final GroupId id, final UpdateGroupDbo dto) {
     final Map<Field<?>, Object> changedFields = new HashMap<>();
     if (dto.name() != null) {
       changedFields.put(Groups.GROUPS.NAME, dto.name().value());

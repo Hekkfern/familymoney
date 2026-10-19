@@ -1,4 +1,4 @@
-package com.familymoney.domains.transactions.repositories.dtos;
+package com.familymoney.domains.transactions.repositories.dbos;
 
 import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.users.types.UserId;
@@ -8,28 +8,29 @@ import lombok.Builder;
 import org.jspecify.annotations.Nullable;
 
 @Builder
-public record UpdatePaymentDto(
+
+public record UpdatePaymentDbo(
     @Nullable Description description,
     @Nullable Instant doneAt,
     @Nullable BigDecimal amount,
-    @Nullable UserId creditor,
-    @Nullable UserId debitor) {
+    @Nullable UserId from,
+    @Nullable UserId to) {
 
   private static final int MAX_AMOUNT_SCALE = 3;
 
-  public UpdatePaymentDto {
+  public UpdatePaymentDbo {
     final boolean isEmptyUpdate =
         description == null
             && doneAt == null
             && amount == null
-            && creditor == null
-            && debitor == null;
+            && from == null
+            && to == null;
     if (isEmptyUpdate) {
       throw new IllegalArgumentException("At least one field must be provided for update");
     }
-    final boolean isSameUser = creditor != null && creditor.equals(debitor);
+    final boolean isSameUser = from != null && from.equals(to);
     if (isSameUser) {
-      throw new IllegalArgumentException("Creditor and debitor must be different users");
+      throw new IllegalArgumentException("Creditor and to must be different users");
     }
     final boolean isInvalidAmount =
         amount != null && (amount.signum() <= 0 || amount.scale() > MAX_AMOUNT_SCALE);
@@ -42,7 +43,7 @@ public record UpdatePaymentDto(
     return description == null
         && doneAt == null
         && amount == null
-        && creditor == null
-        && debitor == null;
+        && from == null
+        && to == null;
   }
 }

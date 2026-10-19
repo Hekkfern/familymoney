@@ -4,8 +4,8 @@ import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
 
 import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
 import com.familymoney.domains.transactions.exceptions.PaymentNotFoundException;
-import com.familymoney.domains.transactions.repositories.dtos.CreatePaymentDto;
-import com.familymoney.domains.transactions.repositories.dtos.UpdatePaymentDto;
+import com.familymoney.domains.transactions.repositories.dbos.CreatePaymentDbo;
+import com.familymoney.domains.transactions.repositories.dbos.UpdatePaymentDbo;
 import com.familymoney.domains.transactions.repositories.entitites.PaymentEntity;
 import com.familymoney.domains.transactions.repositories.mappers.PaymentJooqMapper;
 import com.familymoney.domains.transactions.types.GroupId;
@@ -43,7 +43,7 @@ public class DefaultPaymentRepository implements PaymentRepository {
   private final DSLContext db;
 
   @Override
-  public void create(final CreatePaymentDto dto) {
+  public void create(final CreatePaymentDbo dto) {
     try {
       db.insertInto(Payments.PAYMENTS)
           .columns(
@@ -51,8 +51,8 @@ public class DefaultPaymentRepository implements PaymentRepository {
               Payments.PAYMENTS.GROUP_ID,
               Payments.PAYMENTS.DESCRIPTION,
               Payments.PAYMENTS.AMOUNT,
-              Payments.PAYMENTS.CREDITOR,
-              Payments.PAYMENTS.DEBITOR,
+              Payments.PAYMENTS.FROM_USER,
+              Payments.PAYMENTS.TO_USER,
               Payments.PAYMENTS.DONE_AT,
               Payments.PAYMENTS.CREATED_BY)
           .values(
@@ -60,19 +60,18 @@ public class DefaultPaymentRepository implements PaymentRepository {
               dto.groupId().value(),
               dto.description().value(),
               dto.amount(),
-              dto.creditor().value(),
-              dto.debitor().value(),
+              dto.from().value(),
+              dto.to().value(),
               OffsetDateTime.ofInstant(dto.doneAt(), DEFAULT_TIMEZONE_OFFSET),
               dto.createdBy().value())
           .execute();
     } catch (final DataIntegrityViolationException exception) {
-      throw toDomainException(
-          exception, dto.groupId(), dto.creditor(), dto.debitor(), dto.createdBy());
+      throw toDomainException(exception, dto.groupId(), dto.from(), dto.to(), dto.createdBy());
     }
   }
 
   @Override
-  public void updateById(final PaymentId id, final UpdatePaymentDto dto) {
+  public void updateById(final PaymentId id, final UpdatePaymentDbo dto) {
     final Map<Field<?>, Object> values = new LinkedHashMap<>();
     if (dto.description() != null) {
       values.put(Payments.PAYMENTS.DESCRIPTION, dto.description().value());
@@ -85,11 +84,11 @@ public class DefaultPaymentRepository implements PaymentRepository {
     if (dto.amount() != null) {
       values.put(Payments.PAYMENTS.AMOUNT, dto.amount());
     }
-    if (dto.creditor() != null) {
-      values.put(Payments.PAYMENTS.CREDITOR, dto.creditor().value());
+    if (dto.from() != null) {
+      values.put(Payments.PAYMENTS.FROM_USER, dto.from().value());
     }
-    if (dto.debitor() != null) {
-      values.put(Payments.PAYMENTS.DEBITOR, dto.debitor().value());
+    if (dto.to() != null) {
+      values.put(Payments.PAYMENTS.TO_USER, dto.to().value());
     }
 
     final int updatedRows = executeUpdate(id, dto, values);
@@ -101,14 +100,14 @@ public class DefaultPaymentRepository implements PaymentRepository {
   }
 
   private int executeUpdate(
-      final PaymentId id, final UpdatePaymentDto dto, final Map<Field<?>, Object> values) {
+      final PaymentId id, final UpdatePaymentDbo dto, final Map<Field<?>, Object> values) {
     try {
       return db.update(Payments.PAYMENTS)
           .set(values)
           .where(Payments.PAYMENTS.ID.eq(id.value()))
           .execute();
     } catch (final DataIntegrityViolationException exception) {
-      throw toDomainException(exception, null, dto.creditor(), dto.debitor(), null);
+      throw toDomainException(exception, null, dto.from(), dto.to(), null);
     }
   }
 
@@ -127,20 +126,20 @@ public class DefaultPaymentRepository implements PaymentRepository {
       log.info(msg);
       return new GroupNotFoundException(msg, exception);
     }
-    final boolean isCreditorMissing =
+    final boolean isFromUserMissing =
         creditor != null
             && ConstraintViolationUtils.isConstraintViolated(
-                exception, Keys.PAYMENTS__PAYMENTS_CREDITOR_FKEY);
-    if (isCreditorMissing) {
+                exception, Keys.PAYMENTS__PAYMENTS_FROM_USER_FKEY);
+    if (isFromUserMissing) {
       final String msg = "Creditor with ID '%s' does not exist".formatted(creditor.value());
       log.info(msg);
       return new UserNotFoundException(msg, exception);
     }
-    final boolean isDebitorMissing =
+    final boolean isToUserMissing =
         debitor != null
             && ConstraintViolationUtils.isConstraintViolated(
-                exception, Keys.PAYMENTS__PAYMENTS_DEBITOR_FKEY);
-    if (isDebitorMissing) {
+                exception, Keys.PAYMENTS__PAYMENTS_TO_USER_FKEY);
+    if (isToUserMissing) {
       final String msg = "Debitor with ID '%s' does not exist".formatted(debitor.value());
       log.info(msg);
       return new UserNotFoundException(msg, exception);

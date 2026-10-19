@@ -10,7 +10,7 @@ import static org.mockito.Mockito.when;
 import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
 import com.familymoney.domains.transactions.exceptions.UserIsNotMemberOfGroupException;
 import com.familymoney.domains.transactions.repositories.GroupRepository;
-import com.familymoney.domains.transactions.repositories.dtos.CreateGroupDto;
+import com.familymoney.domains.transactions.repositories.dbos.CreateGroupDbo;
 import com.familymoney.domains.transactions.repositories.entitites.GroupEntity;
 import com.familymoney.domains.transactions.services.data.GroupData;
 import com.familymoney.domains.transactions.services.data.UpdateGroupData;
@@ -58,10 +58,10 @@ class DefaultGroupCheckerTest {
 
     @Test
     void creates_group_without_members() {
-      when(groupRepository.create(any(CreateGroupDto.class)))
+      when(groupRepository.create(any(CreateGroupDbo.class)))
           .thenAnswer(
               invocation ->
-                  Optional.of(groupEntity(invocation.getArgument(0, CreateGroupDto.class).id())));
+                  Optional.of(groupEntity(invocation.getArgument(0, CreateGroupDbo.class).id())));
 
       final GroupId groupId =
           groupOperations.createGroup(
@@ -70,12 +70,12 @@ class DefaultGroupCheckerTest {
               Monetary.getCurrency("USD"));
 
       assertThat(groupId).isNotNull();
-      verify(groupRepository).create(any(CreateGroupDto.class));
+      verify(groupRepository).create(any(CreateGroupDbo.class));
     }
 
     @Test
     void throws_when_group_cannot_be_created() {
-      when(groupRepository.create(any(CreateGroupDto.class))).thenReturn(Optional.empty());
+      when(groupRepository.create(any(CreateGroupDbo.class))).thenReturn(Optional.empty());
 
       final GroupName groupName = GroupName.fromString("group");
       final Description description = Description.of("description");

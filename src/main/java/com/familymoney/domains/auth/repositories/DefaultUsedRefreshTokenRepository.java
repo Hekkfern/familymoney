@@ -2,7 +2,7 @@ package com.familymoney.domains.auth.repositories;
 
 import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
 
-import com.familymoney.domains.auth.repositories.dtos.CreateUsedRefreshTokenDto;
+import com.familymoney.domains.auth.repositories.dbos.CreateUsedRefreshTokenDbo;
 import com.familymoney.domains.auth.repositories.entitites.UsedRefreshTokenEntity;
 import com.familymoney.domains.auth.repositories.mappers.UsedRefreshTokenJooqMapper;
 import com.familymoney.domains.auth.types.RefreshToken;
@@ -21,7 +21,7 @@ public class DefaultUsedRefreshTokenRepository implements UsedRefreshTokenReposi
   private final OpaqueTokenHasher tokenHasher;
 
   @Override
-  public Optional<UsedRefreshTokenEntity> create(final CreateUsedRefreshTokenDto data) {
+  public Optional<UsedRefreshTokenEntity> create(final CreateUsedRefreshTokenDbo data) {
     return db.insertInto(UsedRefreshTokens.USED_REFRESH_TOKENS)
         .columns(
             UsedRefreshTokens.USED_REFRESH_TOKENS.TOKEN_HASH,

@@ -2,8 +2,8 @@ package com.familymoney.domains.transactions.repositories;
 
 import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
 import com.familymoney.domains.transactions.exceptions.UserAlreadyInGroupException;
-import com.familymoney.domains.transactions.repositories.dtos.CreateGroupDto;
-import com.familymoney.domains.transactions.repositories.dtos.UpdateGroupDto;
+import com.familymoney.domains.transactions.repositories.dbos.CreateGroupDbo;
+import com.familymoney.domains.transactions.repositories.dbos.UpdateGroupDbo;
 import com.familymoney.domains.transactions.repositories.entitites.GroupEntity;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.users.exceptions.UserNotFoundException;
@@ -34,7 +34,7 @@ public interface GroupRepository {
    * @param dto values to persist for the new group
    * @throws UserNotFoundException if the user referenced by {@code dto.createdBy()} does not exist
    */
-  void create(CreateGroupDto dto);
+  void create(CreateGroupDbo dto);
 
   /**
    * Updates a group identified by its ID.
@@ -45,7 +45,7 @@ public interface GroupRepository {
    * @param dto the fields to update
    * @throws GroupNotFoundException if no group with the given ID exists
    */
-  void updateById(GroupId id, UpdateGroupDto dto);
+  void updateById(GroupId id, UpdateGroupDbo dto);
 
   /**
    * Soft-deletes a group by its ID. The group is marked as deleted and becomes invisible to every

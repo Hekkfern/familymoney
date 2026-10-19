@@ -2,8 +2,8 @@ package com.familymoney.domains.auth.repositories;
 
 import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
 
-import com.familymoney.domains.auth.repositories.dtos.CreatePasswordResetDto;
-import com.familymoney.domains.auth.repositories.dtos.UpdatePasswordResetDto;
+import com.familymoney.domains.auth.repositories.dbos.CreatePasswordResetDbo;
+import com.familymoney.domains.auth.repositories.dbos.UpdatePasswordResetDbo;
 import com.familymoney.domains.auth.repositories.entitites.PasswordResetEntity;
 import com.familymoney.domains.auth.repositories.mappers.PasswordResetJooqMapper;
 import com.familymoney.domains.auth.types.PasswordResetToken;
@@ -25,7 +25,7 @@ public class DefaultPasswordResetRepository implements PasswordResetRepository {
   private final OpaqueTokenHasher tokenHasher;
 
   @Override
-  public Optional<PasswordResetEntity> create(final CreatePasswordResetDto data) {
+  public Optional<PasswordResetEntity> create(final CreatePasswordResetDbo data) {
     return db.insertInto(PasswordResetTokens.PASSWORD_RESET_TOKENS)
         .columns(
             PasswordResetTokens.PASSWORD_RESET_TOKENS.USER_ID,
@@ -78,7 +78,7 @@ public class DefaultPasswordResetRepository implements PasswordResetRepository {
   }
 
   @Override
-  public boolean updateByUserId(final UserId userId, final UpdatePasswordResetDto data) {
+  public boolean updateByUserId(final UserId userId, final UpdatePasswordResetDbo data) {
     final OffsetDateTime expiresAtVal =
         data.expiresAt() != null ? data.expiresAt().toOffsetDateTime() : null;
     final int rowsAffected =

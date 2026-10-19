@@ -15,8 +15,8 @@ import org.javamoney.moneta.Money;
  * @param description the payment description
  * @param money the paid monetary amount
  * @param doneAt the payment completion time
- * @param fromUserId the user who made the payment
- * @param toUserId the user who received the payment
+ * @param from the user who made the payment
+ * @param to the user who received the payment
  */
 public record PaymentData(
     PaymentId id,
@@ -24,5 +24,5 @@ public record PaymentData(
     Description description,
     Money money,
     Instant doneAt,
-    UserId fromUserId,
-    UserId toUserId) {}
+    UserId from,
+    UserId to) {}

@@ -1,4 +1,4 @@
-package com.familymoney.domains.users.repositories.dtos;
+package com.familymoney.domains.users.repositories.dbos;
 
 import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.UserName;
@@ -6,7 +6,7 @@ import lombok.Builder;
 import org.jspecify.annotations.Nullable;
 
 @Builder
-public record UpdateUserDto(
+public record UpdateUserDbo(
     @Nullable UserName username,
     @Nullable Email email,
     @Nullable String hashedPassword,

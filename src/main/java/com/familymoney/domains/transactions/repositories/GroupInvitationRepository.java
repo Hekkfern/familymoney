@@ -1,6 +1,6 @@
 package com.familymoney.domains.transactions.repositories;
 
-import com.familymoney.domains.transactions.repositories.dtos.CreateGroupInvitationDto;
+import com.familymoney.domains.transactions.repositories.dbos.CreateGroupInvitationDbo;
 import com.familymoney.domains.transactions.repositories.entitites.GroupInvitationEntity;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
@@ -15,7 +15,7 @@ public interface GroupInvitationRepository {
    *
    * @param data values to persist for the invitation
    */
-  void create(CreateGroupInvitationDto data);
+  void create(CreateGroupInvitationDbo data);
 
   /**
    * Finds a group invitation by its token.

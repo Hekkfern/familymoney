@@ -2,8 +2,8 @@ package com.familymoney.domains.transactions.repositories;
 
 import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
 import com.familymoney.domains.transactions.exceptions.PaymentNotFoundException;
-import com.familymoney.domains.transactions.repositories.dtos.CreatePaymentDto;
-import com.familymoney.domains.transactions.repositories.dtos.UpdatePaymentDto;
+import com.familymoney.domains.transactions.repositories.dbos.CreatePaymentDbo;
+import com.familymoney.domains.transactions.repositories.dbos.UpdatePaymentDbo;
 import com.familymoney.domains.transactions.repositories.entitites.PaymentEntity;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.PaymentId;
@@ -16,8 +16,8 @@ import org.springframework.data.domain.Pageable;
 /**
  * Repository interface for persisting completed payments between members of a group.
  *
- * <p>A payment records a single amount transferred from its {@code debitor} to its {@code
- * creditor}, settling part or all of the debt between them. Implementations create, update, delete,
+ * <p>A payment records a single amount transferred from its {@code to} to its {@code
+ * from}, settling part or all of the debt between them. Implementations create, update, delete,
  * and retrieve payments, including paged queries for a group.
  */
 public interface PaymentRepository {
@@ -27,9 +27,9 @@ public interface PaymentRepository {
    *
    * @param dto the payment values to store
    * @throws GroupNotFoundException if the group of the payment does not exist
-   * @throws UserNotFoundException if the creditor, the debitor, or the creator does not exist
+   * @throws UserNotFoundException if the from, the to, or the creator does not exist
    */
-  void create(CreatePaymentDto dto);
+  void create(CreatePaymentDbo dto);
 
   /**
    * Updates the non-null fields of a payment.
@@ -37,9 +37,9 @@ public interface PaymentRepository {
    * @param id the identifier of the payment to update
    * @param dto the values to update
    * @throws PaymentNotFoundException if no payment with the given ID exists
-   * @throws UserNotFoundException if the updated creditor or debitor does not exist
+   * @throws UserNotFoundException if the updated from or to does not exist
    */
-  void updateById(PaymentId id, UpdatePaymentDto dto);
+  void updateById(PaymentId id, UpdatePaymentDbo dto);
 
   /**
    * Deletes a payment.

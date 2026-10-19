@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.familymoney.domains.transactions.repositories.DefaultGroupInvitationRepository;
 import com.familymoney.domains.transactions.repositories.GroupInvitationRepository;
-import com.familymoney.domains.transactions.repositories.dtos.CreateGroupInvitationDto;
+import com.familymoney.domains.transactions.repositories.dbos.CreateGroupInvitationDbo;
 import com.familymoney.domains.transactions.repositories.entitites.GroupInvitationEntity;
 import com.familymoney.domains.transactions.types.ExpirationTime;
 import com.familymoney.domains.transactions.types.GroupId;
@@ -94,7 +94,7 @@ class GroupInvitationRepositoryTest {
 
       final Optional<GroupInvitationEntity> invitationOpt =
           groupInvitationRepository.create(
-              new CreateGroupInvitationDto(UUID.randomUUID(), groupId, userId, token, expiration));
+              new CreateGroupInvitationDbo(UUID.randomUUID(), groupId, userId, token, expiration));
 
       assertThat(invitationOpt).isPresent();
       final GroupInvitationEntity invitation = invitationOpt.get();
@@ -121,8 +121,8 @@ class GroupInvitationRepositoryTest {
       final UserId userId = insertRandomUser();
       final GroupId groupId = GroupId.generate();
 
-      final CreateGroupInvitationDto dto =
-          new CreateGroupInvitationDto(
+      final CreateGroupInvitationDbo dto =
+          new CreateGroupInvitationDbo(
               UUID.randomUUID(),
               groupId,
               userId,
@@ -137,8 +137,8 @@ class GroupInvitationRepositoryTest {
       final GroupId groupId = insertRandomGroup();
       final UserId userId = UserId.generate();
 
-      final CreateGroupInvitationDto dto =
-          new CreateGroupInvitationDto(
+      final CreateGroupInvitationDbo dto =
+          new CreateGroupInvitationDbo(
               UUID.randomUUID(),
               groupId,
               userId,
@@ -163,8 +163,8 @@ class GroupInvitationRepositoryTest {
       databaseCrud.insertGroupInvitation(
           UUID.randomUUID(), groupId, userId, token, now, ExpirationTime.of(now.plusSeconds(300)));
 
-      final CreateGroupInvitationDto dto =
-          new CreateGroupInvitationDto(
+      final CreateGroupInvitationDbo dto =
+          new CreateGroupInvitationDbo(
               UUID.randomUUID(), groupId, userId, token, ExpirationTime.of(now.plusSeconds(600)));
       assertThatThrownBy(() -> groupInvitationRepository.create(dto))
           .isInstanceOf(DataIntegrityViolationException.class);

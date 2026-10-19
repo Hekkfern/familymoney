@@ -6,8 +6,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.familymoney.domains.auth.repositories.DefaultRefreshTokenRepository;
 import com.familymoney.domains.auth.repositories.RefreshTokenRepository;
-import com.familymoney.domains.auth.repositories.dtos.CreateRefreshTokenDto;
-import com.familymoney.domains.auth.repositories.dtos.UpdateRefreshTokenDto;
+import com.familymoney.domains.auth.repositories.dbos.CreateRefreshTokenDbo;
+import com.familymoney.domains.auth.repositories.dbos.UpdateRefreshTokenDbo;
 import com.familymoney.domains.auth.repositories.entitites.RefreshTokenEntity;
 import com.familymoney.domains.auth.types.ExpirationTime;
 import com.familymoney.domains.auth.types.RefreshToken;
@@ -83,7 +83,7 @@ class RefreshTokenRepositoryTest {
 
       final Optional<RefreshTokenEntity> refreshTokenCreated =
           refreshTokenRepository.create(
-              new CreateRefreshTokenDto(UUID.randomUUID(), userId, token, family, expiration));
+              new CreateRefreshTokenDbo(UUID.randomUUID(), userId, token, family, expiration));
 
       assertThat(refreshTokenCreated).isPresent();
       final RefreshTokenEntity refreshToken = refreshTokenCreated.get();
@@ -119,8 +119,8 @@ class RefreshTokenRepositoryTest {
       final Instant now = Instant.now();
       final ExpirationTime expiresAt = ExpirationTime.of(now);
 
-      final CreateRefreshTokenDto dto =
-          new CreateRefreshTokenDto(
+      final CreateRefreshTokenDbo dto =
+          new CreateRefreshTokenDbo(
               UUID.randomUUID(),
               missingUserId,
               RefreshToken.generate(),
@@ -141,8 +141,8 @@ class RefreshTokenRepositoryTest {
       databaseCrud.insertRefreshToken(
           UUID.randomUUID(), userId, token, now, expiration, TokenFamily.generate());
 
-      final CreateRefreshTokenDto dto =
-          new CreateRefreshTokenDto(
+      final CreateRefreshTokenDbo dto =
+          new CreateRefreshTokenDbo(
               UUID.randomUUID(), userId, token, TokenFamily.generate(), expiration);
       assertThatThrownBy(() -> refreshTokenRepository.create(dto))
           .isInstanceOf(DataIntegrityViolationException.class);
@@ -159,8 +159,8 @@ class RefreshTokenRepositoryTest {
       databaseCrud.insertRefreshToken(
           UUID.randomUUID(), userId, RefreshToken.generate(), now, expiration, family);
 
-      final CreateRefreshTokenDto dto =
-          new CreateRefreshTokenDto(
+      final CreateRefreshTokenDbo dto =
+          new CreateRefreshTokenDbo(
               UUID.randomUUID(), userId, RefreshToken.generate(), family, expiration);
       assertThatThrownBy(() -> refreshTokenRepository.create(dto))
           .isInstanceOf(DuplicateKeyException.class);
@@ -214,7 +214,7 @@ class RefreshTokenRepositoryTest {
       databaseCrud.insertRefreshToken(id, userId, token, now, expiration, family);
 
       final RefreshToken newToken = RefreshToken.generate();
-      final UpdateRefreshTokenDto dto = UpdateRefreshTokenDto.builder().token(newToken).build();
+      final UpdateRefreshTokenDbo dto = UpdateRefreshTokenDbo.builder().token(newToken).build();
 
       final boolean updated = refreshTokenRepository.updateByToken(token, dto);
 
@@ -238,7 +238,7 @@ class RefreshTokenRepositoryTest {
       final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
       databaseCrud.insertRefreshToken(id, userId, token, now, expiration, family);
 
-      final UpdateRefreshTokenDto nullDto = UpdateRefreshTokenDto.builder().build();
+      final UpdateRefreshTokenDbo nullDto = UpdateRefreshTokenDbo.builder().build();
 
       final boolean updated = refreshTokenRepository.updateByToken(token, nullDto);
 
@@ -254,8 +254,8 @@ class RefreshTokenRepositoryTest {
     @Test
     void does_nothing_and_returns_false_when_token_does_not_exist() {
       final ExpirationTime newExpiration = ExpirationTime.of(Instant.now().plusSeconds(2000));
-      final UpdateRefreshTokenDto update =
-          UpdateRefreshTokenDto.builder().expiresAt(newExpiration).build();
+      final UpdateRefreshTokenDbo update =
+          UpdateRefreshTokenDbo.builder().expiresAt(newExpiration).build();
 
       final boolean updated = refreshTokenRepository.updateByToken(RefreshToken.generate(), update);
 
@@ -277,7 +277,7 @@ class RefreshTokenRepositoryTest {
       databaseCrud.insertRefreshToken(id, userId, token, now, expiration, family);
 
       final RefreshToken newToken = RefreshToken.generate();
-      final UpdateRefreshTokenDto dto = UpdateRefreshTokenDto.builder().token(newToken).build();
+      final UpdateRefreshTokenDbo dto = UpdateRefreshTokenDbo.builder().token(newToken).build();
 
       final boolean updated = refreshTokenRepository.updateByUserId(userId, dto);
 
@@ -301,7 +301,7 @@ class RefreshTokenRepositoryTest {
       final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
       databaseCrud.insertRefreshToken(id, userId, token, now, expiration, family);
 
-      final UpdateRefreshTokenDto nullDto = UpdateRefreshTokenDto.builder().build();
+      final UpdateRefreshTokenDbo nullDto = UpdateRefreshTokenDbo.builder().build();
 
       final boolean updated = refreshTokenRepository.updateByUserId(userId, nullDto);
 
@@ -317,8 +317,8 @@ class RefreshTokenRepositoryTest {
     @Test
     void does_nothing_and_returns_false_when_user_does_not_exist() {
       final ExpirationTime newExpiration = ExpirationTime.of(Instant.now().plusSeconds(2000));
-      final UpdateRefreshTokenDto update =
-          UpdateRefreshTokenDto.builder().expiresAt(newExpiration).build();
+      final UpdateRefreshTokenDbo update =
+          UpdateRefreshTokenDbo.builder().expiresAt(newExpiration).build();
 
       final boolean updated = refreshTokenRepository.updateByUserId(UserId.generate(), update);
 
