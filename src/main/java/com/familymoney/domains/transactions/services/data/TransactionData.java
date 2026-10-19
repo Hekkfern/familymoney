@@ -1,18 +1,5 @@
 package com.familymoney.domains.transactions.services.data;
 
-import com.familymoney.domains.transactions.types.Description;
-import com.familymoney.domains.transactions.types.ExpenseId;
-import com.familymoney.domains.transactions.types.GroupId;
-import com.familymoney.domains.users.types.UserId;
-import java.time.Instant;
-import org.javamoney.moneta.Money;
+import java.util.UUID;
 
-public record TransactionData(
-    ExpenseId id,
-    Description description,
-    GroupId groupId,
-    Money amount,
-    UserId from,
-    UserId to,
-    Instant doneAt,
-    Instant createdAt) {}
+public record TransactionData(UUID id, TransactionType type) {}

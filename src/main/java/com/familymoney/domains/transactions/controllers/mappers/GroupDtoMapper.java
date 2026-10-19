@@ -14,7 +14,6 @@ public final class GroupDtoMapper {
         groupData.id().value(),
         groupData.name().value(),
         groupData.description().value(),
-        groupData.currency().getCurrencyCode(),
-        groupData.createdAt());
+        groupData.currency());
   }
 }
