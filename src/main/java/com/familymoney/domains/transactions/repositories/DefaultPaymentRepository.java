@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
@@ -170,6 +171,26 @@ public class DefaultPaymentRepository implements PaymentRepository {
     return db.selectFrom(Payments.PAYMENTS)
         .where(Payments.PAYMENTS.ID.eq(id.value()))
         .fetchOptional(PaymentJooqMapper::toEntity);
+  }
+
+  @Override
+  public List<PaymentEntity> findAllByGroupIdAndIds(
+      final GroupId groupId, final Set<PaymentId> ids) {
+    if (ids.isEmpty()) {
+      return List.of();
+    }
+    return db.select(
+            Payments.PAYMENTS.ID,
+            Payments.PAYMENTS.DESCRIPTION,
+            Payments.PAYMENTS.AMOUNT,
+            Payments.PAYMENTS.FROM_USER,
+            Payments.PAYMENTS.TO_USER,
+            Payments.PAYMENTS.GROUP_ID,
+            Payments.PAYMENTS.DONE_AT)
+        .from(Payments.PAYMENTS)
+        .where(Payments.PAYMENTS.GROUP_ID.eq(groupId.value()))
+        .and(Payments.PAYMENTS.ID.in(ids.stream().map(PaymentId::value).toList()))
+        .fetch(PaymentJooqMapper::toEntity);
   }
 
   @Transactional(readOnly = true)

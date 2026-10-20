@@ -9,7 +9,9 @@ import com.familymoney.domains.transactions.types.ExpenseId;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.users.exceptions.UserNotFoundException;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -73,6 +75,15 @@ public interface ExpenseRepository {
    * @return an {@link Optional} containing the {@link FullExpenseEntity} if found, otherwise empty
    */
   Optional<FullExpenseEntity> findById(ExpenseId id);
+
+  /**
+   * Finds the requested expenses in a group, including their shares and payers.
+   *
+   * @param groupId the group identifier
+   * @param ids the expense identifiers to retrieve
+   * @return the matching expenses, with no ordering guarantee
+   */
+  List<FullExpenseEntity> findAllByGroupIdAndIds(final GroupId groupId, final Set<ExpenseId> ids);
 
   /**
    * Retrieves a page of expenses associated with a specific group, ordered by completion time, most

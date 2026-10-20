@@ -111,7 +111,8 @@ public class DefaultGroupController implements GroupController {
   }
 
   @Override
-  public PageResponse<TransactionDto> getGroupTransactions(final UUID groupId, int page, int size) {
+  public PageResponse<TransactionDto> getGroupTransactions(
+      final UUID groupId, final int page, final int size) {
     final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     final Page<TransactionData> transactionPages =
         groupService.getGroupTransactions(GroupId.fromUuid(groupId), user, page, size);

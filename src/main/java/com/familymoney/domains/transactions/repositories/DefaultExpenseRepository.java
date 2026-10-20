@@ -27,9 +27,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.SortField;
@@ -203,6 +205,23 @@ public class DefaultExpenseRepository implements ExpenseRepository {
 
   @Override
   public Optional<FullExpenseEntity> findById(final ExpenseId id) {
+    return findAllByCondition(Expenses.EXPENSES.ID.eq(id.value())).stream().findFirst();
+  }
+
+  @Override
+  public List<FullExpenseEntity> findAllByGroupIdAndIds(
+      final GroupId groupId, final Set<ExpenseId> ids) {
+    if (ids.isEmpty()) {
+      return List.of();
+    }
+    return findAllByCondition(
+        Expenses.EXPENSES
+            .GROUP_ID
+            .eq(groupId.value())
+            .and(Expenses.EXPENSES.ID.in(ids.stream().map(ExpenseId::value).toList())));
+  }
+
+  private List<FullExpenseEntity> findAllByCondition(final Condition condition) {
     return db.select(
             Expenses.EXPENSES.ID,
             Expenses.EXPENSES.DESCRIPTION,
@@ -214,7 +233,7 @@ public class DefaultExpenseRepository implements ExpenseRepository {
                             ExpenseShares.EXPENSE_SHARES.USER_ID,
                             ExpenseShares.EXPENSE_SHARES.AMOUNT)
                         .from(ExpenseShares.EXPENSE_SHARES)
-                        .where(ExpenseShares.EXPENSE_SHARES.EXPENSE_ID.eq(id.value())))
+                        .where(ExpenseShares.EXPENSE_SHARES.EXPENSE_ID.eq(Expenses.EXPENSES.ID)))
                 .as("shares"),
             DSL.multiset(
                     db.select(
@@ -222,11 +241,12 @@ public class DefaultExpenseRepository implements ExpenseRepository {
                             ExpensePayments.EXPENSE_PAYMENTS.USER_ID,
                             ExpensePayments.EXPENSE_PAYMENTS.AMOUNT)
                         .from(ExpensePayments.EXPENSE_PAYMENTS)
-                        .where(ExpensePayments.EXPENSE_PAYMENTS.EXPENSE_ID.eq(id.value())))
+                        .where(
+                            ExpensePayments.EXPENSE_PAYMENTS.EXPENSE_ID.eq(Expenses.EXPENSES.ID)))
                 .as("payments"))
         .from(Expenses.EXPENSES)
-        .where(Expenses.EXPENSES.ID.eq(id.value()))
-        .fetchOptional(
+        .where(condition)
+        .fetch(
             record ->
                 new FullExpenseEntity(
                     ExpenseJooqMapper.toEntity(record),

@@ -158,13 +158,14 @@ public interface GroupService {
   List<BalanceData> getGroupBalances(GroupId groupId, AuthorizedUser requester);
 
   /**
-   * Get a paginated list of individual expenses in a group, ordered by most recent first
+   * Retrieves expenses and payments ordered by completion time descending, type ascending, and ID
+   * descending.
    *
    * @param groupId Identifier of the group
-   * @param requester The user requesting the balances
-   * @param page
-   * @param size
-   * @return Paginated list of expenses
+   * @param requester the user requesting the transactions
+   * @param page the zero-based page index
+   * @param size the maximum number of transactions per page
+   * @return a page of complete expense and payment transactions
    * @throws GroupNotFoundException if the group does not exist
    * @throws UserIsNotMemberOfGroupException if the user is not a member of the group
    */

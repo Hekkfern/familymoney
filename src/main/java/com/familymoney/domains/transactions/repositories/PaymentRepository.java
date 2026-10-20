@@ -9,7 +9,9 @@ import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.PaymentId;
 import com.familymoney.domains.users.exceptions.UserNotFoundException;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -55,6 +57,15 @@ public interface PaymentRepository {
    * @return the payment when it exists, or an empty optional otherwise
    */
   Optional<PaymentEntity> findById(PaymentId id);
+
+  /**
+   * Finds the requested payments in a group.
+   *
+   * @param groupId the group identifier
+   * @param ids the payment identifiers to retrieve
+   * @return the matching payments, with no ordering guarantee
+   */
+  List<PaymentEntity> findAllByGroupIdAndIds(final GroupId groupId, final Set<PaymentId> ids);
 
   /**
    * Finds a page of payments for a group, ordered from newest to oldest completion time.

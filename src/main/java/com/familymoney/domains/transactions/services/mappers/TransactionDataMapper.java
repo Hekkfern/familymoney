@@ -1,21 +1,38 @@
 package com.familymoney.domains.transactions.services.mappers;
 
-import com.familymoney.domains.transactions.repositories.entitites.ExpenseEntity;
+import com.familymoney.domains.transactions.repositories.entitites.FullExpenseEntity;
 import com.familymoney.domains.transactions.repositories.entitites.PaymentEntity;
 import com.familymoney.domains.transactions.services.data.TransactionData;
-import com.familymoney.domains.transactions.services.data.TransactionType;
+import java.util.Currency;
 
+/** Maps persisted expenses and payments to the transaction variants. */
 public final class TransactionDataMapper {
 
   private TransactionDataMapper() {
     /* This utility class should not be instantiated */
   }
 
-  public static TransactionData fromExpense(ExpenseEntity entity) {
-    return new TransactionData(entity.id().value(), TransactionType.EXPENSE);
+  /**
+   * Maps an expense and its participants.
+   *
+   * @param entity the expense with its shares and payers
+   * @param currency the group currency
+   * @return the expense transaction
+   */
+  public static TransactionData.Expense fromExpense(
+      final FullExpenseEntity entity, final Currency currency) {
+    return new TransactionData.Expense(ExpenseDataMapper.fromDbo(entity, currency));
   }
 
-  public static TransactionData fromPayment(PaymentEntity entity) {
-    return new TransactionData(entity.id().value(), TransactionType.PAYMENT);
+  /**
+   * Maps a payment.
+   *
+   * @param entity the payment
+   * @param currency the group currency
+   * @return the payment transaction
+   */
+  public static TransactionData.Payment fromPayment(
+      final PaymentEntity entity, final Currency currency) {
+    return new TransactionData.Payment(PaymentDataMapper.fromDbo(entity, currency));
   }
 }
