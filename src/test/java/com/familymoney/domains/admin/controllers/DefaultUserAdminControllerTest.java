@@ -55,7 +55,7 @@ class DefaultUserAdminControllerTest {
   class GetUserInfo {
 
     @Test
-    void success() {
+    void get_user_info_with_default_pagination() {
       final UserName username = UserName.fromString(FakeGenerator.username());
       final Email email = Email.fromString(FakeGenerator.email());
       final UserId userId = UserId.fromUuid(UUID.randomUUID());
@@ -78,5 +78,72 @@ class DefaultUserAdminControllerTest {
       assertEquals(email.value(), data.email());
       assertEquals(now, data.createdAt());
     }
+  }
+
+  @Nested
+  class EnableUser {
+
+    @Test
+    void enable_user() {
+      // TODO
+    }
+
+    @Test
+    void bad_request_when_userid_field_is_invalid() {
+      // TODO
+    }
+
+    @Test
+    void bad_request_when_enabled_field_is_invalid() {
+      // TODO
+    }
+  }
+
+  @Nested
+  class DeleteUser {
+
+    @Test
+    void delete_user() {
+      // TODO
+    }
+
+    @Test
+    void bad_request_when_userid_field_is_invalid() {
+      // TODO
+    }
+  }
+
+  @Nested
+  class UpdateUserInfo {
+
+    @Test
+    void updates_all_information() {
+      // TODO
+    }
+
+    @Test
+    void updates_one_single_item() {
+      // TODO
+    }
+
+    @Test
+    void bad_request_when_userid_field_is_invalid() {
+      // TODO
+    }
+
+    @Test
+    void bad_request_when_no_fields_are_provided() {}
+  }
+
+  @Nested
+  class SetUserRole {
+
+    // TODO
+  }
+
+  @Nested
+  class GetUserRole {
+
+    // TODO
   }
 }

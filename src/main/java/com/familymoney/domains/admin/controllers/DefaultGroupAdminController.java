@@ -84,6 +84,11 @@ public class DefaultGroupAdminController implements GroupAdminController {
   }
 
   @Override
+  public void removeUserFromGroup(UUID groupId, UUID userId) {
+    groupService.removeUserFromGroupAsAdmin(GroupId.fromUuid(groupId), UserId.fromUuid(userId));
+  }
+
+  @Override
   public List<MemberDto> getUsersInGroup(final UUID groupId) {
     final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     final List<MemberData> users = groupService.getUsersInGroup(GroupId.fromUuid(groupId), user);

@@ -147,6 +147,16 @@ public interface GroupService {
   void addUserToGroupAsAdmin(GroupId groupId, UserId userIdToAdd);
 
   /**
+   * Removes a user from a transaction group.
+   *
+   * <p>WARNING! Only use by administrators
+   *
+   * @param groupId the identifier of the group
+   * @param userIdToRemove the identifier of the user to remove
+   */
+  void removeUserFromGroupAsAdmin(GroupId groupId, UserId userIdToRemove);
+
+  /**
    * Get the balance between all users in a group
    *
    * @param groupId Identifier of the group

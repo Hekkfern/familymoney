@@ -28,12 +28,10 @@ public class DefaultUserAdminController implements UserAdminController {
 
   @Override
   public UserDto getUserInfo(UUID userId) {
-    // Fetch user data
     final UserData userData =
         userService
             .getUserData(UserId.fromUuid(userId))
             .orElseThrow(() -> new UserNotFoundException("User not found"));
-    // Return response
     return UserDtoMapper.toDto(userData);
   }
 
@@ -63,8 +61,8 @@ public class DefaultUserAdminController implements UserAdminController {
   }
 
   @Override
-  public void setUserRole(final UUID userId, final String role) {
-    userService.setUserRole(UserId.fromUuid(userId), Role.fromString(role));
+  public void setUserRole(final UUID userId, final Role role) {
+    userService.setUserRole(UserId.fromUuid(userId), role);
   }
 
   @Override

@@ -234,6 +234,12 @@ public class DefaultGroupService implements GroupService {
   }
 
   @Override
+  public void removeUserFromGroupAsAdmin(GroupId groupId, UserId userIdToRemove) {
+    //TODO
+
+  }
+
+  @Override
   @Transactional
   public List<BalanceData> getGroupBalances(final GroupId groupId, final AuthorizedUser requester) {
     groupChecker.checkIfGroupExists(groupId);

@@ -5,9 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import com.familymoney.domains.users.controllers.dtos.UserDto;
 import com.familymoney.domains.users.services.UserService;
 import com.familymoney.domains.users.services.data.UserData;
 import com.familymoney.domains.users.types.Email;
+import com.familymoney.domains.users.types.UserId;
 import com.familymoney.domains.users.types.UserName;
 import com.familymoney.testutils.FakeGenerator;
 import com.familymoney.testutils.UserControllerUriFactory;
@@ -57,19 +59,20 @@ class DefaultUserControllerTest {
     @Test
     @WithMockUserId(userId = USER_ID)
     void success() {
+      final UserId userId = UserId.fromString(USER_ID);
       final UserName username = UserName.fromString(FakeGenerator.username());
       final Email email = Email.fromString(FakeGenerator.email());
       when(userService.getUserData(any()))
-          .thenReturn(Optional.of(new UserData(null, username, email, now, true, true)));
+          .thenReturn(Optional.of(new UserData(userId, username, email, now, true, true)));
 
-      final GetMyUserResponseDto data =
+      final UserDto data =
           client
               .get()
               .uri(UserControllerUriFactory.getMePath())
               .exchange()
               .expectStatus()
               .isOk()
-              .expectBody(GetMyUserResponseDto.class)
+              .expectBody(UserDto.class)
               .returnResult()
               .getResponseBody();
       assertNotNull(data);

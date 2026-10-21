@@ -2,26 +2,32 @@ package com.familymoney.domains.admin.controllers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.familymoney.domains.transactions.controllers.dtos.CreateGroupResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.GroupDto;
+import com.familymoney.domains.transactions.controllers.dtos.MemberDto;
 import com.familymoney.domains.transactions.services.GroupService;
 import com.familymoney.domains.transactions.services.data.GroupData;
+import com.familymoney.domains.transactions.services.data.MemberData;
+import com.familymoney.domains.transactions.services.data.UpdateGroupData;
 import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupName;
 import com.familymoney.domains.users.types.UserId;
+import com.familymoney.domains.users.types.UserName;
 import com.familymoney.security.JwtAuthFilter;
 import com.familymoney.testutils.FakeGenerator;
 import com.familymoney.testutils.GroupAdminControllerUriFactory;
+import com.familymoney.utils.PageResponse;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Currency;
 import java.util.List;
 import java.util.Map;
-import javax.money.Monetary;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +36,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.client.RestTestClient;
@@ -48,22 +55,21 @@ class DefaultGroupAdminControllerTest {
   @MockitoBean private GroupService groupService;
   @MockitoBean private Clock clock;
 
-  private GroupData groupData(final GroupId groupId) {
+  private GroupData generateGroupData(final GroupId groupId) {
     return new GroupData(
         groupId,
         GroupName.fromString(FakeGenerator.groupName()),
         Description.of(FakeGenerator.description()),
-        Monetary.getCurrency("USD"),
-        NOW);
+        Currency.getInstance("USD"));
   }
 
   @Nested
-  class CreateGroup {
+  class CreateEmptyGroup {
 
     @Test
     void creates_group() {
       final GroupId groupId = GroupId.generate();
-      when(groupService.createGroup(any(), any(), any())).thenReturn(groupId);
+      when(groupService.createEmptyGroup(any(), any(), any(), any())).thenReturn(groupId);
 
       final CreateGroupResponseDto response =
           client
@@ -166,25 +172,53 @@ class DefaultGroupAdminControllerTest {
   class GetGroupsOfUser {
 
     @Test
-    void returns_groups_for_user() {
+    void returns_groups_for_user_with_default_page_and_size() {
       final UserId userId = UserId.generate();
-      final GroupData group = groupData(GroupId.generate());
-      when(groupService.getGroupsForUser(any(), any(), )).thenReturn(new PageImpl<>(List.of(group)));
+      final GroupData group = generateGroupData(GroupId.generate());
+      when(groupService.getGroupsForUser(userId, 0, 20)).thenReturn(new PageImpl<>(List.of(group)));
 
-      final GetGroupsResponseDto response =
+      final PageResponse<GroupDto> response =
           client
               .get()
               .uri(GroupAdminControllerUriFactory.getGroupsUserPath(userId.toString()))
               .exchange()
               .expectStatus()
               .isOk()
-              .expectBody(GetGroupsResponseDto.class)
+              .expectBody(new ParameterizedTypeReference<PageResponse<GroupDto>>() {})
               .returnResult()
               .getResponseBody();
 
       assertThat(response).isNotNull();
-      assertThat(response.groups()).hasSize(1);
-      assertThat(response.groups().getFirst().id()).isEqualTo(group.id().value());
+      assertThat(response.content()).hasSize(1);
+      assertThat(response.content().getFirst().id()).isEqualTo(group.id().value());
+    }
+
+    @Test
+    void returns_groups_for_user_with_custom_page_and_size() {
+      final UserId userId = UserId.generate();
+      final GroupData group = generateGroupData(GroupId.generate());
+      when(groupService.getGroupsForUser(userId, 1, 27)).thenReturn(new PageImpl<>(List.of(group)));
+
+      final PageResponse<GroupDto> response =
+          client
+              .get()
+              .uri(
+                  uribuilder ->
+                      uribuilder
+                          .path(GroupAdminControllerUriFactory.getGroupsUserPath(userId.toString()))
+                          .queryParam("page", 1)
+                          .queryParam("size", 27)
+                          .build())
+              .exchange()
+              .expectStatus()
+              .isOk()
+              .expectBody(new ParameterizedTypeReference<PageResponse<GroupDto>>() {})
+              .returnResult()
+              .getResponseBody();
+
+      assertThat(response).isNotNull();
+      assertThat(response.content()).hasSize(1);
+      assertThat(response.content().getFirst().id()).isEqualTo(group.id().value());
     }
 
     @Test
@@ -197,6 +231,16 @@ class DefaultGroupAdminControllerTest {
           .isBadRequest();
 
       verifyNoInteractions(groupService);
+    }
+
+    @Test
+    void bad_request_when_page_is_invalid() {
+      // TODO
+    }
+
+    @Test
+    void bad_request_when_size_is_invalid() {
+      // TODO
     }
   }
 
@@ -235,8 +279,8 @@ class DefaultGroupAdminControllerTest {
 
     @Test
     void returns_group_information() {
-      final GroupData group = groupData(GroupId.generate());
-      when(groupService.getGroupInfoAsAdmin(group.id())).thenReturn(group);
+      final GroupData group = generateGroupData(GroupId.generate());
+      when(groupService.getGroupInfo(eq(group.id()), any())).thenReturn(group);
 
       final GroupDto response =
           client
@@ -271,19 +315,42 @@ class DefaultGroupAdminControllerTest {
   class UpdateGroupInfo {
 
     @Test
-    void updates_group_information() {
+    void updates_all_information() {
       final GroupId groupId = GroupId.generate();
+      final GroupName groupName = GroupName.fromString(FakeGenerator.groupName());
+      final Description description = Description.of(FakeGenerator.description());
 
       client
           .patch()
           .uri(GroupAdminControllerUriFactory.getGroupPath(groupId.toString()))
-          .body(
-              Map.of("name", FakeGenerator.groupName(), "description", FakeGenerator.description()))
+          .body(Map.of("name", groupName.value(), "description", description.value()))
           .exchange()
           .expectStatus()
           .isOk();
 
-      verify(groupService).updateGroupInfoAsAdmin(any(), any());
+      verify(groupService)
+          .updateGroupInfo(
+              eq(groupId),
+              any(),
+              eq(UpdateGroupData.builder().name(groupName).description(description).build()));
+    }
+
+    @Test
+    void updates_one_single_item() {
+      final GroupId groupId = GroupId.generate();
+      final Description description = Description.of(FakeGenerator.description());
+
+      client
+          .patch()
+          .uri(GroupAdminControllerUriFactory.getGroupPath(groupId.toString()))
+          .body(Map.of("description", description.value()))
+          .exchange()
+          .expectStatus()
+          .isOk();
+
+      verify(groupService)
+          .updateGroupInfo(
+              eq(groupId), any(), eq(UpdateGroupData.builder().description(description).build()));
     }
 
     @Test
@@ -309,7 +376,7 @@ class DefaultGroupAdminControllerTest {
           .expectStatus()
           .isOk();
 
-      verify(groupService).updateGroupInfoAsAdmin(any(), any());
+      verify(groupService).updateGroupInfo(any(), any(), any());
     }
 
     @Test
@@ -318,6 +385,32 @@ class DefaultGroupAdminControllerTest {
           .patch()
           .uri(GroupAdminControllerUriFactory.getGroupPath(GroupId.generate().toString()))
           .body(Map.of("description", "a".repeat(400)))
+          .exchange()
+          .expectStatus()
+          .isBadRequest();
+
+      verifyNoInteractions(groupService);
+    }
+
+    @Test
+    void bad_request_when_group_id_is_invalid() {
+      client
+          .patch()
+          .uri(GroupAdminControllerUriFactory.getGroupPath("invalid"))
+          .body(Map.of("name", FakeGenerator.groupName()))
+          .exchange()
+          .expectStatus()
+          .isBadRequest();
+
+      verifyNoInteractions(groupService);
+    }
+
+    @Test
+    void bad_request_when_no_fields_are_provided() {
+      client
+          .patch()
+          .uri(GroupAdminControllerUriFactory.getGroupPath(GroupId.generate().toString()))
+          .body(Map.of())
           .exchange()
           .expectStatus()
           .isBadRequest();
@@ -430,23 +523,29 @@ class DefaultGroupAdminControllerTest {
     @Test
     void returns_users_in_group() {
       final GroupId groupId = GroupId.generate();
-      final List<UserId> users = List.of(UserId.generate(), UserId.generate());
-      when(groupService.getUsersInGroupAsAdmin(groupId)).thenReturn(users);
+      final List<MemberData> users =
+          List.of(
+              new MemberData(UserId.generate(), UserName.fromString(FakeGenerator.username())),
+              new MemberData(UserId.generate(), UserName.fromString(FakeGenerator.username())));
+      when(groupService.getUsersInGroup(eq(groupId), any())).thenReturn(users);
 
-      final GetUsersInGroupResponseDto response =
+      final List<MemberDto> response =
           client
               .get()
               .uri(GroupAdminControllerUriFactory.getUsersForGroupPath(groupId.toString()))
               .exchange()
               .expectStatus()
               .isOk()
-              .expectBody(GetUsersInGroupResponseDto.class)
+              .expectBody(new ParameterizedTypeReference<List<MemberDto>>() {})
               .returnResult()
               .getResponseBody();
 
       assertThat(response).isNotNull();
-      assertThat(response.userIds())
-          .containsExactlyElementsOf(users.stream().map(UserId::value).toList());
+      assertThat(response)
+          .containsExactlyElementsOf(
+              users.stream()
+                  .map(user -> new MemberDto(user.userId().value(), user.username().value()))
+                  .toList());
     }
 
     @Test
@@ -459,6 +558,48 @@ class DefaultGroupAdminControllerTest {
           .isBadRequest();
 
       verifyNoInteractions(groupService);
+    }
+  }
+
+  @Nested
+  class GetGroupBalances {
+
+    @Test
+    void returns_group_balances() {
+      // TODO
+    }
+
+    @Test
+    void bad_request_when_group_id_is_invalid() {
+      // TODO
+    }
+  }
+
+  @Nested
+  class ForceSyncBalances {
+
+    @Test
+    void force_synces_balances() {
+      // TODO
+    }
+
+    @Test
+    void bad_request_when_group_id_is_invalid() {
+      // TODO
+    }
+  }
+
+  @Nested
+  class GetGroupTransactions {
+
+    @Test
+    void returns_group_transactions() {
+      // TODO
+    }
+
+    @Test
+    void bad_request_when_group_id_is_invalid() {
+      // TODO
     }
   }
 }

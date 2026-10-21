@@ -3,6 +3,7 @@ package com.familymoney.domains.admin.controllers;
 import com.familymoney.domains.users.controllers.dtos.GetUserRoleResponseDto;
 import com.familymoney.domains.users.controllers.dtos.UpdateUserRequestDto;
 import com.familymoney.domains.users.controllers.dtos.UserDto;
+import com.familymoney.domains.users.types.Role;
 import com.familymoney.utils.PageResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -50,7 +51,7 @@ public interface UserAdminController {
       @PathVariable @NotNull UUID userId, @RequestBody @Valid UpdateUserRequestDto request);
 
   @PutMapping(path = "{userId}/role", version = "1")
-  void setUserRole(@PathVariable @NotNull UUID userId, @RequestBody @NotBlank String role);
+  void setUserRole(@PathVariable @NotNull UUID userId, @RequestBody @NotNull Role role);
 
   @GetMapping(path = "{userId}/role", version = "1")
   GetUserRoleResponseDto getUserRole(@PathVariable @NotNull UUID userId);
