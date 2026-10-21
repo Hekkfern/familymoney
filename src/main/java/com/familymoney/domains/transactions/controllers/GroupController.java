@@ -66,7 +66,13 @@ public interface GroupController {
    */
   @Operation(summary = "Leave a group where the authenticated user is a member")
   @DeleteMapping(path = "{groupId}", version = "1")
+  @Idempotent
   void leaveGroup(@PathVariable @NotNull UUID groupId);
+
+  @Operation(summary = "Remove a user from a specific group where the authenticated user is a member")
+  @DeleteMapping(path = "{groupId}/users/{userId}", version = "1")
+  @Idempotent
+  void removeUserFromGroup(@PathVariable @NotNull UUID groupId, @PathVariable @NotNull UUID userId);
 
   /**
    * Retrieves a group's information where the authenticated user is a member.

@@ -234,9 +234,14 @@ public class DefaultGroupService implements GroupService {
   }
 
   @Override
-  public void removeUserFromGroupAsAdmin(GroupId groupId, UserId userIdToRemove) {
-    //TODO
-
+  public void removeUserFromGroup(
+      final GroupId groupId, final UserId userIdToRemove, final AuthorizedUser requester) {
+    groupChecker.checkIfGroupExists(groupId);
+    if (requester.role().equals(Role.USER)) {
+      groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+    }
+    groupChecker.checkIfUserExists(userIdToRemove);
+    groupRepository.removeUserFromGroup(userIdToRemove, groupId);
   }
 
   @Override

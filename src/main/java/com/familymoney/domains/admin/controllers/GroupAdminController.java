@@ -42,6 +42,7 @@ public interface GroupAdminController {
 
   @Operation(summary = "Delete a group")
   @DeleteMapping(path = "{groupId}", version = "1")
+  @Idempotent
   void deleteGroup(@PathVariable @NotNull UUID groupId);
 
   @Operation(summary = "Get information about a specific group")

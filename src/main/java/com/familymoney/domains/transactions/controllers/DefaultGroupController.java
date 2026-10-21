@@ -24,6 +24,7 @@ import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import com.familymoney.domains.transactions.types.GroupName;
+import com.familymoney.domains.users.types.UserId;
 import com.familymoney.utils.AuthenticationUtils;
 import com.familymoney.utils.AuthorizedUser;
 import com.familymoney.utils.PageResponse;
@@ -65,6 +66,13 @@ public class DefaultGroupController implements GroupController {
   public void leaveGroup(final UUID groupId) {
     final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     groupService.leaveGroup(GroupId.fromUuid(groupId), user);
+  }
+
+  @Override
+  public void removeUserFromGroup(final UUID groupId, final UUID userIdToRemove) {
+    final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
+    groupService.removeUserFromGroup(
+      GroupId.fromUuid(groupId), UserId.fromUuid(userIdToRemove), user);
   }
 
   @Override

@@ -315,7 +315,7 @@ class DefaultGroupAdminControllerTest {
   class UpdateGroupInfo {
 
     @Test
-    void updates_all_information() {
+    void updates_all_fields() {
       final GroupId groupId = GroupId.generate();
       final GroupName groupName = GroupName.fromString(FakeGenerator.groupName());
       final Description description = Description.of(FakeGenerator.description());
@@ -336,7 +336,7 @@ class DefaultGroupAdminControllerTest {
     }
 
     @Test
-    void updates_one_single_item() {
+    void updates_one_single_field() {
       final GroupId groupId = GroupId.generate();
       final Description description = Description.of(FakeGenerator.description());
 
@@ -485,7 +485,7 @@ class DefaultGroupAdminControllerTest {
           .expectStatus()
           .isOk();
 
-      verify(groupService).removeUserFromGroupAsAdmin(groupId, userId);
+      verify(groupService).removeUserFromGroup(groupId, userId);
     }
 
     @Test
