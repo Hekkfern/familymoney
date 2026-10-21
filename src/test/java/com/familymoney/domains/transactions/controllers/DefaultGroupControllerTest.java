@@ -2,6 +2,7 @@ package com.familymoney.domains.transactions.controllers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -15,12 +16,14 @@ import com.familymoney.domains.transactions.exceptions.GroupInvitationInvalidExc
 import com.familymoney.domains.transactions.exceptions.UserIsNotMemberOfGroupException;
 import com.familymoney.domains.transactions.services.GroupService;
 import com.familymoney.domains.transactions.services.data.GroupData;
+import com.familymoney.domains.transactions.services.data.MemberData;
 import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import com.familymoney.domains.transactions.types.GroupName;
 import com.familymoney.domains.users.services.UserService;
 import com.familymoney.domains.users.types.UserId;
+import com.familymoney.domains.users.types.UserName;
 import com.familymoney.security.JwtAuthFilter;
 import com.familymoney.testutils.FakeGenerator;
 import com.familymoney.testutils.GroupControllerUriFactory;
@@ -40,6 +43,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.client.RestTestClient;
@@ -84,7 +88,6 @@ class DefaultGroupControllerTest {
       final GroupId groupId = GroupId.generate();
       when(groupService.createGroupAndAddCreatorAsMember(any(), any(), any(), any()))
           .thenReturn(groupId);
-      executeIdempotentAction();
 
       final CreateGroupResponseDto response =
           client
@@ -158,12 +161,13 @@ class DefaultGroupControllerTest {
               .exchange()
               .expectStatus()
               .isOk()
-              .expectBody(GetGroupsResponseDto.class)
+              .expectBody(new ParameterizedTypeReference<PageResponse<GroupDto>>() {})
               .returnResult()
               .getResponseBody();
 
       assertThat(response).isNotNull();
-      assertThat(response.groups()).extracting(GroupDto::id).containsExactly(group.id().value());
+      assertThat(response.content()).hasSize(1);
+      assertThat(response.content().getFirst().id()).isEqualTo(group.id().value());
     }
 
     @Test
@@ -185,12 +189,13 @@ class DefaultGroupControllerTest {
               .exchange()
               .expectStatus()
               .isOk()
-              .expectBody(GetGroupsResponseDto.class)
+            .expectBody(new ParameterizedTypeReference<PageResponse<GroupDto>>() {})
               .returnResult()
               .getResponseBody();
 
       assertThat(response).isNotNull();
-      assertThat(response.groups()).extracting(GroupDto::id).containsExactly(group.id().value());
+      assertThat(response.content()).hasSize(1);
+      assertThat(response.content().getFirst().id()).isEqualTo(group.id().value());
     }
 
     @Test
@@ -241,7 +246,7 @@ class DefaultGroupControllerTest {
           .expectStatus()
           .isOk();
 
-      verify(groupService).deleteGroupAsAdmin(any(), any());
+      verify(groupService).leaveGroup(any(), any());
     }
 
     @Test
@@ -279,13 +284,13 @@ class DefaultGroupControllerTest {
     @WithMockUserId(userId = USER_ID)
     void removes_user_from_group() {
       client
-        .delete()
-        .uri(
-          GroupControllerUriFactory.getGroupAndUserPath(
-            GroupId.generate().toString(), UserId.generate().toString()))
-        .exchange()
-        .expectStatus()
-        .isOk();
+          .delete()
+          .uri(
+              GroupControllerUriFactory.getGroupAndUserPath(
+                  GroupId.generate().toString(), UserId.generate().toString()))
+          .exchange()
+          .expectStatus()
+          .isOk();
 
       verify(groupService).removeUserFromGroup(any(), any(), any());
     }
@@ -293,13 +298,13 @@ class DefaultGroupControllerTest {
     @Test
     void bad_request_when_group_id_is_invalid() {
       client
-        .delete()
-        .uri(
-          GroupControllerUriFactory.getGroupAndUserPath(
-            "invalid", UserId.generate().toString()))
-        .exchange()
-        .expectStatus()
-        .isBadRequest();
+          .delete()
+          .uri(
+              GroupControllerUriFactory.getGroupAndUserPath(
+                  "invalid", UserId.generate().toString()))
+          .exchange()
+          .expectStatus()
+          .isBadRequest();
 
       verifyNoInteractions(groupService);
     }
@@ -307,13 +312,13 @@ class DefaultGroupControllerTest {
     @Test
     void bad_request_when_user_id_is_invalid() {
       client
-        .delete()
-        .uri(
-          GroupControllerUriFactory.getGroupAndUserPath(
-            GroupId.generate().toString(), "invalid"))
-        .exchange()
-        .expectStatus()
-        .isBadRequest();
+          .delete()
+          .uri(
+              GroupControllerUriFactory.getGroupAndUserPath(
+                  GroupId.generate().toString(), "invalid"))
+          .exchange()
+          .expectStatus()
+          .isBadRequest();
 
       verifyNoInteractions(groupService);
     }
@@ -459,12 +464,12 @@ class DefaultGroupControllerTest {
     @Test
     void bad_request_when_no_fields_are_provided() {
       client
-        .patch()
-        .uri(GroupControllerUriFactory.getGroupPath(GroupId.generate().toString()))
-        .body(Map.of())
-        .exchange()
-        .expectStatus()
-        .isBadRequest();
+          .patch()
+          .uri(GroupControllerUriFactory.getGroupPath(GroupId.generate().toString()))
+          .body(Map.of())
+          .exchange()
+          .expectStatus()
+          .isBadRequest();
 
       verifyNoInteractions(groupService);
     }
@@ -560,8 +565,12 @@ class DefaultGroupControllerTest {
     @Test
     @WithMockUserId(userId = USER_ID)
     void returns_users_in_group() {
-      final List<UserId> users = List.of(UserId.generate(), UserId.generate());
-      when(groupService.getUsersInGroup(any(), any())).thenReturn(users);
+      final GroupId groupId = GroupId.generate();
+      final List<MemberData> users =
+        List.of(
+          new MemberData(UserId.generate(), UserName.fromString(FakeGenerator.username())),
+          new MemberData(UserId.generate(), UserName.fromString(FakeGenerator.username())));
+      when(groupService.getUsersInGroup(eq(groupId), any())).thenReturn(users);
 
       final List<MemberDto> response =
           client
@@ -570,13 +579,16 @@ class DefaultGroupControllerTest {
               .exchange()
               .expectStatus()
               .isOk()
-              .expectBody(GetUsersInGroupResponseDto.class)
+            .expectBody(new ParameterizedTypeReference<List<MemberDto>>() {})
               .returnResult()
               .getResponseBody();
 
       assertThat(response).isNotNull();
-      assertThat(response.userIds())
-          .containsExactlyElementsOf(users.stream().map(UserId::value).toList());
+      assertThat(response)
+        .containsExactlyElementsOf(
+          users.stream()
+            .map(user -> new MemberDto(user.userId().value(), user.username().value()))
+            .toList());
     }
 
     @Test

@@ -172,7 +172,7 @@ class DefaultGroupAdminControllerTest {
   class GetGroupsOfUser {
 
     @Test
-    void returns_groups_for_user_with_default_page_and_size() {
+    void returns_groups_for_user_with_default_pagination() {
       final UserId userId = UserId.generate();
       final GroupData group = generateGroupData(GroupId.generate());
       when(groupService.getGroupsForUser(userId, 0, 20)).thenReturn(new PageImpl<>(List.of(group)));
@@ -194,7 +194,7 @@ class DefaultGroupAdminControllerTest {
     }
 
     @Test
-    void returns_groups_for_user_with_custom_page_and_size() {
+    void returns_groups_for_user_with_custom_pagination() {
       final UserId userId = UserId.generate();
       final GroupData group = generateGroupData(GroupId.generate());
       when(groupService.getGroupsForUser(userId, 1, 27)).thenReturn(new PageImpl<>(List.of(group)));
@@ -485,7 +485,7 @@ class DefaultGroupAdminControllerTest {
           .expectStatus()
           .isOk();
 
-      verify(groupService).removeUserFromGroup(groupId, userId);
+      verify(groupService).removeUserFromGroup(groupId, userId, any());
     }
 
     @Test
