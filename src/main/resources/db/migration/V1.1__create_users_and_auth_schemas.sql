@@ -34,8 +34,8 @@ CREATE TABLE users (
     AND email = LOWER(email)
   ),
   hashed_password VARCHAR(255) NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), -- the time when it was created. for auditing purposes.
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), -- the time when it was last updated. for auditing purposes.
   is_email_verified BOOLEAN NOT NULL,
   is_enabled BOOLEAN NOT NULL
 );
@@ -72,8 +72,8 @@ CREATE TABLE email_verification_tokens (
   token_hash VARCHAR(255) UNIQUE NOT NULL CHECK (CHAR_LENGTH(BTRIM(token_hash)) > 0),
   expires_at TIMESTAMPTZ NOT NULL,
   last_sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), -- the time when it was created. for auditing purposes.
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW() -- the time when it was last updated. for auditing purposes.
 );
 
 CREATE INDEX idx_email_verification_tokens_expires_at ON email_verification_tokens (expires_at);
@@ -88,8 +88,8 @@ CREATE TABLE password_reset_tokens (
   token_hash VARCHAR(255) UNIQUE NOT NULL CHECK (CHAR_LENGTH(BTRIM(token_hash)) > 0),
   expires_at TIMESTAMPTZ NOT NULL,
   last_sent_at TIMESTAMPTZ NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), -- the time when it was created. for auditing purposes.
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW() -- the time when it was last updated. for auditing purposes.
 );
 
 CREATE INDEX idx_password_reset_tokens_expires_at ON password_reset_tokens (expires_at);
@@ -103,8 +103,8 @@ CREATE TABLE refresh_tokens (
   id UUID PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
   token_hash VARCHAR(255) UNIQUE NOT NULL CHECK (CHAR_LENGTH(BTRIM(token_hash)) > 0),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), -- the time when it was created. for auditing purposes.
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), -- the time when it was last updated. for auditing purposes.
   expires_at TIMESTAMPTZ NOT NULL,
   family UUID NOT NULL,
   UNIQUE (user_id, family)

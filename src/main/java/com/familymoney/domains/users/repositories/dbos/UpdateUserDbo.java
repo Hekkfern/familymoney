@@ -13,6 +13,18 @@ public record UpdateUserDbo(
     @Nullable Boolean isEmailVerified,
     @Nullable Boolean isEnabled) {
 
+  public UpdateUserDbo {
+    final boolean isEmptyUpdate =
+        username == null
+            && email == null
+            && hashedPassword == null
+            && isEmailVerified == null
+            && isEnabled == null;
+    if (isEmptyUpdate) {
+      throw new IllegalArgumentException("At least one field must be provided for update");
+    }
+  }
+
   public boolean isEmpty() {
     return username == null
         && email == null

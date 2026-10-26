@@ -13,9 +13,8 @@ public interface PasswordResetRepository {
    * Creates a password reset record.
    *
    * @param data password reset values to persist
-   * @return the persisted password reset record, or empty when it could not be created
    */
-  Optional<PasswordResetEntity> create(CreatePasswordResetDbo data);
+  void create(CreatePasswordResetDbo data);
 
   /**
    * Finds a password reset record by its user identifier.
@@ -41,7 +40,7 @@ public interface PasswordResetRepository {
    * @param data replacement password reset values
    * @return {@code true} when a password reset record was updated
    */
-  boolean updateByUserId(UserId userId, UpdatePasswordResetDbo data);
+  void updateByUserId(UserId userId, UpdatePasswordResetDbo data);
 
   /**
    * Deletes password reset records associated with the specified user ID. This method is typically
@@ -49,8 +48,6 @@ public interface PasswordResetRepository {
    * longer valid.
    *
    * @param userId ID of the user whose password reset records should be deleted
-   * @return true if the deletion was successful (i.e., records were found and deleted), or false if
-   *     no matching records exist for the provided user ID
    */
-  boolean deleteByUserId(UserId userId);
+  void deleteByUserId(UserId userId);
 }

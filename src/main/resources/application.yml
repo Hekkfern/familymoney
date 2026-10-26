@@ -11,8 +11,8 @@ spring:
     driver-class-name: "org.postgresql.Driver"
   sql:
     init:
-      mode: always
-      schema-locations: classpath:db/idempotency/postgres.sql
+      mode: "always"
+      schema-locations: "classpath:db/idempotency/postgres.sql"
   config:
     import: "optional:file:.env[.properties]"
   mail:
@@ -47,7 +47,7 @@ springdoc:
   cache:
     disabled: true
 idempotency:
-  store: jdbc
+  store: "jdbc"
   require-key: true
 familymoney:
   jwt:
@@ -59,6 +59,7 @@ familymoney:
     wait-time: "2m"
   group:
     invitation-duration: "1h"
+    wait-time-between-invitations: "2m"
     max-num-invitations: 5
     max-num-groups-per-user: 100
     max-num-users-per-group: 10

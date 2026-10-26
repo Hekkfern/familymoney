@@ -25,7 +25,7 @@ public class DefaultPasswordResetRepository implements PasswordResetRepository {
   private final OpaqueTokenHasher tokenHasher;
 
   @Override
-  public Optional<PasswordResetEntity> create(final CreatePasswordResetDbo data) {
+  public Optional<PasswordResetEntity> create(final CreatePasswordResetDbo dbo) {
     return db.insertInto(PasswordResetTokens.PASSWORD_RESET_TOKENS)
         .columns(
             PasswordResetTokens.PASSWORD_RESET_TOKENS.USER_ID,
@@ -33,10 +33,10 @@ public class DefaultPasswordResetRepository implements PasswordResetRepository {
             PasswordResetTokens.PASSWORD_RESET_TOKENS.EXPIRES_AT,
             PasswordResetTokens.PASSWORD_RESET_TOKENS.LAST_SENT_AT)
         .values(
-            data.userId().value(),
-            tokenHasher.hash(data.token().value()),
-            data.expiresAt().toOffsetDateTime(),
-            data.lastSentAt().atOffset(DEFAULT_TIMEZONE_OFFSET))
+            dbo.userId().value(),
+            tokenHasher.hash(dbo.token().value()),
+            dbo.expiresAt().toOffsetDateTime(),
+            dbo.lastSentAt().atOffset(DEFAULT_TIMEZONE_OFFSET))
         .returning(
             PasswordResetTokens.PASSWORD_RESET_TOKENS.USER_ID,
             PasswordResetTokens.PASSWORD_RESET_TOKENS.CREATED_AT,

@@ -9,7 +9,8 @@ import org.jspecify.annotations.Nullable;
 public record UpdateGroupDbo(@Nullable GroupName name, @Nullable Description description) {
 
   public UpdateGroupDbo {
-    if (isEmpty()) {
+    final boolean isEmptyUpdate = name == null && description == null;
+    if (isEmptyUpdate) {
       throw new IllegalArgumentException("At least one field must be provided for update");
     }
   }

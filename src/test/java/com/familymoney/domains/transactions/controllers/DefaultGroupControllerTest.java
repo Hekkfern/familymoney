@@ -189,7 +189,7 @@ class DefaultGroupControllerTest {
               .exchange()
               .expectStatus()
               .isOk()
-            .expectBody(new ParameterizedTypeReference<PageResponse<GroupDto>>() {})
+              .expectBody(new ParameterizedTypeReference<PageResponse<GroupDto>>() {})
               .returnResult()
               .getResponseBody();
 
@@ -481,7 +481,7 @@ class DefaultGroupControllerTest {
     @Test
     @WithMockUserId(userId = USER_ID)
     void returns_invitation_token() {
-      when(groupService.getInvitationToken(any(), any()))
+      when(groupService.sendInvitationToken(any(), any()))
           .thenReturn(GroupInvitationToken.fromString(VALID_TOKEN));
 
       final InvitationTokenDto response =
@@ -567,9 +567,9 @@ class DefaultGroupControllerTest {
     void returns_users_in_group() {
       final GroupId groupId = GroupId.generate();
       final List<MemberData> users =
-        List.of(
-          new MemberData(UserId.generate(), UserName.fromString(FakeGenerator.username())),
-          new MemberData(UserId.generate(), UserName.fromString(FakeGenerator.username())));
+          List.of(
+              new MemberData(UserId.generate(), UserName.fromString(FakeGenerator.username())),
+              new MemberData(UserId.generate(), UserName.fromString(FakeGenerator.username())));
       when(groupService.getUsersInGroup(eq(groupId), any())).thenReturn(users);
 
       final List<MemberDto> response =
@@ -579,16 +579,16 @@ class DefaultGroupControllerTest {
               .exchange()
               .expectStatus()
               .isOk()
-            .expectBody(new ParameterizedTypeReference<List<MemberDto>>() {})
+              .expectBody(new ParameterizedTypeReference<List<MemberDto>>() {})
               .returnResult()
               .getResponseBody();
 
       assertThat(response).isNotNull();
       assertThat(response)
-        .containsExactlyElementsOf(
-          users.stream()
-            .map(user -> new MemberDto(user.userId().value(), user.username().value()))
-            .toList());
+          .containsExactlyElementsOf(
+              users.stream()
+                  .map(user -> new MemberDto(user.userId().value(), user.username().value()))
+                  .toList());
     }
 
     @Test

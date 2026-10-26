@@ -12,6 +12,13 @@ public record UpdatePasswordResetDbo(
     @Nullable ExpirationTime expiresAt,
     @Nullable Instant lastSentAt) {
 
+  public UpdatePasswordResetDbo {
+    final boolean isEmptyUpdate = token == null && expiresAt == null && lastSentAt == null;
+    if (isEmptyUpdate) {
+      throw new IllegalArgumentException("At least one field must be provided for update");
+    }
+  }
+
   public boolean isEmpty() {
     return token == null && expiresAt == null && lastSentAt == null;
   }

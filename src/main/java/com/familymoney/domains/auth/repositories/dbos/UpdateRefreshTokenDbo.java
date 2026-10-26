@@ -9,6 +9,13 @@ import org.jspecify.annotations.Nullable;
 public record UpdateRefreshTokenDbo(
     @Nullable RefreshToken token, @Nullable ExpirationTime expiresAt) {
 
+  public UpdateRefreshTokenDbo {
+    final boolean isEmptyUpdate = token == null && expiresAt == null;
+    if (isEmptyUpdate) {
+      throw new IllegalArgumentException("At least one field must be provided for update");
+    }
+  }
+
   public boolean isEmpty() {
     return token == null && expiresAt == null;
   }

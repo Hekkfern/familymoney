@@ -36,11 +36,10 @@ import com.familymoney.properties.GroupProperties;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Currency;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import javax.money.CurrencyUnit;
-import javax.money.Monetary;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -59,7 +58,7 @@ import org.springframework.data.domain.Pageable;
 class DefaultGroupServiceTest {
 
   private static final Instant NOW = Instant.parse("2025-01-01T00:00:00Z");
-  private static final CurrencyUnit CURRENCY_USD = Monetary.getCurrency("USD");
+  private static final Currency CURRENCY_USD = Currency.getInstance("USD");
 
   @Mock private GroupRepository groupRepository;
   @Mock private GroupInvitationRepository groupInvitationRepository;
@@ -69,15 +68,14 @@ class DefaultGroupServiceTest {
 
   @InjectMocks private DefaultGroupService groupService;
 
-  private GroupEntity groupDbo(final GroupId id) {
-    return new GroupEntity(
-        id, GroupName.fromString("group"), Description.of("desc"), CURRENCY_USD, NOW, NOW);
+  private GroupEntity buildGroupDbo(final GroupId id) {
+    return new GroupEntity(id, GroupName.fromString("group"), Description.of("desc"), CURRENCY_USD);
   }
 
-  private GroupInvitationEntity invitationDbo(
+  private GroupInvitationEntity buildInvitationDbo(
       GroupId groupId, GroupInvitationToken token, Instant expiresAt) {
     return new GroupInvitationEntity(
-        UUID.randomUUID(), groupId, null, NOW, ExpirationTime.of(expiresAt));
+        UUID.randomUUID(), groupId, null, ExpirationTime.of(expiresAt));
   }
 
   private void mockAddUserToGroupRepository() {
@@ -104,6 +102,11 @@ class DefaultGroupServiceTest {
                       NOW,
                       dto.expiresAt()));
             });
+  }
+
+  @Nested
+  class CreateEmptyGroup {
+    // TODO
   }
 
   @Nested
@@ -161,7 +164,7 @@ class DefaultGroupServiceTest {
     }
 
     @Test
-    void throws_user_not_found_when_addUser_fails_due_to_user_deleted_concurrently() {
+    void throws_when_addUser_fails_due_to_user_deleted_concurrently() {
       when(groupChecker.createGroup(any(), any(), any())).thenReturn(GroupId.generate());
       when(groupRepository.addUserToGroup(any(UserId.class), any(GroupId.class)))
           .thenThrow(new DataIntegrityViolationException("FK violation"));
@@ -178,7 +181,12 @@ class DefaultGroupServiceTest {
   }
 
   @Nested
-  class DeleteGroup {
+  class LeaveGroup {
+    // TODO
+  }
+
+  @Nested
+  class DeleteGroupAsAdmin {
 
     @Test
     void deletes_group_when_group_exists_and_user_is_member_of_the_group() {
@@ -196,7 +204,7 @@ class DefaultGroupServiceTest {
       final UserId user = UserId.generate();
       doThrow(new GroupNotFoundException("Group not found"))
           .when(groupChecker)
-          .checkIfGroupExists(gid);
+          .verifyGroupExists(gid);
 
       assertThatThrownBy(() -> groupService.deleteGroupAsAdmin(gid, user))
           .isInstanceOf(GroupNotFoundException.class);
@@ -208,7 +216,7 @@ class DefaultGroupServiceTest {
       final UserId user = UserId.generate();
       doThrow(new UserIsNotMemberOfGroupException("User is not a member of the group"))
           .when(groupChecker)
-          .checkIfUserIsInGroup(user, gid);
+          .verifyUserIsInGroup(user, gid);
 
       assertThatThrownBy(() -> groupService.deleteGroupAsAdmin(gid, user))
           .isInstanceOf(UserIsNotMemberOfGroupException.class);
@@ -216,7 +224,7 @@ class DefaultGroupServiceTest {
   }
 
   @Nested
-  class GetGroupsByUser {
+  class GetGroupsForUser {
 
     @Test
     void get_page_from_repository() {
@@ -255,7 +263,7 @@ class DefaultGroupServiceTest {
       final UserId user = UserId.generate();
       doThrow(new UserIsNotMemberOfGroupException("User is not a member of the group"))
           .when(groupChecker)
-          .checkIfUserIsInGroup(user, gid);
+          .verifyUserIsInGroup(user, gid);
 
       assertThatThrownBy(() -> groupService.getGroupInfo(gid, user))
           .isInstanceOf(UserIsNotMemberOfGroupException.class);
@@ -267,7 +275,7 @@ class DefaultGroupServiceTest {
       final UserId user = UserId.generate();
       doThrow(new GroupNotFoundException("Group not found"))
           .when(groupChecker)
-          .checkIfGroupExists(gid);
+          .verifyGroupExists(gid);
 
       assertThatThrownBy(() -> groupService.getGroupInfo(gid, user))
           .isInstanceOf(GroupNotFoundException.class);
@@ -294,7 +302,7 @@ class DefaultGroupServiceTest {
       final UserId user = UserId.generate();
       doThrow(new UserIsNotMemberOfGroupException("User is not a member of the group"))
           .when(groupChecker)
-          .checkIfUserIsInGroup(user, gid);
+          .verifyUserIsInGroup(user, gid);
 
       final UpdateGroupData data = new UpdateGroupData(null, Description.of("new"));
       assertThatThrownBy(() -> groupService.updateGroupInfo(gid, user, data))
@@ -307,7 +315,7 @@ class DefaultGroupServiceTest {
       final UserId user = UserId.generate();
       doThrow(new GroupNotFoundException("Group not found"))
           .when(groupChecker)
-          .checkIfGroupExists(gid);
+          .verifyGroupExists(gid);
 
       final UpdateGroupData data = new UpdateGroupData(null, Description.of("new"));
       assertThatThrownBy(() -> groupService.updateGroupInfo(gid, user, data))
@@ -330,7 +338,7 @@ class DefaultGroupServiceTest {
       final UserId user = UserId.generate();
       mockCreateInGroupInvitationRepository();
 
-      assertThatCode(() -> groupService.getInvitationToken(gid, user)).doesNotThrowAnyException();
+      assertThatCode(() -> groupService.sendInvitationToken(gid, user)).doesNotThrowAnyException();
 
       verify(groupInvitationRepository).create(any(CreateGroupInvitationDbo.class));
     }
@@ -341,9 +349,9 @@ class DefaultGroupServiceTest {
       final UserId user = UserId.generate();
       doThrow(new UserIsNotMemberOfGroupException("User is not a member of the group"))
           .when(groupChecker)
-          .checkIfUserIsInGroup(user, gid);
+          .verifyUserIsInGroup(user, gid);
 
-      assertThatThrownBy(() -> groupService.getInvitationToken(gid, user))
+      assertThatThrownBy(() -> groupService.sendInvitationToken(gid, user))
           .isInstanceOf(UserIsNotMemberOfGroupException.class);
     }
 
@@ -354,7 +362,7 @@ class DefaultGroupServiceTest {
       when(groupInvitationRepository.create(any(CreateGroupInvitationDbo.class)))
           .thenReturn(Optional.empty());
 
-      assertThatThrownBy(() -> groupService.getInvitationToken(gid, user))
+      assertThatThrownBy(() -> groupService.sendInvitationToken(gid, user))
           .isInstanceOf(DatabaseExecutionException.class);
     }
 
@@ -364,9 +372,9 @@ class DefaultGroupServiceTest {
       final UserId user = UserId.generate();
       doThrow(new GroupNotFoundException("Group not found"))
           .when(groupChecker)
-          .checkIfGroupExists(gid);
+          .verifyGroupExists(gid);
 
-      assertThatThrownBy(() -> groupService.getInvitationToken(gid, user))
+      assertThatThrownBy(() -> groupService.sendInvitationToken(gid, user))
           .isInstanceOf(GroupNotFoundException.class);
     }
 
@@ -374,9 +382,9 @@ class DefaultGroupServiceTest {
     void throws_when_maximum_number_of_invitations_reached() {
       final GroupId gid = GroupId.generate();
       final UserId user = UserId.generate();
-      when(groupInvitationRepository.countByGroupIdAndUserId(gid, user)).thenReturn(20L);
+      when(groupInvitationRepository.existsByGroupIdAndUserId(gid, user)).thenReturn(20L);
 
-      assertThatThrownBy(() -> groupService.getInvitationToken(gid, user))
+      assertThatThrownBy(() -> groupService.sendInvitationToken(gid, user))
           .isInstanceOf(MaximumGroupInvitationsReachedException.class);
     }
   }
@@ -443,7 +451,7 @@ class DefaultGroupServiceTest {
       final UserId user = UserId.generate();
       doThrow(new UserIsNotMemberOfGroupException("User is not a member of the group"))
           .when(groupChecker)
-          .checkIfUserIsInGroup(user, gid);
+          .verifyUserIsInGroup(user, gid);
 
       assertThatThrownBy(() -> groupService.getUsersInGroup(gid, user))
           .isInstanceOf(UserIsNotMemberOfGroupException.class);
@@ -455,10 +463,52 @@ class DefaultGroupServiceTest {
       final UserId user = UserId.generate();
       doThrow(new GroupNotFoundException("Group not found"))
           .when(groupChecker)
-          .checkIfGroupExists(gid);
+          .verifyGroupExists(gid);
 
       assertThatThrownBy(() -> groupService.getUsersInGroup(gid, user))
           .isInstanceOf(GroupNotFoundException.class);
+    }
+  }
+
+  @Nested
+  class AddUserToGroupAsAdmin {
+
+    @Test
+    void adds_existing_user_to_existing_group() {
+      final GroupId groupId = GroupId.generate();
+      final UserId userId = UserId.generate();
+      when(groupRepository.addUserToGroup(userId, groupId))
+          .thenReturn(Optional.of(new UserGroupEntity(userId, groupId, Instant.now())));
+
+      groupService.addUserToGroupAsAdmin(groupId, userId);
+
+      verify(groupChecker).verifyGroupExists(groupId);
+      verify(groupChecker).verifyUserExists(userId);
+      verify(groupRepository).addUserToGroup(userId, groupId);
+    }
+
+    @Test
+    void throws_when_group_does_not_exist() {
+      final GroupId groupId = GroupId.generate();
+      final UserId userId = UserId.generate();
+      doThrow(new GroupNotFoundException("Group not found"))
+          .when(groupChecker)
+          .verifyGroupExists(groupId);
+
+      assertThatThrownBy(() -> groupService.addUserToGroupAsAdmin(groupId, userId))
+          .isInstanceOf(GroupNotFoundException.class);
+    }
+
+    @Test
+    void throws_when_user_does_not_exist() {
+      final GroupId groupId = GroupId.generate();
+      final UserId userId = UserId.generate();
+      doThrow(new UserNotFoundException("User not found"))
+          .when(groupChecker)
+          .verifyUserExists(userId);
+
+      assertThatThrownBy(() -> groupService.addUserToGroupAsAdmin(groupId, userId))
+          .isInstanceOf(UserNotFoundException.class);
     }
   }
 
@@ -483,7 +533,7 @@ class DefaultGroupServiceTest {
       final UserId toRemove = UserId.generate();
       doThrow(new UserIsNotMemberOfGroupException("User is not a member of the group"))
           .when(groupChecker)
-          .checkIfUserIsInGroup(user, gid);
+          .verifyUserIsInGroup(user, gid);
 
       assertThatThrownBy(() -> groupService.removeUserFromGroup(gid, user, toRemove))
           .isInstanceOf(UserIsNotMemberOfGroupException.class);
@@ -496,7 +546,7 @@ class DefaultGroupServiceTest {
       final UserId toRemove = UserId.generate();
       doThrow(new GroupNotFoundException("Group not found"))
           .when(groupChecker)
-          .checkIfGroupExists(gid);
+          .verifyGroupExists(gid);
 
       assertThatThrownBy(() -> groupService.removeUserFromGroup(gid, user, toRemove))
           .isInstanceOf(GroupNotFoundException.class);
@@ -517,44 +567,17 @@ class DefaultGroupServiceTest {
   }
 
   @Nested
-  class AddUserToGroupAsAdmin {
+  class GetGroupBalances {
+    // TODO
+  }
 
-    @Test
-    void adds_existing_user_to_existing_group() {
-      final GroupId groupId = GroupId.generate();
-      final UserId userId = UserId.generate();
-      when(groupRepository.addUserToGroup(userId, groupId))
-          .thenReturn(Optional.of(new UserGroupEntity(userId, groupId, Instant.now())));
+  @Nested
+  class GetGroupTransactions {
+    // TODO
+  }
 
-      groupService.addUserToGroupAsAdmin(groupId, userId);
-
-      verify(groupChecker).checkIfGroupExists(groupId);
-      verify(groupChecker).checkIfUserExists(userId);
-      verify(groupRepository).addUserToGroup(userId, groupId);
-    }
-
-    @Test
-    void throws_when_group_does_not_exist() {
-      final GroupId groupId = GroupId.generate();
-      final UserId userId = UserId.generate();
-      doThrow(new GroupNotFoundException("Group not found"))
-          .when(groupChecker)
-          .checkIfGroupExists(groupId);
-
-      assertThatThrownBy(() -> groupService.addUserToGroupAsAdmin(groupId, userId))
-          .isInstanceOf(GroupNotFoundException.class);
-    }
-
-    @Test
-    void throws_when_user_does_not_exist() {
-      final GroupId groupId = GroupId.generate();
-      final UserId userId = UserId.generate();
-      doThrow(new UserNotFoundException("User not found"))
-          .when(groupChecker)
-          .checkIfUserExists(userId);
-
-      assertThatThrownBy(() -> groupService.addUserToGroupAsAdmin(groupId, userId))
-          .isInstanceOf(UserNotFoundException.class);
-    }
+  @Nested
+  class ForceSyncBalancesAsAdmin {
+    // TODO
   }
 }

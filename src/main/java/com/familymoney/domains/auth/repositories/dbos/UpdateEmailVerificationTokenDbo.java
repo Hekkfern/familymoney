@@ -12,6 +12,13 @@ public record UpdateEmailVerificationTokenDbo(
     @Nullable ExpirationTime expiresAt,
     @Nullable Instant lastSentAt) {
 
+  public UpdateEmailVerificationTokenDbo {
+    final boolean isEmptyUpdate = token == null && expiresAt == null && lastSentAt == null;
+    if (isEmptyUpdate) {
+      throw new IllegalArgumentException("At least one field must be provided for update");
+    }
+  }
+
   public boolean isEmpty() {
     return token == null && expiresAt == null && lastSentAt == null;
   }

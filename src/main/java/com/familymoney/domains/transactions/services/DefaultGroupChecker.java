@@ -21,7 +21,7 @@ public class DefaultGroupChecker implements GroupChecker {
   private final UserRepository userRepository;
 
   @Override
-  public void checkIfGroupExists(final GroupId groupId) {
+  public void verifyGroupExists(final GroupId groupId) {
     final boolean exists = groupRepository.existsById(groupId);
     if (!exists) {
       final String msg = "Group '%s' does not exist".formatted(groupId);
@@ -31,7 +31,7 @@ public class DefaultGroupChecker implements GroupChecker {
   }
 
   @Override
-  public void checkIfUserExists(final UserId userId) {
+  public void verifyUserExists(final UserId userId) {
     if (userRepository.existsById(userId)) {
       return;
     }
@@ -41,7 +41,7 @@ public class DefaultGroupChecker implements GroupChecker {
   }
 
   @Override
-  public void checkIfUserIsInGroup(final UserId userId, final GroupId groupId)
+  public void verifyUserIsInGroup(final UserId userId, final GroupId groupId)
       throws UserIsNotMemberOfGroupException {
     if (!groupRepository.isUserInGroup(userId, groupId)) {
       final String msg = "User '%s' is not a member of group '%s'".formatted(userId, groupId);

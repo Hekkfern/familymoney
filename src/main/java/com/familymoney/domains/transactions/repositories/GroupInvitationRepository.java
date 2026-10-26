@@ -27,6 +27,18 @@ public interface GroupInvitationRepository {
   Optional<GroupInvitationEntity> findByToken(GroupInvitationToken token);
 
   /**
+   * Finds a group invitation by user ID, group ID, and the ID of the user who created the
+   * invitation.
+   *
+   * @param userId the user identifier
+   * @param groupId the group identifier
+   * @param createdBy the identifier of the user who created the invitation
+   * @return an {@link Optional} containing the matching {@link GroupInvitationEntity} when found;
+   *     otherwise an empty {@link Optional}
+   */
+  Optional<GroupInvitationEntity> findByKey(UserId userId, GroupId groupId, UserId createdBy);
+
+  /**
    * Deletes a group invitation by its token.
    *
    * @param token the unique invitation token
@@ -34,13 +46,31 @@ public interface GroupInvitationRepository {
   void deleteByToken(GroupInvitationToken token);
 
   /**
-   * Counts invitations for the given group and user pair.
+   * Deletes a group invitation by user ID, group ID, and the ID of the user who created the
+   * invitation.
+   *
+   * @param userId the user identifier
+   * @param groupId the group identifier
+   * @param createdBy the identifier of the user who created the invitation
+   */
+  void deleteByKey(UserId userId, GroupId groupId, UserId createdBy);
+
+  /**
+   * Counts the number of non-expired group invitations created by a specific user.
+   *
+   * @param createdBy the identifier of the user who created the invitations
+   * @return the count of invitations created by the specified user
+   */
+  int countByCreatedBy(UserId createdBy);
+
+  /**
+   * Checks if a non-expired group invitation exists for the given group ID and user ID .
    *
    * @param groupId the group identifier
    * @param userId the user identifier
-   * @return the number of invitation records that match the provided group and user IDs
+   * @return {@code true} if a non-expired invitation exists; {@code false} otherwise
    */
-  long countByGroupIdAndUserId(GroupId groupId, UserId userId);
+  boolean existsByGroupIdAndUserId(GroupId groupId, UserId userId);
 
   /**
    * Deletes a batch of invitations that belong to groups soft-deleted before the given instant.

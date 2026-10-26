@@ -108,12 +108,12 @@ public interface GroupService {
    * Generate an invitation token for a group
    *
    * @param groupId Identifier of the group to generate the token for
+   * @param userId Identifier of the user to send the invitation to
    * @param requester The user requesting the token
-   * @return Invitation token for the group
    * @throws GroupNotFoundException if the group does not exist
    * @throws UserIsNotMemberOfGroupException if the user is not a member of the group
    */
-  GroupInvitationToken getInvitationToken(GroupId groupId, AuthorizedUser requester);
+  void sendInvitationToken(GroupId groupId, UserId userId, AuthorizedUser requester);
 
   /**
    * Enter a group using an invitation token. Once used, the token becomes invalid.

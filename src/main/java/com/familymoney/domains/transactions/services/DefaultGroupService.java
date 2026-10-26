@@ -1,5 +1,6 @@
 package com.familymoney.domains.transactions.services;
 
+import com.familymoney.domains.transactions.events.GroupInvitationRequestedEvent;
 import com.familymoney.domains.transactions.exceptions.ExpenseNotFoundException;
 import com.familymoney.domains.transactions.exceptions.GroupInvitationInvalidException;
 import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
@@ -8,6 +9,10 @@ import com.familymoney.domains.transactions.exceptions.MaximumGroupInvitationsRe
 import com.familymoney.domains.transactions.exceptions.MaximumGroupMembersReachedException;
 import com.familymoney.domains.transactions.exceptions.MaximumGroupsPerUserReachedException;
 import com.familymoney.domains.transactions.exceptions.PaymentNotFoundException;
+import com.familymoney.domains.transactions.exceptions.SendGroupInvitationTooSoonException;
+import com.familymoney.domains.transactions.exceptions.UserAlreadyInGroupException;
+import com.familymoney.domains.transactions.exceptions.UserAlreadyInvitedException;
+import com.familymoney.domains.transactions.exceptions.WrongUserForInvitationException;
 import com.familymoney.domains.transactions.repositories.BalanceRepository;
 import com.familymoney.domains.transactions.repositories.ExpenseRepository;
 import com.familymoney.domains.transactions.repositories.GroupInvitationRepository;
@@ -17,6 +22,7 @@ import com.familymoney.domains.transactions.repositories.TransactionRepository;
 import com.familymoney.domains.transactions.repositories.dbos.CreateGroupDbo;
 import com.familymoney.domains.transactions.repositories.dbos.CreateGroupInvitationDbo;
 import com.familymoney.domains.transactions.repositories.entitites.FullExpenseEntity;
+import com.familymoney.domains.transactions.repositories.entitites.GroupEntity;
 import com.familymoney.domains.transactions.repositories.entitites.GroupInvitationEntity;
 import com.familymoney.domains.transactions.repositories.entitites.PaymentEntity;
 import com.familymoney.domains.transactions.repositories.entitites.TransactionReference;
@@ -38,22 +44,24 @@ import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import com.familymoney.domains.transactions.types.GroupName;
 import com.familymoney.domains.transactions.types.PaymentId;
 import com.familymoney.domains.users.exceptions.UserNotFoundException;
+import com.familymoney.domains.users.repositories.UserRepository;
+import com.familymoney.domains.users.repositories.entitites.UserEntity;
 import com.familymoney.domains.users.types.Role;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.properties.GroupProperties;
 import com.familymoney.utils.AuthorizedUser;
-import com.familymoney.utils.UUIDGenerator;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Currency;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -67,6 +75,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class DefaultGroupService implements GroupService {
 
+  private final UserRepository userRepository;
   private final GroupRepository groupRepository;
   private final BalanceRepository balanceRepository;
   private final TransactionRepository transactionRepository;
@@ -76,6 +85,7 @@ public class DefaultGroupService implements GroupService {
   private final GroupChecker groupChecker;
   private final Clock clock;
   private final GroupProperties groupProperties;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Override
   public GroupId createEmptyGroup(
@@ -110,22 +120,22 @@ public class DefaultGroupService implements GroupService {
   @Override
   @Transactional
   public void leaveGroup(final GroupId groupId, final AuthorizedUser requester) {
-    groupChecker.checkIfGroupExists(groupId);
-    groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+    groupChecker.verifyGroupExists(groupId);
+    groupChecker.verifyUserIsInGroup(requester.id(), groupId);
     groupRepository.removeUserFromGroup(requester.id(), groupId);
   }
 
   @Override
   @Transactional
   public void deleteGroupAsAdmin(final GroupId groupId) {
-    groupChecker.checkIfGroupExists(groupId);
+    groupChecker.verifyGroupExists(groupId);
     groupRepository.softDeleteById(groupId);
   }
 
   @Override
   @Transactional
   public Page<GroupData> getGroupsForUser(final UserId userId, final int page, final int size) {
-    groupChecker.checkIfUserExists(userId);
+    groupChecker.verifyUserExists(userId);
     return groupRepository
         .findByUserId(userId, PageRequest.of(page, size))
         .map(GroupDataMapper::fromDbo);
@@ -134,9 +144,9 @@ public class DefaultGroupService implements GroupService {
   @Override
   @Transactional
   public GroupData getGroupInfo(final GroupId groupId, final AuthorizedUser requester) {
-    groupChecker.checkIfGroupExists(groupId);
+    groupChecker.verifyGroupExists(groupId);
     if (requester.role().equals(Role.USER)) {
-      groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+      groupChecker.verifyUserIsInGroup(requester.id(), groupId);
     }
     return groupRepository
         .findById(groupId)
@@ -149,36 +159,70 @@ public class DefaultGroupService implements GroupService {
   @Transactional
   public void updateGroupInfo(
       final GroupId groupId, final AuthorizedUser requester, final UpdateGroupData data) {
-    groupChecker.checkIfGroupExists(groupId);
+    groupChecker.verifyGroupExists(groupId);
     if (requester.role().equals(Role.USER)) {
-      groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+      groupChecker.verifyUserIsInGroup(requester.id(), groupId);
     }
     groupRepository.updateById(groupId, UpdateGroupDataMapper.toDbo(data));
   }
 
   @Override
   @Transactional
-  public GroupInvitationToken getInvitationToken(
-      final GroupId groupId, final AuthorizedUser requester) {
-    groupChecker.checkIfGroupExists(groupId);
+  public void sendInvitationToken(
+      final GroupId groupId, final UserId userId, final AuthorizedUser requester) {
+    groupChecker.verifyGroupExists(groupId);
+    groupChecker.verifyUserExists(userId);
     if (requester.role().equals(Role.USER)) {
-      groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+      groupChecker.verifyUserIsInGroup(requester.id(), groupId);
+    }
+    if (groupRepository.isUserInGroup(userId, groupId)) {
+      throw new UserAlreadyInGroupException();
     }
     if (groupRepository.countMembershipsOfGroup(groupId) >= groupProperties.maxNumUsersPerGroup()) {
       throw new MaximumGroupMembersReachedException();
     }
-    if (groupInvitationRepository.countByGroupIdAndUserId(groupId, requester.id())
+    if (groupRepository.countMembershipsOfUser(userId) >= groupProperties.maxNumGroupsPerUser()) {
+      throw new MaximumGroupsPerUserReachedException();
+    }
+    if (groupInvitationRepository.countByCreatedBy(requester.id())
         >= groupProperties.maxNumInvitations()) {
       throw new MaximumGroupInvitationsReachedException();
     }
+    if (groupInvitationRepository.existsByGroupIdAndUserId(groupId, userId)) {
+      throw new UserAlreadyInvitedException();
+    }
+    final Optional<GroupInvitationEntity> existingInvitation =
+        groupInvitationRepository.findByKey(userId, groupId, requester.id());
+    final Instant now = Instant.now(clock);
+    if (existingInvitation.isPresent()) {
+      final GroupInvitationEntity invitation = existingInvitation.get();
+      if (invitation.lastSentAt().plus(groupProperties.waitTimeBetweenInvitations()).isAfter(now)) {
+        throw new SendGroupInvitationTooSoonException();
+      } else {
+        groupInvitationRepository.deleteByKey(
+            invitation.userId(), invitation.groupId(), invitation.createdBy());
+      }
+    }
     final GroupInvitationToken token = GroupInvitationToken.generate();
     final ExpirationTime expiresAt =
-        ExpirationTime.of(Instant.now(clock).plus(groupProperties.invitationDuration()));
-    final UUID invitationId = UUIDGenerator.generate();
+        ExpirationTime.of(now.plus(groupProperties.invitationDuration()));
+    final UserEntity userToInvite =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new UserNotFoundException("User to invite not found"));
+    final GroupEntity groupToInvite =
+        groupRepository
+            .findById(groupId)
+            .orElseThrow(() -> new GroupNotFoundException("Group to invite not found"));
     groupInvitationRepository.create(
-        new CreateGroupInvitationDbo(
-            invitationId, groupId, requester.id(), token, requester.id(), expiresAt));
-    return token;
+        new CreateGroupInvitationDbo(groupId, userId, token, requester.id(), expiresAt, now));
+    eventPublisher.publishEvent(
+        new GroupInvitationRequestedEvent(
+            userToInvite.id(),
+            userToInvite.email(),
+            userToInvite.username(),
+            groupToInvite.name(),
+            token));
   }
 
   @Override
@@ -193,6 +237,10 @@ public class DefaultGroupService implements GroupService {
       log.info("Invitation token is expired");
       throw new GroupInvitationInvalidException("Invitation token expired");
     }
+    if (!invitationDb.userId().equals(requester.id())) {
+      throw new WrongUserForInvitationException();
+    }
+    groupChecker.verifyGroupExists(invitationDb.groupId());
     if (groupRepository.countMembershipsOfGroup(invitationDb.groupId())
         >= groupProperties.maxNumUsersPerGroup()) {
       throw new MaximumGroupMembersReachedException();
@@ -201,7 +249,6 @@ public class DefaultGroupService implements GroupService {
         >= groupProperties.maxNumGroupsPerUser()) {
       throw new MaximumGroupsPerUserReachedException();
     }
-    groupChecker.checkIfGroupExists(invitationDb.groupId());
     groupInvitationRepository.deleteByToken(token);
     groupRepository.addUserToGroup(requester.id(), invitationDb.groupId());
   }
@@ -209,9 +256,9 @@ public class DefaultGroupService implements GroupService {
   @Override
   @Transactional
   public List<MemberData> getUsersInGroup(final GroupId groupId, final AuthorizedUser requester) {
-    groupChecker.checkIfGroupExists(groupId);
+    groupChecker.verifyGroupExists(groupId);
     if (requester.role().equals(Role.USER)) {
-      groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+      groupChecker.verifyUserIsInGroup(requester.id(), groupId);
     }
     return groupRepository.findUsersByGroupId(groupId).stream()
         .map(MemberDataMapper::fromDbo)
@@ -221,8 +268,8 @@ public class DefaultGroupService implements GroupService {
   @Override
   @Transactional
   public void addUserToGroupAsAdmin(final GroupId groupId, final UserId userIdToAdd) {
-    groupChecker.checkIfGroupExists(groupId);
-    groupChecker.checkIfUserExists(userIdToAdd);
+    groupChecker.verifyGroupExists(groupId);
+    groupChecker.verifyUserExists(userIdToAdd);
     if (groupRepository.countMembershipsOfGroup(groupId) >= groupProperties.maxNumUsersPerGroup()) {
       throw new MaximumGroupMembersReachedException();
     }
@@ -236,20 +283,20 @@ public class DefaultGroupService implements GroupService {
   @Override
   public void removeUserFromGroup(
       final GroupId groupId, final UserId userIdToRemove, final AuthorizedUser requester) {
-    groupChecker.checkIfGroupExists(groupId);
+    groupChecker.verifyGroupExists(groupId);
     if (requester.role().equals(Role.USER)) {
-      groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+      groupChecker.verifyUserIsInGroup(requester.id(), groupId);
     }
-    groupChecker.checkIfUserExists(userIdToRemove);
+    groupChecker.verifyUserExists(userIdToRemove);
     groupRepository.removeUserFromGroup(userIdToRemove, groupId);
   }
 
   @Override
   @Transactional
   public List<BalanceData> getGroupBalances(final GroupId groupId, final AuthorizedUser requester) {
-    groupChecker.checkIfGroupExists(groupId);
+    groupChecker.verifyGroupExists(groupId);
     if (requester.role().equals(Role.USER)) {
-      groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+      groupChecker.verifyUserIsInGroup(requester.id(), groupId);
     }
     // TODO
     return List.of();
@@ -259,9 +306,9 @@ public class DefaultGroupService implements GroupService {
   @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
   public Page<TransactionData> getGroupTransactions(
       final GroupId groupId, final AuthorizedUser requester, final int page, final int size) {
-    groupChecker.checkIfGroupExists(groupId);
+    groupChecker.verifyGroupExists(groupId);
     if (requester.role().equals(Role.USER)) {
-      groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+      groupChecker.verifyUserIsInGroup(requester.id(), groupId);
     }
     final Pageable pageable = PageRequest.of(page, size);
     final Page<TransactionReference> references =

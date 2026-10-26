@@ -5,8 +5,8 @@ import com.familymoney.domains.transactions.controllers.dtos.CreateGroupRequestD
 import com.familymoney.domains.transactions.controllers.dtos.CreateGroupResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.EnterGroupRequestDto;
 import com.familymoney.domains.transactions.controllers.dtos.GroupDto;
-import com.familymoney.domains.transactions.controllers.dtos.InvitationTokenDto;
 import com.familymoney.domains.transactions.controllers.dtos.MemberDto;
+import com.familymoney.domains.transactions.controllers.dtos.SendInvitationTokenRequestDto;
 import com.familymoney.domains.transactions.controllers.dtos.TransactionDto;
 import com.familymoney.domains.transactions.controllers.dtos.UpdateGroupRequestDto;
 import com.familymoney.domains.transactions.controllers.mappers.BalanceDtoMapper;
@@ -72,7 +72,7 @@ public class DefaultGroupController implements GroupController {
   public void removeUserFromGroup(final UUID groupId, final UUID userIdToRemove) {
     final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
     groupService.removeUserFromGroup(
-      GroupId.fromUuid(groupId), UserId.fromUuid(userIdToRemove), user);
+        GroupId.fromUuid(groupId), UserId.fromUuid(userIdToRemove), user);
   }
 
   @Override
@@ -90,11 +90,10 @@ public class DefaultGroupController implements GroupController {
   }
 
   @Override
-  public InvitationTokenDto getInvitationToken(final UUID groupId) {
+  public void sendInvitationToken(final UUID groupId, final SendInvitationTokenRequestDto request) {
     final AuthorizedUser user = AuthenticationUtils.getAuthorizedUserFromSecurityContext();
-    final GroupInvitationToken token =
-        groupService.getInvitationToken(GroupId.fromUuid(groupId), user);
-    return new InvitationTokenDto(token.value());
+    groupService.sendInvitationToken(
+        GroupId.fromUuid(groupId), UserId.fromUuid(request.userId()), user);
   }
 
   @Override

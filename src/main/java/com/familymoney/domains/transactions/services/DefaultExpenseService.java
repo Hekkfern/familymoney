@@ -40,9 +40,9 @@ public class DefaultExpenseService implements ExpenseService {
   @Transactional(readOnly = true)
   public Page<ExpenseData> getExpenses(
       final GroupId groupId, final AuthorizedUser requester, final int page, final int size) {
-    groupChecker.checkIfGroupExists(groupId);
+    groupChecker.verifyGroupExists(groupId);
     if (requester.role().equals(Role.USER)) {
-      groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+      groupChecker.verifyUserIsInGroup(requester.id(), groupId);
     }
     final Currency currency = getGroupCurrency(groupId);
     return expenseRepository
@@ -59,7 +59,7 @@ public class DefaultExpenseService implements ExpenseService {
       final Map<UserId, BigDecimal> shares,
       final Map<UserId, BigDecimal> payers,
       final AuthorizedUser requester) {
-    groupChecker.checkIfGroupExists(groupId);
+    groupChecker.verifyGroupExists(groupId);
     final ExpenseId id = ExpenseId.generate();
     expenseRepository.create(
         new CreateExpenseDbo(id, description, groupId, requester.id(), doneAt, shares, payers));
@@ -71,9 +71,9 @@ public class DefaultExpenseService implements ExpenseService {
   public ExpenseData getExpense(final ExpenseId id, final AuthorizedUser requester) {
     final FullExpenseEntity entity = getExpenseFromId(id);
     final GroupId groupId = entity.expense().groupId();
-    groupChecker.checkIfGroupExists(groupId);
+    groupChecker.verifyGroupExists(groupId);
     if (requester.role().equals(Role.USER)) {
-      groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+      groupChecker.verifyUserIsInGroup(requester.id(), groupId);
     }
     return ExpenseDataMapper.fromDbo(entity, getGroupCurrency(entity.expense().groupId()));
   }
@@ -83,9 +83,9 @@ public class DefaultExpenseService implements ExpenseService {
       final ExpenseId id, final AuthorizedUser requester, final UpdateExpenseData data) {
     final FullExpenseEntity entity = getExpenseFromId(id);
     final GroupId groupId = entity.expense().groupId();
-    groupChecker.checkIfGroupExists(groupId);
+    groupChecker.verifyGroupExists(groupId);
     if (requester.role().equals(Role.USER)) {
-      groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+      groupChecker.verifyUserIsInGroup(requester.id(), groupId);
     }
     expenseRepository.updateById(
         id, new UpdateExpenseDbo(data.description(), data.doneAt(), data.shares(), data.payers()));
@@ -95,9 +95,9 @@ public class DefaultExpenseService implements ExpenseService {
   public void deleteExpense(final ExpenseId id, final AuthorizedUser requester) {
     final FullExpenseEntity entity = getExpenseFromId(id);
     final GroupId groupId = entity.expense().groupId();
-    groupChecker.checkIfGroupExists(groupId);
+    groupChecker.verifyGroupExists(groupId);
     if (requester.role().equals(Role.USER)) {
-      groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+      groupChecker.verifyUserIsInGroup(requester.id(), groupId);
     }
     expenseRepository.deleteById(id);
   }

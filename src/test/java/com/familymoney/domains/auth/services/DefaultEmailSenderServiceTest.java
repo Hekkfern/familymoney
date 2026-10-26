@@ -2,15 +2,19 @@ package com.familymoney.domains.auth.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.familymoney.config.ThymeleafConfig;
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.auth.types.PasswordResetToken;
+import com.familymoney.domains.transactions.types.GroupInvitationToken;
+import com.familymoney.domains.transactions.types.GroupName;
 import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.UserName;
 import com.familymoney.properties.AppProperties;
@@ -22,6 +26,7 @@ import jakarta.mail.internet.MimeMessage;
 import java.net.URI;
 import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -29,6 +34,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
@@ -106,5 +112,74 @@ class DefaultEmailSenderServiceTest {
     assertThat(sentMessage.getContent().toString())
         .contains("https://example.com/reset-password?token=" + token.value())
         .contains("60 minutes");
+  }
+
+  @Nested
+  class SendGroupInvitationEmail {
+
+    @Test
+    void sends_an_html_email_with_the_invitation_details() {
+      final Email email = Email.fromString("invitee@example.com");
+      final UserName username = UserName.fromString("Invitee");
+      final GroupName groupName = GroupName.fromString("Family");
+      final GroupInvitationToken token = GroupInvitationToken.generate();
+      final ArgumentCaptor<MimeMessage> messageCaptor = ArgumentCaptor.forClass(MimeMessage.class);
+
+      emailSenderService.sendGroupInvitationEmail(email, username, groupName, token);
+
+      verify(javaMailSender).send(messageCaptor.capture());
+      final MimeMessage message = messageCaptor.getValue();
+      assertThatCode(
+              () -> {
+                message.saveChanges();
+                assertThat(message.getFrom()[0].toString())
+                    .isEqualTo("John Doe <test@example.com>");
+                assertThat(message.getRecipients(Message.RecipientType.TO)[0].toString())
+                    .isEqualTo(email.value());
+                assertThat(message.getSubject()).isEqualTo("Group Invitation");
+                assertThat(message.isMimeType("text/html")).isTrue();
+                assertThat(message.getContent().toString())
+                    .contains(
+                        username.value(), groupName.value(), appProperties.name(), token.value())
+                    .doesNotContain("[[${");
+              })
+          .doesNotThrowAnyException();
+    }
+
+    @Test
+    void escapes_user_and_group_names() {
+      final ArgumentCaptor<MimeMessage> messageCaptor = ArgumentCaptor.forClass(MimeMessage.class);
+
+      emailSenderService.sendGroupInvitationEmail(
+          Email.fromString("invitee@example.com"),
+          UserName.fromString("<b>Invitee</b>"),
+          GroupName.fromString("<script>alert('group')</script>"),
+          GroupInvitationToken.generate());
+
+      verify(javaMailSender).send(messageCaptor.capture());
+      assertThatCode(
+              () ->
+                  assertThat(messageCaptor.getValue().getContent().toString())
+                      .contains("&lt;b&gt;Invitee&lt;/b&gt;", "&lt;script&gt;")
+                      .doesNotContain("<script>", "<b>Invitee</b>"))
+          .doesNotThrowAnyException();
+    }
+
+    @Test
+    void propagates_delivery_errors() {
+      final MailSendException failure = new MailSendException("SMTP unavailable");
+      doThrow(failure)
+          .when(javaMailSender)
+          .send(org.mockito.ArgumentMatchers.any(MimeMessage.class));
+
+      assertThatThrownBy(
+              () ->
+                  emailSenderService.sendGroupInvitationEmail(
+                      Email.fromString("invitee@example.com"),
+                      UserName.fromString("Invitee"),
+                      GroupName.fromString("Family"),
+                      GroupInvitationToken.generate()))
+          .isSameAs(failure);
+    }
   }
 }

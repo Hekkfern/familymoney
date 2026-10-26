@@ -10,6 +10,7 @@ import com.familymoney.domains.auth.controllers.dtos.RegisterRequestDto;
 import com.familymoney.domains.auth.controllers.dtos.ResendVerificationEmailRequestDto;
 import com.familymoney.domains.auth.controllers.dtos.ResetPasswordRequestDto;
 import com.familymoney.domains.auth.controllers.dtos.VerifyEmailRequestDto;
+import io.github.benhendayoussef.idempotency.api.Idempotent;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -55,6 +56,7 @@ public interface AuthController {
         content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE))
   })
   @PostMapping(path = "register", version = "1")
+  @Idempotent
   void register(@RequestBody @Valid RegisterRequestDto request);
 
   @Operation(summary = "Log in using an existing user account")
@@ -109,6 +111,7 @@ public interface AuthController {
 
   @Operation(summary = "Refresh the access and refresh tokens using a valid refresh token")
   @PostMapping(path = "refresh", version = "1")
+  @Idempotent
   RefreshResponseDto refresh(@RequestBody @Valid RefreshTokenRequestDto request);
 
   @Operation(summary = "Log out the user and invalidate the refresh token")

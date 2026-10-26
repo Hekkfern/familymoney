@@ -5,8 +5,8 @@ import com.familymoney.domains.transactions.controllers.dtos.CreateGroupRequestD
 import com.familymoney.domains.transactions.controllers.dtos.CreateGroupResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.EnterGroupRequestDto;
 import com.familymoney.domains.transactions.controllers.dtos.GroupDto;
-import com.familymoney.domains.transactions.controllers.dtos.InvitationTokenDto;
 import com.familymoney.domains.transactions.controllers.dtos.MemberDto;
+import com.familymoney.domains.transactions.controllers.dtos.SendInvitationTokenRequestDto;
 import com.familymoney.domains.transactions.controllers.dtos.TransactionDto;
 import com.familymoney.domains.transactions.controllers.dtos.UpdateGroupRequestDto;
 import com.familymoney.utils.PageResponse;
@@ -69,7 +69,8 @@ public interface GroupController {
   @Idempotent
   void leaveGroup(@PathVariable @NotNull UUID groupId);
 
-  @Operation(summary = "Remove a user from a specific group where the authenticated user is a member")
+  @Operation(
+      summary = "Remove a user from a specific group where the authenticated user is a member")
   @DeleteMapping(path = "{groupId}/users/{userId}", version = "1")
   @Idempotent
   void removeUserFromGroup(@PathVariable @NotNull UUID groupId, @PathVariable @NotNull UUID userId);
@@ -98,22 +99,26 @@ public interface GroupController {
       @PathVariable @NotNull UUID groupId, @RequestBody @Valid UpdateGroupRequestDto request);
 
   /**
-   * Retrieves a group's invitation token where the authenticated user is a member. Generates a new
-   * token, valid for a limited time, that can be redeemed once through {@link
-   * #enterToGroup(EnterGroupRequestDto)}.
+   * Generates and sends an invitation token to another existing user, for becoming a member of a
+   * group where the authenticated user is a member. The generated token, valid for a limited time,
+   * can be redeemed once through {@link #enterToGroup(EnterGroupRequestDto)}.
    *
    * @param groupId the group identifier
-   * @return the invitation token
+   * @param request the details for sending the invitation
    */
   @Operation(
-      summary = "Get an invitation token for a group where the authenticated user is a member")
+      summary =
+          "Generates and sends an invitation token to another existing user, for becoming a member of a group where the authenticated user is a member")
   @PostMapping(path = "{groupId}/invitation", version = "1")
   @Idempotent
-  InvitationTokenDto getInvitationToken(@PathVariable @NotNull UUID groupId);
+  void sendInvitationToken(
+      @PathVariable @NotNull UUID groupId,
+      @RequestBody @Valid SendInvitationTokenRequestDto request);
 
   /**
    * Adds the authenticated user to a group using an invitation token generated through {@link
-   * #getInvitationToken(UUID)}. The token is consumed and can no longer be used once redeemed.
+   * #sendInvitationToken(UUID,SendInvitationTokenRequestDto)}. The token is consumed and can no
+   * longer be used once redeemed.
    *
    * @param request the invitation token
    */

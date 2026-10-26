@@ -39,9 +39,9 @@ public class DefaultPaymentService implements PaymentService {
   @Transactional(readOnly = true)
   public Page<PaymentData> getPayments(
       final GroupId groupId, final AuthorizedUser requester, final int page, int size) {
-    groupChecker.checkIfGroupExists(groupId);
+    groupChecker.verifyGroupExists(groupId);
     if (requester.role().equals(Role.USER)) {
-      groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+      groupChecker.verifyUserIsInGroup(requester.id(), groupId);
     }
     final Currency currency = getGroupCurrency(groupId);
     return paymentRepository
@@ -58,9 +58,9 @@ public class DefaultPaymentService implements PaymentService {
       final UserId from,
       final UserId to,
       final AuthorizedUser requester) {
-    groupChecker.checkIfGroupExists(groupId);
+    groupChecker.verifyGroupExists(groupId);
     if (requester.role().equals(Role.USER)) {
-      groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+      groupChecker.verifyUserIsInGroup(requester.id(), groupId);
     }
     final PaymentId id = PaymentId.generate();
     paymentRepository.create(
@@ -73,9 +73,9 @@ public class DefaultPaymentService implements PaymentService {
   public PaymentData getPayment(final PaymentId id, final AuthorizedUser requester) {
     final PaymentEntity entity = getPaymentFromId(id);
     final GroupId groupId = entity.groupId();
-    groupChecker.checkIfGroupExists(groupId);
+    groupChecker.verifyGroupExists(groupId);
     if (requester.role().equals(Role.USER)) {
-      groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+      groupChecker.verifyUserIsInGroup(requester.id(), groupId);
     }
     return PaymentDataMapper.fromDbo(entity, getGroupCurrency(groupId));
   }
@@ -84,9 +84,9 @@ public class DefaultPaymentService implements PaymentService {
   public void updatePayment(
       final PaymentId id, final AuthorizedUser requester, final UpdatePaymentData data) {
     final GroupId groupId = getPaymentFromId(id).groupId();
-    groupChecker.checkIfGroupExists(groupId);
+    groupChecker.verifyGroupExists(groupId);
     if (requester.role().equals(Role.USER)) {
-      groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+      groupChecker.verifyUserIsInGroup(requester.id(), groupId);
     }
     paymentRepository.updateById(
         id,
@@ -97,9 +97,9 @@ public class DefaultPaymentService implements PaymentService {
   @Override
   public void deletePayment(final PaymentId id, final AuthorizedUser requester) {
     final GroupId groupId = getPaymentFromId(id).groupId();
-    groupChecker.checkIfGroupExists(groupId);
+    groupChecker.verifyGroupExists(groupId);
     if (requester.role().equals(Role.USER)) {
-      groupChecker.checkIfUserIsInGroup(requester.id(), groupId);
+      groupChecker.verifyUserIsInGroup(requester.id(), groupId);
     }
     paymentRepository.deleteById(id);
   }

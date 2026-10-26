@@ -2,6 +2,8 @@ package com.familymoney.domains.auth.services;
 
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.auth.types.PasswordResetToken;
+import com.familymoney.domains.transactions.types.GroupInvitationToken;
+import com.familymoney.domains.transactions.types.GroupName;
 import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.UserName;
 import com.familymoney.properties.AppProperties;
@@ -20,6 +22,11 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 @RequiredArgsConstructor
 public class DefaultEmailSenderService implements EmailSenderService {
 
+  private static final String FROM_TEMPLATE = "%s <%s>";
+  private static final String GROUP_INVITATION_EMAIL_TEMPLATE_NAME = "email-group-invitation";
+  private static final String EMAIL_VERIFICATION_EMAIL_TEMPLATE_NAME = "email-verification";
+  private static final String PASSWORD_RESET_EMAIL_TEMPLATE_NAME = "email-passwordreset";
+
   private final JavaMailSender mailSender;
   private final SpringTemplateEngine htmlTemplateEngine;
   private final MailSenderProperties mailSenderProperties;
@@ -36,7 +43,7 @@ public class DefaultEmailSenderService implements EmailSenderService {
 
     try {
       mimeMessageHelper.setFrom(
-          String.format("%s <%s>", mailSenderProperties.name(), mailSenderProperties.email()));
+        FROM_TEMPLATE.formatted(mailSenderProperties.name(), mailSenderProperties.email()));
       mimeMessageHelper.setTo(toEmail.value());
       mimeMessageHelper.setSubject("Email Verification");
 
@@ -45,14 +52,13 @@ public class DefaultEmailSenderService implements EmailSenderService {
       context.setVariable("appName", appProperties.name());
       context.setVariable(
           "verificationUrl",
-          String.format("https://miticketdecomida.com/verify-email/%s", verificationToken.value()));
-      final String VERIFICATION_EMAIL_TEMPLATE_NAME = "email-verification";
+          "https://miticketdecomida.com/verify-email/%s".formatted(verificationToken.value()));
       final String processedString =
-          htmlTemplateEngine.process(VERIFICATION_EMAIL_TEMPLATE_NAME, context);
+          htmlTemplateEngine.process(EMAIL_VERIFICATION_EMAIL_TEMPLATE_NAME, context);
       mimeMessageHelper.setText(processedString, true);
 
       mailSender.send(mimeMessage);
-    } catch (final Exception exception) {
+    } catch (final Exception _) {
       throw new RuntimeException("Failed to send email verification email");
     }
   }
@@ -65,7 +71,7 @@ public class DefaultEmailSenderService implements EmailSenderService {
 
     try {
       mimeMessageHelper.setFrom(
-          String.format("%s <%s>", mailSenderProperties.name(), mailSenderProperties.email()));
+        FROM_TEMPLATE.formatted(mailSenderProperties.name(), mailSenderProperties.email()));
       mimeMessageHelper.setTo(toEmail.value());
       mimeMessageHelper.setSubject("Password Reset");
 
@@ -80,13 +86,43 @@ public class DefaultEmailSenderService implements EmailSenderService {
               .toUriString());
       context.setVariable(
           "tokenDurationMinutes", resetPasswordProperties.tokenDuration().toMinutes());
-      final String resetEmailTemplateName = "email-passwordreset";
-      final String processedString = htmlTemplateEngine.process(resetEmailTemplateName, context);
+      final String processedString =
+          htmlTemplateEngine.process(PASSWORD_RESET_EMAIL_TEMPLATE_NAME, context);
       mimeMessageHelper.setText(processedString, true);
 
       mailSender.send(mimeMessage);
     } catch (final Exception exception) {
       throw new RuntimeException("Failed to send password reset email", exception);
+    }
+  }
+
+  @Override
+  public void sendGroupInvitationEmail(
+      final Email toEmail,
+      final UserName username,
+      final GroupName groupName,
+      final GroupInvitationToken invitationToken) {
+    final MimeMessage mimeMessage = mailSender.createMimeMessage();
+    final MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, "UTF-8");
+
+    try {
+      mimeMessageHelper.setFrom(
+          FROM_TEMPLATE.formatted(mailSenderProperties.name(), mailSenderProperties.email()));
+      mimeMessageHelper.setTo(toEmail.value());
+      mimeMessageHelper.setSubject("Group Invitation");
+
+      final Context context = new Context();
+      context.setVariable("userName", username.value());
+      context.setVariable("appName", appProperties.name());
+      context.setVariable("groupName", groupName.value());
+      context.setVariable("invitationToken", invitationToken.value());
+      final String processedString =
+          htmlTemplateEngine.process(GROUP_INVITATION_EMAIL_TEMPLATE_NAME, context);
+      mimeMessageHelper.setText(processedString, true);
+
+      mailSender.send(mimeMessage);
+    } catch (final Exception exception) {
+      throw new RuntimeException("Failed to send group invitation email", exception);
     }
   }
 }

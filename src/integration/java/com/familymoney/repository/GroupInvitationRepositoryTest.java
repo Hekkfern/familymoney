@@ -278,7 +278,7 @@ class GroupInvitationRepositoryTest {
           expiration);
 
       final long invitationCount =
-          groupInvitationRepository.countByGroupIdAndUserId(groupId, userId);
+          groupInvitationRepository.existsByGroupIdAndUserId(groupId, userId);
 
       assertThat(invitationCount).isEqualTo(2L);
     }
@@ -308,7 +308,7 @@ class GroupInvitationRepositoryTest {
           expiration);
 
       final long invitationCount =
-          groupInvitationRepository.countByGroupIdAndUserId(groupId, userId);
+          groupInvitationRepository.existsByGroupIdAndUserId(groupId, userId);
 
       assertThat(invitationCount).isZero();
     }

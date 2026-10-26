@@ -15,7 +15,7 @@ public interface GroupChecker {
    * @param groupId Identifier of the group
    * @throws GroupNotFoundException if the group does not exist
    */
-  void checkIfGroupExists(GroupId groupId);
+  void verifyGroupExists(GroupId groupId);
 
   /**
    * Checks if a user exists, throwing an exception if not.
@@ -23,7 +23,7 @@ public interface GroupChecker {
    * @param userId Identifier of the user
    * @throws UserNotFoundException if the user does not exist
    */
-  void checkIfUserExists(UserId userId);
+  void verifyUserExists(UserId userId);
 
   /**
    * Checks if a user is a member of a group, throwing an exception if not.
@@ -32,5 +32,5 @@ public interface GroupChecker {
    * @param groupId Identifier of the group
    * @throws UserIsNotMemberOfGroupException if the user is not a member of the group
    */
-  void checkIfUserIsInGroup(UserId userId, GroupId groupId);
+  void verifyUserIsInGroup(UserId userId, GroupId groupId);
 }

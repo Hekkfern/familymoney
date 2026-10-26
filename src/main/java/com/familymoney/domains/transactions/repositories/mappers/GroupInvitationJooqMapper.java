@@ -16,13 +16,16 @@ public final class GroupInvitationJooqMapper {
   }
 
   public static GroupInvitationEntity toEntity(final Record r) {
-    OffsetDateTime expiresAt =
+    final OffsetDateTime expiresAt =
         Objects.requireNonNull(r.get(GroupInvitations.GROUP_INVITATIONS.EXPIRES_AT));
+    final OffsetDateTime lastSentAt =
+        Objects.requireNonNull(r.get(GroupInvitations.GROUP_INVITATIONS.LAST_SENT_AT));
 
     return new GroupInvitationEntity(
-        r.get(GroupInvitations.GROUP_INVITATIONS.ID),
         GroupId.fromUuid(r.get(GroupInvitations.GROUP_INVITATIONS.GROUP_ID)),
         UserId.fromUuid(r.get(GroupInvitations.GROUP_INVITATIONS.USER_ID)),
-        ExpirationTime.of(expiresAt));
+        UserId.fromUuid(r.get(GroupInvitations.GROUP_INVITATIONS.CREATED_BY)),
+        ExpirationTime.of(expiresAt),
+        lastSentAt.toInstant());
   }
 }
