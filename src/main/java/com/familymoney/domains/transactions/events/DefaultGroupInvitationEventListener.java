@@ -23,7 +23,7 @@ public class DefaultGroupInvitationEventListener implements GroupInvitationEvent
     try {
       emailSenderService.sendGroupInvitationEmail(
           event.email(), event.username(), event.groupName(), event.invitationToken());
-    } catch (final RuntimeException ignored) {
+    } catch (final RuntimeException _) {
       log.error("Failed to deliver the group invitation email for user {}", event.userId());
     }
   }

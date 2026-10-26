@@ -43,7 +43,7 @@ public class DefaultEmailSenderService implements EmailSenderService {
 
     try {
       mimeMessageHelper.setFrom(
-        FROM_TEMPLATE.formatted(mailSenderProperties.name(), mailSenderProperties.email()));
+          FROM_TEMPLATE.formatted(mailSenderProperties.name(), mailSenderProperties.email()));
       mimeMessageHelper.setTo(toEmail.value());
       mimeMessageHelper.setSubject("Email Verification");
 
@@ -71,7 +71,7 @@ public class DefaultEmailSenderService implements EmailSenderService {
 
     try {
       mimeMessageHelper.setFrom(
-        FROM_TEMPLATE.formatted(mailSenderProperties.name(), mailSenderProperties.email()));
+          FROM_TEMPLATE.formatted(mailSenderProperties.name(), mailSenderProperties.email()));
       mimeMessageHelper.setTo(toEmail.value());
       mimeMessageHelper.setSubject("Password Reset");
 
