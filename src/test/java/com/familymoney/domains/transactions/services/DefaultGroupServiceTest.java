@@ -747,8 +747,6 @@ class DefaultGroupServiceTest {
 
     @Test
     void throws_when_group_does_not_exist() {
-      final GroupId groupId = GroupId.generate();
-      final UserId userId = UserId.generate();
       doThrow(new GroupNotFoundException("Group not found"))
           .when(groupChecker)
           .verifyGroupExists(groupId);
@@ -759,8 +757,6 @@ class DefaultGroupServiceTest {
 
     @Test
     void throws_when_user_to_add_does_not_exist() {
-      final GroupId groupId = GroupId.generate();
-      final UserId userId = UserId.generate();
       doThrow(new UserNotFoundException("User not found"))
           .when(groupChecker)
           .verifyUserExists(userId);

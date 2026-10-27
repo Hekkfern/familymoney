@@ -2,6 +2,7 @@ package com.familymoney.domains.auth.repositories;
 
 import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
 
+import com.familymoney.domains.auth.exceptions.ResetPasswordTokenNotFoundException;
 import com.familymoney.domains.auth.repositories.dbos.CreatePasswordResetDbo;
 import com.familymoney.domains.auth.repositories.dbos.UpdatePasswordResetDbo;
 import com.familymoney.domains.auth.repositories.entitites.PasswordResetEntity;
@@ -10,13 +11,16 @@ import com.familymoney.domains.auth.types.PasswordResetToken;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.tables.PasswordResetTokens;
 import com.familymoney.security.OpaqueTokenHasher;
-import java.time.OffsetDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
-import org.jooq.impl.DSL;
+import org.jooq.Field;
 import org.springframework.stereotype.Repository;
 
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class DefaultPasswordResetRepository implements PasswordResetRepository {
@@ -25,8 +29,8 @@ public class DefaultPasswordResetRepository implements PasswordResetRepository {
   private final OpaqueTokenHasher tokenHasher;
 
   @Override
-  public Optional<PasswordResetEntity> create(final CreatePasswordResetDbo dbo) {
-    return db.insertInto(PasswordResetTokens.PASSWORD_RESET_TOKENS)
+  public void create(final CreatePasswordResetDbo dbo) {
+    db.insertInto(PasswordResetTokens.PASSWORD_RESET_TOKENS)
         .columns(
             PasswordResetTokens.PASSWORD_RESET_TOKENS.USER_ID,
             PasswordResetTokens.PASSWORD_RESET_TOKENS.TOKEN_HASH,
@@ -37,14 +41,7 @@ public class DefaultPasswordResetRepository implements PasswordResetRepository {
             tokenHasher.hash(dbo.token().value()),
             dbo.expiresAt().toOffsetDateTime(),
             dbo.lastSentAt().atOffset(DEFAULT_TIMEZONE_OFFSET))
-        .returning(
-            PasswordResetTokens.PASSWORD_RESET_TOKENS.USER_ID,
-            PasswordResetTokens.PASSWORD_RESET_TOKENS.CREATED_AT,
-            PasswordResetTokens.PASSWORD_RESET_TOKENS.UPDATED_AT,
-            PasswordResetTokens.PASSWORD_RESET_TOKENS.EXPIRES_AT,
-            PasswordResetTokens.PASSWORD_RESET_TOKENS.LAST_SENT_AT)
-        .fetchOptional()
-        .map(PasswordResetJooqMapper::toEntity);
+        .execute();
   }
 
   @Override
@@ -78,31 +75,33 @@ public class DefaultPasswordResetRepository implements PasswordResetRepository {
   }
 
   @Override
-  public boolean updateByUserId(final UserId userId, final UpdatePasswordResetDbo data) {
-    final OffsetDateTime expiresAtVal =
-        data.expiresAt() != null ? data.expiresAt().toOffsetDateTime() : null;
+  public void updateByUserId(final UserId userId, final UpdatePasswordResetDbo data) {
+    final Map<Field<?>, Object> changedFields = new HashMap<>();
+    if (data.token() != null) {
+      changedFields.put(
+          PasswordResetTokens.PASSWORD_RESET_TOKENS.TOKEN_HASH,
+          tokenHasher.hash(data.token().value()));
+    }
+    if (data.expiresAt() != null) {
+      changedFields.put(
+          PasswordResetTokens.PASSWORD_RESET_TOKENS.EXPIRES_AT, data.expiresAt().toOffsetDateTime());
+    }
+    if (data.lastSentAt() != null) {
+      changedFields.put(
+          PasswordResetTokens.PASSWORD_RESET_TOKENS.LAST_SENT_AT,
+          data.lastSentAt().atOffset(DEFAULT_TIMEZONE_OFFSET));
+    }
     final int rowsAffected =
         db.update(PasswordResetTokens.PASSWORD_RESET_TOKENS)
-            .set(
-                PasswordResetTokens.PASSWORD_RESET_TOKENS.TOKEN_HASH,
-                DSL.coalesce(
-                    DSL.val(data.token() != null ? tokenHasher.hash(data.token().value()) : null),
-                    PasswordResetTokens.PASSWORD_RESET_TOKENS.TOKEN_HASH))
-            .set(
-                PasswordResetTokens.PASSWORD_RESET_TOKENS.EXPIRES_AT,
-                DSL.coalesce(
-                    DSL.val(expiresAtVal), PasswordResetTokens.PASSWORD_RESET_TOKENS.EXPIRES_AT))
-            .set(
-                PasswordResetTokens.PASSWORD_RESET_TOKENS.LAST_SENT_AT,
-                DSL.coalesce(
-                    DSL.val(
-                        data.lastSentAt() != null
-                            ? data.lastSentAt().atOffset(DEFAULT_TIMEZONE_OFFSET)
-                            : null),
-                    PasswordResetTokens.PASSWORD_RESET_TOKENS.LAST_SENT_AT))
+            .set(changedFields)
             .where(PasswordResetTokens.PASSWORD_RESET_TOKENS.USER_ID.eq(userId.value()))
             .execute();
-    return rowsAffected > 0;
+    if (rowsAffected == 0) {
+      final String msg =
+          "Password reset token for user with ID '%s' does not exist".formatted(userId.value());
+      log.info(msg);
+      throw new ResetPasswordTokenNotFoundException(msg);
+    }
   }
 
   @Override

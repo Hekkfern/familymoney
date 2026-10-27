@@ -2,7 +2,9 @@ package com.familymoney.repository;
 
 import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.familymoney.domains.auth.exceptions.ResetPasswordTokenNotFoundException;
 import com.familymoney.domains.auth.repositories.DefaultPasswordResetRepository;
 import com.familymoney.domains.auth.repositories.PasswordResetRepository;
 import com.familymoney.domains.auth.repositories.dbos.CreatePasswordResetDbo;
@@ -107,15 +109,51 @@ class PasswordResetRepositoryTest {
           new CreatePasswordResetDbo(
               userId, initialToken, ExpirationTime.of(now.plusSeconds(300)), now));
 
-      final boolean updated =
-          passwordResetRepository.updateByUserId(
-              userId,
-              new UpdatePasswordResetDbo(
-                  replacementToken, ExpirationTime.of(now.plusSeconds(600)), now.plusSeconds(60)));
+      passwordResetRepository.updateByUserId(
+          userId,
+          new UpdatePasswordResetDbo(
+              replacementToken, ExpirationTime.of(now.plusSeconds(600)), now.plusSeconds(60)));
 
-      assertThat(updated).isTrue();
       assertThat(passwordResetRepository.findByToken(initialToken)).isEmpty();
       assertThat(passwordResetRepository.findByToken(replacementToken)).isPresent();
+    }
+
+    @Test
+    void updates_only_the_provided_fields() {
+      final UserId userId = insertRandomUser();
+      final PasswordResetToken token = PasswordResetToken.generate();
+      final PasswordResetToken replacementToken = PasswordResetToken.generate();
+      final Instant now = Instant.ofEpochSecond(1778755330);
+      final ExpirationTime expiresAt = ExpirationTime.of(now.plusSeconds(300));
+      final ExpirationTime replacementExpiresAt = ExpirationTime.of(now.plusSeconds(600));
+      passwordResetRepository.create(new CreatePasswordResetDbo(userId, token, expiresAt, now));
+
+      passwordResetRepository.updateByUserId(
+          userId, new UpdatePasswordResetDbo(null, replacementExpiresAt, null));
+
+      final PasswordResetEntity updated = passwordResetRepository.findByToken(token).orElseThrow();
+      assertThat(updated.expiresAt()).isEqualTo(replacementExpiresAt);
+      assertThat(updated.lastSentAt()).isEqualTo(now);
+
+      passwordResetRepository.updateByUserId(
+          userId, new UpdatePasswordResetDbo(replacementToken, null, now.plusSeconds(60)));
+
+      assertThat(passwordResetRepository.findByToken(token)).isEmpty();
+      final PasswordResetEntity replaced =
+          passwordResetRepository.findByToken(replacementToken).orElseThrow();
+      assertThat(replaced.expiresAt()).isEqualTo(replacementExpiresAt);
+      assertThat(replaced.lastSentAt()).isEqualTo(now.plusSeconds(60));
+    }
+
+    @Test
+    void throws_when_the_password_reset_record_does_not_exist() {
+      final UserId userId = UserId.generate();
+      final UpdatePasswordResetDbo data =
+          new UpdatePasswordResetDbo(PasswordResetToken.generate(), null, null);
+
+      assertThatThrownBy(() -> passwordResetRepository.updateByUserId(userId, data))
+          .isInstanceOf(ResetPasswordTokenNotFoundException.class)
+          .hasMessage("Password reset token for user with ID '%s' does not exist", userId.value());
     }
   }
 

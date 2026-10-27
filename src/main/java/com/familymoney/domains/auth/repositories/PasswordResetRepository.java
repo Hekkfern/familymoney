@@ -1,5 +1,6 @@
 package com.familymoney.domains.auth.repositories;
 
+import com.familymoney.domains.auth.exceptions.ResetPasswordTokenNotFoundException;
 import com.familymoney.domains.auth.repositories.dbos.CreatePasswordResetDbo;
 import com.familymoney.domains.auth.repositories.dbos.UpdatePasswordResetDbo;
 import com.familymoney.domains.auth.repositories.entitites.PasswordResetEntity;
@@ -38,7 +39,7 @@ public interface PasswordResetRepository {
    *
    * @param userId user identifier associated with the reset token
    * @param data replacement password reset values
-   * @return {@code true} when a password reset record was updated
+   * @throws ResetPasswordTokenNotFoundException if the user has no password reset record
    */
   void updateByUserId(UserId userId, UpdatePasswordResetDbo data);
 

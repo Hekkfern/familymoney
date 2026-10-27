@@ -42,10 +42,4 @@ public class GroupExceptionHandler extends ResponseEntityExceptionHandler {
     return ProblemDetail.forStatusAndDetail(
         HttpStatus.CONFLICT, "User is already a member of the group");
   }
-
-  @ExceptionHandler(GroupOwnerNotFoundException.class)
-  public ProblemDetail handleGroupOwnerNotFoundException(GroupOwnerNotFoundException e) {
-    logger.info(e.getMessage());
-    return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
-  }
 }

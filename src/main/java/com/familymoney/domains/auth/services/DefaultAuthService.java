@@ -332,6 +332,7 @@ public class DefaultAuthService implements AuthService {
    *
    * @param email email address associated with the account
    * @throws DatabaseExecutionException when the password reset token cannot be persisted
+   * @throws ResetPasswordTokenNotFoundException if the existing reset record no longer exists
    */
   @Transactional
   @Override
@@ -357,13 +358,11 @@ public class DefaultAuthService implements AuthService {
     final ExpirationTime expiresAt =
         ExpirationTime.of(now.plus(resetPasswordProperties.tokenDuration()));
     if (existingToken.isEmpty()) {
-      passwordResetRepository
-          .create(new CreatePasswordResetDbo(user.id(), resetToken, expiresAt, now))
-          .orElseThrow(
-              () -> new DatabaseExecutionException("Could not create password reset token"));
-    } else if (!passwordResetRepository.updateByUserId(
-        user.id(), new UpdatePasswordResetDbo(resetToken, expiresAt, now))) {
-      throw new DatabaseExecutionException("Could not update password reset token");
+      passwordResetRepository.create(
+          new CreatePasswordResetDbo(user.id(), resetToken, expiresAt, now));
+    } else {
+      passwordResetRepository.updateByUserId(
+          user.id(), new UpdatePasswordResetDbo(resetToken, expiresAt, now));
     }
 
     eventPublisher.publishEvent(
@@ -402,11 +401,7 @@ public class DefaultAuthService implements AuthService {
       throw new DatabaseExecutionException("Could not update the user password in the database");
     }
 
-    final boolean tokenDeleted = passwordResetRepository.deleteByUserId(resetToken.userId());
-    if (!tokenDeleted) {
-      throw new DatabaseExecutionException("Could not delete password reset token");
-    }
-
+    passwordResetRepository.deleteByUserId(resetToken.userId());
     refreshTokenRepository.deleteByUserId(resetToken.userId());
   }
 
