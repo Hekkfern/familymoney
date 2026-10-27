@@ -13,10 +13,8 @@ public interface EmailVerificationRepository {
    * Create a new email verification record
    *
    * @param data values to store
-   * @return Created {@link EmailVerificationEntity} wrapped in Optional, or empty Optional if
-   *     creation failed
    */
-  Optional<EmailVerificationEntity> create(CreateEmailVerificationDbo data);
+  void create(CreateEmailVerificationDbo data);
 
   /**
    * Find an entry by its User ID.
@@ -41,15 +39,15 @@ public interface EmailVerificationRepository {
    * @param userId the id of the user to update. Must not be null.
    * @param data a {@link UpdateEmailVerificationTokenDbo} containing fields to change. Must not be
    *     null. Only non-null fields will be applied.
-   * @return true if the update affected an existing record, false otherwise.
+   * @throws com.familymoney.domains.auth.exceptions.VerificationTokenNotFoundException if the
+   *     verification token does not exist
    */
-  boolean updateByUserId(UserId userId, UpdateEmailVerificationTokenDbo data);
+  void updateByUserId(UserId userId, UpdateEmailVerificationTokenDbo data);
 
   /**
    * Delete Email Verification records by User ID
    *
    * @param userId ID of the user
-   * @return true if deletion was successful, false otherwise
    */
-  boolean deleteByUserId(UserId userId);
+  void deleteByUserId(UserId userId);
 }

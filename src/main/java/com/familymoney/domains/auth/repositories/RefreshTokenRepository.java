@@ -14,10 +14,8 @@ public interface RefreshTokenRepository {
    * Create and persist a new refresh token associated with a user.
    *
    * @param data values to store.
-   * @return an {@link Optional} containing the persisted {@link RefreshTokenEntity} when creation
-   *     succeeds, or an empty Optional when creation fails (e.g. due to constraint violation).
    */
-  Optional<RefreshTokenEntity> create(CreateRefreshTokenDbo data);
+  void create(CreateRefreshTokenDbo data);
 
   /**
    * Find a refresh token record by its token value.
@@ -34,10 +32,9 @@ public interface RefreshTokenRepository {
    * @param token the token to update. Must not be null.
    * @param data the update payload containing fields to change. Must not be null. Only non-null
    *     fields in {@code data} will be modified.
-   * @return true if at least one row was updated; false if no matching token exists or no change
-   *     was performed.
+   * @throws com.familymoney.domains.auth.exceptions.RefreshTokenNotFoundException if no token matches
    */
-  boolean updateByToken(RefreshToken token, UpdateRefreshTokenDbo data);
+  void updateByToken(RefreshToken token, UpdateRefreshTokenDbo data);
 
   /**
    * Update refresh tokens associated with a specific user id.
@@ -45,17 +42,16 @@ public interface RefreshTokenRepository {
    * @param userId the id of the user whose tokens should be updated. Must not be null.
    * @param data the update payload containing fields to change. Must not be null. Only non-null
    *     fields in {@code data} will be modified.
-   * @return true if at least one row was updated; false otherwise.
+   * @throws com.familymoney.domains.auth.exceptions.RefreshTokenNotFoundException if no token matches
    */
-  boolean updateByUserId(UserId userId, UpdateRefreshTokenDbo data);
+  void updateByUserId(UserId userId, UpdateRefreshTokenDbo data);
 
   /**
    * Delete refresh token records by their token value.
    *
    * @param token the token to delete. Must not be null.
-   * @return true if at least one record was deleted; false if no matching token exists.
    */
-  boolean deleteByToken(RefreshToken token);
+  void deleteByToken(RefreshToken token);
 
   /**
    * Deletes all refresh tokens belonging to a user.

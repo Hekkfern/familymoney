@@ -1,11 +1,8 @@
 package com.familymoney.domains.auth.repositories;
 
 import com.familymoney.domains.auth.repositories.dbos.CreateTokenFamilyBlacklistDbo;
-import com.familymoney.domains.auth.repositories.entitites.TokenFamilyBlacklistEntity;
-import com.familymoney.domains.auth.repositories.mappers.TokenFamilyBlacklistJooqMapper;
 import com.familymoney.domains.auth.types.TokenFamily;
 import com.familymoney.generated.tables.TokenfamilyBlacklist;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Repository;
@@ -17,16 +14,12 @@ public class DefaultTokenFamilyBlacklistRepository implements TokenFamilyBlackli
   private final DSLContext db;
 
   @Override
-  public Optional<TokenFamilyBlacklistEntity> create(final CreateTokenFamilyBlacklistDbo data) {
-    return db.insertInto(TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST)
+  public void create(final CreateTokenFamilyBlacklistDbo data) {
+    db.insertInto(TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST)
         .columns(TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST.FAMILY)
         .values(data.family().value())
         .onConflictDoNothing()
-        .returning(
-            TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST.FAMILY,
-            TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST.CREATED_AT)
-        .fetchOptional()
-        .map(TokenFamilyBlacklistJooqMapper::toEntity);
+        .execute();
   }
 
   @Override
@@ -38,11 +31,9 @@ public class DefaultTokenFamilyBlacklistRepository implements TokenFamilyBlackli
   }
 
   @Override
-  public boolean deleteByFamily(final TokenFamily family) {
-    final int rows =
-        db.deleteFrom(TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST)
-            .where(TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST.FAMILY.eq(family.value()))
-            .execute();
-    return rows > 0;
+  public void deleteByFamily(final TokenFamily family) {
+    db.deleteFrom(TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST)
+        .where(TokenfamilyBlacklist.TOKENFAMILY_BLACKLIST.FAMILY.eq(family.value()))
+        .execute();
   }
 }

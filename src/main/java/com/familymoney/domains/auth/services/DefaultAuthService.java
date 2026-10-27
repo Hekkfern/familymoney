@@ -236,18 +236,13 @@ public class DefaultAuthService implements AuthService {
         jwtUtils.generateAccessToken(refreshTokenDb.userId(), refreshTokenDb.family());
     final RefreshToken newRefreshToken = RefreshToken.generate();
     // Save new refresh token in database
-    final boolean refreshTokenUpdated =
-        refreshTokenRepository.updateByToken(
-            refreshToken,
-            UpdateRefreshTokenDbo.builder()
-                .token(newRefreshToken)
-                .expiresAt(
-                    ExpirationTime.of(
-                        Instant.now(clock).plus(jwtProperties.refreshTokenDuration())))
-                .build());
-    if (!refreshTokenUpdated) {
-      throw new DatabaseExecutionException("Could not create new refresh token in the database");
-    }
+    refreshTokenRepository.updateByToken(
+        refreshToken,
+        UpdateRefreshTokenDbo.builder()
+            .token(newRefreshToken)
+            .expiresAt(
+                ExpirationTime.of(Instant.now(clock).plus(jwtProperties.refreshTokenDuration())))
+            .build());
     // Build response with both tokens
     log.trace("refreshTokens() finished");
     return new TokenPair(newAccessToken, newRefreshToken);
@@ -308,20 +303,15 @@ public class DefaultAuthService implements AuthService {
     }
     // Generate and save verification token to database
     final EmailVerificationToken newEmailVerificationToken = EmailVerificationToken.generate();
-    final boolean emailVerificationTokenUpdated =
-        emailVerificationRepository.updateByUserId(
-            userDb.id(),
-            UpdateEmailVerificationTokenDbo.builder()
-                .token(newEmailVerificationToken)
-                .expiresAt(
-                    ExpirationTime.of(
-                        Instant.now(clock).plus(emailVerificationProperties.tokenDuration())))
-                .lastSentAt(Instant.now(clock))
-                .build());
-    if (!emailVerificationTokenUpdated) {
-      throw new DatabaseExecutionException(
-          "Could not create email verification token in the database");
-    }
+    emailVerificationRepository.updateByUserId(
+        userDb.id(),
+        UpdateEmailVerificationTokenDbo.builder()
+            .token(newEmailVerificationToken)
+            .expiresAt(
+                ExpirationTime.of(
+                    Instant.now(clock).plus(emailVerificationProperties.tokenDuration())))
+            .lastSentAt(Instant.now(clock))
+            .build());
     // Send verification email
     emailSenderService.sendEmailVerificationEmail(
         email, userDb.username(), newEmailVerificationToken);

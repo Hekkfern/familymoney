@@ -2,18 +2,14 @@ package com.familymoney.domains.transactions.repositories;
 
 import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
 
-import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
-import com.familymoney.domains.transactions.exceptions.UserAlreadyInGroupException;
 import com.familymoney.domains.transactions.repositories.dbos.CreateGroupDbo;
 import com.familymoney.domains.transactions.repositories.dbos.UpdateGroupDbo;
 import com.familymoney.domains.transactions.repositories.entitites.GroupEntity;
 import com.familymoney.domains.transactions.repositories.mappers.GroupJooqMapper;
 import com.familymoney.domains.transactions.types.GroupId;
-import com.familymoney.domains.users.exceptions.UserNotFoundException;
 import com.familymoney.domains.users.repositories.entitites.UserEntity;
 import com.familymoney.domains.users.repositories.mappers.UserJooqMapper;
 import com.familymoney.domains.users.types.UserId;
-import com.familymoney.generated.Keys;
 import com.familymoney.generated.tables.Expenses;
 import com.familymoney.generated.tables.GroupBalances;
 import com.familymoney.generated.tables.GroupInvitations;
@@ -21,7 +17,6 @@ import com.familymoney.generated.tables.Groups;
 import com.familymoney.generated.tables.Payments;
 import com.familymoney.generated.tables.UserGroups;
 import com.familymoney.generated.tables.Users;
-import com.familymoney.utils.ConstraintViolationUtils;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -30,14 +25,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.SortField;
 import org.jooq.impl.DSL;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -46,7 +38,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 @RequiredArgsConstructor
-@Slf4j
 public class DefaultGroupRepository implements GroupRepository {
 
   private final DSLContext db;
@@ -54,30 +45,20 @@ public class DefaultGroupRepository implements GroupRepository {
 
   @Override
   public void create(final CreateGroupDbo dto) {
-    try {
-      db.insertInto(Groups.GROUPS)
-          .columns(
-              Groups.GROUPS.ID,
-              Groups.GROUPS.NAME,
-              Groups.GROUPS.DESCRIPTION,
-              Groups.GROUPS.CURRENCY_CODE,
-              Groups.GROUPS.CREATED_BY)
-          .values(
-              dto.id().value(),
-              dto.name().value(),
-              dto.description().value(),
-              dto.currency().getCurrencyCode(),
-              dto.createdBy().value())
-          .execute();
-    } catch (final DataIntegrityViolationException exception) {
-      if (ConstraintViolationUtils.isConstraintViolated(
-          exception, Keys.GROUPS__GROUPS_CREATED_BY_FKEY)) {
-        final String msg = "User with ID '%s' does not exist".formatted(dto.createdBy().value());
-        log.info(msg);
-        throw new UserNotFoundException(msg, exception);
-      }
-      throw exception;
-    }
+    db.insertInto(Groups.GROUPS)
+        .columns(
+            Groups.GROUPS.ID,
+            Groups.GROUPS.NAME,
+            Groups.GROUPS.DESCRIPTION,
+            Groups.GROUPS.CURRENCY_CODE,
+            Groups.GROUPS.CREATED_BY)
+        .values(
+            dto.id().value(),
+            dto.name().value(),
+            dto.description().value(),
+            dto.currency().getCurrencyCode(),
+            dto.createdBy().value())
+        .execute();
   }
 
   @Override
@@ -89,28 +70,18 @@ public class DefaultGroupRepository implements GroupRepository {
     if (dto.description() != null) {
       changedFields.put(Groups.GROUPS.DESCRIPTION, dto.description().value());
     }
-    final int rowsAffected =
-        db.update(Groups.GROUPS)
-            .set(changedFields)
-            .where(Groups.GROUPS.ID.eq(id.value()).and(Groups.GROUPS.DELETED_AT.isNull()))
-            .execute();
-    if (rowsAffected == 0) {
-      final String msg = "Group with ID '%s' does not exist".formatted(id.value());
-      log.info(msg);
-      throw new GroupNotFoundException(msg);
-    }
+    db.update(Groups.GROUPS)
+        .set(changedFields)
+        .where(Groups.GROUPS.ID.eq(id.value()).and(Groups.GROUPS.DELETED_AT.isNull()))
+        .execute();
   }
 
   @Override
   public void softDeleteById(final GroupId id) {
-    final int rowsAffected =
-        db.update(Groups.GROUPS)
-            .set(Groups.GROUPS.DELETED_AT, OffsetDateTime.now(clock))
-            .where(Groups.GROUPS.ID.eq(id.value()).and(Groups.GROUPS.DELETED_AT.isNull()))
-            .execute();
-    if (rowsAffected == 0) {
-      log.warn("Could not soft-delete group with ID: {}", id.value());
-    }
+    db.update(Groups.GROUPS)
+        .set(Groups.GROUPS.DELETED_AT, OffsetDateTime.now(clock))
+        .where(Groups.GROUPS.ID.eq(id.value()).and(Groups.GROUPS.DELETED_AT.isNull()))
+        .execute();
   }
 
   @Override
@@ -288,50 +259,21 @@ public class DefaultGroupRepository implements GroupRepository {
 
   @Override
   public void addUserToGroup(final UserId userId, final GroupId groupId) {
-    try {
-      db.insertInto(UserGroups.USER_GROUPS)
-          .columns(UserGroups.USER_GROUPS.USER_ID, UserGroups.USER_GROUPS.GROUP_ID)
-          .values(userId.value(), groupId.value())
-          .execute();
-    } catch (final DuplicateKeyException exception) {
-      final String msg =
-          "User with ID '%s' is already a member of group with ID '%s'"
-              .formatted(userId.value(), groupId.value());
-      log.info(msg);
-      throw new UserAlreadyInGroupException(msg, exception);
-    } catch (final DataIntegrityViolationException exception) {
-      if (ConstraintViolationUtils.isConstraintViolated(
-          exception, Keys.USER_GROUPS__USER_GROUPS_USER_ID_FKEY)) {
-        final String msg = "User with ID: %s does not exist".formatted(userId.value());
-        log.info(msg);
-        throw new UserNotFoundException(msg, exception);
-      }
-      if (ConstraintViolationUtils.isConstraintViolated(
-          exception, Keys.USER_GROUPS__USER_GROUPS_GROUP_ID_FKEY)) {
-        final String msg = "Group with ID: %s does not exist".formatted(groupId.value());
-        log.info(msg);
-        throw new GroupNotFoundException(msg, exception);
-      }
-      throw exception;
-    }
+    db.insertInto(UserGroups.USER_GROUPS)
+        .columns(UserGroups.USER_GROUPS.USER_ID, UserGroups.USER_GROUPS.GROUP_ID)
+        .values(userId.value(), groupId.value())
+        .execute();
   }
 
   @Override
   public void removeUserFromGroup(final UserId userId, final GroupId groupId) {
-    final int rowsAffected =
-        db.deleteFrom(UserGroups.USER_GROUPS)
-            .where(
-                UserGroups.USER_GROUPS
-                    .USER_ID
-                    .eq(userId.value())
-                    .and(UserGroups.USER_GROUPS.GROUP_ID.eq(groupId.value())))
-            .execute();
-    if (rowsAffected == 0) {
-      log.warn(
-          "Could not remove user with ID: {} from group with ID: {}",
-          userId.value(),
-          groupId.value());
-    }
+    db.deleteFrom(UserGroups.USER_GROUPS)
+        .where(
+            UserGroups.USER_GROUPS
+                .USER_ID
+                .eq(userId.value())
+                .and(UserGroups.USER_GROUPS.GROUP_ID.eq(groupId.value())))
+        .execute();
   }
 
   @Override

@@ -12,9 +12,8 @@ public interface UsedRefreshTokenRepository {
    * Persist a consumed refresh token unless it has already been recorded.
    *
    * @param data the data to store.
-   * @return the persisted token record, or empty when the token was already present.
    */
-  Optional<UsedRefreshTokenEntity> create(CreateUsedRefreshTokenDbo data);
+  void create(CreateUsedRefreshTokenDbo data);
 
   /**
    * Find a consumed refresh token by its value.

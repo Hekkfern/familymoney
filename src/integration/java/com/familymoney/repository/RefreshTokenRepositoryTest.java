@@ -4,6 +4,7 @@ import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.familymoney.domains.auth.exceptions.RefreshTokenNotFoundException;
 import com.familymoney.domains.auth.repositories.DefaultRefreshTokenRepository;
 import com.familymoney.domains.auth.repositories.RefreshTokenRepository;
 import com.familymoney.domains.auth.repositories.dbos.CreateRefreshTokenDbo;
@@ -204,7 +205,7 @@ class RefreshTokenRepositoryTest {
   class UpdateByToken {
 
     @Test
-    void updates_row_and_returns_true_when_it_succeeds() {
+    void updates_token_and_preserves_other_fields() {
       final UserId userId = insertRandomUser();
       final RefreshToken token = RefreshToken.generate();
       final TokenFamily family = TokenFamily.generate();
@@ -216,9 +217,9 @@ class RefreshTokenRepositoryTest {
       final RefreshToken newToken = RefreshToken.generate();
       final UpdateRefreshTokenDbo dto = UpdateRefreshTokenDbo.builder().token(newToken).build();
 
-      final boolean updated = refreshTokenRepository.updateByToken(token, dto);
+      refreshTokenRepository.updateByToken(token, dto);
 
-      assertThat(updated).isTrue();
+      assertThat(refreshTokenRepository.findByToken(token)).isEmpty();
       final RefreshTokenEntity tokenFound =
           refreshTokenRepository.findByToken(newToken).orElseThrow();
       assertThat(tokenFound.id()).isEqualTo(id);
@@ -229,7 +230,7 @@ class RefreshTokenRepositoryTest {
     }
 
     @Test
-    void does_nothing_and_returns_false_when_dto_is_all_null() {
+    void preserves_fields_when_dto_is_all_null() {
       final UserId userId = insertRandomUser();
       final RefreshToken token = RefreshToken.generate();
       final TokenFamily family = TokenFamily.generate();
@@ -240,9 +241,8 @@ class RefreshTokenRepositoryTest {
 
       final UpdateRefreshTokenDbo nullDto = UpdateRefreshTokenDbo.builder().build();
 
-      final boolean updated = refreshTokenRepository.updateByToken(token, nullDto);
+      refreshTokenRepository.updateByToken(token, nullDto);
 
-      assertThat(updated).isTrue();
       final RefreshTokenEntity tokenFound = refreshTokenRepository.findByToken(token).orElseThrow();
       assertThat(tokenFound.id()).isEqualTo(id);
       assertThat(tokenFound.userId()).isEqualTo(userId);
@@ -252,14 +252,15 @@ class RefreshTokenRepositoryTest {
     }
 
     @Test
-    void does_nothing_and_returns_false_when_token_does_not_exist() {
+    void throws_when_token_does_not_exist() {
       final ExpirationTime newExpiration = ExpirationTime.of(Instant.now().plusSeconds(2000));
       final UpdateRefreshTokenDbo update =
           UpdateRefreshTokenDbo.builder().expiresAt(newExpiration).build();
 
-      final boolean updated = refreshTokenRepository.updateByToken(RefreshToken.generate(), update);
-
-      assertThat(updated).isFalse();
+      final RefreshToken missingToken = RefreshToken.generate();
+      assertThatThrownBy(() -> refreshTokenRepository.updateByToken(missingToken, update))
+          .isInstanceOf(RefreshTokenNotFoundException.class)
+          .hasMessageNotContaining(missingToken.value());
     }
   }
 
@@ -267,7 +268,29 @@ class RefreshTokenRepositoryTest {
   class UpdateByUserId {
 
     @Test
-    void updates_row_and_returns_true_when_it_succeeds() {
+    void updates_expiration_for_all_tokens_of_user() {
+      final UserId userId = insertRandomUser();
+      final RefreshToken first = RefreshToken.generate();
+      final RefreshToken second = RefreshToken.generate();
+      final Instant now = Instant.now();
+      final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
+      databaseCrud.insertRefreshToken(
+          UUID.randomUUID(), userId, first, now, expiration, TokenFamily.generate());
+      databaseCrud.insertRefreshToken(
+          UUID.randomUUID(), userId, second, now, expiration, TokenFamily.generate());
+      final ExpirationTime newExpiration = ExpirationTime.of(now.plusSeconds(7200));
+
+      refreshTokenRepository.updateByUserId(
+          userId, UpdateRefreshTokenDbo.builder().expiresAt(newExpiration).build());
+
+      assertThat(refreshTokenRepository.findByToken(first).orElseThrow().expiresAt())
+          .isEqualTo(newExpiration);
+      assertThat(refreshTokenRepository.findByToken(second).orElseThrow().expiresAt())
+          .isEqualTo(newExpiration);
+    }
+
+    @Test
+    void updates_token_and_preserves_other_fields() {
       final UserId userId = insertRandomUser();
       final RefreshToken token = RefreshToken.generate();
       final TokenFamily family = TokenFamily.generate();
@@ -279,9 +302,9 @@ class RefreshTokenRepositoryTest {
       final RefreshToken newToken = RefreshToken.generate();
       final UpdateRefreshTokenDbo dto = UpdateRefreshTokenDbo.builder().token(newToken).build();
 
-      final boolean updated = refreshTokenRepository.updateByUserId(userId, dto);
+      refreshTokenRepository.updateByUserId(userId, dto);
 
-      assertThat(updated).isTrue();
+      assertThat(refreshTokenRepository.findByToken(token)).isEmpty();
       final RefreshTokenEntity tokenFound =
           refreshTokenRepository.findByToken(newToken).orElseThrow();
       assertThat(tokenFound.id()).isEqualTo(id);
@@ -292,7 +315,7 @@ class RefreshTokenRepositoryTest {
     }
 
     @Test
-    void does_nothing_and_returns_false_when_dto_is_all_null() {
+    void preserves_fields_when_dto_is_all_null() {
       final UserId userId = insertRandomUser();
       final RefreshToken token = RefreshToken.generate();
       final TokenFamily family = TokenFamily.generate();
@@ -303,9 +326,8 @@ class RefreshTokenRepositoryTest {
 
       final UpdateRefreshTokenDbo nullDto = UpdateRefreshTokenDbo.builder().build();
 
-      final boolean updated = refreshTokenRepository.updateByUserId(userId, nullDto);
+      refreshTokenRepository.updateByUserId(userId, nullDto);
 
-      assertThat(updated).isTrue();
       final RefreshTokenEntity tokenFound = refreshTokenRepository.findByToken(token).orElseThrow();
       assertThat(tokenFound.id()).isEqualTo(id);
       assertThat(tokenFound.userId()).isEqualTo(userId);
@@ -315,14 +337,15 @@ class RefreshTokenRepositoryTest {
     }
 
     @Test
-    void does_nothing_and_returns_false_when_user_does_not_exist() {
+    void throws_when_user_does_not_exist() {
       final ExpirationTime newExpiration = ExpirationTime.of(Instant.now().plusSeconds(2000));
       final UpdateRefreshTokenDbo update =
           UpdateRefreshTokenDbo.builder().expiresAt(newExpiration).build();
 
-      final boolean updated = refreshTokenRepository.updateByUserId(UserId.generate(), update);
-
-      assertThat(updated).isFalse();
+      final UserId userId = UserId.generate();
+      assertThatThrownBy(() -> refreshTokenRepository.updateByUserId(userId, update))
+          .isInstanceOf(RefreshTokenNotFoundException.class)
+          .hasMessageContaining(userId.value().toString());
     }
   }
 

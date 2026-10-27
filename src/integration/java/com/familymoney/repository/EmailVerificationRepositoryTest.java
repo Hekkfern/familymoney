@@ -4,6 +4,7 @@ import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.familymoney.domains.auth.exceptions.VerificationTokenNotFoundException;
 import com.familymoney.domains.auth.repositories.DefaultEmailVerificationRepository;
 import com.familymoney.domains.auth.repositories.EmailVerificationRepository;
 import com.familymoney.domains.auth.repositories.dbos.CreateEmailVerificationDbo;
@@ -206,7 +207,7 @@ class EmailVerificationRepositoryTest {
   class UpdateByUserId {
 
     @Test
-    void updates_row_and_returns_true_when_it_succeeds() {
+    void updates_token_and_preserves_other_fields() {
       final UserId userId = insertRandomUser();
       final EmailVerificationToken token = EmailVerificationToken.generate();
       final Instant now = Instant.now();
@@ -217,9 +218,10 @@ class EmailVerificationRepositoryTest {
       final UpdateEmailVerificationTokenDbo dto =
           UpdateEmailVerificationTokenDbo.builder().token(newToken).build();
 
-      final boolean updated = emailVerificationRepository.updateByUserId(userId, dto);
+      emailVerificationRepository.updateByUserId(userId, dto);
 
-      assertThat(updated).isTrue();
+      assertThat(emailVerificationRepository.findByToken(newToken)).isPresent();
+      assertThat(emailVerificationRepository.findByToken(token)).isEmpty();
       final EmailVerificationEntity tokenFound =
           emailVerificationRepository.findByUserId(userId).orElseThrow();
       assertThat(tokenFound.userId()).isEqualTo(userId);
@@ -229,36 +231,42 @@ class EmailVerificationRepositoryTest {
     }
 
     @Test
-    void does_nothing_and_returns_false_when_dto_is_all_null() {
+    void updates_timestamps_and_preserves_token() {
       final UserId userId = insertRandomUser();
       final EmailVerificationToken token = EmailVerificationToken.generate();
       final Instant now = Instant.now();
       final ExpirationTime expiration = ExpirationTime.of(now.plusSeconds(3600));
       databaseCrud.insertEmailVerificationToken(userId, token, now, expiration);
 
-      final UpdateEmailVerificationTokenDbo nullDto =
-          UpdateEmailVerificationTokenDbo.builder().build();
+      final Instant newLastSentAt = now.plusSeconds(60);
+      final ExpirationTime newExpiration = ExpirationTime.of(now.plusSeconds(7200));
+      final UpdateEmailVerificationTokenDbo dto =
+          UpdateEmailVerificationTokenDbo.builder()
+              .expiresAt(newExpiration)
+              .lastSentAt(newLastSentAt)
+              .build();
 
-      final boolean updated = emailVerificationRepository.updateByUserId(userId, nullDto);
+      emailVerificationRepository.updateByUserId(userId, dto);
 
-      assertThat(updated).isTrue();
       final EmailVerificationEntity tokenFound =
-          emailVerificationRepository.findByUserId(userId).orElseThrow();
+          emailVerificationRepository.findByToken(token).orElseThrow();
       assertThat(tokenFound.userId()).isEqualTo(userId);
-      assertThat(tokenFound.expiresAt()).isEqualTo(expiration);
+      assertThat(tokenFound.expiresAt()).isEqualTo(newExpiration);
       assertThat(tokenFound.createdAt()).isEqualTo(now);
+      assertThat(tokenFound.lastSentAt()).isEqualTo(newLastSentAt);
     }
 
     @Test
-    void does_nothing_and_returns_false_when_user_does_not_exist() {
+    void throws_when_user_does_not_exist() {
       final UpdateEmailVerificationTokenDbo update =
           UpdateEmailVerificationTokenDbo.builder()
               .token(EmailVerificationToken.generate())
               .build();
 
-      final boolean updated = emailVerificationRepository.updateByUserId(UserId.generate(), update);
-
-      assertThat(updated).isFalse();
+      final UserId userId = UserId.generate();
+      assertThatThrownBy(() -> emailVerificationRepository.updateByUserId(userId, update))
+          .isInstanceOf(VerificationTokenNotFoundException.class)
+          .hasMessageContaining(userId.value().toString());
     }
   }
 

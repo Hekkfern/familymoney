@@ -21,8 +21,8 @@ public class DefaultUsedRefreshTokenRepository implements UsedRefreshTokenReposi
   private final OpaqueTokenHasher tokenHasher;
 
   @Override
-  public Optional<UsedRefreshTokenEntity> create(final CreateUsedRefreshTokenDbo data) {
-    return db.insertInto(UsedRefreshTokens.USED_REFRESH_TOKENS)
+  public void create(final CreateUsedRefreshTokenDbo data) {
+    db.insertInto(UsedRefreshTokens.USED_REFRESH_TOKENS)
         .columns(
             UsedRefreshTokens.USED_REFRESH_TOKENS.TOKEN_HASH,
             UsedRefreshTokens.USED_REFRESH_TOKENS.FAMILY,
@@ -32,12 +32,7 @@ public class DefaultUsedRefreshTokenRepository implements UsedRefreshTokenReposi
             data.family().value(),
             data.usedAt().atOffset(DEFAULT_TIMEZONE_OFFSET))
         .onConflictDoNothing()
-        .returning(
-            UsedRefreshTokens.USED_REFRESH_TOKENS.FAMILY,
-            UsedRefreshTokens.USED_REFRESH_TOKENS.USED_AT,
-            UsedRefreshTokens.USED_REFRESH_TOKENS.CREATED_AT)
-        .fetchOptional()
-        .map(UsedRefreshTokenJooqMapper::toEntity);
+        .execute();
   }
 
   @Override

@@ -10,6 +10,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -508,9 +509,6 @@ class DefaultAuthServiceTest {
       mockRefreshTokenOwner(true);
       when(usedRefreshTokenRepository.create(any(CreateUsedRefreshTokenDbo.class)))
           .thenReturn(Optional.of(new UsedRefreshTokenEntity(TokenFamily.generate(), now, now)));
-      when(refreshTokenRepository.updateByToken(
-              any(RefreshToken.class), any(UpdateRefreshTokenDbo.class)))
-          .thenReturn(true);
       when(jwtUtils.generateAccessToken(any(UserId.class), any(TokenFamily.class)))
           .thenReturn(AccessToken.fromString(FakeGenerator.accessToken()));
 
@@ -553,11 +551,13 @@ class DefaultAuthServiceTest {
       mockRefreshTokenOwner(true);
       when(usedRefreshTokenRepository.create(any(CreateUsedRefreshTokenDbo.class)))
           .thenReturn(Optional.of(new UsedRefreshTokenEntity(TokenFamily.generate(), now, now)));
-      when(refreshTokenRepository.updateByToken(any(), any())).thenReturn(false);
+      doThrow(new RefreshTokenNotFoundException("Refresh token does not exist"))
+          .when(refreshTokenRepository)
+          .updateByToken(any(), any());
       when(jwtUtils.generateAccessToken(any(UserId.class), any(TokenFamily.class)))
           .thenReturn(AccessToken.fromString(FakeGenerator.accessToken()));
 
-      assertThrows(DatabaseExecutionException.class, () -> authService.refreshTokens(refreshToken));
+      assertThrows(RefreshTokenNotFoundException.class, () -> authService.refreshTokens(refreshToken));
     }
 
     @Test
@@ -772,10 +772,6 @@ class DefaultAuthServiceTest {
                       now.minusSeconds(3600),
                       ExpirationTime.of(now.plusSeconds(100)),
                       now.minusSeconds(3600))));
-      when(emailVerificationRepository.updateByUserId(
-              any(UserId.class), any(UpdateEmailVerificationTokenDbo.class)))
-          .thenReturn(true);
-
       assertThatCode(() -> authService.resendVerificationEmail(email)).doesNotThrowAnyException();
 
       verify(emailVerificationRepository)
@@ -824,12 +820,12 @@ class DefaultAuthServiceTest {
                       now.minusSeconds(3600),
                       ExpirationTime.of(now.plusSeconds(100)),
                       now.minusSeconds(3600))));
-      when(emailVerificationRepository.updateByUserId(
-              any(UserId.class), any(UpdateEmailVerificationTokenDbo.class)))
-          .thenReturn(false);
+      doThrow(new VerificationTokenNotFoundException("Verification token not found"))
+          .when(emailVerificationRepository)
+          .updateByUserId(any(UserId.class), any(UpdateEmailVerificationTokenDbo.class));
 
       assertThrows(
-          DatabaseExecutionException.class, () -> authService.resendVerificationEmail(email));
+          VerificationTokenNotFoundException.class, () -> authService.resendVerificationEmail(email));
 
       verify(emailVerificationRepository, never()).create(any(CreateEmailVerificationDbo.class));
       verify(emailSenderService, never())

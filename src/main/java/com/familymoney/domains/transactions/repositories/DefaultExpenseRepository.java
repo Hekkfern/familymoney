@@ -2,8 +2,6 @@ package com.familymoney.domains.transactions.repositories;
 
 import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
 
-import com.familymoney.domains.transactions.exceptions.ExpenseNotFoundException;
-import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
 import com.familymoney.domains.transactions.repositories.dbos.CreateExpenseDbo;
 import com.familymoney.domains.transactions.repositories.dbos.UpdateExpenseDbo;
 import com.familymoney.domains.transactions.repositories.entitites.FullExpenseEntity;
@@ -12,14 +10,11 @@ import com.familymoney.domains.transactions.repositories.mappers.ExpensePaymentJ
 import com.familymoney.domains.transactions.repositories.mappers.ExpenseShareJooqMapper;
 import com.familymoney.domains.transactions.types.ExpenseId;
 import com.familymoney.domains.transactions.types.GroupId;
-import com.familymoney.domains.users.exceptions.UserNotFoundException;
 import com.familymoney.domains.users.types.UserId;
-import com.familymoney.generated.Keys;
 import com.familymoney.generated.tables.ExpensePayments;
 import com.familymoney.generated.tables.ExpenseShares;
 import com.familymoney.generated.tables.Expenses;
 import com.familymoney.generated.tables.Groups;
-import com.familymoney.utils.ConstraintViolationUtils;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -36,8 +31,6 @@ import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.SortField;
 import org.jooq.impl.DSL;
-import org.jspecify.annotations.Nullable;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -46,7 +39,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 @RequiredArgsConstructor
-@Slf4j
 public class DefaultExpenseRepository implements ExpenseRepository {
 
   private final DSLContext db;
@@ -54,33 +46,28 @@ public class DefaultExpenseRepository implements ExpenseRepository {
   @Transactional
   @Override
   public void create(final CreateExpenseDbo dto) {
-    try {
-      db.insertInto(Expenses.EXPENSES)
-          .columns(
-              Expenses.EXPENSES.ID,
-              Expenses.EXPENSES.DESCRIPTION,
-              Expenses.EXPENSES.GROUP_ID,
-              Expenses.EXPENSES.DONE_AT,
-              Expenses.EXPENSES.CREATED_BY)
-          .values(
-              dto.id().value(),
-              dto.description().value(),
-              dto.groupId().value(),
-              OffsetDateTime.ofInstant(dto.doneAt(), DEFAULT_TIMEZONE_OFFSET),
-              dto.createdBy().value())
-          .execute();
-      insertShares(dto.id(), dto.shares());
-      insertPayments(dto.id(), dto.payers());
-    } catch (final DataIntegrityViolationException exception) {
-      throw toDomainException(exception, dto.groupId(), dto.createdBy());
-    }
+    db.insertInto(Expenses.EXPENSES)
+        .columns(
+            Expenses.EXPENSES.ID,
+            Expenses.EXPENSES.DESCRIPTION,
+            Expenses.EXPENSES.GROUP_ID,
+            Expenses.EXPENSES.DONE_AT,
+            Expenses.EXPENSES.CREATED_BY)
+        .values(
+            dto.id().value(),
+            dto.description().value(),
+            dto.groupId().value(),
+            OffsetDateTime.ofInstant(dto.doneAt(), DEFAULT_TIMEZONE_OFFSET),
+            dto.createdBy().value())
+        .execute();
+    insertShares(dto.id(), dto.shares());
+    insertPayments(dto.id(), dto.payers());
   }
 
   @Transactional
   @Override
   public void updateById(final ExpenseId id, final UpdateExpenseDbo dto) {
     final Map<Field<?>, Object> values = new LinkedHashMap<>();
-    values.put(Expenses.EXPENSES.UPDATED_AT, DSL.currentOffsetDateTime());
     if (dto.description() != null) {
       values.put(Expenses.EXPENSES.DESCRIPTION, dto.description().value());
     }
@@ -89,17 +76,7 @@ public class DefaultExpenseRepository implements ExpenseRepository {
           Expenses.EXPENSES.DONE_AT,
           OffsetDateTime.ofInstant(dto.doneAt(), DEFAULT_TIMEZONE_OFFSET));
     }
-
-    final int expensesUpdated =
-        db.update(Expenses.EXPENSES)
-            .set(values)
-            .where(Expenses.EXPENSES.ID.eq(id.value()))
-            .execute();
-    if (expensesUpdated == 0) {
-      final String msg = "Expense with ID: %s does not exist".formatted(id.value());
-      log.info(msg);
-      throw new ExpenseNotFoundException(msg);
-    }
+    db.update(Expenses.EXPENSES).set(values).where(Expenses.EXPENSES.ID.eq(id.value())).execute();
 
     final Map<UserId, BigDecimal> shares = dto.shares();
     final Map<UserId, BigDecimal> payers = dto.payers();
@@ -112,55 +89,14 @@ public class DefaultExpenseRepository implements ExpenseRepository {
       final ExpenseId id,
       final Map<UserId, BigDecimal> shares,
       final Map<UserId, BigDecimal> payers) {
-    try {
-      db.deleteFrom(ExpenseShares.EXPENSE_SHARES)
-          .where(ExpenseShares.EXPENSE_SHARES.EXPENSE_ID.eq(id.value()))
-          .execute();
-      insertShares(id, shares);
-      db.deleteFrom(ExpensePayments.EXPENSE_PAYMENTS)
-          .where(ExpensePayments.EXPENSE_PAYMENTS.EXPENSE_ID.eq(id.value()))
-          .execute();
-      insertPayments(id, payers);
-    } catch (final DataIntegrityViolationException exception) {
-      throw toDomainException(exception, null, null);
-    }
-  }
-
-  private static RuntimeException toDomainException(
-      final DataIntegrityViolationException exception,
-      final @Nullable GroupId groupId,
-      final @Nullable UserId createdBy) {
-    final boolean isGroupMissing =
-        groupId != null
-            && ConstraintViolationUtils.isConstraintViolated(
-                exception, Keys.EXPENSES__EXPENSES_GROUP_ID_FKEY);
-    if (isGroupMissing) {
-      final String msg = "Group with ID: %s does not exist".formatted(groupId.value());
-      log.info(msg);
-      return new GroupNotFoundException(msg, exception);
-    }
-    final boolean isCreatorMissing =
-        createdBy != null
-            && ConstraintViolationUtils.isConstraintViolated(
-                exception, Keys.EXPENSES__EXPENSES_CREATED_BY_FKEY);
-    if (isCreatorMissing) {
-      final String msg = "Creator with ID: %s does not exist".formatted(createdBy.value());
-      log.info(msg);
-      return new UserNotFoundException(msg, exception);
-    }
-    if (ConstraintViolationUtils.isConstraintViolated(
-        exception, Keys.EXPENSE_SHARES__EXPENSE_SHARES_USER_ID_FKEY)) {
-      final String msg = "A user in the expense shares does not exist";
-      log.info(msg);
-      return new UserNotFoundException(msg, exception);
-    }
-    if (ConstraintViolationUtils.isConstraintViolated(
-        exception, Keys.EXPENSE_PAYMENTS__EXPENSE_PAYMENTS_USER_ID_FKEY)) {
-      final String msg = "A user in the expense payers does not exist";
-      log.info(msg);
-      return new UserNotFoundException(msg, exception);
-    }
-    return exception;
+    db.deleteFrom(ExpenseShares.EXPENSE_SHARES)
+        .where(ExpenseShares.EXPENSE_SHARES.EXPENSE_ID.eq(id.value()))
+        .execute();
+    insertShares(id, shares);
+    db.deleteFrom(ExpensePayments.EXPENSE_PAYMENTS)
+        .where(ExpensePayments.EXPENSE_PAYMENTS.EXPENSE_ID.eq(id.value()))
+        .execute();
+    insertPayments(id, payers);
   }
 
   @Transactional
@@ -172,11 +108,7 @@ public class DefaultExpenseRepository implements ExpenseRepository {
     db.deleteFrom(ExpensePayments.EXPENSE_PAYMENTS)
         .where(ExpensePayments.EXPENSE_PAYMENTS.EXPENSE_ID.eq(id.value()))
         .execute();
-    final int rowsAffected =
-        db.deleteFrom(Expenses.EXPENSES).where(Expenses.EXPENSES.ID.eq(id.value())).execute();
-    if (rowsAffected != 1) {
-      log.warn("Could not delete expense ID: {}", id.value());
-    }
+    db.deleteFrom(Expenses.EXPENSES).where(Expenses.EXPENSES.ID.eq(id.value())).execute();
   }
 
   @Transactional
@@ -247,11 +179,11 @@ public class DefaultExpenseRepository implements ExpenseRepository {
         .from(Expenses.EXPENSES)
         .where(condition)
         .fetch(
-            record ->
+            r ->
                 new FullExpenseEntity(
-                    ExpenseJooqMapper.toEntity(record),
-                    record.value5().map(ExpenseShareJooqMapper::toEntity),
-                    record.value6().map(ExpensePaymentJooqMapper::toEntity)));
+                    ExpenseJooqMapper.toEntity(r),
+                    r.value5().map(ExpenseShareJooqMapper::toEntity),
+                    r.value6().map(ExpensePaymentJooqMapper::toEntity)));
   }
 
   @Transactional(readOnly = true)
@@ -313,11 +245,11 @@ public class DefaultExpenseRepository implements ExpenseRepository {
             .limit(pageable.getPageSize())
             .offset(pageable.getOffset())
             .fetch(
-                record ->
+                r ->
                     new FullExpenseEntity(
-                        ExpenseJooqMapper.toEntity(record),
-                        record.value5().map(ExpenseShareJooqMapper::toEntity),
-                        record.value6().map(ExpensePaymentJooqMapper::toEntity)));
+                        ExpenseJooqMapper.toEntity(r),
+                        r.value5().map(ExpenseShareJooqMapper::toEntity),
+                        r.value6().map(ExpensePaymentJooqMapper::toEntity)));
     return new PageImpl<>(data, pageable, safeTotal);
   }
 

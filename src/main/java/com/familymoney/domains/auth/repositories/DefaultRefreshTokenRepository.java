@@ -8,11 +8,12 @@ import com.familymoney.domains.auth.types.RefreshToken;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.generated.tables.RefreshTokens;
 import com.familymoney.security.OpaqueTokenHasher;
-import java.time.OffsetDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
-import org.jooq.impl.DSL;
+import org.jooq.Field;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -23,8 +24,8 @@ public class DefaultRefreshTokenRepository implements RefreshTokenRepository {
   private final OpaqueTokenHasher tokenHasher;
 
   @Override
-  public Optional<RefreshTokenEntity> create(final CreateRefreshTokenDbo data) {
-    return db.insertInto(RefreshTokens.REFRESH_TOKENS)
+  public void create(final CreateRefreshTokenDbo data) {
+    db.insertInto(RefreshTokens.REFRESH_TOKENS)
         .columns(
             RefreshTokens.REFRESH_TOKENS.ID,
             RefreshTokens.REFRESH_TOKENS.USER_ID,
@@ -37,15 +38,7 @@ public class DefaultRefreshTokenRepository implements RefreshTokenRepository {
             tokenHasher.hash(data.token().value()),
             data.family().value(),
             data.expiresAt().toOffsetDateTime())
-        .returning(
-            RefreshTokens.REFRESH_TOKENS.ID,
-            RefreshTokens.REFRESH_TOKENS.USER_ID,
-            RefreshTokens.REFRESH_TOKENS.CREATED_AT,
-            RefreshTokens.REFRESH_TOKENS.UPDATED_AT,
-            RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,
-            RefreshTokens.REFRESH_TOKENS.FAMILY)
-        .fetchOptional()
-        .map(RefreshTokenJooqMapper::toEntity);
+        .execute();
   }
 
   @Override
@@ -64,50 +57,45 @@ public class DefaultRefreshTokenRepository implements RefreshTokenRepository {
   }
 
   @Override
-  public boolean updateByToken(final RefreshToken token, final UpdateRefreshTokenDbo data) {
-    final OffsetDateTime expiresAtVal =
-        data.expiresAt() != null ? data.expiresAt().toOffsetDateTime() : null;
-    final int rowsAffected =
-        db.update(RefreshTokens.REFRESH_TOKENS)
-            .set(
-                RefreshTokens.REFRESH_TOKENS.TOKEN_HASH,
-                DSL.coalesce(
-                    DSL.val(data.token() != null ? tokenHasher.hash(data.token().value()) : null),
-                    RefreshTokens.REFRESH_TOKENS.TOKEN_HASH))
-            .set(
-                RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,
-                DSL.coalesce(DSL.val(expiresAtVal), RefreshTokens.REFRESH_TOKENS.EXPIRES_AT))
-            .where(RefreshTokens.REFRESH_TOKENS.TOKEN_HASH.eq(tokenHasher.hash(token.value())))
-            .execute();
-    return rowsAffected > 0;
+  public void updateByToken(final RefreshToken token, final UpdateRefreshTokenDbo data) {
+    final Map<Field<?>, Object> changedFields = changedFields(data);
+    db.update(RefreshTokens.REFRESH_TOKENS)
+        .set(changedFields)
+        .where(RefreshTokens.REFRESH_TOKENS.TOKEN_HASH.eq(tokenHasher.hash(token.value())))
+        .execute();
   }
 
   @Override
-  public boolean updateByUserId(final UserId userId, final UpdateRefreshTokenDbo data) {
-    final OffsetDateTime expiresAtVal =
-        data.expiresAt() != null ? data.expiresAt().toOffsetDateTime() : null;
-    final int rowsAffected =
-        db.update(RefreshTokens.REFRESH_TOKENS)
-            .set(
-                RefreshTokens.REFRESH_TOKENS.TOKEN_HASH,
-                DSL.coalesce(
-                    DSL.val(data.token() != null ? tokenHasher.hash(data.token().value()) : null),
-                    RefreshTokens.REFRESH_TOKENS.TOKEN_HASH))
-            .set(
-                RefreshTokens.REFRESH_TOKENS.EXPIRES_AT,
-                DSL.coalesce(DSL.val(expiresAtVal), RefreshTokens.REFRESH_TOKENS.EXPIRES_AT))
-            .where(RefreshTokens.REFRESH_TOKENS.USER_ID.eq(userId.value()))
-            .execute();
-    return rowsAffected > 0;
+  public void updateByUserId(final UserId userId, final UpdateRefreshTokenDbo data) {
+    final Map<Field<?>, Object> changedFields = changedFields(data);
+    db.update(RefreshTokens.REFRESH_TOKENS)
+        .set(changedFields)
+        .where(RefreshTokens.REFRESH_TOKENS.USER_ID.eq(userId.value()))
+        .execute();
+  }
+
+  private Map<Field<?>, Object> changedFields(final UpdateRefreshTokenDbo data) {
+    final Map<Field<?>, Object> changedFields = new HashMap<>();
+    if (data.token() != null) {
+      changedFields.put(
+          RefreshTokens.REFRESH_TOKENS.TOKEN_HASH, tokenHasher.hash(data.token().value()));
+    }
+    if (data.expiresAt() != null) {
+      changedFields.put(
+          RefreshTokens.REFRESH_TOKENS.EXPIRES_AT, data.expiresAt().toOffsetDateTime());
+    }
+    if (changedFields.isEmpty()) {
+      changedFields.put(
+          RefreshTokens.REFRESH_TOKENS.TOKEN_HASH, RefreshTokens.REFRESH_TOKENS.TOKEN_HASH);
+    }
+    return changedFields;
   }
 
   @Override
-  public boolean deleteByToken(RefreshToken token) {
-    final int rows =
-        db.delete(RefreshTokens.REFRESH_TOKENS)
-            .where(RefreshTokens.REFRESH_TOKENS.TOKEN_HASH.eq(tokenHasher.hash(token.value())))
-            .execute();
-    return rows > 0;
+  public void deleteByToken(RefreshToken token) {
+    db.delete(RefreshTokens.REFRESH_TOKENS)
+        .where(RefreshTokens.REFRESH_TOKENS.TOKEN_HASH.eq(tokenHasher.hash(token.value())))
+        .execute();
   }
 
   @Override

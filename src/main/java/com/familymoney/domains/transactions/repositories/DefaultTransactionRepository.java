@@ -24,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 /** Retrieves transaction references across expenses and payments. */
 @Repository
 @RequiredArgsConstructor
-@Slf4j
 public class DefaultTransactionRepository implements TransactionRepository {
 
   private final DSLContext db;

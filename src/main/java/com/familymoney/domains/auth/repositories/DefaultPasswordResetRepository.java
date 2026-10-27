@@ -2,7 +2,6 @@ package com.familymoney.domains.auth.repositories;
 
 import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
 
-import com.familymoney.domains.auth.exceptions.ResetPasswordTokenNotFoundException;
 import com.familymoney.domains.auth.repositories.dbos.CreatePasswordResetDbo;
 import com.familymoney.domains.auth.repositories.dbos.UpdatePasswordResetDbo;
 import com.familymoney.domains.auth.repositories.entitites.PasswordResetEntity;
@@ -20,7 +19,6 @@ import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.springframework.stereotype.Repository;
 
-@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class DefaultPasswordResetRepository implements PasswordResetRepository {
@@ -84,32 +82,24 @@ public class DefaultPasswordResetRepository implements PasswordResetRepository {
     }
     if (data.expiresAt() != null) {
       changedFields.put(
-          PasswordResetTokens.PASSWORD_RESET_TOKENS.EXPIRES_AT, data.expiresAt().toOffsetDateTime());
+          PasswordResetTokens.PASSWORD_RESET_TOKENS.EXPIRES_AT,
+          data.expiresAt().toOffsetDateTime());
     }
     if (data.lastSentAt() != null) {
       changedFields.put(
           PasswordResetTokens.PASSWORD_RESET_TOKENS.LAST_SENT_AT,
           data.lastSentAt().atOffset(DEFAULT_TIMEZONE_OFFSET));
     }
-    final int rowsAffected =
-        db.update(PasswordResetTokens.PASSWORD_RESET_TOKENS)
-            .set(changedFields)
-            .where(PasswordResetTokens.PASSWORD_RESET_TOKENS.USER_ID.eq(userId.value()))
-            .execute();
-    if (rowsAffected == 0) {
-      final String msg =
-          "Password reset token for user with ID '%s' does not exist".formatted(userId.value());
-      log.info(msg);
-      throw new ResetPasswordTokenNotFoundException(msg);
-    }
+    db.update(PasswordResetTokens.PASSWORD_RESET_TOKENS)
+        .set(changedFields)
+        .where(PasswordResetTokens.PASSWORD_RESET_TOKENS.USER_ID.eq(userId.value()))
+        .execute();
   }
 
   @Override
-  public boolean deleteByUserId(final UserId userId) {
-    final int rowsAffected =
-        db.deleteFrom(PasswordResetTokens.PASSWORD_RESET_TOKENS)
-            .where(PasswordResetTokens.PASSWORD_RESET_TOKENS.USER_ID.eq(userId.value()))
-            .execute();
-    return rowsAffected > 0;
+  public void deleteByUserId(final UserId userId) {
+    db.deleteFrom(PasswordResetTokens.PASSWORD_RESET_TOKENS)
+        .where(PasswordResetTokens.PASSWORD_RESET_TOKENS.USER_ID.eq(userId.value()))
+        .execute();
   }
 }
