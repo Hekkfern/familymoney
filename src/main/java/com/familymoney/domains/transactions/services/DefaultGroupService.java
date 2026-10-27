@@ -4,13 +4,11 @@ import com.familymoney.domains.transactions.events.GroupInvitationRequestedEvent
 import com.familymoney.domains.transactions.exceptions.ExpenseNotFoundException;
 import com.familymoney.domains.transactions.exceptions.GroupInvitationInvalidException;
 import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
-import com.familymoney.domains.transactions.exceptions.GroupOwnerNotFoundException;
 import com.familymoney.domains.transactions.exceptions.MaximumGroupInvitationsReachedException;
 import com.familymoney.domains.transactions.exceptions.MaximumGroupMembersReachedException;
 import com.familymoney.domains.transactions.exceptions.MaximumGroupsPerUserReachedException;
 import com.familymoney.domains.transactions.exceptions.PaymentNotFoundException;
 import com.familymoney.domains.transactions.exceptions.SendGroupInvitationTooSoonException;
-import com.familymoney.domains.transactions.exceptions.UserAlreadyInGroupException;
 import com.familymoney.domains.transactions.exceptions.UserAlreadyInvitedException;
 import com.familymoney.domains.transactions.exceptions.WrongUserForInvitationException;
 import com.familymoney.domains.transactions.repositories.BalanceRepository;
@@ -106,15 +104,11 @@ public class DefaultGroupService implements GroupService {
       final Description description,
       final Currency currency,
       final AuthorizedUser requester) {
-    try {
-      final GroupId groupId = GroupId.generate();
-      groupRepository.create(
-          new CreateGroupDbo(groupId, name, description, currency, requester.id()));
-      groupRepository.addUserToGroup(requester.id(), groupId);
-      return groupId;
-    } catch (final UserNotFoundException e) {
-      throw new GroupOwnerNotFoundException("User does not exist", e);
-    }
+    final GroupId groupId = GroupId.generate();
+    groupRepository.create(
+        new CreateGroupDbo(groupId, name, description, currency, requester.id()));
+    groupRepository.addUserToGroup(requester.id(), groupId);
+    return groupId;
   }
 
   @Override
@@ -175,9 +169,7 @@ public class DefaultGroupService implements GroupService {
     if (requester.role().equals(Role.USER)) {
       groupChecker.verifyUserIsInGroup(requester.id(), groupId);
     }
-    if (groupRepository.isUserInGroup(userId, groupId)) {
-      throw new UserAlreadyInGroupException();
-    }
+    groupChecker.verifyUserIsNotInGroup(userId, groupId);
     if (groupRepository.countMembershipsOfGroup(groupId) >= groupProperties.maxNumUsersPerGroup()) {
       throw new MaximumGroupMembersReachedException();
     }
@@ -270,6 +262,7 @@ public class DefaultGroupService implements GroupService {
   public void addUserToGroupAsAdmin(final GroupId groupId, final UserId userIdToAdd) {
     groupChecker.verifyGroupExists(groupId);
     groupChecker.verifyUserExists(userIdToAdd);
+    groupChecker.verifyUserIsNotInGroup(userIdToAdd, groupId);
     if (groupRepository.countMembershipsOfGroup(groupId) >= groupProperties.maxNumUsersPerGroup()) {
       throw new MaximumGroupMembersReachedException();
     }
@@ -284,10 +277,10 @@ public class DefaultGroupService implements GroupService {
   public void removeUserFromGroup(
       final GroupId groupId, final UserId userIdToRemove, final AuthorizedUser requester) {
     groupChecker.verifyGroupExists(groupId);
+    groupChecker.verifyUserExists(userIdToRemove);
     if (requester.role().equals(Role.USER)) {
       groupChecker.verifyUserIsInGroup(requester.id(), groupId);
     }
-    groupChecker.verifyUserExists(userIdToRemove);
     groupRepository.removeUserFromGroup(userIdToRemove, groupId);
   }
 
@@ -298,7 +291,7 @@ public class DefaultGroupService implements GroupService {
     if (requester.role().equals(Role.USER)) {
       groupChecker.verifyUserIsInGroup(requester.id(), groupId);
     }
-    // TODO
+    // TODO: to be implemented
     return List.of();
   }
 
@@ -386,6 +379,6 @@ public class DefaultGroupService implements GroupService {
 
   @Override
   public void forceSyncBalancesAsAdmin(final GroupId groupId) {
-    // TODO
+    // TODO: to be implemented
   }
 }

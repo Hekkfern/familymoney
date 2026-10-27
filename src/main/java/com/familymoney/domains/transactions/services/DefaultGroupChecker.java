@@ -1,6 +1,7 @@
 package com.familymoney.domains.transactions.services;
 
 import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
+import com.familymoney.domains.transactions.exceptions.UserAlreadyInGroupException;
 import com.familymoney.domains.transactions.exceptions.UserIsNotMemberOfGroupException;
 import com.familymoney.domains.transactions.repositories.GroupRepository;
 import com.familymoney.domains.transactions.types.GroupId;
@@ -47,6 +48,15 @@ public class DefaultGroupChecker implements GroupChecker {
       final String msg = "User '%s' is not a member of group '%s'".formatted(userId, groupId);
       log.info(msg);
       throw new UserIsNotMemberOfGroupException(msg);
+    }
+  }
+
+  @Override
+  public void verifyUserIsNotInGroup(UserId userId, GroupId groupId) {
+    if (groupRepository.isUserInGroup(userId, groupId)) {
+      final String msg = "User '%s' is already a member of group '%s'".formatted(userId, groupId);
+      log.info(msg);
+      throw new UserAlreadyInGroupException(msg);
     }
   }
 }

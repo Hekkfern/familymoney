@@ -33,4 +33,6 @@ public interface GroupChecker {
    * @throws UserIsNotMemberOfGroupException if the user is not a member of the group
    */
   void verifyUserIsInGroup(UserId userId, GroupId groupId);
+
+  void verifyUserIsNotInGroup(UserId userId, GroupId groupId);
 }

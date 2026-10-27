@@ -4,7 +4,6 @@ import static com.familymoney.config.Constants.DEFAULT_TIMEZONE_OFFSET;
 
 import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
 import com.familymoney.domains.transactions.exceptions.UserAlreadyInGroupException;
-import com.familymoney.domains.transactions.exceptions.UserIsNotMemberOfGroupException;
 import com.familymoney.domains.transactions.repositories.dbos.CreateGroupDbo;
 import com.familymoney.domains.transactions.repositories.dbos.UpdateGroupDbo;
 import com.familymoney.domains.transactions.repositories.entitites.GroupEntity;
@@ -328,11 +327,10 @@ public class DefaultGroupRepository implements GroupRepository {
                     .and(UserGroups.USER_GROUPS.GROUP_ID.eq(groupId.value())))
             .execute();
     if (rowsAffected == 0) {
-      final String msg =
-          "User with ID '%s' is not a member of group with ID '%s'"
-              .formatted(userId.value(), groupId.value());
-      log.info(msg);
-      throw new UserIsNotMemberOfGroupException(msg);
+      log.warn(
+          "Could not remove user with ID: {} from group with ID: {}",
+          userId.value(),
+          groupId.value());
     }
   }
 

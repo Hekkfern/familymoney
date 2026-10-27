@@ -2,7 +2,6 @@ package com.familymoney.domains.transactions.services;
 
 import com.familymoney.domains.transactions.exceptions.GroupInvitationInvalidException;
 import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
-import com.familymoney.domains.transactions.exceptions.GroupOwnerNotFoundException;
 import com.familymoney.domains.transactions.exceptions.UserIsNotMemberOfGroupException;
 import com.familymoney.domains.transactions.services.data.BalanceData;
 import com.familymoney.domains.transactions.services.data.GroupData;
