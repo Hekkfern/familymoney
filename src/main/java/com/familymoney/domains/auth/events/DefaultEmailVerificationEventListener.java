@@ -23,7 +23,7 @@ public class DefaultEmailVerificationEventListener implements EmailVerificationE
     try {
       emailSenderService.sendEmailVerificationEmail(
           event.email(), event.username(), event.verificationToken());
-    } catch (final RuntimeException ignored) {
+    } catch (final RuntimeException _) {
       log.error(
           "Failed to deliver the registration email-verification message for user {}",
           event.userId());

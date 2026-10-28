@@ -23,7 +23,7 @@ public class DefaultPasswordResetEventListener implements PasswordResetEventList
     try {
       emailSenderService.sendPasswordResetEmail(
           event.email(), event.username(), event.resetToken());
-    } catch (final RuntimeException exception) {
+    } catch (final RuntimeException _) {
       log.error("Failed to deliver the password-reset message for user {}", event.userId());
     }
   }

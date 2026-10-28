@@ -56,7 +56,8 @@ public class SecurityConfig {
                     .requestMatchers(
                         api.matcher("/v*/users/**"),
                         api.matcher("/v*/groups/**"),
-                        api.matcher("/v*/transactions/**"))
+                        api.matcher("/v*/expenses/**"),
+                        api.matcher("/v*/payments/**"))
                     .authenticated()
                     .requestMatchers(api.matcher("/v*/admin/**"))
                     .hasRole(Role.ADMIN.toString())

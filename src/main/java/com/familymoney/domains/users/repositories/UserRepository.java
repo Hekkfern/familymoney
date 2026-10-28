@@ -22,10 +22,8 @@ public interface UserRepository {
    * Store a new user.
    *
    * @param data values to store.
-   * @return an {@link Optional} containing the created {@link UserEntity} when successful; empty
-   *     Optional if the creation failed (e.g., uniqueness violation).
    */
-  Optional<UserEntity> create(CreateUserDbo data);
+  void create(CreateUserDbo data);
 
   /**
    * Find a user by its identifier.
@@ -79,17 +77,15 @@ public interface UserRepository {
    * @param id the id of the user to update. Must not be null.
    * @param data a {@link UpdateUserDbo} containing fields to change. Must not be null. Only
    *     non-null fields will be applied.
-   * @return true if the update affected an existing record, false otherwise.
    */
-  boolean updateById(UserId id, UpdateUserDbo data);
+  void updateById(UserId id, UpdateUserDbo data);
 
   /**
    * Delete a user by its id.
    *
    * @param id the id of the user to delete. Must not be null.
-   * @return true if a record was deleted, false if no matching record existed.
    */
-  boolean deleteById(UserId id);
+  void deleteById(UserId id);
 
   /**
    * Retrieve a paginated list of users.

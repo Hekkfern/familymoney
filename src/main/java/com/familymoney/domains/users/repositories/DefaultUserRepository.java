@@ -8,13 +8,14 @@ import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.domains.users.types.UserName;
 import com.familymoney.generated.tables.Users;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.SortField;
-import org.jooq.impl.DSL;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -27,8 +28,8 @@ public class DefaultUserRepository implements UserRepository {
   private final DSLContext db;
 
   @Override
-  public Optional<UserEntity> create(final CreateUserDbo data) {
-    return db.insertInto(Users.USERS)
+  public void create(final CreateUserDbo data) {
+    db.insertInto(Users.USERS)
         .columns(
             Users.USERS.ID,
             Users.USERS.USERNAME,
@@ -43,17 +44,7 @@ public class DefaultUserRepository implements UserRepository {
             data.passwordHash(),
             data.isEmailVerified(),
             data.isEnabled())
-        .returning(
-            Users.USERS.ID,
-            Users.USERS.USERNAME,
-            Users.USERS.EMAIL,
-            Users.USERS.HASHED_PASSWORD,
-            Users.USERS.CREATED_AT,
-            Users.USERS.UPDATED_AT,
-            Users.USERS.IS_EMAIL_VERIFIED,
-            Users.USERS.IS_ENABLED)
-        .fetchOptional()
-        .map(UserJooqMapper::toEntity);
+        .execute();
   }
 
   @Override
@@ -122,39 +113,29 @@ public class DefaultUserRepository implements UserRepository {
   }
 
   @Override
-  public boolean updateById(final UserId id, final UpdateUserDbo data) {
-    final int rowsAffected =
-        db.update(Users.USERS)
-            .set(
-                Users.USERS.USERNAME,
-                DSL.coalesce(
-                    DSL.val(data.username() != null ? data.username().value() : null),
-                    Users.USERS.USERNAME))
-            .set(
-                Users.USERS.EMAIL,
-                DSL.coalesce(
-                    DSL.val(data.email() != null ? data.email().value() : null), Users.USERS.EMAIL))
-            .set(
-                Users.USERS.HASHED_PASSWORD,
-                DSL.coalesce(
-                    DSL.val(data.hashedPassword() != null ? data.hashedPassword() : null),
-                    Users.USERS.HASHED_PASSWORD))
-            .set(
-                Users.USERS.IS_EMAIL_VERIFIED,
-                DSL.coalesce(DSL.val(data.isEmailVerified()), Users.USERS.IS_EMAIL_VERIFIED))
-            .set(
-                Users.USERS.IS_ENABLED,
-                DSL.coalesce(DSL.val(data.isEnabled()), Users.USERS.IS_ENABLED))
-            .where(Users.USERS.ID.eq(id.value()))
-            .execute();
-    return rowsAffected > 0;
+  public void updateById(final UserId id, final UpdateUserDbo data) {
+    final Map<Field<?>, Object> changedFields = new HashMap<>();
+    if (data.username() != null) {
+      changedFields.put(Users.USERS.USERNAME, data.username().value());
+    }
+    if (data.email() != null) {
+      changedFields.put(Users.USERS.EMAIL, data.email().value());
+    }
+    if (data.hashedPassword() != null) {
+      changedFields.put(Users.USERS.HASHED_PASSWORD, data.hashedPassword());
+    }
+    if (data.isEmailVerified() != null) {
+      changedFields.put(Users.USERS.IS_EMAIL_VERIFIED, data.isEmailVerified());
+    }
+    if (data.isEnabled() != null) {
+      changedFields.put(Users.USERS.IS_ENABLED, data.isEnabled());
+    }
+    db.update(Users.USERS).set(changedFields).where(Users.USERS.ID.eq(id.value())).execute();
   }
 
   @Override
-  public boolean deleteById(final UserId id) {
-    final int rowsAffected =
-        db.deleteFrom(Users.USERS).where(Users.USERS.ID.eq(id.value())).execute();
-    return rowsAffected > 0;
+  public void deleteById(final UserId id) {
+    db.deleteFrom(Users.USERS).where(Users.USERS.ID.eq(id.value())).execute();
   }
 
   @Override
