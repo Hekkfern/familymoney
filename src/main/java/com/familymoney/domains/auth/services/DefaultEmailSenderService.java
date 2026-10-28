@@ -10,6 +10,7 @@ import com.familymoney.properties.AppProperties;
 import com.familymoney.properties.MailSenderProperties;
 import com.familymoney.properties.ResetPasswordProperties;
 import jakarta.mail.internet.MimeMessage;
+import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -39,7 +40,8 @@ public class DefaultEmailSenderService implements EmailSenderService {
       final UserName username,
       final EmailVerificationToken verificationToken) {
     final MimeMessage mimeMessage = mailSender.createMimeMessage();
-    final MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, "UTF-8");
+    final MimeMessageHelper mimeMessageHelper =
+        new MimeMessageHelper(mimeMessage, StandardCharsets.UTF_8.name());
 
     try {
       mimeMessageHelper.setFrom(
@@ -58,8 +60,8 @@ public class DefaultEmailSenderService implements EmailSenderService {
       mimeMessageHelper.setText(processedString, true);
 
       mailSender.send(mimeMessage);
-    } catch (final Exception _) {
-      throw new RuntimeException("Failed to send email verification email");
+    } catch (final Exception e) {
+      throw new RuntimeException("Failed to send email verification email", e);
     }
   }
 
@@ -67,7 +69,8 @@ public class DefaultEmailSenderService implements EmailSenderService {
   public void sendPasswordResetEmail(
       final Email toEmail, final UserName username, final PasswordResetToken resetToken) {
     final MimeMessage mimeMessage = mailSender.createMimeMessage();
-    final MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, "UTF-8");
+    final MimeMessageHelper mimeMessageHelper =
+        new MimeMessageHelper(mimeMessage, StandardCharsets.UTF_8.name());
 
     try {
       mimeMessageHelper.setFrom(

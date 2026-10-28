@@ -557,7 +557,8 @@ class DefaultAuthServiceTest {
       when(jwtUtils.generateAccessToken(any(UserId.class), any(TokenFamily.class)))
           .thenReturn(AccessToken.fromString(FakeGenerator.accessToken()));
 
-      assertThrows(RefreshTokenNotFoundException.class, () -> authService.refreshTokens(refreshToken));
+      assertThrows(
+          RefreshTokenNotFoundException.class, () -> authService.refreshTokens(refreshToken));
     }
 
     @Test
@@ -825,7 +826,8 @@ class DefaultAuthServiceTest {
           .updateByUserId(any(UserId.class), any(UpdateEmailVerificationTokenDbo.class));
 
       assertThrows(
-          VerificationTokenNotFoundException.class, () -> authService.resendVerificationEmail(email));
+          VerificationTokenNotFoundException.class,
+          () -> authService.resendVerificationEmail(email));
 
       verify(emailVerificationRepository, never()).create(any(CreateEmailVerificationDbo.class));
       verify(emailSenderService, never())

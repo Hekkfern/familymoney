@@ -95,7 +95,6 @@ public class DefaultAuthService implements AuthService {
   @Override
   public void registerUser(final UserName username, final Email email, final Password password) {
     log.trace("registerUser() started");
-    // Create user
     final UserId userId = UserId.generate();
     try {
       userRepository
@@ -110,24 +109,17 @@ public class DefaultAuthService implements AuthService {
       }
       throw new UserAlreadyExistsException(USER_ALREADY_EXISTS_MESSAGE, exception);
     }
-    // Assign user permissions (default role)
     final boolean defaultRoleAssigned = roleRepository.setRoleForUserId(userId, Role.USER);
     if (!defaultRoleAssigned) {
       throw new DatabaseExecutionException("Could not assign the default role to the user");
     }
-    // Generate and save verification token to database
     final EmailVerificationToken emailVerificationToken = EmailVerificationToken.generate();
-    emailVerificationRepository
-        .create(
-            new CreateEmailVerificationDbo(
-                userId,
-                emailVerificationToken,
-                ExpirationTime.of(
-                    Instant.now(clock).plus(emailVerificationProperties.tokenDuration()))))
-        .orElseThrow(
-            () ->
-                new DatabaseExecutionException(
-                    "Could not create email verification token in the database"));
+    emailVerificationRepository.create(
+        new CreateEmailVerificationDbo(
+            userId,
+            emailVerificationToken,
+            ExpirationTime.of(
+                Instant.now(clock).plus(emailVerificationProperties.tokenDuration()))));
     eventPublisher.publishEvent(
         new EmailVerificationRequestedEvent(userId, email, username, emailVerificationToken));
     log.trace("registerUser() completed");
@@ -161,24 +153,16 @@ public class DefaultAuthService implements AuthService {
     if (invalidCredentials) {
       throw new BadCredentialsException("Invalid credentials");
     }
-    // Generate family ID for the tokens of this session
     final TokenFamily family = TokenFamily.generate();
-    // Generate access token
     final AccessToken accessToken = jwtUtils.generateAccessToken(userDb.id(), family);
-    // Generate refresh token
     final RefreshToken refreshToken = RefreshToken.generate();
-    // Save refresh token in database
-    refreshTokenRepository
-        .create(
-            new CreateRefreshTokenDbo(
-                UUIDGenerator.generate(),
-                userDb.id(),
-                refreshToken,
-                family,
-                ExpirationTime.of(Instant.now(clock).plus(jwtProperties.refreshTokenDuration()))))
-        .orElseThrow(
-            () -> new DatabaseExecutionException("Could not create refresh token in the database"));
-    // Build response with both tokens
+    refreshTokenRepository.create(
+        new CreateRefreshTokenDbo(
+            UUIDGenerator.generate(),
+            userDb.id(),
+            refreshToken,
+            family,
+            ExpirationTime.of(Instant.now(clock).plus(jwtProperties.refreshTokenDuration()))));
     log.trace("loginUser() finished");
     return new TokenPair(accessToken, refreshToken);
   }
@@ -187,28 +171,23 @@ public class DefaultAuthService implements AuthService {
   @Override
   public TokenPair refreshTokens(final RefreshToken refreshToken) {
     log.trace("refreshTokens() started");
-    // Find the refresh token in the database
     final Optional<RefreshTokenEntity> refreshTokenDbOptional =
         refreshTokenRepository.findByToken(refreshToken);
     if (refreshTokenDbOptional.isEmpty()) {
-      // check if the refresh token has already been used (refresh token reuse detection)
       final Optional<UsedRefreshTokenEntity> usedRefreshToken =
           usedRefreshTokenRepository.findByToken(refreshToken);
       if (usedRefreshToken.isPresent()) {
-        // reuse confirmed. blacklist all the family
         blacklistFamily(usedRefreshToken.get().family());
         throw new RefreshTokenReuseDetectedException();
       }
       throw new RefreshTokenNotFoundException("Refresh token not found");
     }
     final RefreshTokenEntity refreshTokenDb = refreshTokenDbOptional.get();
-    // Check if the refresh token is expired
     if (refreshTokenDb.expiresAt().isExpired(clock)) {
       final String msg = "Expired refresh token";
       log.info(msg);
       throw new RefreshTokenInvalidException(msg);
     }
-    // check if the user is enabled
     final UserEntity userDb =
         userRepository
             .findById(refreshTokenDb.userId())
@@ -216,26 +195,22 @@ public class DefaultAuthService implements AuthService {
     if (!userDb.isEnabled()) {
       throw new UserNotEnabledException();
     }
-    // Check if the family token is blacklisted
     if (tokenFamilyBlacklistRepository.exists(refreshTokenDb.family())) {
       final String msg = "Token family is blacklisted";
       log.info(msg);
       throw new BlacklistedFamilyException(msg);
     }
-    // add the token to the list of used refresh tokens
-    final Optional<UsedRefreshTokenEntity> usedRefreshToken =
-        usedRefreshTokenRepository.create(
-            new CreateUsedRefreshTokenDbo(
-                refreshToken, refreshTokenDb.family(), Instant.now(clock)));
-    if (usedRefreshToken.isEmpty()) {
+    if (usedRefreshTokenRepository.findByToken(refreshToken).isPresent()) {
+      /* If the refresh token has already been used, blacklist the entire family so the token cannot longer be used to
+      refresh the access token. This is a security measure to prevent token reuse attacks. */
       blacklistFamily(refreshTokenDb.family());
       throw new RefreshTokenReuseDetectedException();
     }
-    // generate new tokens
+    usedRefreshTokenRepository.create(
+        new CreateUsedRefreshTokenDbo(refreshToken, refreshTokenDb.family(), Instant.now(clock)));
     final AccessToken newAccessToken =
         jwtUtils.generateAccessToken(refreshTokenDb.userId(), refreshTokenDb.family());
     final RefreshToken newRefreshToken = RefreshToken.generate();
-    // Save new refresh token in database
     refreshTokenRepository.updateByToken(
         refreshToken,
         UpdateRefreshTokenDbo.builder()
@@ -243,24 +218,20 @@ public class DefaultAuthService implements AuthService {
             .expiresAt(
                 ExpirationTime.of(Instant.now(clock).plus(jwtProperties.refreshTokenDuration())))
             .build());
-    // Build response with both tokens
     log.trace("refreshTokens() finished");
     return new TokenPair(newAccessToken, newRefreshToken);
   }
 
   @Override
   public void verifyEmail(final EmailVerificationToken token) {
-    // Find the verification token in the database
     final EmailVerificationEntity emailVerificationTokenDb =
         emailVerificationRepository
             .findByToken(token)
             .orElseThrow(
                 () -> new VerificationTokenNotFoundException("Invalid email verification token"));
-    // Check if the token is expired
     if (emailVerificationTokenDb.expiresAt().isExpired(clock)) {
       throw new VerificationTokenExpiredException("Email verification token has expired");
     }
-    // Verify the user's email
     final boolean userUpdated =
         userRepository.updateById(
             emailVerificationTokenDb.userId(),
@@ -269,18 +240,11 @@ public class DefaultAuthService implements AuthService {
       throw new DatabaseExecutionException(
           "Could not set the is_email_verified column of the user in the database");
     }
-    // Delete all the verification tokens assigned to this user from the database
-    final boolean tokenDeleted =
-        emailVerificationRepository.deleteByUserId(emailVerificationTokenDb.userId());
-    if (!tokenDeleted) {
-      throw new DatabaseExecutionException(
-          "Could not delete the email verification token in the database");
-    }
+    emailVerificationRepository.deleteByUserId(emailVerificationTokenDb.userId());
   }
 
   @Override
   public void resendVerificationEmail(final Email email) {
-    // Look for user by email
     final Optional<UserEntity> user = userRepository.findByEmail(email);
     if (user.isEmpty()) {
       return;
@@ -289,8 +253,8 @@ public class DefaultAuthService implements AuthService {
     if (userDb.isEmailVerified()) {
       return;
     }
-    // check minimum wait time between requests. If the current instant is before the createdAt
-    // plus the configured wait time, the user is requesting a new verification email too soon.
+    /* If the current instant is before the createdAt
+    plus the configured wait time, the user is requesting a new verification email too soon. */
     final Optional<EmailVerificationEntity> oldEmailVerificationTokenDb =
         emailVerificationRepository.findByUserId(userDb.id());
     final Instant now = Instant.now(clock);
@@ -301,7 +265,6 @@ public class DefaultAuthService implements AuthService {
     if (now.isBefore(nextRequestAt)) {
       throw new NewEmailVerificationTooSoonException(nextRequestAt);
     }
-    // Generate and save verification token to database
     final EmailVerificationToken newEmailVerificationToken = EmailVerificationToken.generate();
     emailVerificationRepository.updateByUserId(
         userDb.id(),
@@ -312,7 +275,6 @@ public class DefaultAuthService implements AuthService {
                     Instant.now(clock).plus(emailVerificationProperties.tokenDuration())))
             .lastSentAt(Instant.now(clock))
             .build());
-    // Send verification email
     emailSenderService.sendEmailVerificationEmail(
         email, userDb.username(), newEmailVerificationToken);
   }
@@ -398,29 +360,22 @@ public class DefaultAuthService implements AuthService {
   @Transactional
   @Override
   public void logoutUser(final RefreshToken refreshToken) {
-    // Find the refresh token in the database
     final RefreshTokenEntity refreshTokenDb =
         refreshTokenRepository
             .findByToken(refreshToken)
             .orElseThrow(
                 () -> new RefreshTokenNotFoundException("Refresh token not found in the database"));
-    // Check if the refresh token is expired
     if (refreshTokenDb.expiresAt().isExpired(clock)) {
       final String msg = "Expired refresh token";
       log.trace(msg);
       throw new RefreshTokenInvalidException(msg);
     }
-    // Check if the family token is blacklisted
     if (tokenFamilyBlacklistRepository.exists(refreshTokenDb.family())) {
       final String msg = "Token family is blacklisted";
       log.info(msg);
       throw new BlacklistedFamilyException(msg);
     }
-    // Invalidate refresh token from the database
-    final boolean refreshTokenDeleted = refreshTokenRepository.deleteByToken(refreshToken);
-    if (!refreshTokenDeleted) {
-      throw new DatabaseExecutionException("Could not delete the refresh token in the database");
-    }
+    refreshTokenRepository.deleteByToken(refreshToken);
     blacklistFamily(refreshTokenDb.family());
   }
 

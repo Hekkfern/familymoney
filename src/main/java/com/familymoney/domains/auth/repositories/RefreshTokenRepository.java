@@ -32,7 +32,6 @@ public interface RefreshTokenRepository {
    * @param token the token to update. Must not be null.
    * @param data the update payload containing fields to change. Must not be null. Only non-null
    *     fields in {@code data} will be modified.
-   * @throws com.familymoney.domains.auth.exceptions.RefreshTokenNotFoundException if no token matches
    */
   void updateByToken(RefreshToken token, UpdateRefreshTokenDbo data);
 
@@ -42,7 +41,6 @@ public interface RefreshTokenRepository {
    * @param userId the id of the user whose tokens should be updated. Must not be null.
    * @param data the update payload containing fields to change. Must not be null. Only non-null
    *     fields in {@code data} will be modified.
-   * @throws com.familymoney.domains.auth.exceptions.RefreshTokenNotFoundException if no token matches
    */
   void updateByUserId(UserId userId, UpdateRefreshTokenDbo data);
 

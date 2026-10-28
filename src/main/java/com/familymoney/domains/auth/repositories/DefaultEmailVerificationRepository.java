@@ -14,7 +14,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.springframework.stereotype.Repository;
