@@ -45,7 +45,6 @@ import com.familymoney.domains.auth.repositories.dbos.UpdateRefreshTokenDbo;
 import com.familymoney.domains.auth.repositories.entitites.EmailVerificationEntity;
 import com.familymoney.domains.auth.repositories.entitites.PasswordResetEntity;
 import com.familymoney.domains.auth.repositories.entitites.RefreshTokenEntity;
-import com.familymoney.domains.auth.repositories.entitites.TokenFamilyBlacklistEntity;
 import com.familymoney.domains.auth.repositories.entitites.UsedRefreshTokenEntity;
 import com.familymoney.domains.auth.services.data.TokenPair;
 import com.familymoney.domains.auth.types.AccessToken;
@@ -128,35 +127,6 @@ class DefaultAuthServiceTest {
 
   @InjectMocks private DefaultAuthService authService;
 
-  private void mockUserRepositoryCreate() {
-    when(userRepository.create(any(CreateUserDbo.class)))
-        .thenAnswer(
-            invocation -> {
-              CreateUserDbo dto = invocation.getArgument(0, CreateUserDbo.class);
-              return Optional.of(
-                  new UserEntity(
-                      dto.id(), // return the same UserId received
-                      dto.username(),
-                      dto.email(),
-                      dto.passwordHash(), // use dto.passwordHash() or provide a test value
-                      now,
-                      now,
-                      false,
-                      true));
-            });
-  }
-
-  private void mockEmailVerificationRepositoryCreate() {
-    when(emailVerificationRepository.create(any(CreateEmailVerificationDbo.class)))
-        .thenAnswer(
-            invocation -> {
-              CreateEmailVerificationDbo dto =
-                  invocation.getArgument(0, CreateEmailVerificationDbo.class);
-              return Optional.of(
-                  new EmailVerificationEntity(dto.userId(), now, now, dto.expiresAt(), now));
-            });
-  }
-
   private void mockEmailVerificationRepositoryFindByUserId() {
     when(emailVerificationRepository.findByUserId(any(UserId.class)))
         .thenAnswer(
@@ -165,17 +135,6 @@ class DefaultAuthServiceTest {
               return Optional.of(
                   new EmailVerificationEntity(
                       userid, now, now, ExpirationTime.of(now.plusSeconds(3600)), now));
-            });
-  }
-
-  private void mockRefreshTokenRepositoryCreate() {
-    when(refreshTokenRepository.create(any(CreateRefreshTokenDbo.class)))
-        .thenAnswer(
-            invocation -> {
-              CreateRefreshTokenDbo dto = invocation.getArgument(0, CreateRefreshTokenDbo.class);
-              return Optional.of(
-                  new RefreshTokenEntity(
-                      dto.id(), dto.userId(), now, now, dto.expiresAt(), dto.family()));
             });
   }
 
@@ -191,8 +150,6 @@ class DefaultAuthServiceTest {
                       UserName.fromString(FakeGenerator.username()),
                       email,
                       "hashed-password",
-                      now,
-                      now,
                       isEmailVerified,
                       isEnabled));
             });
@@ -225,8 +182,6 @@ class DefaultAuthServiceTest {
                       UserName.fromString(FakeGenerator.username()),
                       Email.fromString(FakeGenerator.email()),
                       "hashed-password",
-                      now,
-                      now,
                       true,
                       isEnabled));
             });
@@ -249,18 +204,18 @@ class DefaultAuthServiceTest {
 
     @Test
     void succeeds_when_register_user_for_the_first_time() {
+      // given
+      when(permissionsRepository.setRoleForUserId(any(UserId.class), eq(Role.USER)))
+          .thenReturn(true);
+
+      // when
       final UserName username = UserName.fromString(FakeGenerator.username());
       final Email email = Email.fromString(FakeGenerator.email());
       final Password password = Password.fromString(FakeGenerator.password());
-
-      mockUserRepositoryCreate();
-      when(permissionsRepository.setRoleForUserId(any(UserId.class), eq(Role.USER)))
-          .thenReturn(true);
-      mockEmailVerificationRepositoryCreate();
-
       assertThatCode(() -> authService.registerUser(username, email, password))
           .doesNotThrowAnyException();
 
+      // then
       final ArgumentCaptor<CreateEmailVerificationDbo> verificationDtoCaptor =
           ArgumentCaptor.forClass(CreateEmailVerificationDbo.class);
       final ArgumentCaptor<EmailVerificationRequestedEvent> eventCaptor =

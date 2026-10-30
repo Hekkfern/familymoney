@@ -16,10 +16,6 @@ public final class RefreshTokenJooqMapper {
   }
 
   public static RefreshTokenEntity toEntity(final Record r) {
-    final OffsetDateTime createdAt =
-        Objects.requireNonNull(r.get(RefreshTokens.REFRESH_TOKENS.CREATED_AT));
-    final OffsetDateTime updatedAt =
-        Objects.requireNonNull(r.get(RefreshTokens.REFRESH_TOKENS.UPDATED_AT));
     final OffsetDateTime expiresAt =
         Objects.requireNonNull(r.get(RefreshTokens.REFRESH_TOKENS.EXPIRES_AT));
     final TokenFamily family =
@@ -28,8 +24,6 @@ public final class RefreshTokenJooqMapper {
     return new RefreshTokenEntity(
         r.get(RefreshTokens.REFRESH_TOKENS.ID),
         UserId.fromUuid(r.get(RefreshTokens.REFRESH_TOKENS.USER_ID)),
-        createdAt.toInstant(),
-        updatedAt.toInstant(),
         ExpirationTime.of(expiresAt),
         family);
   }

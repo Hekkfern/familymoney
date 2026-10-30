@@ -22,10 +22,6 @@ public final class PasswordResetJooqMapper {
    * @throws NullPointerException when a required database field is null
    */
   public static PasswordResetEntity toEntity(final Record r) {
-    final OffsetDateTime createdAt =
-        Objects.requireNonNull(r.get(PasswordResetTokens.PASSWORD_RESET_TOKENS.CREATED_AT));
-    final OffsetDateTime updatedAt =
-        Objects.requireNonNull(r.get(PasswordResetTokens.PASSWORD_RESET_TOKENS.UPDATED_AT));
     final OffsetDateTime expiresAt =
         Objects.requireNonNull(r.get(PasswordResetTokens.PASSWORD_RESET_TOKENS.EXPIRES_AT));
     final OffsetDateTime lastSentAt =
@@ -33,8 +29,6 @@ public final class PasswordResetJooqMapper {
 
     return new PasswordResetEntity(
         UserId.fromUuid(r.get(PasswordResetTokens.PASSWORD_RESET_TOKENS.USER_ID)),
-        createdAt.toInstant(),
-        updatedAt.toInstant(),
         ExpirationTime.of(expiresAt),
         lastSentAt.toInstant());
   }

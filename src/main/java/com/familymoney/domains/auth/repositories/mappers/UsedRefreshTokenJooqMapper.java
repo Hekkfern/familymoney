@@ -17,8 +17,6 @@ public final class UsedRefreshTokenJooqMapper {
             Objects.requireNonNull(r.get(UsedRefreshTokens.USED_REFRESH_TOKENS.FAMILY)));
     final OffsetDateTime usedAt =
         Objects.requireNonNull(r.get(UsedRefreshTokens.USED_REFRESH_TOKENS.USED_AT));
-    final OffsetDateTime createdAt =
-        Objects.requireNonNull(r.get(UsedRefreshTokens.USED_REFRESH_TOKENS.CREATED_AT));
-    return new UsedRefreshTokenEntity(family, usedAt.toInstant(), createdAt.toInstant());
+    return new UsedRefreshTokenEntity(family, usedAt.toInstant());
   }
 }
