@@ -11,14 +11,14 @@ public final class UsedRefreshTokenJooqMapper {
 
   private UsedRefreshTokenJooqMapper() {}
 
-  public static UsedRefreshTokenEntity toEntity(final Record record) {
+  public static UsedRefreshTokenEntity toEntity(final Record r) {
     final TokenFamily family =
         TokenFamily.fromUuid(
-            Objects.requireNonNull(record.get(UsedRefreshTokens.USED_REFRESH_TOKENS.FAMILY)));
+            Objects.requireNonNull(r.get(UsedRefreshTokens.USED_REFRESH_TOKENS.FAMILY)));
     final OffsetDateTime usedAt =
-        Objects.requireNonNull(record.get(UsedRefreshTokens.USED_REFRESH_TOKENS.USED_AT));
+        Objects.requireNonNull(r.get(UsedRefreshTokens.USED_REFRESH_TOKENS.USED_AT));
     final OffsetDateTime createdAt =
-        Objects.requireNonNull(record.get(UsedRefreshTokens.USED_REFRESH_TOKENS.CREATED_AT));
+        Objects.requireNonNull(r.get(UsedRefreshTokens.USED_REFRESH_TOKENS.CREATED_AT));
     return new UsedRefreshTokenEntity(family, usedAt.toInstant(), createdAt.toInstant());
   }
 }

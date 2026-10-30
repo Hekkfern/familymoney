@@ -20,19 +20,19 @@ public final class PaymentJooqMapper {
   /**
    * Maps a payment record to an entity.
    *
-   * @param record the payment database record
+   * @param r the payment database record
    * @return the mapped payment entity
    */
-  public static PaymentEntity toEntity(final Record record) {
-    final OffsetDateTime doneAt = Objects.requireNonNull(record.get(Payments.PAYMENTS.DONE_AT));
+  public static PaymentEntity toEntity(final Record r) {
+    final OffsetDateTime doneAt = Objects.requireNonNull(r.get(Payments.PAYMENTS.DONE_AT));
 
     return new PaymentEntity(
-        PaymentId.fromUuid(record.get(Payments.PAYMENTS.ID)),
-        Description.of(record.get(Payments.PAYMENTS.DESCRIPTION)),
-        record.get(Payments.PAYMENTS.AMOUNT),
-        UserId.fromUuid(record.get(Payments.PAYMENTS.FROM_USER)),
-        UserId.fromUuid(record.get(Payments.PAYMENTS.TO_USER)),
-        GroupId.fromUuid(record.get(Payments.PAYMENTS.GROUP_ID)),
+        PaymentId.fromUuid(r.get(Payments.PAYMENTS.ID)),
+        Description.of(r.get(Payments.PAYMENTS.DESCRIPTION)),
+        r.get(Payments.PAYMENTS.AMOUNT),
+        UserId.fromUuid(r.get(Payments.PAYMENTS.FROM_USER)),
+        UserId.fromUuid(r.get(Payments.PAYMENTS.TO_USER)),
+        GroupId.fromUuid(r.get(Payments.PAYMENTS.GROUP_ID)),
         doneAt.toInstant());
   }
 }

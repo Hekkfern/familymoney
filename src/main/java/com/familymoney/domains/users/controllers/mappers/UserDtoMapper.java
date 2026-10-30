@@ -14,7 +14,6 @@ public final class UserDtoMapper {
         userData.id().value(),
         userData.username().value(),
         userData.email().value(),
-        userData.createdAt(),
         userData.isEmailVerified(),
         userData.isEnabled());
   }

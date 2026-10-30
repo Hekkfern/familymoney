@@ -15,6 +15,14 @@ public record UpdateExpenseData(
     @Nullable Map<UserId, BigDecimal> shares,
     @Nullable Map<UserId, BigDecimal> payers) {
 
+  public UpdateExpenseData {
+    final boolean isEmptyUpdate =
+        description == null && doneAt == null && shares == null && payers == null;
+    if (isEmptyUpdate) {
+      throw new IllegalArgumentException("At least one field must be provided for update");
+    }
+  }
+
   public boolean isEmpty() {
     return description == null && doneAt == null && shares == null && payers == null;
   }

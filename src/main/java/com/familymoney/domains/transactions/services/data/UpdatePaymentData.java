@@ -15,6 +15,14 @@ public record UpdatePaymentData(
     @Nullable UserId from,
     @Nullable UserId to) {
 
+  public UpdatePaymentData {
+    final boolean isEmptyUpdate =
+        description == null && doneAt == null && amount == null && from == null && to == null;
+    if (isEmptyUpdate) {
+      throw new IllegalArgumentException("At least one field must be provided for update");
+    }
+  }
+
   public boolean isEmpty() {
     return description == null && doneAt == null && amount == null && from == null && to == null;
   }

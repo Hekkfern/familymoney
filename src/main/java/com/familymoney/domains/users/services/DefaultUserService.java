@@ -45,16 +45,14 @@ public class DefaultUserService implements UserService {
   @Transactional
   @Override
   public void updateUserInfo(final UserId userId, final UpdateUserData data) {
-    if (!data.isEmpty()) {
-      userRepository.updateById(
-          userId,
-          UpdateUserDbo.builder()
-              .username(data.username())
-              .email(data.email())
-              .hashedPassword(
-                  data.password() != null ? passwordEncoder.encode(data.password().value()) : null)
-              .build());
-    }
+    userRepository.updateById(
+        userId,
+        UpdateUserDbo.builder()
+            .username(data.username())
+            .email(data.email())
+            .hashedPassword(
+                data.password() != null ? passwordEncoder.encode(data.password().value()) : null)
+            .build());
   }
 
   @Override
@@ -77,26 +75,18 @@ public class DefaultUserService implements UserService {
     return roleRepository.getRoleByUserId(userId);
   }
 
+  @Transactional
   @Override
   public void createAdminUser(final UserName username, final Email email, final Password password) {
-    // Check if user already exists
     if (userRepository.existsByEmailOrUsername(email, username)) {
       log.info("Admin user already exists, skipping creation");
       return;
     }
-    // Create user
     final UserId userId = UserId.generate();
-    final Optional<UserEntity> userDbOpt =
-        userRepository.create(
-            new CreateUserDbo(
-                userId, username, email, passwordEncoder.encode(password.value()), true, true));
-    if (userDbOpt.isEmpty()) {
-      log.error("Could not create user in the database");
-      return;
-    }
-    // Assign admin permissions
+    userRepository.create(
+        new CreateUserDbo(
+            userId, username, email, passwordEncoder.encode(password.value()), true, true));
     roleRepository.setRoleForUserId(userId, Role.ADMIN);
-    // verify email
     userRepository.updateById(userId, UpdateUserDbo.builder().isEmailVerified(true).build());
     log.info("Admin user created successfully");
   }

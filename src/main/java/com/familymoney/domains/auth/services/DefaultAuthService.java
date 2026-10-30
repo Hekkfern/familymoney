@@ -97,12 +97,9 @@ public class DefaultAuthService implements AuthService {
     log.trace("registerUser() started");
     final UserId userId = UserId.generate();
     try {
-      userRepository
-          .create(
-              new CreateUserDbo(
-                  userId, username, email, passwordEncoder.encode(password.value()), true, false))
-          .orElseThrow(
-              () -> new DatabaseExecutionException("Could not create user in the database"));
+      userRepository.create(
+          new CreateUserDbo(
+              userId, username, email, passwordEncoder.encode(password.value()), true, false));
     } catch (final DuplicateKeyException exception) {
       if (!isUserIdentityConflict(exception)) {
         throw new DatabaseExecutionException("Could not create user in the database", exception);
@@ -232,14 +229,8 @@ public class DefaultAuthService implements AuthService {
     if (emailVerificationTokenDb.expiresAt().isExpired(clock)) {
       throw new VerificationTokenExpiredException("Email verification token has expired");
     }
-    final boolean userUpdated =
-        userRepository.updateById(
-            emailVerificationTokenDb.userId(),
-            UpdateUserDbo.builder().isEmailVerified(true).build());
-    if (!userUpdated) {
-      throw new DatabaseExecutionException(
-          "Could not set the is_email_verified column of the user in the database");
-    }
+    userRepository.updateById(
+        emailVerificationTokenDb.userId(), UpdateUserDbo.builder().isEmailVerified(true).build());
     emailVerificationRepository.deleteByUserId(emailVerificationTokenDb.userId());
   }
 
@@ -343,15 +334,11 @@ public class DefaultAuthService implements AuthService {
       throw new ResetPasswordTokenExpiredException("Password reset token expired");
     }
 
-    final boolean passwordUpdated =
-        userRepository.updateById(
-            resetToken.userId(),
-            UpdateUserDbo.builder()
-                .hashedPassword(passwordEncoder.encode(newPassword.value()))
-                .build());
-    if (!passwordUpdated) {
-      throw new DatabaseExecutionException("Could not update the user password in the database");
-    }
+    userRepository.updateById(
+        resetToken.userId(),
+        UpdateUserDbo.builder()
+            .hashedPassword(passwordEncoder.encode(newPassword.value()))
+            .build());
 
     passwordResetRepository.deleteByUserId(resetToken.userId());
     refreshTokenRepository.deleteByUserId(resetToken.userId());

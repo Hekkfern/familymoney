@@ -14,7 +14,6 @@ public class UserDataMapper {
         entity.id(),
         entity.username(),
         entity.email(),
-        entity.createdAt(),
         entity.isEmailVerified(),
         entity.isEnabled());
   }

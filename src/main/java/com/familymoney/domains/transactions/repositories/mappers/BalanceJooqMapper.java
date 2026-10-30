@@ -15,13 +15,13 @@ public final class BalanceJooqMapper {
     /* this class is not intended to be instantiated */
   }
 
-  public static BalanceEntity toEntity(final Record record) {
+  public static BalanceEntity toEntity(final Record r) {
     return new BalanceEntity(
-        GroupId.fromUuid(record.get(GroupBalances.GROUP_BALANCES.GROUP_ID)),
+        GroupId.fromUuid(r.get(GroupBalances.GROUP_BALANCES.GROUP_ID)),
         Money.of(
-            record.get(GroupBalances.GROUP_BALANCES.AMOUNT),
-            Monetary.getCurrency(record.get(Groups.GROUPS.CURRENCY_CODE))),
-        UserId.fromUuid(record.get(GroupBalances.GROUP_BALANCES.USER_ID_1)),
-        UserId.fromUuid(record.get(GroupBalances.GROUP_BALANCES.USER_ID_2)));
+            r.get(GroupBalances.GROUP_BALANCES.AMOUNT),
+            Monetary.getCurrency(r.get(Groups.GROUPS.CURRENCY_CODE))),
+        UserId.fromUuid(r.get(GroupBalances.GROUP_BALANCES.USER_ID_1)),
+        UserId.fromUuid(r.get(GroupBalances.GROUP_BALANCES.USER_ID_2)));
   }
 }
