@@ -19,7 +19,6 @@ import com.familymoney.domains.transactions.services.data.GroupData;
 import com.familymoney.domains.transactions.services.data.MemberData;
 import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.GroupId;
-import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import com.familymoney.domains.transactions.types.GroupName;
 import com.familymoney.domains.users.services.UserService;
 import com.familymoney.domains.users.types.UserId;
@@ -481,9 +480,6 @@ class DefaultGroupControllerTest {
     @Test
     @WithMockUserId(userId = USER_ID)
     void returns_invitation_token() {
-      when(groupService.sendInvitationToken(any(), any()))
-          .thenReturn(GroupInvitationToken.fromString(VALID_TOKEN));
-
       final InvitationTokenDto response =
           client
               .get()
@@ -583,8 +579,8 @@ class DefaultGroupControllerTest {
               .returnResult()
               .getResponseBody();
 
-      assertThat(response).isNotNull();
       assertThat(response)
+          .isNotNull()
           .containsExactlyElementsOf(
               users.stream()
                   .map(user -> new MemberDto(user.userId().value(), user.username().value()))

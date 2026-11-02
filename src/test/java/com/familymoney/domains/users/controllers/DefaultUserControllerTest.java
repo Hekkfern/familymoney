@@ -63,7 +63,7 @@ class DefaultUserControllerTest {
       final UserName username = UserName.fromString(FakeGenerator.username());
       final Email email = Email.fromString(FakeGenerator.email());
       when(userService.getUserData(any()))
-          .thenReturn(Optional.of(new UserData(userId, username, email, now, true, true)));
+          .thenReturn(Optional.of(new UserData(userId, username, email, true, true)));
 
       final UserDto data =
           client
@@ -78,7 +78,6 @@ class DefaultUserControllerTest {
       assertNotNull(data);
       assertEquals(username.value(), data.username());
       assertEquals(email.value(), data.email());
-      assertEquals(now, data.createdAt());
     }
 
     @Test

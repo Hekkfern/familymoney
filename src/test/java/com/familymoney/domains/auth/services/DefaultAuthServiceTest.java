@@ -38,7 +38,6 @@ import com.familymoney.domains.auth.repositories.dbos.CreateEmailVerificationDbo
 import com.familymoney.domains.auth.repositories.dbos.CreatePasswordResetDbo;
 import com.familymoney.domains.auth.repositories.dbos.CreateRefreshTokenDbo;
 import com.familymoney.domains.auth.repositories.dbos.CreateTokenFamilyBlacklistDbo;
-import com.familymoney.domains.auth.repositories.dbos.CreateUsedRefreshTokenDbo;
 import com.familymoney.domains.auth.repositories.dbos.UpdateEmailVerificationTokenDbo;
 import com.familymoney.domains.auth.repositories.dbos.UpdatePasswordResetDbo;
 import com.familymoney.domains.auth.repositories.dbos.UpdateRefreshTokenDbo;
@@ -134,7 +133,7 @@ class DefaultAuthServiceTest {
               UserId userid = invocation.getArgument(0, UserId.class);
               return Optional.of(
                   new EmailVerificationEntity(
-                      userid, now, now, ExpirationTime.of(now.plusSeconds(3600)), now));
+                      userid, ExpirationTime.of(now.plusSeconds(3600)), now));
             });
   }
 
@@ -164,8 +163,6 @@ class DefaultAuthServiceTest {
                   new RefreshTokenEntity(
                       UUID.randomUUID(),
                       UserId.generate(),
-                      now,
-                      now,
                       ExpirationTime.of(now.plusSeconds(3600)),
                       TokenFamily.generate()));
             });
@@ -195,7 +192,7 @@ class DefaultAuthServiceTest {
                   invocation.getArgument(0, EmailVerificationToken.class);
               return Optional.of(
                   new EmailVerificationEntity(
-                      UserId.generate(), now, now, ExpirationTime.of(now.plusSeconds(3600)), now));
+                      UserId.generate(), ExpirationTime.of(now.plusSeconds(3600)), now));
             });
   }
 
@@ -244,14 +241,15 @@ class DefaultAuthServiceTest {
       final Email email = Email.fromString(FakeGenerator.email());
       final Password password = Password.fromString(FakeGenerator.password());
 
-      when(userRepository.create(any(CreateUserDbo.class)))
-          .thenThrow(
+      doThrow(
               new DuplicateKeyException(
                   "Concurrent duplicate user",
                   new SQLException(
                       "duplicate key value violates unique constraint \""
                           + identityConstraint
-                          + "\"")));
+                          + "\"")))
+          .when(userRepository)
+          .create(any(CreateUserDbo.class));
 
       assertThrows(
           UserAlreadyExistsException.class,
@@ -271,12 +269,13 @@ class DefaultAuthServiceTest {
       final Email email = Email.fromString(FakeGenerator.email());
       final Password password = Password.fromString(FakeGenerator.password());
 
-      when(userRepository.create(any(CreateUserDbo.class)))
-          .thenThrow(
+      doThrow(
               new DuplicateKeyException(
                   "Duplicate generated user ID",
                   new SQLException(
-                      "duplicate key value violates unique constraint \"users_pkey\"")));
+                      "duplicate key value violates unique constraint \"users_pkey\"")))
+          .when(userRepository)
+          .create(any(CreateUserDbo.class));
 
       assertThrows(
           DatabaseExecutionException.class,
@@ -288,29 +287,10 @@ class DefaultAuthServiceTest {
     }
 
     @Test
-    void throws_when_user_table_fails() {
-      final UserName username = UserName.fromString(FakeGenerator.username());
-      final Email email = Email.fromString(FakeGenerator.email());
-      final Password password = Password.fromString(FakeGenerator.password());
-
-      when(userRepository.create(any(CreateUserDbo.class))).thenReturn(Optional.empty());
-
-      assertThrows(
-          DatabaseExecutionException.class,
-          () -> authService.registerUser(username, email, password));
-      verify(eventPublisher, never()).publishEvent(any(EmailVerificationRequestedEvent.class));
-      verify(emailSenderService, never())
-          .sendEmailVerificationEmail(
-              any(Email.class), any(UserName.class), any(EmailVerificationToken.class));
-    }
-
-    @Test
     void throws_when_default_role_assignment_fails() {
       final UserName username = UserName.fromString(FakeGenerator.username());
       final Email email = Email.fromString(FakeGenerator.email());
       final Password password = Password.fromString(FakeGenerator.password());
-
-      mockUserRepositoryCreate();
       when(permissionsRepository.setRoleForUserId(any(UserId.class), eq(Role.USER)))
           .thenReturn(false);
 
@@ -319,27 +299,6 @@ class DefaultAuthServiceTest {
           () -> authService.registerUser(username, email, password));
 
       verify(emailVerificationRepository, never()).create(any(CreateEmailVerificationDbo.class));
-      verify(eventPublisher, never()).publishEvent(any(EmailVerificationRequestedEvent.class));
-      verify(emailSenderService, never())
-          .sendEmailVerificationEmail(
-              any(Email.class), any(UserName.class), any(EmailVerificationToken.class));
-    }
-
-    @Test
-    void fails_when_email_verification_table() {
-      final UserName username = UserName.fromString(FakeGenerator.username());
-      final Email email = Email.fromString(FakeGenerator.email());
-      final Password password = Password.fromString(FakeGenerator.password());
-
-      mockUserRepositoryCreate();
-      when(permissionsRepository.setRoleForUserId(any(UserId.class), eq(Role.USER)))
-          .thenReturn(true);
-      when(emailVerificationRepository.create(any(CreateEmailVerificationDbo.class)))
-          .thenReturn(Optional.empty());
-
-      assertThrows(
-          DatabaseExecutionException.class,
-          () -> authService.registerUser(username, email, password));
       verify(eventPublisher, never()).publishEvent(any(EmailVerificationRequestedEvent.class));
       verify(emailSenderService, never())
           .sendEmailVerificationEmail(
@@ -359,7 +318,6 @@ class DefaultAuthServiceTest {
       when(passwordEncoder.verify(eq(password.value()), anyString())).thenReturn(true);
       when(jwtUtils.generateAccessToken(any(UserId.class), any(TokenFamily.class)))
           .thenReturn(AccessToken.fromString(FakeGenerator.accessToken()));
-      mockRefreshTokenRepositoryCreate();
 
       assertThatCode(
               () -> {
@@ -406,21 +364,6 @@ class DefaultAuthServiceTest {
     }
 
     @Test
-    void throws_when_refresh_token_table_fails() {
-      final Email email = Email.fromString(FakeGenerator.email());
-      final Password password = Password.fromString(FakeGenerator.password());
-
-      mockUserRepositoryFindByEmail(true, true);
-      when(passwordEncoder.verify(eq(password.value()), anyString())).thenReturn(true);
-      when(jwtUtils.generateAccessToken(any(UserId.class), any(TokenFamily.class)))
-          .thenReturn(AccessToken.fromString(FakeGenerator.accessToken()));
-      when(refreshTokenRepository.create(any(CreateRefreshTokenDbo.class)))
-          .thenReturn(Optional.empty());
-
-      assertThrows(DatabaseExecutionException.class, () -> authService.loginUser(email, password));
-    }
-
-    @Test
     void throws_when_user_has_not_verified_email() {
       final Email email = Email.fromString(FakeGenerator.email());
       final Password password = Password.fromString(FakeGenerator.password());
@@ -462,8 +405,6 @@ class DefaultAuthServiceTest {
 
       mockRefreshTokenFindByToken();
       mockRefreshTokenOwner(true);
-      when(usedRefreshTokenRepository.create(any(CreateUsedRefreshTokenDbo.class)))
-          .thenReturn(Optional.of(new UsedRefreshTokenEntity(TokenFamily.generate(), now, now)));
       when(jwtUtils.generateAccessToken(any(UserId.class), any(TokenFamily.class)))
           .thenReturn(AccessToken.fromString(FakeGenerator.accessToken()));
 
@@ -504,8 +445,6 @@ class DefaultAuthServiceTest {
 
       mockRefreshTokenFindByToken();
       mockRefreshTokenOwner(true);
-      when(usedRefreshTokenRepository.create(any(CreateUsedRefreshTokenDbo.class)))
-          .thenReturn(Optional.of(new UsedRefreshTokenEntity(TokenFamily.generate(), now, now)));
       doThrow(new RefreshTokenNotFoundException("Refresh token does not exist"))
           .when(refreshTokenRepository)
           .updateByToken(any(), any());
@@ -522,9 +461,7 @@ class DefaultAuthServiceTest {
       final TokenFamily family = TokenFamily.generate();
       when(refreshTokenRepository.findByToken(refreshToken)).thenReturn(Optional.empty());
       when(usedRefreshTokenRepository.findByToken(refreshToken))
-          .thenReturn(Optional.of(new UsedRefreshTokenEntity(family, now, now)));
-      when(tokenFamilyBlacklistRepository.create(any(CreateTokenFamilyBlacklistDbo.class)))
-          .thenReturn(Optional.of(new TokenFamilyBlacklistEntity(family, now)));
+          .thenReturn(Optional.of(new UsedRefreshTokenEntity(family, now)));
 
       assertThrows(
           RefreshTokenReuseDetectedException.class, () -> authService.refreshTokens(refreshToken));
@@ -533,44 +470,6 @@ class DefaultAuthServiceTest {
       verify(refreshTokenRepository, never())
           .updateByToken(any(RefreshToken.class), any(UpdateRefreshTokenDbo.class));
       verify(jwtUtils, never()).generateAccessToken(any(UserId.class), any(TokenFamily.class));
-    }
-
-    @Test
-    void detects_reuse_when_refresh_token_reservation_fails() {
-      final RefreshToken refreshToken = RefreshToken.generate();
-
-      mockRefreshTokenFindByToken();
-      mockRefreshTokenOwner(true);
-      when(usedRefreshTokenRepository.create(any(CreateUsedRefreshTokenDbo.class)))
-          .thenReturn(Optional.empty());
-      when(tokenFamilyBlacklistRepository.create(any(CreateTokenFamilyBlacklistDbo.class)))
-          .thenAnswer(
-              invocation -> {
-                final CreateTokenFamilyBlacklistDbo dto =
-                    invocation.getArgument(0, CreateTokenFamilyBlacklistDbo.class);
-                return Optional.of(new TokenFamilyBlacklistEntity(dto.family(), now));
-              });
-
-      assertThrows(
-          RefreshTokenReuseDetectedException.class, () -> authService.refreshTokens(refreshToken));
-
-      verify(refreshTokenRepository, never())
-          .updateByToken(any(RefreshToken.class), any(UpdateRefreshTokenDbo.class));
-      verify(jwtUtils, never()).generateAccessToken(any(UserId.class), any(TokenFamily.class));
-    }
-
-    @Test
-    void detects_reuse_when_family_is_already_blacklisted() {
-      final RefreshToken refreshToken = RefreshToken.generate();
-      final TokenFamily family = TokenFamily.generate();
-      when(refreshTokenRepository.findByToken(refreshToken)).thenReturn(Optional.empty());
-      when(usedRefreshTokenRepository.findByToken(refreshToken))
-          .thenReturn(Optional.of(new UsedRefreshTokenEntity(family, now, now)));
-      when(tokenFamilyBlacklistRepository.create(any(CreateTokenFamilyBlacklistDbo.class)))
-          .thenReturn(Optional.empty());
-
-      assertThrows(
-          RefreshTokenReuseDetectedException.class, () -> authService.refreshTokens(refreshToken));
     }
 
     @Test
@@ -585,8 +484,6 @@ class DefaultAuthServiceTest {
                     new RefreshTokenEntity(
                         UUID.randomUUID(),
                         UserId.generate(),
-                        now.minusSeconds(3600),
-                        now,
                         ExpirationTime.of(now.minusSeconds(10)),
                         TokenFamily.generate()));
               });
@@ -632,8 +529,6 @@ class DefaultAuthServiceTest {
       final EmailVerificationToken emailVerificationToken = EmailVerificationToken.generate();
 
       mockEmailVerificationTokenFindByToken();
-      when(userRepository.updateById(any(UserId.class), any(UpdateUserDbo.class))).thenReturn(true);
-      when(emailVerificationRepository.deleteByUserId(any(UserId.class))).thenReturn(true);
 
       assertThatCode(() -> authService.verifyEmail(emailVerificationToken))
           .doesNotThrowAnyException();
@@ -666,8 +561,6 @@ class DefaultAuthServiceTest {
                 return Optional.of(
                     new EmailVerificationEntity(
                         UserId.generate(),
-                        now.minusSeconds(3600),
-                        now.minusSeconds(3600),
                         ExpirationTime.of(now.minusSeconds(1)),
                         now.minusSeconds(3600)));
               });
@@ -678,36 +571,6 @@ class DefaultAuthServiceTest {
 
       verify(userRepository, never()).updateById(any(UserId.class), any(UpdateUserDbo.class));
       verify(emailVerificationRepository, never()).deleteByUserId(any(UserId.class));
-    }
-
-    @Test
-    void throws_when_updating_user_fails() {
-      final EmailVerificationToken emailVerificationToken = EmailVerificationToken.generate();
-
-      mockEmailVerificationTokenFindByToken();
-      when(userRepository.updateById(any(UserId.class), any(UpdateUserDbo.class)))
-          .thenReturn(false);
-
-      assertThrows(
-          DatabaseExecutionException.class, () -> authService.verifyEmail(emailVerificationToken));
-
-      verify(userRepository).updateById(any(UserId.class), any(UpdateUserDbo.class));
-      verify(emailVerificationRepository, never()).deleteByUserId(any(UserId.class));
-    }
-
-    @Test
-    void throws_when_deleting_email_verification_token_fails() {
-      final EmailVerificationToken emailVerificationToken = EmailVerificationToken.generate();
-
-      mockEmailVerificationTokenFindByToken();
-      when(userRepository.updateById(any(UserId.class), any(UpdateUserDbo.class))).thenReturn(true);
-      when(emailVerificationRepository.deleteByUserId(any(UserId.class))).thenReturn(false);
-
-      assertThrows(
-          DatabaseExecutionException.class, () -> authService.verifyEmail(emailVerificationToken));
-
-      verify(userRepository).updateById(any(UserId.class), any(UpdateUserDbo.class));
-      verify(emailVerificationRepository).deleteByUserId(any(UserId.class));
     }
   }
 
@@ -724,8 +587,6 @@ class DefaultAuthServiceTest {
               Optional.of(
                   new EmailVerificationEntity(
                       UserId.generate(),
-                      now.minusSeconds(3600),
-                      now.minusSeconds(3600),
                       ExpirationTime.of(now.plusSeconds(100)),
                       now.minusSeconds(3600))));
       assertThatCode(() -> authService.resendVerificationEmail(email)).doesNotThrowAnyException();
@@ -772,8 +633,6 @@ class DefaultAuthServiceTest {
               Optional.of(
                   new EmailVerificationEntity(
                       UserId.generate(),
-                      now.minusSeconds(3600),
-                      now.minusSeconds(3600),
                       ExpirationTime.of(now.plusSeconds(100)),
                       now.minusSeconds(3600))));
       doThrow(new VerificationTokenNotFoundException("Verification token not found"))
@@ -851,18 +710,8 @@ class DefaultAuthServiceTest {
       final UserName username = UserName.fromString(FakeGenerator.username());
       when(userRepository.findByEmail(email))
           .thenReturn(
-              Optional.of(
-                  new UserEntity(
-                      userId, username, email, "hashed-password", now, now, true, true)));
+              Optional.of(new UserEntity(userId, username, email, "hashed-password", true, true)));
       when(passwordResetRepository.findByUserId(userId)).thenReturn(Optional.empty());
-      when(passwordResetRepository.create(any(CreatePasswordResetDbo.class)))
-          .thenAnswer(
-              invocation -> {
-                final CreatePasswordResetDbo data = invocation.getArgument(0);
-                return Optional.of(
-                    new PasswordResetEntity(
-                        data.userId(), now, now, data.expiresAt(), data.lastSentAt()));
-              });
 
       authService.forgotPassword(email);
 
@@ -896,15 +745,13 @@ class DefaultAuthServiceTest {
                       UserName.fromString(FakeGenerator.username()),
                       email,
                       "hashed-password",
-                      now,
-                      now,
                       true,
                       true)));
       when(passwordResetRepository.findByUserId(userId))
           .thenReturn(
               Optional.of(
                   new PasswordResetEntity(
-                      userId, now, now, ExpirationTime.of(now.plus(Duration.ofHours(1))), now)));
+                      userId, ExpirationTime.of(now.plus(Duration.ofHours(1))), now)));
 
       assertThatCode(() -> authService.forgotPassword(email)).doesNotThrowAnyException();
 
@@ -927,9 +774,7 @@ class DefaultAuthServiceTest {
           .thenReturn(
               Optional.of(
                   new PasswordResetEntity(
-                      userId, now, now, ExpirationTime.of(now.plus(Duration.ofHours(1))), now)));
-      when(userRepository.updateById(any(UserId.class), any(UpdateUserDbo.class))).thenReturn(true);
-      when(passwordResetRepository.deleteByUserId(userId)).thenReturn(true);
+                      userId, ExpirationTime.of(now.plus(Duration.ofHours(1))), now)));
 
       authService.resetPassword(token, newPassword);
 
@@ -963,35 +808,13 @@ class DefaultAuthServiceTest {
           .thenReturn(
               Optional.of(
                   new PasswordResetEntity(
-                      UserId.generate(), now, now, ExpirationTime.of(now.minusSeconds(1)), now)));
+                      UserId.generate(), ExpirationTime.of(now.minusSeconds(1)), now)));
 
       assertThrows(
           ResetPasswordTokenExpiredException.class,
           () -> authService.resetPassword(token, Password.fromString(FakeGenerator.password())));
 
       verify(userRepository, never()).updateById(any(UserId.class), any(UpdateUserDbo.class));
-      verify(refreshTokenRepository, never()).deleteByUserId(any(UserId.class));
-    }
-
-    @Test
-    void fails_without_revoking_sessions_when_updating_the_password_fails() {
-      final PasswordResetToken token = PasswordResetToken.generate();
-      when(passwordResetRepository.findByToken(token))
-          .thenReturn(
-              Optional.of(
-                  new PasswordResetEntity(
-                      UserId.generate(),
-                      now,
-                      now,
-                      ExpirationTime.of(now.plus(Duration.ofHours(1))),
-                      now)));
-      when(userRepository.updateById(any(UserId.class), any(UpdateUserDbo.class)))
-          .thenReturn(false);
-
-      assertThrows(
-          DatabaseExecutionException.class,
-          () -> authService.resetPassword(token, Password.fromString(FakeGenerator.password())));
-
       verify(refreshTokenRepository, never()).deleteByUserId(any(UserId.class));
     }
   }
@@ -1004,9 +827,6 @@ class DefaultAuthServiceTest {
       final RefreshToken refreshToken = RefreshToken.generate();
 
       mockRefreshTokenFindByToken();
-      when(refreshTokenRepository.deleteByToken(any(RefreshToken.class))).thenReturn(true);
-      when(tokenFamilyBlacklistRepository.create(any(CreateTokenFamilyBlacklistDbo.class)))
-          .thenReturn(Optional.of(new TokenFamilyBlacklistEntity(TokenFamily.generate(), now)));
 
       assertThatCode(() -> authService.logoutUser(refreshToken)).doesNotThrowAnyException();
 
@@ -1039,8 +859,6 @@ class DefaultAuthServiceTest {
                     new RefreshTokenEntity(
                         UUID.randomUUID(),
                         UserId.generate(),
-                        now.minusSeconds(7200),
-                        now.minusSeconds(7200),
                         ExpirationTime.of(now.minusSeconds(1)),
                         TokenFamily.generate()));
               });
@@ -1064,34 +882,6 @@ class DefaultAuthServiceTest {
       verify(refreshTokenRepository, never()).deleteByToken(any(RefreshToken.class));
       verify(tokenFamilyBlacklistRepository, never())
           .create(any(CreateTokenFamilyBlacklistDbo.class));
-    }
-
-    @Test
-    void throws_when_deleting_refresh_token_fails() {
-      final RefreshToken refreshToken = RefreshToken.generate();
-
-      mockRefreshTokenFindByToken();
-      when(refreshTokenRepository.deleteByToken(any(RefreshToken.class))).thenReturn(false);
-
-      assertThrows(DatabaseExecutionException.class, () -> authService.logoutUser(refreshToken));
-
-      verify(refreshTokenRepository).deleteByToken(any(RefreshToken.class));
-      verify(tokenFamilyBlacklistRepository, never()).deleteByFamily(any(TokenFamily.class));
-    }
-
-    @Test
-    void succeeds_when_family_blacklisting_conflicts() {
-      final RefreshToken refreshToken = RefreshToken.generate();
-
-      mockRefreshTokenFindByToken();
-      when(refreshTokenRepository.deleteByToken(any(RefreshToken.class))).thenReturn(true);
-      when(tokenFamilyBlacklistRepository.create(any(CreateTokenFamilyBlacklistDbo.class)))
-          .thenReturn(Optional.empty());
-
-      assertThatCode(() -> authService.logoutUser(refreshToken)).doesNotThrowAnyException();
-
-      verify(refreshTokenRepository).deleteByToken(any(RefreshToken.class));
-      verify(tokenFamilyBlacklistRepository).create(any(CreateTokenFamilyBlacklistDbo.class));
     }
   }
 

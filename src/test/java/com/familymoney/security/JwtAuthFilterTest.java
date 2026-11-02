@@ -21,7 +21,6 @@ import com.familymoney.domains.users.types.UserName;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.time.Instant;
 import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,7 +59,6 @@ class JwtAuthFilterTest {
         userId,
         UserName.fromString("enabled-user"),
         Email.fromString("enabled@example.com"),
-        Instant.EPOCH,
         true,
         true);
   }
@@ -144,7 +142,6 @@ class JwtAuthFilterTest {
                     userId,
                     UserName.fromString("disabled-user"),
                     Email.fromString("disabled@example.com"),
-                    Instant.EPOCH,
                     true,
                     false)));
 
