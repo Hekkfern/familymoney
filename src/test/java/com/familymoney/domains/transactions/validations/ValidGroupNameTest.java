@@ -1,4 +1,4 @@
-package com.familymoney.domains.auth.validations;
+package com.familymoney.domains.transactions.validations;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

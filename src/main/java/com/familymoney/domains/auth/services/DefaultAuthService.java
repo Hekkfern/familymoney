@@ -37,6 +37,7 @@ import com.familymoney.domains.auth.types.ExpirationTime;
 import com.familymoney.domains.auth.types.PasswordResetToken;
 import com.familymoney.domains.auth.types.RefreshToken;
 import com.familymoney.domains.auth.types.TokenFamily;
+import com.familymoney.domains.common.services.EmailSenderService;
 import com.familymoney.domains.users.repositories.RoleRepository;
 import com.familymoney.domains.users.repositories.UserRepository;
 import com.familymoney.domains.users.repositories.dbos.CreateUserDbo;

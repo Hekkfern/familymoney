@@ -1,4 +1,4 @@
-package com.familymoney.domains.auth.services;
+package com.familymoney.domains.common.services;
 
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.auth.types.PasswordResetToken;

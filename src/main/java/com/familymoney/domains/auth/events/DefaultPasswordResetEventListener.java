@@ -1,6 +1,6 @@
 package com.familymoney.domains.auth.events;
 
-import com.familymoney.domains.auth.services.EmailSenderService;
+import com.familymoney.domains.common.services.EmailSenderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;

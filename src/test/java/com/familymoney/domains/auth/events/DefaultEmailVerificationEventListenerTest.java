@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 
-import com.familymoney.domains.auth.services.EmailSenderService;
+import com.familymoney.domains.common.services.EmailSenderService;
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.users.types.Email;
 import com.familymoney.domains.users.types.UserId;

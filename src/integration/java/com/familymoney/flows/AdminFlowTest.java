@@ -2,7 +2,7 @@ package com.familymoney.flows;
 
 import static com.familymoney.testutils.TestConstants.POSTGRESQL_CONTAINER_IMAGE;
 
-import com.familymoney.domains.auth.services.EmailSenderService;
+import com.familymoney.domains.common.services.EmailSenderService;
 import com.familymoney.flows.utils.FlowUtils;
 import com.familymoney.testutils.FakeGenerator;
 import org.junit.jupiter.api.BeforeEach;

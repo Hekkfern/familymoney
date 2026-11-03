@@ -8,7 +8,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
-import com.familymoney.domains.auth.services.EmailSenderService;
+import com.familymoney.domains.common.services.EmailSenderService;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import com.familymoney.domains.transactions.types.GroupName;
 import com.familymoney.domains.users.types.Email;

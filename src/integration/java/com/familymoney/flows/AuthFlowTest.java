@@ -15,7 +15,7 @@ import com.familymoney.domains.auth.controllers.dtos.RefreshTokenRequestDto;
 import com.familymoney.domains.auth.controllers.dtos.RegisterRequestDto;
 import com.familymoney.domains.auth.controllers.dtos.ResetPasswordRequestDto;
 import com.familymoney.domains.auth.controllers.dtos.VerifyEmailRequestDto;
-import com.familymoney.domains.auth.services.EmailSenderService;
+import com.familymoney.domains.common.services.EmailSenderService;
 import com.familymoney.domains.auth.types.AccessToken;
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.auth.types.PasswordResetToken;
