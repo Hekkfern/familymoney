@@ -3,23 +3,20 @@ package com.familymoney.domains.transactions.validations;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import java.util.Currency;
-import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 public class ValidCurrencyCodeValidator implements ConstraintValidator<ValidCurrencyCode, String> {
 
   @Override
-  public boolean isValid(String value, ConstraintValidatorContext context) {
+  public boolean isValid(final @Nullable String value, final ConstraintValidatorContext context) {
     if (value == null) {
       return true;
     }
-    boolean containsIsoCode = false;
-
-    Set<Currency> currencies = Currency.getAvailableCurrencies();
     try {
-      containsIsoCode = currencies.contains(Currency.getInstance(value));
+      Currency.getInstance(value);
+      return true;
     } catch (IllegalArgumentException _) {
       return false;
     }
-    return containsIsoCode;
   }
 }
