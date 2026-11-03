@@ -2,7 +2,6 @@ package com.familymoney.domains.transactions.validations;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.familymoney.domains.transactions.validations.ValidGroupName;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;

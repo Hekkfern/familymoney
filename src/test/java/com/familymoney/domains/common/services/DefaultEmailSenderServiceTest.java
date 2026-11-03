@@ -2,18 +2,15 @@ package com.familymoney.domains.common.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.familymoney.config.ThymeleafConfig;
 import com.familymoney.domains.auth.types.EmailVerificationToken;
 import com.familymoney.domains.auth.types.PasswordResetToken;
-import com.familymoney.domains.common.services.DefaultEmailSenderService;
 import com.familymoney.domains.transactions.types.GroupInvitationToken;
 import com.familymoney.domains.transactions.types.GroupName;
 import com.familymoney.domains.users.types.Email;
@@ -83,16 +80,18 @@ class DefaultEmailSenderServiceTest {
 
       final MimeMessage sentMessage = messageCaptor.getValue();
       assertNotNull(sentMessage);
-      assertThatCode(() ->
-              assertEquals(
-                  String.format(
-                      "%s <%s>", mailSenderProperties.name(), mailSenderProperties.email()),
-                  sentMessage.getFrom()[0].toString()))
+      assertThatCode(
+              () ->
+                  assertEquals(
+                      String.format(
+                          "%s <%s>", mailSenderProperties.name(), mailSenderProperties.email()),
+                      sentMessage.getFrom()[0].toString()))
           .doesNotThrowAnyException();
-      assertThatCode(() ->
-              assertEquals(
-                  email.toString(),
-                  sentMessage.getRecipients(Message.RecipientType.TO)[0].toString()))
+      assertThatCode(
+              () ->
+                  assertEquals(
+                      email.toString(),
+                      sentMessage.getRecipients(Message.RecipientType.TO)[0].toString()))
           .doesNotThrowAnyException();
       assertThatCode(() -> assertFalse(sentMessage.getContent().toString().isEmpty()))
           .doesNotThrowAnyException();
