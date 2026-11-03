@@ -9,6 +9,8 @@ public class GroupAdminControllerUriFactory {
   private static final String GROUPS_USER_PATH = BASE_PATH + "/users/%s";
   private static final String GROUP_AND_USER_PATH = BASE_PATH + "/%s/users/%s";
   private static final String GROUP_USERS_PATH = BASE_PATH + "/%s/users";
+  private static final String GROUP_BALANCES_PATH = BASE_PATH + "/%s/balances";
+  private static final String GROUP_TRANSACTIONS_PATH = BASE_PATH + "/%s/transactions";
 
   // endregion
 
@@ -32,6 +34,14 @@ public class GroupAdminControllerUriFactory {
 
   public static String getUsersForGroupPath(final String groupId) {
     return String.format(GROUP_USERS_PATH, groupId);
+  }
+
+  public static String getGroupBalancesPath(final String groupId) {
+    return String.format(GROUP_BALANCES_PATH, groupId);
+  }
+
+  public static String getGroupTransactionsPath(final String groupId) {
+    return String.format(GROUP_TRANSACTIONS_PATH, groupId);
   }
 
   // endregion

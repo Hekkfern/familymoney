@@ -7,16 +7,22 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.familymoney.domains.transactions.controllers.dtos.BalanceDto;
 import com.familymoney.domains.transactions.controllers.dtos.CreateGroupResponseDto;
 import com.familymoney.domains.transactions.controllers.dtos.GroupDto;
 import com.familymoney.domains.transactions.controllers.dtos.MemberDto;
+import com.familymoney.domains.transactions.controllers.dtos.TransactionDto;
 import com.familymoney.domains.transactions.services.GroupService;
+import com.familymoney.domains.transactions.services.data.BalanceData;
 import com.familymoney.domains.transactions.services.data.GroupData;
 import com.familymoney.domains.transactions.services.data.MemberData;
+import com.familymoney.domains.transactions.services.data.PaymentData;
+import com.familymoney.domains.transactions.services.data.TransactionData;
 import com.familymoney.domains.transactions.services.data.UpdateGroupData;
 import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupName;
+import com.familymoney.domains.transactions.types.PaymentId;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.domains.users.types.UserName;
 import com.familymoney.security.JwtAuthFilter;
@@ -24,13 +30,17 @@ import com.familymoney.testutils.FakeGenerator;
 import com.familymoney.testutils.GroupAdminControllerUriFactory;
 import com.familymoney.testutils.WithMockUserId;
 import com.familymoney.utils.PageResponse;
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Currency;
 import java.util.List;
 import java.util.Map;
+import org.javamoney.moneta.Money;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -52,7 +62,6 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 class DefaultGroupAdminControllerTest {
 
   static final String USER_ID = "01a19afd-6fa1-74f3-a638-7db6cef7c8ee";
-  private static final Instant NOW = Instant.parse("2025-01-01T00:00:00Z");
 
   @Autowired private RestTestClient client;
   @MockitoBean private GroupService groupService;
@@ -98,16 +107,81 @@ class DefaultGroupAdminControllerTest {
     }
 
     @Test
-    void bad_request_when_required_fields_are_missing() {
+    void bad_request_when_name_is_missing() {
       client
           .post()
           .uri(GroupAdminControllerUriFactory.getGroupsPath())
-          .body(Map.of())
+          .body(Map.of("description", FakeGenerator.description(), "currencyCode", "USD"))
           .exchange()
           .expectStatus()
           .isBadRequest();
 
       verifyNoInteractions(groupService);
+    }
+
+    @Test
+    void bad_request_when_description_is_missing() {
+      client
+          .post()
+          .uri(GroupAdminControllerUriFactory.getGroupsPath())
+          .body(Map.of("name", FakeGenerator.groupName(), "currencyCode", "USD"))
+          .exchange()
+          .expectStatus()
+          .isBadRequest();
+
+      verifyNoInteractions(groupService);
+    }
+
+    @Test
+    void bad_request_when_currency_code_is_missing() {
+      client
+          .post()
+          .uri(GroupAdminControllerUriFactory.getGroupsPath())
+          .body(
+              Map.of("name", FakeGenerator.groupName(), "description", FakeGenerator.description()))
+          .exchange()
+          .expectStatus()
+          .isBadRequest();
+
+      verifyNoInteractions(groupService);
+    }
+
+    @Test
+    void bad_request_when_name_is_empty() {
+      client
+          .post()
+          .uri(GroupAdminControllerUriFactory.getGroupsPath())
+          .body(
+              Map.of("name", "", "description", FakeGenerator.description(), "currencyCode", "USD"))
+          .exchange()
+          .expectStatus()
+          .isBadRequest();
+
+      verifyNoInteractions(groupService);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "   ", "\n", "\t"})
+    void creates_group_when_description_is_empty_or_blank(final String description) {
+      final GroupId groupId = GroupId.generate();
+      when(groupService.createEmptyGroup(any(), any(), any(), any())).thenReturn(groupId);
+
+      client
+          .post()
+          .uri(GroupAdminControllerUriFactory.getGroupsPath())
+          .body(
+              Map.of(
+                  "name",
+                  FakeGenerator.groupName(),
+                  "description",
+                  description,
+                  "currencyCode",
+                  "USD"))
+          .exchange()
+          .expectStatus()
+          .isOk();
+
+      verify(groupService).createEmptyGroup(any(), eq(Description.of("")), any(), any());
     }
 
     @Test
@@ -238,12 +312,59 @@ class DefaultGroupAdminControllerTest {
 
     @Test
     void bad_request_when_page_is_invalid() {
-      // TODO
+      client
+          .get()
+          .uri(
+              uriBuilder ->
+                  uriBuilder
+                      .path(
+                          GroupAdminControllerUriFactory.getGroupsUserPath(
+                              UserId.generate().toString()))
+                      .queryParam("page", -1)
+                      .build())
+          .exchange()
+          .expectStatus()
+          .isBadRequest();
+
+      verifyNoInteractions(groupService);
     }
 
     @Test
     void bad_request_when_size_is_invalid() {
-      // TODO
+      client
+          .get()
+          .uri(
+              uriBuilder ->
+                  uriBuilder
+                      .path(
+                          GroupAdminControllerUriFactory.getGroupsUserPath(
+                              UserId.generate().toString()))
+                      .queryParam("size", 101)
+                      .build())
+          .exchange()
+          .expectStatus()
+          .isBadRequest();
+
+      verifyNoInteractions(groupService);
+    }
+
+    @Test
+    void bad_request_when_size_is_below_minimum() {
+      client
+          .get()
+          .uri(
+              uriBuilder ->
+                  uriBuilder
+                      .path(
+                          GroupAdminControllerUriFactory.getGroupsUserPath(
+                              UserId.generate().toString()))
+                      .queryParam("size", 19)
+                      .build())
+          .exchange()
+          .expectStatus()
+          .isBadRequest();
+
+      verifyNoInteractions(groupService);
     }
   }
 
@@ -379,7 +500,11 @@ class DefaultGroupAdminControllerTest {
           .expectStatus()
           .isOk();
 
-      verify(groupService).updateGroupInfo(any(), any(), any());
+      verify(groupService)
+          .updateGroupInfo(
+              any(),
+              any(),
+              eq(UpdateGroupData.builder().description(Description.of("  ")).build()));
     }
 
     @Test
@@ -488,7 +613,7 @@ class DefaultGroupAdminControllerTest {
           .expectStatus()
           .isOk();
 
-      verify(groupService).removeUserFromGroup(groupId, userId, any());
+      verify(groupService).removeUserFromGroup(eq(groupId), eq(userId), any());
     }
 
     @Test
@@ -569,12 +694,40 @@ class DefaultGroupAdminControllerTest {
 
     @Test
     void returns_group_balances() {
-      // TODO
+      final GroupId groupId = GroupId.generate();
+      final BalanceData balance =
+          new BalanceData(
+              UserId.generate(), UserId.generate(), Money.of(new BigDecimal("12.50"), "USD"));
+      when(groupService.getGroupBalances(eq(groupId), any())).thenReturn(List.of(balance));
+
+      final List<BalanceDto> response =
+          client
+              .get()
+              .uri(GroupAdminControllerUriFactory.getGroupBalancesPath(groupId.toString()))
+              .exchange()
+              .expectStatus()
+              .isOk()
+              .expectBody(new ParameterizedTypeReference<List<BalanceDto>>() {})
+              .returnResult()
+              .getResponseBody();
+
+      assertThat(response).hasSize(1);
+      assertThat(response.getFirst().creditor()).isEqualTo(balance.creditor().value());
+      assertThat(response.getFirst().debitor()).isEqualTo(balance.debitor().value());
+      assertThat(response.getFirst().amount()).isEqualByComparingTo("12.50");
+      assertThat(response.getFirst().currency()).isEqualTo("USD");
     }
 
     @Test
     void bad_request_when_group_id_is_invalid() {
-      // TODO
+      client
+          .get()
+          .uri(GroupAdminControllerUriFactory.getGroupBalancesPath("invalid"))
+          .exchange()
+          .expectStatus()
+          .isBadRequest();
+
+      verifyNoInteractions(groupService);
     }
   }
 
@@ -582,13 +735,29 @@ class DefaultGroupAdminControllerTest {
   class ForceSyncBalances {
 
     @Test
-    void force_synces_balances() {
-      // TODO
+    void forces_balances_sync() {
+      final GroupId groupId = GroupId.generate();
+
+      client
+          .post()
+          .uri(GroupAdminControllerUriFactory.getGroupPath(groupId.toString()))
+          .exchange()
+          .expectStatus()
+          .isOk();
+
+      verify(groupService).forceSyncBalancesAsAdmin(groupId);
     }
 
     @Test
     void bad_request_when_group_id_is_invalid() {
-      // TODO
+      client
+          .post()
+          .uri(GroupAdminControllerUriFactory.getGroupPath("invalid"))
+          .exchange()
+          .expectStatus()
+          .isBadRequest();
+
+      verifyNoInteractions(groupService);
     }
   }
 
@@ -597,12 +766,47 @@ class DefaultGroupAdminControllerTest {
 
     @Test
     void returns_group_transactions() {
-      // TODO
+      final GroupId groupId = GroupId.generate();
+      final PaymentData payment =
+          new PaymentData(
+              PaymentId.generate(),
+              groupId,
+              Description.of(FakeGenerator.description()),
+              Money.of(new BigDecimal("30.00"), "USD"),
+              Instant.parse("2025-01-01T00:00:00Z"),
+              UserId.generate(),
+              UserId.generate());
+      when(groupService.getGroupTransactions(eq(groupId), any(), eq(0), eq(20)))
+          .thenReturn(new PageImpl<>(List.of(new TransactionData.Payment(payment))));
+
+      final PageResponse<TransactionDto> response =
+          client
+              .get()
+              .uri(GroupAdminControllerUriFactory.getGroupTransactionsPath(groupId.toString()))
+              .exchange()
+              .expectStatus()
+              .isOk()
+              .expectBody(new ParameterizedTypeReference<PageResponse<TransactionDto>>() {})
+              .returnResult()
+              .getResponseBody();
+
+      assertThat(response).isNotNull();
+      assertThat(response.content()).hasSize(1);
+      assertThat(response.content().getFirst().id()).isEqualTo(payment.id().value());
+      assertThat(response.content().getFirst().description())
+          .isEqualTo(payment.description().value());
     }
 
     @Test
     void bad_request_when_group_id_is_invalid() {
-      // TODO
+      client
+          .get()
+          .uri(GroupAdminControllerUriFactory.getGroupTransactionsPath("invalid"))
+          .exchange()
+          .expectStatus()
+          .isBadRequest();
+
+      verifyNoInteractions(groupService);
     }
   }
 }

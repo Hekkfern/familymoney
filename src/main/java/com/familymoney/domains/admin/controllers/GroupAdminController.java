@@ -55,14 +55,15 @@ public interface GroupAdminController {
       @PathVariable @NotNull UUID groupId, @RequestBody @Valid UpdateGroupRequestDto request);
 
   @Operation(summary = "Add a user to a specific group")
-  @PostMapping(path = "{groupId}/users/{userId}", version = "1")
+  @PostMapping(path = "{groupId}/users/{userIdToAdd}", version = "1")
   @Idempotent
-  void addUserToGroup(@PathVariable @NotNull UUID groupId, @PathVariable @NotNull UUID userId);
+  void addUserToGroup(@PathVariable @NotNull UUID groupId, @PathVariable @NotNull UUID userIdToAdd);
 
   @Operation(summary = "Remove a user from a specific group")
-  @DeleteMapping(path = "{groupId}/users/{userId}", version = "1")
+  @DeleteMapping(path = "{groupId}/users/{userIdToRemove}", version = "1")
   @Idempotent
-  void removeUserFromGroup(@PathVariable @NotNull UUID groupId, @PathVariable @NotNull UUID userId);
+  void removeUserFromGroup(
+      @PathVariable @NotNull UUID groupId, @PathVariable @NotNull UUID userIdToRemove);
 
   @Operation(summary = "Get the list of users in a specific group")
   @GetMapping(path = "{groupId}/users", version = "1")

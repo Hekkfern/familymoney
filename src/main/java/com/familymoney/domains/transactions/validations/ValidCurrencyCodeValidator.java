@@ -18,6 +18,7 @@ public class ValidCurrencyCodeValidator implements ConstraintValidator<ValidCurr
     try {
       containsIsoCode = currencies.contains(Currency.getInstance(value));
     } catch (IllegalArgumentException _) {
+      return false;
     }
     return containsIsoCode;
   }
