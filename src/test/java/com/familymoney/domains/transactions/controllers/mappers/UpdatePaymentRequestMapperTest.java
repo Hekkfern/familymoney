@@ -1,11 +1,13 @@
 package com.familymoney.domains.transactions.controllers.mappers;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.familymoney.domains.transactions.controllers.dtos.UpdatePaymentRequestDto;
 import com.familymoney.domains.transactions.services.data.UpdatePaymentData;
 import com.familymoney.domains.transactions.types.Description;
 import com.familymoney.domains.users.types.UserId;
+import com.familymoney.testutils.FakeGenerator;
 import java.math.BigDecimal;
 import java.time.Instant;
 import org.junit.jupiter.api.Nested;
@@ -20,14 +22,15 @@ class UpdatePaymentRequestMapperTest {
     void maps_successfully() {
       final UserId from = UserId.generate();
       final UserId to = UserId.generate();
+      final String description = FakeGenerator.description();
       final BigDecimal amount = new BigDecimal("123.456");
       final Instant doneAt = Instant.parse("2026-01-01T12:00:00Z");
       final UpdatePaymentRequestDto dto =
-          new UpdatePaymentRequestDto("Settlement", from.value(), to.value(), amount, doneAt);
+          new UpdatePaymentRequestDto(description, from.value(), to.value(), amount, doneAt);
 
       final UpdatePaymentData data = UpdatePaymentRequestMapper.fromDto(dto);
 
-      assertThat(data.description()).isEqualTo(Description.of("Settlement"));
+      assertThat(data.description()).isEqualTo(Description.of(description));
       assertThat(data.doneAt()).isEqualTo(doneAt);
       assertThat(data.amount()).isEqualTo(amount);
       assertThat(data.from()).isEqualTo(from);
@@ -36,32 +39,19 @@ class UpdatePaymentRequestMapperTest {
     }
 
     @Test
-    void preserves_omitted_fields_in_partial_update() {
+    void preserves_description_only_update() {
+      final String description = FakeGenerator.description();
       final UpdatePaymentRequestDto dto =
-          new UpdatePaymentRequestDto("Settlement", null, null, null, null);
+          new UpdatePaymentRequestDto(description, null, null, null, null);
 
       final UpdatePaymentData data = UpdatePaymentRequestMapper.fromDto(dto);
 
-      assertThat(data.description()).isEqualTo(Description.of("Settlement"));
+      assertThat(data.description()).isEqualTo(Description.of(description));
       assertThat(data.doneAt()).isNull();
       assertThat(data.amount()).isNull();
       assertThat(data.from()).isNull();
       assertThat(data.to()).isNull();
       assertThat(data.isEmpty()).isFalse();
-    }
-
-    @Test
-    void preserves_all_omitted_fields() {
-      final UpdatePaymentRequestDto dto = new UpdatePaymentRequestDto(null, null, null, null, null);
-
-      final UpdatePaymentData data = UpdatePaymentRequestMapper.fromDto(dto);
-
-      assertThat(data.description()).isNull();
-      assertThat(data.doneAt()).isNull();
-      assertThat(data.amount()).isNull();
-      assertThat(data.from()).isNull();
-      assertThat(data.to()).isNull();
-      assertThat(data.isEmpty()).isTrue();
     }
 
     @Test
@@ -78,6 +68,59 @@ class UpdatePaymentRequestMapperTest {
       assertThat(data.from()).isNull();
       assertThat(data.to()).isNull();
       assertThat(data.isEmpty()).isFalse();
+    }
+
+    @Test
+    void preserves_done_at_only_update() {
+      final Instant doneAt = Instant.parse("2026-01-01T12:00:00Z");
+      final UpdatePaymentRequestDto dto =
+          new UpdatePaymentRequestDto(null, null, null, null, doneAt);
+
+      final UpdatePaymentData data = UpdatePaymentRequestMapper.fromDto(dto);
+
+      assertThat(data.description()).isNull();
+      assertThat(data.doneAt()).isEqualTo(doneAt);
+      assertThat(data.amount()).isNull();
+      assertThat(data.from()).isNull();
+      assertThat(data.to()).isNull();
+    }
+
+    @Test
+    void preserves_from_only_update() {
+      final UserId from = UserId.generate();
+      final UpdatePaymentRequestDto dto =
+          new UpdatePaymentRequestDto(null, from.value(), null, null, null);
+
+      final UpdatePaymentData data = UpdatePaymentRequestMapper.fromDto(dto);
+
+      assertThat(data.description()).isNull();
+      assertThat(data.doneAt()).isNull();
+      assertThat(data.amount()).isNull();
+      assertThat(data.from()).isEqualTo(from);
+      assertThat(data.to()).isNull();
+    }
+
+    @Test
+    void preserves_to_only_update() {
+      final UserId to = UserId.generate();
+      final UpdatePaymentRequestDto dto =
+          new UpdatePaymentRequestDto(null, null, to.value(), null, null);
+
+      final UpdatePaymentData data = UpdatePaymentRequestMapper.fromDto(dto);
+
+      assertThat(data.description()).isNull();
+      assertThat(data.doneAt()).isNull();
+      assertThat(data.amount()).isNull();
+      assertThat(data.from()).isNull();
+      assertThat(data.to()).isEqualTo(to);
+    }
+
+    @Test
+    void throws_when_no_field_is_provided() {
+      final UpdatePaymentRequestDto dto = new UpdatePaymentRequestDto(null, null, null, null, null);
+
+      assertThatThrownBy(() -> UpdatePaymentRequestMapper.fromDto(dto))
+          .isInstanceOf(IllegalArgumentException.class);
     }
   }
 }

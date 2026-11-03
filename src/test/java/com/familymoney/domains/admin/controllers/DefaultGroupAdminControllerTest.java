@@ -22,6 +22,7 @@ import com.familymoney.domains.users.types.UserName;
 import com.familymoney.security.JwtAuthFilter;
 import com.familymoney.testutils.FakeGenerator;
 import com.familymoney.testutils.GroupAdminControllerUriFactory;
+import com.familymoney.testutils.WithMockUserId;
 import com.familymoney.utils.PageResponse;
 import java.time.Clock;
 import java.time.Instant;
@@ -47,8 +48,10 @@ import org.springframework.test.web.servlet.client.RestTestClient;
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = JwtAuthFilter.class))
 @AutoConfigureMockMvc(addFilters = false)
 @AutoConfigureRestTestClient
+@WithMockUserId(userId = DefaultGroupAdminControllerTest.USER_ID, role = "ADMIN")
 class DefaultGroupAdminControllerTest {
 
+  static final String USER_ID = "01a19afd-6fa1-74f3-a638-7db6cef7c8ee";
   private static final Instant NOW = Instant.parse("2025-01-01T00:00:00Z");
 
   @Autowired private RestTestClient client;

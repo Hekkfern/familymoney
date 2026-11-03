@@ -60,7 +60,7 @@ class DefaultUserAdminControllerTest {
       final Email email = Email.fromString(FakeGenerator.email());
       final UserId userId = UserId.fromUuid(UUID.randomUUID());
       when(userService.getUserData(any()))
-          .thenReturn(Optional.of(new UserData(userId, username, email, now, true, true)));
+          .thenReturn(Optional.of(new UserData(userId, username, email, true, true)));
       when(userService.getUserRole(any())).thenReturn(Optional.of(Role.ADMIN));
 
       final UserDto data =
@@ -76,7 +76,6 @@ class DefaultUserAdminControllerTest {
       assertNotNull(data);
       assertEquals(username.value(), data.username());
       assertEquals(email.value(), data.email());
-      assertEquals(now, data.createdAt());
     }
   }
 

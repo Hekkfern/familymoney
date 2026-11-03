@@ -96,8 +96,6 @@ class DefaultGroupServiceTest {
           UserName.fromString(FakeGenerator.username()),
           Email.fromString(FakeGenerator.email()),
           FakeGenerator.password(),
-          NOW,
-          NOW,
           true,
           true);
 
@@ -403,7 +401,7 @@ class DefaultGroupServiceTest {
   @Nested
   class SendInvitationToken {
 
-    @BeforeEach()
+    @BeforeEach
     void beforeEach() {
       lenient().when(groupProperties.invitationDuration()).thenReturn(Duration.ofHours(1));
       lenient().when(groupProperties.maxNumInvitations()).thenReturn(5);
@@ -680,8 +678,6 @@ class DefaultGroupServiceTest {
               UserName.fromString(FakeGenerator.username()),
               Email.fromString(FakeGenerator.email()),
               FakeGenerator.password(),
-              NOW,
-              NOW,
               true,
               true);
       when(groupRepository.findUsersByGroupId(groupId)).thenReturn(List.of(user, secondUser));

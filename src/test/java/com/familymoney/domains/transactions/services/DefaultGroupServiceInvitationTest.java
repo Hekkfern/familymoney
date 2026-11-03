@@ -69,8 +69,6 @@ class DefaultGroupServiceInvitationTest {
             UserName.fromString("Invitee"),
             Email.fromString("invitee@example.com"),
             "hashed-password",
-            NOW,
-            NOW,
             true,
             true);
     private final GroupEntity group =
