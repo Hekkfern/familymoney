@@ -12,6 +12,7 @@ import com.familymoney.domains.transactions.controllers.dtos.CreateGroupResponse
 import com.familymoney.domains.transactions.controllers.dtos.GroupDto;
 import com.familymoney.domains.transactions.controllers.dtos.MemberDto;
 import com.familymoney.domains.transactions.controllers.dtos.TransactionDto;
+import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
 import com.familymoney.domains.transactions.services.GroupService;
 import com.familymoney.domains.transactions.services.data.BalanceData;
 import com.familymoney.domains.transactions.services.data.GroupData;
@@ -107,6 +108,18 @@ class DefaultGroupAdminControllerTest {
     }
 
     @Test
+    void bad_request_when_body_is_missing() {
+      client
+          .post()
+          .uri(GroupAdminControllerUriFactory.getGroupsPath())
+          .exchange()
+          .expectStatus()
+          .isBadRequest();
+
+      verifyNoInteractions(groupService);
+    }
+
+    @Test
     void bad_request_when_name_is_missing() {
       client
           .post()
@@ -146,13 +159,47 @@ class DefaultGroupAdminControllerTest {
       verifyNoInteractions(groupService);
     }
 
-    @Test
-    void bad_request_when_name_is_empty() {
+    @ParameterizedTest
+    @ValueSource(
+        strings = {
+          "",
+          "   ",
+          "\n",
+          "\t",
+          "invalid@name",
+          "iRaboXFhTyaCUjtNnDRruOBGvxBcXiXuqqDcvknrrHmQrASzPSALnLvLXrhrKJStx"
+        })
+    void bad_request_when_name_is_invalid(final String name) {
       client
           .post()
           .uri(GroupAdminControllerUriFactory.getGroupsPath())
           .body(
-              Map.of("name", "", "description", FakeGenerator.description(), "currencyCode", "USD"))
+              Map.of(
+                  "name", name, "description", FakeGenerator.description(), "currencyCode", "USD"))
+          .exchange()
+          .expectStatus()
+          .isBadRequest();
+
+      verifyNoInteractions(groupService);
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings = {
+          "KDMKPakwYxxbBHMLOpsdCGZyAuFcImgrtXAhEqVJXECwveLTbLGfMcWzToklJVbAesDMRIhpzhlTouzxPIkqivMaAPnlaagVApVJBUwDHUhKJVSDubRgckrlNbUbGqLRvErYMQyurKGQXmzHaQKqQTbaqXoBxOsvGLfAkFbEksSBLUIWjRyEyhbYkJYkcgKOYQYhOkaVDEEKCeSGKSTPjtjsaCkRWrDZuDNEWHmUgrNgVeuSUqbzOSmmIxfPiZin"
+        })
+    void bad_request_when_description_is_invalid(final String description) {
+      client
+          .post()
+          .uri(GroupAdminControllerUriFactory.getGroupsPath())
+          .body(
+              Map.of(
+                  "name",
+                  FakeGenerator.groupName(),
+                  "description",
+                  description,
+                  "currencyCode",
+                  "USD"))
           .exchange()
           .expectStatus()
           .isBadRequest();
@@ -184,48 +231,9 @@ class DefaultGroupAdminControllerTest {
       verify(groupService).createEmptyGroup(any(), eq(Description.of("")), any(), any());
     }
 
-    @Test
-    void bad_request_when_name_is_invalid() {
-      client
-          .post()
-          .uri(GroupAdminControllerUriFactory.getGroupsPath())
-          .body(
-              Map.of(
-                  "name",
-                  "invalid@name",
-                  "description",
-                  FakeGenerator.description(),
-                  "currencyCode",
-                  "USD"))
-          .exchange()
-          .expectStatus()
-          .isBadRequest();
-
-      verifyNoInteractions(groupService);
-    }
-
-    @Test
-    void bad_request_when_name_exceeds_maximum_length() {
-      client
-          .post()
-          .uri(GroupAdminControllerUriFactory.getGroupsPath())
-          .body(
-              Map.of(
-                  "name",
-                  "a".repeat(65),
-                  "description",
-                  FakeGenerator.description(),
-                  "currencyCode",
-                  "USD"))
-          .exchange()
-          .expectStatus()
-          .isBadRequest();
-
-      verifyNoInteractions(groupService);
-    }
-
-    @Test
-    void bad_request_when_currency_code_is_invalid() {
+    @ParameterizedTest
+    @ValueSource(strings = {"", "   ", "\n", "\t", "invalid", "ZZZ"})
+    void bad_request_when_currency_code_is_invalid(final String currencyCode) {
       client
           .post()
           .uri(GroupAdminControllerUriFactory.getGroupsPath())
@@ -236,7 +244,7 @@ class DefaultGroupAdminControllerTest {
                   "description",
                   FakeGenerator.description(),
                   "currencyCode",
-                  "ZZZ"))
+                  currencyCode))
           .exchange()
           .expectStatus()
           .isBadRequest();
@@ -279,13 +287,12 @@ class DefaultGroupAdminControllerTest {
       final PageResponse<GroupDto> response =
           client
               .get()
-              .uri(
-                  uribuilder ->
-                      uribuilder
-                          .path(GroupAdminControllerUriFactory.getGroupsUserPath(userId.toString()))
-                          .queryParam("page", 1)
-                          .queryParam("size", 27)
-                          .build())
+              .uri(uribuilder ->
+                  uribuilder
+                      .path(GroupAdminControllerUriFactory.getGroupsUserPath(userId.toString()))
+                      .queryParam("page", 1)
+                      .queryParam("size", 27)
+                      .build())
               .exchange()
               .expectStatus()
               .isOk()
@@ -299,10 +306,31 @@ class DefaultGroupAdminControllerTest {
     }
 
     @Test
-    void bad_request_when_user_id_is_invalid() {
+    void returns_empty_when_user_has_no_groups() {
+      final UserId userId = UserId.generate();
+      when(groupService.getGroupsForUser(userId, 0, 20)).thenReturn(new PageImpl<>(List.of()));
+
+      final PageResponse<GroupDto> response =
+          client
+              .get()
+              .uri(GroupAdminControllerUriFactory.getGroupsUserPath(userId.toString()))
+              .exchange()
+              .expectStatus()
+              .isOk()
+              .expectBody(new ParameterizedTypeReference<PageResponse<GroupDto>>() {})
+              .returnResult()
+              .getResponseBody();
+
+      assertThat(response).isNotNull();
+      assertThat(response.content()).isEmpty();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "   ", "\n", "\t", "invalid"})
+    void bad_request_when_user_id_is_blank(final String userId) {
       client
           .get()
-          .uri(GroupAdminControllerUriFactory.getGroupsUserPath("invalid"))
+          .uri(GroupAdminControllerUriFactory.getGroupsUserPath(userId))
           .exchange()
           .expectStatus()
           .isBadRequest();
@@ -310,18 +338,18 @@ class DefaultGroupAdminControllerTest {
       verifyNoInteractions(groupService);
     }
 
-    @Test
-    void bad_request_when_page_is_invalid() {
+    @ParameterizedTest
+    @ValueSource(ints = {-1, 1000})
+    void bad_request_when_page_is_invalid(final int page) {
       client
           .get()
-          .uri(
-              uriBuilder ->
-                  uriBuilder
-                      .path(
-                          GroupAdminControllerUriFactory.getGroupsUserPath(
-                              UserId.generate().toString()))
-                      .queryParam("page", -1)
-                      .build())
+          .uri(uriBuilder ->
+              uriBuilder
+                  .path(
+                      GroupAdminControllerUriFactory.getGroupsUserPath(
+                          UserId.generate().toString()))
+                  .queryParam("page", page)
+                  .build())
           .exchange()
           .expectStatus()
           .isBadRequest();
@@ -329,37 +357,18 @@ class DefaultGroupAdminControllerTest {
       verifyNoInteractions(groupService);
     }
 
-    @Test
-    void bad_request_when_size_is_invalid() {
+    @ParameterizedTest
+    @ValueSource(ints = {-1, 19, 101})
+    void bad_request_when_size_is_invalid(final int size) {
       client
           .get()
-          .uri(
-              uriBuilder ->
-                  uriBuilder
-                      .path(
-                          GroupAdminControllerUriFactory.getGroupsUserPath(
-                              UserId.generate().toString()))
-                      .queryParam("size", 101)
-                      .build())
-          .exchange()
-          .expectStatus()
-          .isBadRequest();
-
-      verifyNoInteractions(groupService);
-    }
-
-    @Test
-    void bad_request_when_size_is_below_minimum() {
-      client
-          .get()
-          .uri(
-              uriBuilder ->
-                  uriBuilder
-                      .path(
-                          GroupAdminControllerUriFactory.getGroupsUserPath(
-                              UserId.generate().toString()))
-                      .queryParam("size", 19)
-                      .build())
+          .uri(uriBuilder ->
+              uriBuilder
+                  .path(
+                      GroupAdminControllerUriFactory.getGroupsUserPath(
+                          UserId.generate().toString()))
+                  .queryParam("size", size)
+                  .build())
           .exchange()
           .expectStatus()
           .isBadRequest();
@@ -385,11 +394,12 @@ class DefaultGroupAdminControllerTest {
       verify(groupService).deleteGroupAsAdmin(groupId);
     }
 
-    @Test
-    void bad_request_when_group_id_is_invalid() {
+    @ParameterizedTest
+    @ValueSource(strings = {"", "   ", "\n", "\t", "invalid"})
+    void bad_request_when_group_id_is_invalid(final String groupId) {
       client
           .delete()
-          .uri(GroupAdminControllerUriFactory.getGroupPath("invalid"))
+          .uri(GroupAdminControllerUriFactory.getGroupPath(groupId))
           .exchange()
           .expectStatus()
           .isBadRequest();
@@ -423,10 +433,25 @@ class DefaultGroupAdminControllerTest {
     }
 
     @Test
-    void bad_request_when_group_id_is_invalid() {
+    void returns_nothing_when_group_does_not_exist() {
+      final GroupId groupId = GroupId.generate();
+      when(groupService.getGroupInfo(eq(groupId), any()))
+          .thenThrow(new GroupNotFoundException("Group not found"));
+
       client
           .get()
-          .uri(GroupAdminControllerUriFactory.getGroupPath("invalid"))
+          .uri(GroupAdminControllerUriFactory.getGroupPath(groupId.toString()))
+          .exchange()
+          .expectStatus()
+          .isNotFound();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "   ", "\n", "\t", "invalid"})
+    void bad_request_when_group_id_is_invalid(final String groupId) {
+      client
+          .get()
+          .uri(GroupAdminControllerUriFactory.getGroupPath(groupId))
           .exchange()
           .expectStatus()
           .isBadRequest();
@@ -460,7 +485,25 @@ class DefaultGroupAdminControllerTest {
     }
 
     @Test
-    void updates_one_single_field() {
+    void updates_only_name_field() {
+      final GroupId groupId = GroupId.generate();
+      final GroupName groupName = GroupName.fromString(FakeGenerator.groupName());
+
+      client
+          .patch()
+          .uri(GroupAdminControllerUriFactory.getGroupPath(groupId.toString()))
+          .body(Map.of("name", groupName.value()))
+          .exchange()
+          .expectStatus()
+          .isOk();
+
+      verify(groupService)
+          .updateGroupInfo(
+              eq(groupId), any(), eq(UpdateGroupData.builder().name(groupName).build()));
+    }
+
+    @Test
+    void updates_only_description_field() {
       final GroupId groupId = GroupId.generate();
       final Description description = Description.of(FakeGenerator.description());
 
@@ -477,12 +520,21 @@ class DefaultGroupAdminControllerTest {
               eq(groupId), any(), eq(UpdateGroupData.builder().description(description).build()));
     }
 
-    @Test
-    void bad_request_when_name_is_invalid() {
+    @ParameterizedTest
+    @ValueSource(
+        strings = {
+          "",
+          "   ",
+          "\n",
+          "\t",
+          "invalid@name",
+          "iRaboXFhTyaCUjtNnDRruOBGvxBcXiXuqqDcvknrrHmQrASzPSALnLvLXrhrKJStx"
+        })
+    void bad_request_when_name_is_invalid(final String name) {
       client
           .patch()
           .uri(GroupAdminControllerUriFactory.getGroupPath(GroupId.generate().toString()))
-          .body(Map.of("name", "invalid@name"))
+          .body(Map.of("name", name))
           .exchange()
           .expectStatus()
           .isBadRequest();
@@ -490,12 +542,13 @@ class DefaultGroupAdminControllerTest {
       verifyNoInteractions(groupService);
     }
 
-    @Test
-    void updates_description_when_description_is_blank() {
+    @ParameterizedTest
+    @ValueSource(strings = {"", "   ", "\n", "\t"})
+    void updates_description_when_description_is_empty_or_blank(final String description) {
       client
           .patch()
           .uri(GroupAdminControllerUriFactory.getGroupPath(GroupId.generate().toString()))
-          .body(Map.of("description", "  "))
+          .body(Map.of("description", description))
           .exchange()
           .expectStatus()
           .isOk();
@@ -504,15 +557,33 @@ class DefaultGroupAdminControllerTest {
           .updateGroupInfo(
               any(),
               any(),
-              eq(UpdateGroupData.builder().description(Description.of("  ")).build()));
+              eq(UpdateGroupData.builder().description(Description.of(description)).build()));
     }
 
-    @Test
-    void bad_request_when_description_is_invalid() {
+    @ParameterizedTest
+    @ValueSource(
+        strings = {
+          "KDMKPakwYxxbBHMLOpsdCGZyAuFcImgrtXAhEqVJXECwveLTbLGfMcWzToklJVbAesDMRIhpzhlTouzxPIkqivMaAPnlaagVApVJBUwDHUhKJVSDubRgckrlNbUbGqLRvErYMQyurKGQXmzHaQKqQTbaqXoBxOsvGLfAkFbEksSBLUIWjRyEyhbYkJYkcgKOYQYhOkaVDEEKCeSGKSTPjtjsaCkRWrDZuDNEWHmUgrNgVeuSUqbzOSmmIxfPiZin"
+        })
+    void bad_request_when_description_is_invalid(final String description) {
       client
           .patch()
           .uri(GroupAdminControllerUriFactory.getGroupPath(GroupId.generate().toString()))
-          .body(Map.of("description", "a".repeat(400)))
+          .body(Map.of("description", description))
+          .exchange()
+          .expectStatus()
+          .isBadRequest();
+
+      verifyNoInteractions(groupService);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "   ", "\n", "\t", "invalid"})
+    void bad_request_when_group_id_is_invalid(final String groupId) {
+      client
+          .patch()
+          .uri(GroupAdminControllerUriFactory.getGroupPath(groupId))
+          .body(Map.of("name", FakeGenerator.groupName()))
           .exchange()
           .expectStatus()
           .isBadRequest();
@@ -521,11 +592,10 @@ class DefaultGroupAdminControllerTest {
     }
 
     @Test
-    void bad_request_when_group_id_is_invalid() {
+    void bad_request_when_body_is_missing() {
       client
           .patch()
-          .uri(GroupAdminControllerUriFactory.getGroupPath("invalid"))
-          .body(Map.of("name", FakeGenerator.groupName()))
+          .uri(GroupAdminControllerUriFactory.getGroupPath(GroupId.generate().toString()))
           .exchange()
           .expectStatus()
           .isBadRequest();
@@ -567,13 +637,14 @@ class DefaultGroupAdminControllerTest {
       verify(groupService).addUserToGroupAsAdmin(groupId, userId);
     }
 
-    @Test
-    void bad_request_when_group_id_is_invalid() {
+    @ParameterizedTest
+    @ValueSource(strings = {"", "   ", "\n", "\t", "invalid"})
+    void bad_request_when_group_id_is_invalid(final String groupId) {
       client
           .post()
           .uri(
               GroupAdminControllerUriFactory.getGroupAndUserPath(
-                  "invalid", UserId.generate().toString()))
+                  groupId, UserId.generate().toString()))
           .exchange()
           .expectStatus()
           .isBadRequest();
@@ -616,13 +687,14 @@ class DefaultGroupAdminControllerTest {
       verify(groupService).removeUserFromGroup(eq(groupId), eq(userId), any());
     }
 
-    @Test
-    void bad_request_when_group_id_is_invalid() {
+    @ParameterizedTest
+    @ValueSource(strings = {"", "   ", "\n", "\t", "invalid"})
+    void bad_request_when_group_id_is_invalid(final String groupId) {
       client
           .delete()
           .uri(
               GroupAdminControllerUriFactory.getGroupAndUserPath(
-                  "invalid", UserId.generate().toString()))
+                  groupId, UserId.generate().toString()))
           .exchange()
           .expectStatus()
           .isBadRequest();
@@ -676,11 +748,12 @@ class DefaultGroupAdminControllerTest {
                   .toList());
     }
 
-    @Test
-    void bad_request_when_group_id_is_invalid() {
+    @ParameterizedTest
+    @ValueSource(strings = {"", "   ", "\n", "\t", "invalid"})
+    void bad_request_when_group_id_is_invalid(final String groupId) {
       client
           .get()
-          .uri(GroupAdminControllerUriFactory.getUsersForGroupPath("invalid"))
+          .uri(GroupAdminControllerUriFactory.getUsersForGroupPath(groupId))
           .exchange()
           .expectStatus()
           .isBadRequest();
@@ -718,11 +791,12 @@ class DefaultGroupAdminControllerTest {
       assertThat(response.getFirst().currency()).isEqualTo("USD");
     }
 
-    @Test
-    void bad_request_when_group_id_is_invalid() {
+    @ParameterizedTest
+    @ValueSource(strings = {"", "   ", "\n", "\t", "invalid"})
+    void bad_request_when_group_id_is_invalid(final String groupId) {
       client
           .get()
-          .uri(GroupAdminControllerUriFactory.getGroupBalancesPath("invalid"))
+          .uri(GroupAdminControllerUriFactory.getGroupBalancesPath(groupId))
           .exchange()
           .expectStatus()
           .isBadRequest();
@@ -748,11 +822,12 @@ class DefaultGroupAdminControllerTest {
       verify(groupService).forceSyncBalancesAsAdmin(groupId);
     }
 
-    @Test
-    void bad_request_when_group_id_is_invalid() {
+    @ParameterizedTest
+    @ValueSource(strings = {"", "   ", "\n", "\t", "invalid"})
+    void bad_request_when_group_id_is_invalid(final String groupId) {
       client
           .post()
-          .uri(GroupAdminControllerUriFactory.getGroupPath("invalid"))
+          .uri(GroupAdminControllerUriFactory.getGroupPath(groupId))
           .exchange()
           .expectStatus()
           .isBadRequest();
@@ -797,11 +872,12 @@ class DefaultGroupAdminControllerTest {
           .isEqualTo(payment.description().value());
     }
 
-    @Test
-    void bad_request_when_group_id_is_invalid() {
+    @ParameterizedTest
+    @ValueSource(strings = {"", "   ", "\n", "\t", "invalid"})
+    void bad_request_when_group_id_is_invalid(final String groupId) {
       client
           .get()
-          .uri(GroupAdminControllerUriFactory.getGroupTransactionsPath("invalid"))
+          .uri(GroupAdminControllerUriFactory.getGroupTransactionsPath(groupId))
           .exchange()
           .expectStatus()
           .isBadRequest();
