@@ -742,12 +742,31 @@ class DefaultGroupAdminControllerTest {
               .returnResult()
               .getResponseBody();
 
-      assertThat(response).isNotNull();
       assertThat(response)
+          .isNotNull()
           .containsExactlyElementsOf(
               users.stream()
                   .map(user -> new MemberDto(user.userId().value(), user.username().value()))
                   .toList());
+    }
+
+    @Test
+    void returns__nothing_when_group_has_no_users() {
+      final GroupId groupId = GroupId.generate();
+      when(groupService.getUsersInGroup(eq(groupId), any())).thenReturn(List.of());
+
+      final List<MemberDto> response =
+          client
+              .get()
+              .uri(GroupAdminControllerUriFactory.getUsersForGroupPath(groupId.toString()))
+              .exchange()
+              .expectStatus()
+              .isOk()
+              .expectBody(new ParameterizedTypeReference<List<MemberDto>>() {})
+              .returnResult()
+              .getResponseBody();
+
+      assertThat(response).isNotNull().isEmpty();
     }
 
     @ParameterizedTest
