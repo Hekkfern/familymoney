@@ -1,5 +1,6 @@
 package com.familymoney.domains.transactions.exceptions;
 
+import com.familymoney.domains.admin.controllers.GroupAdminController;
 import com.familymoney.domains.transactions.controllers.GroupController;
 import com.familymoney.domains.transactions.services.GroupService;
 import com.familymoney.domains.users.exceptions.UserNotFoundException;
@@ -9,7 +10,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-@RestControllerAdvice(assignableTypes = {GroupController.class, GroupService.class})
+@RestControllerAdvice(
+    assignableTypes = {GroupController.class, GroupAdminController.class, GroupService.class})
 public class GroupExceptionHandler extends ResponseEntityExceptionHandler {
 
   @ExceptionHandler(UserIsNotMemberOfGroupException.class)
@@ -25,7 +27,7 @@ public class GroupExceptionHandler extends ResponseEntityExceptionHandler {
   }
 
   @ExceptionHandler(GroupNotFoundException.class)
-  public ProblemDetail handleTransactionGroupNotFoundException(final GroupNotFoundException e) {
+  public ProblemDetail handleGroupNotFoundException(final GroupNotFoundException e) {
     logger.info(e.getMessage());
     return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "Group not found");
   }

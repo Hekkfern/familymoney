@@ -18,7 +18,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
-class AdminFlowTest {
+class UserAdminFlowTest {
 
   // region Fields
 

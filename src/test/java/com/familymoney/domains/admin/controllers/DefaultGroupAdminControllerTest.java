@@ -326,7 +326,7 @@ class DefaultGroupAdminControllerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"", "   ", "\n", "\t", "invalid"})
+    @ValueSource(strings = {"   ", "\n", "\t", "invalid"})
     void bad_request_when_user_id_is_blank(final String userId) {
       client
           .get()
@@ -395,7 +395,7 @@ class DefaultGroupAdminControllerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"", "   ", "\n", "\t", "invalid"})
+    @ValueSource(strings = {"   ", "\n", "\t", "invalid"})
     void bad_request_when_group_id_is_invalid(final String groupId) {
       client
           .delete()
@@ -433,7 +433,7 @@ class DefaultGroupAdminControllerTest {
     }
 
     @Test
-    void returns_nothing_when_group_does_not_exist() {
+    void not_found_when_group_does_not_exist() {
       final GroupId groupId = GroupId.generate();
       when(groupService.getGroupInfo(eq(groupId), any()))
           .thenThrow(new GroupNotFoundException("Group not found"));
@@ -447,7 +447,7 @@ class DefaultGroupAdminControllerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"", "   ", "\n", "\t", "invalid"})
+    @ValueSource(strings = {"   ", "\n", "\t", "invalid"})
     void bad_request_when_group_id_is_invalid(final String groupId) {
       client
           .get()
@@ -578,7 +578,7 @@ class DefaultGroupAdminControllerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"", "   ", "\n", "\t", "invalid"})
+    @ValueSource(strings = {"   ", "\n", "\t", "invalid"})
     void bad_request_when_group_id_is_invalid(final String groupId) {
       client
           .patch()
@@ -638,7 +638,7 @@ class DefaultGroupAdminControllerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"", "   ", "\n", "\t", "invalid"})
+    @ValueSource(strings = {"   ", "\n", "\t", "invalid"})
     void bad_request_when_group_id_is_invalid(final String groupId) {
       client
           .post()
@@ -652,13 +652,14 @@ class DefaultGroupAdminControllerTest {
       verifyNoInteractions(groupService);
     }
 
-    @Test
-    void bad_request_when_user_id_is_invalid() {
+    @ParameterizedTest
+    @ValueSource(strings = {"   ", "\n", "\t", "invalid"})
+    void bad_request_when_user_id_is_invalid(final String userIdToAdd) {
       client
           .post()
           .uri(
               GroupAdminControllerUriFactory.getGroupAndUserPath(
-                  GroupId.generate().toString(), "invalid"))
+                  GroupId.generate().toString(), userIdToAdd))
           .exchange()
           .expectStatus()
           .isBadRequest();
@@ -688,7 +689,7 @@ class DefaultGroupAdminControllerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"", "   ", "\n", "\t", "invalid"})
+    @ValueSource(strings = {"   ", "\n", "\t", "invalid"})
     void bad_request_when_group_id_is_invalid(final String groupId) {
       client
           .delete()
@@ -702,13 +703,14 @@ class DefaultGroupAdminControllerTest {
       verifyNoInteractions(groupService);
     }
 
-    @Test
-    void bad_request_when_user_id_is_invalid() {
+    @ParameterizedTest
+    @ValueSource(strings = {"   ", "\n", "\t", "invalid"})
+    void bad_request_when_user_id_is_invalid(final String userIdToRemove) {
       client
           .delete()
           .uri(
               GroupAdminControllerUriFactory.getGroupAndUserPath(
-                  GroupId.generate().toString(), "invalid"))
+                  GroupId.generate().toString(), userIdToRemove))
           .exchange()
           .expectStatus()
           .isBadRequest();
@@ -749,7 +751,7 @@ class DefaultGroupAdminControllerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"", "   ", "\n", "\t", "invalid"})
+    @ValueSource(strings = {"   ", "\n", "\t", "invalid"})
     void bad_request_when_group_id_is_invalid(final String groupId) {
       client
           .get()
@@ -792,7 +794,7 @@ class DefaultGroupAdminControllerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"", "   ", "\n", "\t", "invalid"})
+    @ValueSource(strings = {"   ", "\n", "\t", "invalid"})
     void bad_request_when_group_id_is_invalid(final String groupId) {
       client
           .get()
@@ -823,7 +825,7 @@ class DefaultGroupAdminControllerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"", "   ", "\n", "\t", "invalid"})
+    @ValueSource(strings = {"   ", "\n", "\t", "invalid"})
     void bad_request_when_group_id_is_invalid(final String groupId) {
       client
           .post()
@@ -873,7 +875,7 @@ class DefaultGroupAdminControllerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"", "   ", "\n", "\t", "invalid"})
+    @ValueSource(strings = {"   ", "\n", "\t", "invalid"})
     void bad_request_when_group_id_is_invalid(final String groupId) {
       client
           .get()

@@ -1,4 +1,4 @@
 @NullMarked
-package com.familymoney.integration;
+package com.familymoney.flows;
 
 import org.jspecify.annotations.NullMarked;
