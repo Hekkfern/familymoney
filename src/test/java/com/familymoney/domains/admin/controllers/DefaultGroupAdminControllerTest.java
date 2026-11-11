@@ -3,27 +3,33 @@ package com.familymoney.domains.admin.controllers;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.familymoney.domains.transactions.controllers.dtos.BalanceDto;
 import com.familymoney.domains.transactions.controllers.dtos.CreateGroupResponseDto;
+import com.familymoney.domains.transactions.controllers.dtos.ExpenseTransactionDto;
 import com.familymoney.domains.transactions.controllers.dtos.GroupDto;
 import com.familymoney.domains.transactions.controllers.dtos.MemberDto;
+import com.familymoney.domains.transactions.controllers.dtos.PaymentTransactionDto;
 import com.familymoney.domains.transactions.controllers.dtos.TransactionDto;
 import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
 import com.familymoney.domains.transactions.services.GroupService;
 import com.familymoney.domains.transactions.services.data.BalanceData;
+import com.familymoney.domains.transactions.services.data.ExpenseData;
 import com.familymoney.domains.transactions.services.data.GroupData;
 import com.familymoney.domains.transactions.services.data.MemberData;
 import com.familymoney.domains.transactions.services.data.PaymentData;
 import com.familymoney.domains.transactions.services.data.TransactionData;
 import com.familymoney.domains.transactions.services.data.UpdateGroupData;
 import com.familymoney.domains.transactions.types.Description;
+import com.familymoney.domains.transactions.types.ExpenseId;
 import com.familymoney.domains.transactions.types.GroupId;
 import com.familymoney.domains.transactions.types.GroupName;
 import com.familymoney.domains.transactions.types.PaymentId;
+import com.familymoney.domains.users.exceptions.UserNotFoundException;
 import com.familymoney.domains.users.types.UserId;
 import com.familymoney.domains.users.types.UserName;
 import com.familymoney.security.JwtAuthFilter;
@@ -254,7 +260,7 @@ class DefaultGroupAdminControllerTest {
   }
 
   @Nested
-  class GetGroupsOfUser {
+  class GetGroupsForUser {
 
     @Test
     void returns_groups_for_user_with_default_pagination() {
@@ -287,12 +293,13 @@ class DefaultGroupAdminControllerTest {
       final PageResponse<GroupDto> response =
           client
               .get()
-              .uri(uribuilder ->
-                  uribuilder
-                      .path(GroupAdminControllerUriFactory.getGroupsUserPath(userId.toString()))
-                      .queryParam("page", 1)
-                      .queryParam("size", 27)
-                      .build())
+              .uri(
+                  uribuilder ->
+                      uribuilder
+                          .path(GroupAdminControllerUriFactory.getGroupsUserPath(userId.toString()))
+                          .queryParam("page", 1)
+                          .queryParam("size", 27)
+                          .build())
               .exchange()
               .expectStatus()
               .isOk()
@@ -325,9 +332,23 @@ class DefaultGroupAdminControllerTest {
       assertThat(response.content()).isEmpty();
     }
 
+    @Test
+    void not_found_when_user_does_not_exist() {
+      final UserId userId = UserId.generate();
+      when(groupService.getGroupsForUser(userId, 0, 20))
+          .thenThrow(new UserNotFoundException("User not found"));
+
+      client
+          .get()
+          .uri(GroupAdminControllerUriFactory.getGroupsUserPath(userId.toString()))
+          .exchange()
+          .expectStatus()
+          .isNotFound();
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"   ", "\n", "\t", "invalid"})
-    void bad_request_when_user_id_is_blank(final String userId) {
+    void bad_request_when_user_id_is_invalid(final String userId) {
       client
           .get()
           .uri(GroupAdminControllerUriFactory.getGroupsUserPath(userId))
@@ -343,13 +364,14 @@ class DefaultGroupAdminControllerTest {
     void bad_request_when_page_is_invalid(final int page) {
       client
           .get()
-          .uri(uriBuilder ->
-              uriBuilder
-                  .path(
-                      GroupAdminControllerUriFactory.getGroupsUserPath(
-                          UserId.generate().toString()))
-                  .queryParam("page", page)
-                  .build())
+          .uri(
+              uriBuilder ->
+                  uriBuilder
+                      .path(
+                          GroupAdminControllerUriFactory.getGroupsUserPath(
+                              UserId.generate().toString()))
+                      .queryParam("page", page)
+                      .build())
           .exchange()
           .expectStatus()
           .isBadRequest();
@@ -362,13 +384,14 @@ class DefaultGroupAdminControllerTest {
     void bad_request_when_size_is_invalid(final int size) {
       client
           .get()
-          .uri(uriBuilder ->
-              uriBuilder
-                  .path(
-                      GroupAdminControllerUriFactory.getGroupsUserPath(
-                          UserId.generate().toString()))
-                  .queryParam("size", size)
-                  .build())
+          .uri(
+              uriBuilder ->
+                  uriBuilder
+                      .path(
+                          GroupAdminControllerUriFactory.getGroupsUserPath(
+                              UserId.generate().toString()))
+                      .queryParam("size", size)
+                      .build())
           .exchange()
           .expectStatus()
           .isBadRequest();
@@ -392,6 +415,21 @@ class DefaultGroupAdminControllerTest {
           .isOk();
 
       verify(groupService).deleteGroupAsAdmin(groupId);
+    }
+
+    @Test
+    void not_found_when_group_does_not_exist() {
+      final GroupId groupId = GroupId.generate();
+      doThrow(new GroupNotFoundException("Group not found"))
+          .when(groupService)
+          .deleteGroupAsAdmin(groupId);
+
+      client
+          .delete()
+          .uri(GroupAdminControllerUriFactory.getGroupPath(groupId.toString()))
+          .exchange()
+          .expectStatus()
+          .isNotFound();
     }
 
     @ParameterizedTest
@@ -430,6 +468,8 @@ class DefaultGroupAdminControllerTest {
       assertThat(response).isNotNull();
       assertThat(response.id()).isEqualTo(group.id().value());
       assertThat(response.name()).isEqualTo(group.name().value());
+      assertThat(response.description()).isEqualTo(group.description().value());
+      assertThat(response.currency()).isEqualTo(group.currency());
     }
 
     @Test
@@ -577,6 +617,22 @@ class DefaultGroupAdminControllerTest {
       verifyNoInteractions(groupService);
     }
 
+    @Test
+    void not_found_when_group_does_not_exist() {
+      final GroupId groupId = GroupId.generate();
+      doThrow(new GroupNotFoundException("Group not found"))
+          .when(groupService)
+          .updateGroupInfo(eq(groupId), any(), any());
+
+      client
+          .patch()
+          .uri(GroupAdminControllerUriFactory.getGroupPath(groupId.toString()))
+          .body(Map.of("name", FakeGenerator.groupName()))
+          .exchange()
+          .expectStatus()
+          .isNotFound();
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"   ", "\n", "\t", "invalid"})
     void bad_request_when_group_id_is_invalid(final String groupId) {
@@ -637,6 +693,42 @@ class DefaultGroupAdminControllerTest {
       verify(groupService).addUserToGroupAsAdmin(groupId, userId);
     }
 
+    @Test
+    void not_found_when_user_does_not_exist() {
+      final GroupId groupId = GroupId.generate();
+      final UserId userId = UserId.generate();
+      doThrow(new UserNotFoundException("User not found"))
+          .when(groupService)
+          .addUserToGroupAsAdmin(groupId, userId);
+
+      client
+          .post()
+          .uri(
+              GroupAdminControllerUriFactory.getGroupAndUserPath(
+                  groupId.toString(), userId.toString()))
+          .exchange()
+          .expectStatus()
+          .isNotFound();
+    }
+
+    @Test
+    void not_found_when_group_does_not_exist() {
+      final GroupId groupId = GroupId.generate();
+      final UserId userId = UserId.generate();
+      doThrow(new GroupNotFoundException("Group not found"))
+          .when(groupService)
+          .addUserToGroupAsAdmin(groupId, userId);
+
+      client
+          .post()
+          .uri(
+              GroupAdminControllerUriFactory.getGroupAndUserPath(
+                  groupId.toString(), userId.toString()))
+          .exchange()
+          .expectStatus()
+          .isNotFound();
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"   ", "\n", "\t", "invalid"})
     void bad_request_when_group_id_is_invalid(final String groupId) {
@@ -686,6 +778,42 @@ class DefaultGroupAdminControllerTest {
           .isOk();
 
       verify(groupService).removeUserFromGroup(eq(groupId), eq(userId), any());
+    }
+
+    @Test
+    void not_found_when_user_does_not_exist() {
+      final GroupId groupId = GroupId.generate();
+      final UserId userId = UserId.generate();
+      doThrow(new UserNotFoundException("User not found"))
+          .when(groupService)
+          .removeUserFromGroup(eq(groupId), eq(userId), any());
+
+      client
+          .delete()
+          .uri(
+              GroupAdminControllerUriFactory.getGroupAndUserPath(
+                  groupId.toString(), userId.toString()))
+          .exchange()
+          .expectStatus()
+          .isNotFound();
+    }
+
+    @Test
+    void not_found_when_group_does_not_exist() {
+      final GroupId groupId = GroupId.generate();
+      final UserId userId = UserId.generate();
+      doThrow(new GroupNotFoundException("Group not found"))
+          .when(groupService)
+          .removeUserFromGroup(eq(groupId), eq(userId), any());
+
+      client
+          .delete()
+          .uri(
+              GroupAdminControllerUriFactory.getGroupAndUserPath(
+                  groupId.toString(), userId.toString()))
+          .exchange()
+          .expectStatus()
+          .isNotFound();
     }
 
     @ParameterizedTest
@@ -769,6 +897,20 @@ class DefaultGroupAdminControllerTest {
       assertThat(response).isNotNull().isEmpty();
     }
 
+    @Test
+    void not_found_when_group_does_not_exist() {
+      final GroupId groupId = GroupId.generate();
+      when(groupService.getUsersInGroup(eq(groupId), any()))
+          .thenThrow(new GroupNotFoundException("Group not found"));
+
+      client
+          .get()
+          .uri(GroupAdminControllerUriFactory.getUsersForGroupPath(groupId.toString()))
+          .exchange()
+          .expectStatus()
+          .isNotFound();
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"   ", "\n", "\t", "invalid"})
     void bad_request_when_group_id_is_invalid(final String groupId) {
@@ -812,6 +954,20 @@ class DefaultGroupAdminControllerTest {
       assertThat(response.getFirst().currency()).isEqualTo("USD");
     }
 
+    @Test
+    void not_found_when_group_does_not_exist() {
+      final GroupId groupId = GroupId.generate();
+      when(groupService.getGroupBalances(eq(groupId), any()))
+          .thenThrow(new GroupNotFoundException("Group not found"));
+
+      client
+          .get()
+          .uri(GroupAdminControllerUriFactory.getGroupBalancesPath(groupId.toString()))
+          .exchange()
+          .expectStatus()
+          .isNotFound();
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"   ", "\n", "\t", "invalid"})
     void bad_request_when_group_id_is_invalid(final String groupId) {
@@ -843,6 +999,21 @@ class DefaultGroupAdminControllerTest {
       verify(groupService).forceSyncBalancesAsAdmin(groupId);
     }
 
+    @Test
+    void not_found_when_group_does_not_exist() {
+      final GroupId groupId = GroupId.generate();
+      doThrow(new GroupNotFoundException("Group not found"))
+          .when(groupService)
+          .forceSyncBalancesAsAdmin(groupId);
+
+      client
+          .post()
+          .uri(GroupAdminControllerUriFactory.getGroupPath(groupId.toString()))
+          .exchange()
+          .expectStatus()
+          .isNotFound();
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"   ", "\n", "\t", "invalid"})
     void bad_request_when_group_id_is_invalid(final String groupId) {
@@ -860,20 +1031,129 @@ class DefaultGroupAdminControllerTest {
   @Nested
   class GetGroupTransactions {
 
-    @Test
-    void returns_group_transactions() {
-      final GroupId groupId = GroupId.generate();
-      final PaymentData payment =
-          new PaymentData(
-              PaymentId.generate(),
-              groupId,
-              Description.of(FakeGenerator.description()),
-              Money.of(new BigDecimal("30.00"), "USD"),
-              Instant.parse("2025-01-01T00:00:00Z"),
+    private PaymentData generatePayment(final GroupId groupId) {
+      return new PaymentData(
+          PaymentId.generate(),
+          groupId,
+          Description.of(FakeGenerator.description()),
+          Money.of(new BigDecimal("30.00"), "USD"),
+          Instant.parse("2025-01-01T00:00:00Z"),
+          UserId.generate(),
+          UserId.generate());
+    }
+
+    private ExpenseData generateExpense(final GroupId groupId) {
+      return new ExpenseData(
+          ExpenseId.generate(),
+          groupId,
+          Description.of(FakeGenerator.description()),
+          Money.of(new BigDecimal("40.00"), "USD"),
+          Instant.parse("2025-01-02T00:00:00Z"),
+          Map.of(
               UserId.generate(),
-              UserId.generate());
+              new BigDecimal("20.00"),
+              UserId.generate(),
+              new BigDecimal("20.00")),
+          Map.of(UserId.generate(), new BigDecimal("40.00")));
+    }
+
+    private void assertContainsPaymentAndExpense(
+        final PageResponse<TransactionDto> response,
+        final PaymentData payment,
+        final ExpenseData expense) {
+      assertThat(response).isNotNull();
+      assertThat(response.content()).hasSize(2);
+      assertThat(response.content().get(0))
+          .isInstanceOfSatisfying(
+              PaymentTransactionDto.class,
+              dto -> {
+                assertThat(dto.id()).isEqualTo(payment.id().value());
+                assertThat(dto.description()).isEqualTo(payment.description().value());
+                assertThat(dto.amount()).isEqualByComparingTo("30.00");
+                assertThat(dto.doneAt()).isEqualTo(payment.doneAt());
+                assertThat(dto.fromUser()).isEqualTo(payment.from().value());
+                assertThat(dto.toUser()).isEqualTo(payment.to().value());
+              });
+      assertThat(response.content().get(1))
+          .isInstanceOfSatisfying(
+              ExpenseTransactionDto.class,
+              dto -> {
+                assertThat(dto.id()).isEqualTo(expense.id().value());
+                assertThat(dto.description()).isEqualTo(expense.description().value());
+                assertThat(dto.amount()).isEqualByComparingTo("40.00");
+                assertThat(dto.doneAt()).isEqualTo(expense.doneAt());
+                assertThat(dto.payers())
+                    .containsExactlyInAnyOrderElementsOf(
+                        expense.payers().keySet().stream().map(UserId::value).toList());
+                assertThat(dto.shares())
+                    .containsExactlyInAnyOrderElementsOf(
+                        expense.shares().keySet().stream().map(UserId::value).toList());
+              });
+    }
+
+    @Test
+    void returns_group_transactions_with_default_pagination() {
+      final GroupId groupId = GroupId.generate();
+      final PaymentData payment = generatePayment(groupId);
+      final ExpenseData expense = generateExpense(groupId);
       when(groupService.getGroupTransactions(eq(groupId), any(), eq(0), eq(20)))
-          .thenReturn(new PageImpl<>(List.of(new TransactionData.Payment(payment))));
+          .thenReturn(
+              new PageImpl<>(
+                  List.of(
+                      new TransactionData.Payment(payment), new TransactionData.Expense(expense))));
+
+      final PageResponse<TransactionDto> response =
+          client
+              .get()
+              .uri(GroupAdminControllerUriFactory.getGroupTransactionsPath(groupId.toString()))
+              .exchange()
+              .expectStatus()
+              .isOk()
+              .expectBody(new ParameterizedTypeReference<PageResponse<TransactionDto>>() {})
+              .returnResult()
+              .getResponseBody();
+
+      assertContainsPaymentAndExpense(response, payment, expense);
+    }
+
+    @Test
+    void returns_group_transactions_with_custom_pagination() {
+      final GroupId groupId = GroupId.generate();
+      final PaymentData payment = generatePayment(groupId);
+      final ExpenseData expense = generateExpense(groupId);
+      when(groupService.getGroupTransactions(eq(groupId), any(), eq(1), eq(27)))
+          .thenReturn(
+              new PageImpl<>(
+                  List.of(
+                      new TransactionData.Payment(payment), new TransactionData.Expense(expense))));
+
+      final PageResponse<TransactionDto> response =
+          client
+              .get()
+              .uri(
+                  uriBuilder ->
+                      uriBuilder
+                          .path(
+                              GroupAdminControllerUriFactory.getGroupTransactionsPath(
+                                  groupId.toString()))
+                          .queryParam("page", 1)
+                          .queryParam("size", 27)
+                          .build())
+              .exchange()
+              .expectStatus()
+              .isOk()
+              .expectBody(new ParameterizedTypeReference<PageResponse<TransactionDto>>() {})
+              .returnResult()
+              .getResponseBody();
+
+      assertContainsPaymentAndExpense(response, payment, expense);
+    }
+
+    @Test
+    void returns_empty_when_group_has_zero_transactions() {
+      final GroupId groupId = GroupId.generate();
+      when(groupService.getGroupTransactions(eq(groupId), any(), eq(0), eq(20)))
+          .thenReturn(new PageImpl<>(List.of()));
 
       final PageResponse<TransactionDto> response =
           client
@@ -887,10 +1167,21 @@ class DefaultGroupAdminControllerTest {
               .getResponseBody();
 
       assertThat(response).isNotNull();
-      assertThat(response.content()).hasSize(1);
-      assertThat(response.content().getFirst().id()).isEqualTo(payment.id().value());
-      assertThat(response.content().getFirst().description())
-          .isEqualTo(payment.description().value());
+      assertThat(response.content()).isEmpty();
+    }
+
+    @Test
+    void not_found_when_group_does_not_exist() {
+      final GroupId groupId = GroupId.generate();
+      when(groupService.getGroupTransactions(eq(groupId), any(), eq(0), eq(20)))
+          .thenThrow(new GroupNotFoundException("Group not found"));
+
+      client
+          .get()
+          .uri(GroupAdminControllerUriFactory.getGroupTransactionsPath(groupId.toString()))
+          .exchange()
+          .expectStatus()
+          .isNotFound();
     }
 
     @ParameterizedTest
@@ -899,6 +1190,46 @@ class DefaultGroupAdminControllerTest {
       client
           .get()
           .uri(GroupAdminControllerUriFactory.getGroupTransactionsPath(groupId))
+          .exchange()
+          .expectStatus()
+          .isBadRequest();
+
+      verifyNoInteractions(groupService);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {-1, 10001})
+    void bad_request_when_page_is_invalid(final int page) {
+      client
+          .get()
+          .uri(
+              uriBuilder ->
+                  uriBuilder
+                      .path(
+                          GroupAdminControllerUriFactory.getGroupTransactionsPath(
+                              GroupId.generate().toString()))
+                      .queryParam("page", page)
+                      .build())
+          .exchange()
+          .expectStatus()
+          .isBadRequest();
+
+      verifyNoInteractions(groupService);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {-1, 19, 101})
+    void bad_request_when_size_is_invalid(final int size) {
+      client
+          .get()
+          .uri(
+              uriBuilder ->
+                  uriBuilder
+                      .path(
+                          GroupAdminControllerUriFactory.getGroupTransactionsPath(
+                              GroupId.generate().toString()))
+                      .queryParam("size", size)
+                      .build())
           .exchange()
           .expectStatus()
           .isBadRequest();

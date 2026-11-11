@@ -1,8 +1,8 @@
 ---
 name: familymoney-springboot
 description: Write and review application code in an existing Spring Boot 4 project, for controllers,
-    validation and ProblemDetail errors, JOOQ, RestClient and HTTP interfaces, configuration properties,
-    caching, scheduling, virtual threads, AOT and startup tuning. Use when adding or changing features.
+	validation and ProblemDetail errors, JOOQ, RestClient and HTTP interfaces, configuration properties,
+	caching, scheduling, virtual threads, AOT and startup tuning. Use when adding or changing features.
 ---
 
 # familymoney Spring Boot 4 application code
@@ -45,12 +45,12 @@ Follow the project rules in the custom instructions (Google Java style, no `var`
 ## Slice-test gotcha
 
 - Put `@EnableCaching`, `@EnableAsync` and `@EnableScheduling` on dedicated `@Configuration` classes,
-  NOT on the `@SpringBootApplication` class. Otherwise, slices such as `@DataJpaTest` fail to start
-  (for example, no `CacheManager`).
+NOT on the `@SpringBootApplication` class. Otherwise, slices such as `@DataJpaTest` fail to start
+(for example, no `CacheManager`).
 - Slices do not scan `@Configuration` classes: `@Import` the one a test needs.
 
 ## Proxied beans
 
 - `@Cacheable`, `@Async` and `@Transactional` work through proxies. They do nothing on self-invocation
-  or on `private`/`final` methods.
+or on `private`/`final` methods.
 - Test them through the injected bean, never by calling the method on `this` or on a manually created instance.

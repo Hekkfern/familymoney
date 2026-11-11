@@ -2,7 +2,14 @@ package com.familymoney.domains.transactions.services;
 
 import com.familymoney.domains.transactions.exceptions.GroupInvitationInvalidException;
 import com.familymoney.domains.transactions.exceptions.GroupNotFoundException;
+import com.familymoney.domains.transactions.exceptions.MaximumGroupInvitationsReachedException;
+import com.familymoney.domains.transactions.exceptions.MaximumGroupMembersReachedException;
+import com.familymoney.domains.transactions.exceptions.MaximumGroupsPerUserReachedException;
+import com.familymoney.domains.transactions.exceptions.SendGroupInvitationTooSoonException;
+import com.familymoney.domains.transactions.exceptions.UserAlreadyInGroupException;
+import com.familymoney.domains.transactions.exceptions.UserAlreadyInvitedException;
 import com.familymoney.domains.transactions.exceptions.UserIsNotMemberOfGroupException;
+import com.familymoney.domains.transactions.exceptions.WrongUserForInvitationException;
 import com.familymoney.domains.transactions.services.data.BalanceData;
 import com.familymoney.domains.transactions.services.data.GroupData;
 import com.familymoney.domains.transactions.services.data.MemberData;
@@ -19,163 +26,201 @@ import java.util.Currency;
 import java.util.List;
 import org.springframework.data.domain.Page;
 
+/** Manages transaction groups, their members, invitations, balances and transactions. */
 public interface GroupService {
 
   /**
-   * Creates a transaction group, without users.
+   * Creates a transaction group without any member.
    *
-   * <p>WARNING! Only use by administrators
+   * <p>WARNING! Only use by administrators.
    *
-   * @param name the group name
-   * @param description the group description
-   * @param currency the currency for group expenses
+   * @param name the name of the group
+   * @param description the description of the group
+   * @param currency the default currency for the group expenses
    * @param requester the user creating the group
    * @return the identifier of the created group
-   * @throws UserNotFoundException if the creating user does not exist
+   * @throws UserNotFoundException if the requester does not exist
    */
   GroupId createEmptyGroup(
       GroupName name, Description description, Currency currency, AuthorizedUser requester);
 
   /**
-   * Create a new group, and adds the creating user as member of the group
+   * Creates a new group and adds the creating user as a member of it.
    *
-   * @param name Name of the group to display to users
-   * @param description Description of the group
-   * @param currency Default currency for the group
-   * @param requester The user creating the group
-   * @return Identifier of the newly created group
-   * @throws GroupOwnerNotFoundException if the creating user does not exist
+   * @param name the name of the group
+   * @param description the description of the group
+   * @param currency the default currency for the group expenses
+   * @param requester the user creating the group
+   * @return the identifier of the created group
+   * @throws UserNotFoundException if the requester does not exist
    */
   GroupId createGroupAndAddCreatorAsMember(
       GroupName name, Description description, Currency currency, AuthorizedUser requester);
 
   /**
-   * Leaves a group where the selected user is a member. Only members of the group can leave it. If
-   * this user is the last member of the group, the group will be deleted.
+   * Makes the requester leave a group. If the requester is the last member, the group is deleted.
    *
-   * @param groupId Identifier of the group to leave
-   * @param requester The user attempting to leave the group
+   * @param groupId the identifier of the group to leave
+   * @param requester the user leaving the group
    * @throws GroupNotFoundException if the group does not exist
-   * @throws UserIsNotMemberOfGroupException if the user is not a member of the group
+   * @throws UserIsNotMemberOfGroupException if the requester is not a member of the group
    */
   void leaveGroup(GroupId groupId, AuthorizedUser requester);
 
   /**
    * Deletes a transaction group.
    *
-   * <p>WARNING! Only use by administrators
+   * <p>WARNING! Only use by administrators.
    *
    * @param groupId the identifier of the group to delete
+   * @throws GroupNotFoundException if the group does not exist
    */
   void deleteGroupAsAdmin(GroupId groupId);
 
   /**
-   * Get a paginated list of groups the user is a member of
+   * Retrieves a paginated list of the groups a user is a member of.
    *
-   * @param userId The identifier of the user to get the groups for
-   * @param page
-   * @param size
-   * @return Paginated list of groups
+   * @param userId the identifier of the user whose groups are retrieved
+   * @param page the zero-based page index
+   * @param size the maximum number of groups per page
+   * @return a page of groups
+   * @throws UserNotFoundException if the user does not exist
    */
   Page<GroupData> getGroupsForUser(UserId userId, int page, int size);
 
   /**
-   * Get information about a specific group where the selected user is a member. Only members of the
-   * group can view it.
+   * Retrieves the information of a group. Requesters with the user role must be members of the
+   * group.
    *
-   * @param groupId Identifier of the group to retrieve information about
-   * @param requester The user requesting the information
-   * @return Information about the group, if found.
+   * @param groupId the identifier of the group
+   * @param requester the user requesting the information
+   * @return the information of the group
    * @throws GroupNotFoundException if the group does not exist
-   * @throws UserIsNotMemberOfGroupException if the user is not a member of the group
+   * @throws UserIsNotMemberOfGroupException if the requester has the user role and is not a member
+   *     of the group
    */
   GroupData getGroupInfo(GroupId groupId, AuthorizedUser requester);
 
   /**
-   * Update one or more fields of a group's information where the selected user is a member. Only
-   * members of the group can update it.
+   * Updates one or more fields of a group. Requesters with the user role must be members of the
+   * group.
    *
-   * @param groupId Identifier of the group to modify
-   * @param requester The user requesting the information
-   * @param data Data to update. Only non-null fields will be updated
+   * @param groupId the identifier of the group to modify
+   * @param requester the user requesting the update
+   * @param data the data to update; only the fields that are present are updated
    * @throws GroupNotFoundException if the group does not exist
-   * @throws UserIsNotMemberOfGroupException if the user is not a member of the group
+   * @throws UserIsNotMemberOfGroupException if the requester has the user role and is not a member
+   *     of the group
    */
   void updateGroupInfo(GroupId groupId, AuthorizedUser requester, UpdateGroupData data);
 
   /**
-   * Generate an invitation token for a group
+   * Generates an invitation token for a user to join a group and sends it to that user. Requesters
+   * with the user role must be members of the group.
    *
-   * @param groupId Identifier of the group to generate the token for
-   * @param userId Identifier of the user to send the invitation to
-   * @param requester The user requesting the token
+   * @param groupId the identifier of the group the user is invited to
+   * @param userId the identifier of the user to invite
+   * @param requester the user sending the invitation
    * @throws GroupNotFoundException if the group does not exist
-   * @throws UserIsNotMemberOfGroupException if the user is not a member of the group
+   * @throws UserNotFoundException if the invited user does not exist
+   * @throws UserIsNotMemberOfGroupException if the requester has the user role and is not a member
+   *     of the group
+   * @throws UserAlreadyInGroupException if the invited user is already a member of the group
+   * @throws MaximumGroupMembersReachedException if the group has reached its maximum number of
+   *     members
+   * @throws MaximumGroupsPerUserReachedException if the invited user has reached the maximum number
+   *     of groups
+   * @throws MaximumGroupInvitationsReachedException if the requester has reached the maximum number
+   *     of invitations
+   * @throws UserAlreadyInvitedException if the user already has a pending invitation to the group
+   * @throws SendGroupInvitationTooSoonException if the invitation is resent before the required
+   *     waiting time has elapsed
    */
   void sendInvitationToken(GroupId groupId, UserId userId, AuthorizedUser requester);
 
   /**
-   * Enter a group using an invitation token. Once used, the token becomes invalid.
+   * Joins a group using an invitation token. Once used, the token becomes invalid.
    *
-   * @param groupInvitationToken Invitation token to use to enter the group
-   * @param requester The user entering the group
-   * @throws GroupInvitationInvalidException if the invitation token is invalid
+   * @param groupInvitationToken the invitation token
+   * @param requester the user joining the group
+   * @throws GroupInvitationInvalidException if the invitation token does not exist or has expired
+   * @throws WrongUserForInvitationException if the invitation was issued for another user
+   * @throws GroupNotFoundException if the group of the invitation does not exist
+   * @throws MaximumGroupMembersReachedException if the group has reached its maximum number of
+   *     members
+   * @throws MaximumGroupsPerUserReachedException if the requester has reached the maximum number of
+   *     groups
    */
   void enterToGroupWithToken(GroupInvitationToken groupInvitationToken, AuthorizedUser requester);
 
   /**
-   * Get the list of users in a group where the selected user is a member. Only members of the group
-   * can view it.
+   * Retrieves the members of a group. Requesters with the user role must be members of the group.
    *
-   * @param groupId Identifier of the group
-   * @param requester The user requesting the list of members
-   * @return List of members of the group
+   * @param groupId the identifier of the group
+   * @param requester the user requesting the members
+   * @return the members of the group
    * @throws GroupNotFoundException if the group does not exist
-   * @throws UserIsNotMemberOfGroupException if the user is not a member of the group
+   * @throws UserIsNotMemberOfGroupException if the requester has the user role and is not a member
+   *     of the group
    */
   List<MemberData> getUsersInGroup(GroupId groupId, AuthorizedUser requester);
 
   /**
    * Adds a user to a transaction group.
    *
-   * <p>WARNING! Only use by administrators
+   * <p>WARNING! Only use by administrators.
    *
    * @param groupId the identifier of the group
    * @param userIdToAdd the identifier of the user to add
+   * @throws GroupNotFoundException if the group does not exist
+   * @throws UserNotFoundException if the user does not exist
+   * @throws UserAlreadyInGroupException if the user is already a member of the group
+   * @throws MaximumGroupMembersReachedException if the group has reached its maximum number of
+   *     members
+   * @throws MaximumGroupsPerUserReachedException if the user has reached the maximum number of
+   *     groups
    */
   void addUserToGroupAsAdmin(GroupId groupId, UserId userIdToAdd);
 
   /**
-   * Removes a user from a transaction group.
+   * Removes a user from a transaction group. Requesters with the user role must be members of the
+   * group.
    *
    * @param groupId the identifier of the group
    * @param userIdToRemove the identifier of the user to remove
-   * @param requester The user requesting the removal
+   * @param requester the user requesting the removal
+   * @throws GroupNotFoundException if the group does not exist
+   * @throws UserNotFoundException if the user to remove does not exist
+   * @throws UserIsNotMemberOfGroupException if the requester has the user role and is not a member
+   *     of the group
    */
   void removeUserFromGroup(GroupId groupId, UserId userIdToRemove, AuthorizedUser requester);
 
   /**
-   * Get the balance between all users in a group
+   * Retrieves the balances between the members of a group. Requesters with the user role must be
+   * members of the group.
    *
-   * @param groupId Identifier of the group
-   * @param requester The user requesting the balances
-   * @return List of balances between users in the group
+   * @param groupId the identifier of the group
+   * @param requester the user requesting the balances
+   * @return the balances between the members of the group
    * @throws GroupNotFoundException if the group does not exist
-   * @throws UserIsNotMemberOfGroupException if the user is not a member of the group
+   * @throws UserIsNotMemberOfGroupException if the requester has the user role and is not a member
+   *     of the group
    */
   List<BalanceData> getGroupBalances(GroupId groupId, AuthorizedUser requester);
 
   /**
-   * Retrieves expenses and payments ordered by completion time descending, type ascending, and ID
-   * descending.
+   * Retrieves the expenses and payments of a group, ordered by completion time descending, type
+   * ascending, and ID descending. Requesters with the user role must be members of the group.
    *
-   * @param groupId Identifier of the group
+   * @param groupId the identifier of the group
    * @param requester the user requesting the transactions
    * @param page the zero-based page index
    * @param size the maximum number of transactions per page
-   * @return a page of complete expense and payment transactions
+   * @return a page of expense and payment transactions
    * @throws GroupNotFoundException if the group does not exist
-   * @throws UserIsNotMemberOfGroupException if the user is not a member of the group
+   * @throws UserIsNotMemberOfGroupException if the requester has the user role and is not a member
+   *     of the group
    */
   Page<TransactionData> getGroupTransactions(
       GroupId groupId, AuthorizedUser requester, int page, int size);
@@ -184,9 +229,10 @@ public interface GroupService {
    * Recalculates the balances of all the expenses in the group. This is a heavy operation and
    * should be used only when necessary.
    *
-   * <p>WARNING! Only use by administrators
+   * <p>WARNING! Only use by administrators.
    *
-   * @param groupId Identifier of the group
+   * @param groupId the identifier of the group
+   * @throws GroupNotFoundException if the group does not exist
    */
   void forceSyncBalancesAsAdmin(GroupId groupId);
 }
